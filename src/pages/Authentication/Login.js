@@ -56,11 +56,15 @@ const Login = (props) => {
         enableReinitialize: true,
 
         initialValues: {
-            email: userLogin.email || "admin@themesbrand.com" || '',
+            // email: userLogin.email || "admin@themesbrand.com" || '',
+            companyid: '',
+            username: userLogin.username || '',
             password: userLogin.password || "123456" || '',
         },
         validationSchema: Yup.object({
-            email: Yup.string().required("Please Enter Your Email"),
+            // email: Yup.string().required("Please Enter Your Email"),
+            companyid: Yup.string().required("Please Enter Your Company ID"),
+            username: Yup.string().required("Please Enter Your Username"),
             password: Yup.string().required("Please Enter Your Password"),
         }),
         onSubmit: (values) => {
@@ -88,7 +92,7 @@ const Login = (props) => {
             }, 3000);
         }
     }, [dispatch, errorMsg]);
-    document.title = "Basic SignIn | Velzon - React Admin & Dashboard Template";
+    document.title = "Basic SignIn | DiaJewSoft - React Admin & Dashboard Template";
     return (
         <React.Fragment>
             <ParticlesAuth>
@@ -99,10 +103,12 @@ const Login = (props) => {
                                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                                     <div>
                                         <Link to="/" className="d-inline-block auth-logo">
-                                            <img src={logoLight} alt="" height="20" />
+                                            {/* <img src={logoLight} alt="" height="20" /> */}
+                                            <h2 style={{ color: 'white', fontweight: 'bold' }}>DiaJewSoft</h2>
+                                            {/* <img src={`http://localhost:5047/Upload/logo.png`} alt="DiaJewSoft Logo" height="120" /> */}
                                         </Link>
                                     </div>
-                                    <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                                    {/* <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p> */}
                                 </div>
                             </Col>
                         </Row>
@@ -111,9 +117,13 @@ const Login = (props) => {
                             <Col md={8} lg={6} xl={5}>
                                 <Card className="mt-4">
                                     <CardBody className="p-4">
-                                        <div className="text-center mt-2">
-                                            <h5 className="text-primary">Welcome Back !</h5>
-                                            <p className="text-muted">Sign in to continue to Velzon.</p>
+                                        <div className="text-center mt-4">
+                                            <h4 className="text-primary mb-4">Welcome Back!</h4>
+                                            <div className="d-flex align-items-center mt-4 mb-2">
+                                                <hr className="flex-grow-1" />
+                                                <span className="mb-0 mx-3 text-muted" style={{ fontSize: '12px', fontWeight: '500' }}>Sign In to access your DiaJewSoft</span>
+                                                <hr className="flex-grow-1" />
+                                            </div>
                                         </div>
                                         {error && error ? (<Alert color="danger"> {error} </Alert>) : null}
                                         <div className="p-2 mt-4">
@@ -125,7 +135,7 @@ const Login = (props) => {
                                                 }}
                                                 action="#">
 
-                                                <div className="mb-3">
+                                                {/* <div className="mb-3">
                                                     <Label htmlFor="email" className="form-label">Email</Label>
                                                     <Input
                                                         name="email"
@@ -142,12 +152,50 @@ const Login = (props) => {
                                                     {validation.touched.email && validation.errors.email ? (
                                                         <FormFeedback type="invalid">{validation.errors.email}</FormFeedback>
                                                     ) : null}
+                                                </div> */}
+
+                                                <div className="mb-3">
+                                                    <Label htmlFor="companyid" className="form-label">Company ID</Label>
+                                                    <Input
+                                                        name="companyid"
+                                                        className="form-control"
+                                                        placeholder="Enter Company ID"
+                                                        type="text"
+                                                        onChange={validation.handleChange}
+                                                        onBlur={validation.handleBlur}
+                                                        value={validation.values.companyid || ""}
+                                                        invalid={
+                                                            validation.touched.companyid && validation.errors.companyid ? true : false
+                                                        }
+                                                    />
+                                                    {validation.touched.companyid && validation.errors.companyid ? (
+                                                        <FormFeedback type="invalid">{validation.errors.companyid}</FormFeedback>
+                                                    ) : null}
                                                 </div>
 
                                                 <div className="mb-3">
-                                                    <div className="float-end">
+                                                    <Label htmlFor="username" className="form-label">Username</Label>
+                                                    <Input
+                                                        name="username"
+                                                        className="form-control"
+                                                        placeholder="Enter Username"
+                                                        type="text"
+                                                        onChange={validation.handleChange}
+                                                        onBlur={validation.handleBlur}
+                                                        value={validation.values.username || ""}
+                                                        invalid={
+                                                            validation.touched.username && validation.errors.username ? true : false
+                                                        }
+                                                    />
+                                                    {validation.touched.username && validation.errors.username ? (
+                                                        <FormFeedback type="invalid">{validation.errors.username}</FormFeedback>
+                                                    ) : null}
+                                                </div>
+
+                                                <div className="mb-3">
+                                                    {/* <div className="float-end">
                                                         <Link to="/forgot-password" className="text-muted">Forgot password?</Link>
-                                                    </div>
+                                                    </div> */}
                                                     <Label className="form-label" htmlFor="password-input">Password</Label>
                                                     <div className="position-relative auth-pass-inputgroup mb-3">
                                                         <Input
@@ -182,6 +230,10 @@ const Login = (props) => {
                                                 </div>
 
                                                 <div className="mt-4 text-center">
+                                                    <p className="mb-0 text-muted">Powered by <a href="https://softsense.in/" target="_blank" rel="noreferrer" className="text-primary text-decoration-none">SoftOnCloud</a></p>
+                                                </div>
+
+                                                {/* <div className="mt-4 text-center">
                                                     <div className="signin-other-title">
                                                         <h5 className="fs-13 mb-4 title">Sign In with</h5>
                                                     </div>
@@ -209,15 +261,15 @@ const Login = (props) => {
                                                         <Button color="dark" className="btn-icon"><i className="ri-github-fill fs-16"></i></Button>{" "}
                                                         <Button color="info" className="btn-icon"><i className="ri-twitter-fill fs-16"></i></Button>
                                                     </div>
-                                                </div>
+                                                </div> */}
                                             </Form>
                                         </div>
                                     </CardBody>
                                 </Card>
 
-                                <div className="mt-4 text-center">
+                                {/* <div className="mt-4 text-center">
                                     <p className="mb-0">Don't have an account ? <Link to="/register" className="fw-semibold text-primary text-decoration-underline"> Signup </Link> </p>
-                                </div>
+                                </div> */}
 
                             </Col>
                         </Row>
