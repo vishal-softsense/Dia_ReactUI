@@ -7,9 +7,16 @@ axios.defaults.baseURL = api.API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 // content type
-const token = JSON.parse(sessionStorage.getItem("authUser")) ? JSON.parse(sessionStorage.getItem("authUser")).token : null;
-if (token)
-  axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+// Dynamically inject token before every request to prevent stale token issues
+axios.interceptors.request.use(function (config) {
+  const user = JSON.parse(sessionStorage.getItem("authUser"));
+  if (user && user.token) {
+    config.headers.Authorization = `Bearer ${user.token}`;
+  }
+  return config;
+}, function (error) {
+  return Promise.reject(error);
+});
 
 // intercepting to capture errors
 axios.interceptors.response.use(

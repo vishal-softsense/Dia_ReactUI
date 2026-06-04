@@ -105,7 +105,7 @@ const Login = (props) => {
                                         <Link to="/" className="d-inline-block auth-logo">
                                             {/* <img src={logoLight} alt="" height="20" /> */}
                                             <h2 style={{ color: 'white', fontweight: 'bold' }}>DiaJewSoft</h2>
-                                            {/* <img src={`http://localhost:5047/Upload/logo.png`} alt="DiaJewSoft Logo" height="120" /> */}
+                                            {/* <img src={`https://localhost:7169/Upload/logo.png`} alt="DiaJewSoft Logo" height="120" /> */}
                                         </Link>
                                     </div>
                                     {/* <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p> */}

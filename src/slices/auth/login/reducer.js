@@ -13,8 +13,8 @@ const loginSlice = createSlice({
   initialState,
   reducers: {
     apiError(state, action) {
-      state.error = action.payload.data;
-      state.loading = true;
+      state.error = action.payload && action.payload.data ? action.payload.data : (action.payload?.message || action.payload || "An error occurred during login.");
+      state.loading = false;
       state.isUserLogout = false;
       state.errorMsg = true;
     },

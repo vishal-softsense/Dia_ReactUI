@@ -3,6 +3,7 @@ import { getFirebaseBackend } from "../../../helpers/firebase_helper";
 import {
   postFakeLogin,
   postJwtLogin,
+  postApiLogin,
   postSocialLogin,
 } from "../../../helpers/fakebackend_helper";
 
@@ -10,44 +11,23 @@ import { loginSuccess, logoutUserSuccess, apiError, reset_login_flag } from './r
 
 export const loginUser = (user, history) => async (dispatch) => {
   try {
-    let response;
-    if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-      let fireBaseBackend = getFirebaseBackend();
-      response = fireBaseBackend.loginUser(
-        user.email,
-        user.password
-      );
-    } else if (process.env.REACT_APP_DEFAULTAUTH === "jwt") {
-      response = postJwtLogin({
-        email: user.email,
-        password: user.password
-      });
-
-    } else if (process.env.REACT_APP_DEFAULTAUTH) {
-      response = postFakeLogin({
-        email: user.email,
-        password: user.password,
-      });
-    }
+    let response = postApiLogin({
+      CompanyId: user.companyid,
+      Username: user.username,
+      Password: user.password
+    });
 
     var data = await response;
 
     if (data) {
+      data = {
+          ...data,
+          token: data.token || data.Token,
+          user: data.user || data.User
+      };
       sessionStorage.setItem("authUser", JSON.stringify(data));
-      if (process.env.REACT_APP_DEFAULTAUTH === "fake") {
-        var finallogin = JSON.stringify(data);
-        finallogin = JSON.parse(finallogin)
-        data = finallogin.data;
-        if (finallogin.status === "success") {
-          dispatch(loginSuccess(data));
-          history('/dashboard')
-        } else {
-          dispatch(apiError(finallogin));
-        }
-      } else {
-        dispatch(loginSuccess(data));
-        history('/dashboard')
-      }
+      dispatch(loginSuccess(data));
+      history('/dashboard')
     }
   } catch (error) {
     dispatch(apiError(error));
