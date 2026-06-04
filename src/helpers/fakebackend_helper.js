@@ -44,7 +44,7 @@ export const postJwtRegister = (url, data) => {
             message = "Sorry! something went wrong, please contact our support team";
             break;
           case 401:
-            message = "Invalid credentials";
+            message = err.response.data?.message || err.response.data?.Message || "Invalid credentials";
             break;
           default:
             message = err[1];
