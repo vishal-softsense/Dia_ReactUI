@@ -9,7 +9,7 @@ import {
 
 import { loginSuccess, logoutUserSuccess, apiError, reset_login_flag } from './reducer';
 
-export const loginUser = (user, history) => async (dispatch) => {
+export const loginUser = (user, history, rememberMe) => async (dispatch) => {
   try {
     let response = postApiLogin({
       CompanyId: user.companyid,
@@ -25,7 +25,17 @@ export const loginUser = (user, history) => async (dispatch) => {
           token: data.token || data.Token,
           user: data.user || data.User
       };
-      sessionStorage.setItem("authUser", JSON.stringify(data));
+      if (rememberMe) {
+        localStorage.setItem("authUser", JSON.stringify(data));
+        localStorage.setItem("rememberedUser", JSON.stringify({
+          companyid: user.companyid,
+          username: user.username
+        }));
+      } else {
+        sessionStorage.setItem("authUser", JSON.stringify(data));
+        localStorage.removeItem("rememberedUser");
+        localStorage.removeItem("authUser");
+      }
       dispatch(loginSuccess(data));
       history('/dashboard')
     }
@@ -37,6 +47,7 @@ export const loginUser = (user, history) => async (dispatch) => {
 export const logoutUser = () => async (dispatch) => {
   try {
     sessionStorage.removeItem("authUser");
+    localStorage.removeItem("authUser");
     let fireBaseBackend = getFirebaseBackend();
     if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
       const response = fireBaseBackend.logout;

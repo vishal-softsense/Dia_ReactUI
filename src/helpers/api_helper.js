@@ -9,7 +9,10 @@ axios.defaults.headers.post["Content-Type"] = "application/json";
 // content type
 // Dynamically inject token before every request to prevent stale token issues
 axios.interceptors.request.use(function (config) {
-  const user = JSON.parse(sessionStorage.getItem("authUser"));
+  let user = JSON.parse(sessionStorage.getItem("authUser"));
+  if (!user) {
+    user = JSON.parse(localStorage.getItem("authUser"));
+  }
   if (user && user.token) {
     config.headers.Authorization = `Bearer ${user.token}`;
   }
@@ -101,7 +104,10 @@ class APIClient {
   };
 }
 const getLoggedinUser = () => {
-  const user = sessionStorage.getItem("authUser");
+  let user = sessionStorage.getItem("authUser");
+  if (!user) {
+    user = localStorage.getItem("authUser");
+  }
   if (!user) {
     return null;
   } else {

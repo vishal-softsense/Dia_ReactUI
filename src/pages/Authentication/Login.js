@@ -36,8 +36,24 @@ const Login = (props) => {
         user, error, loading, errorMsg
     } = useSelector(loginpageData);
 
-    const [userLogin, setUserLogin] = useState([]);
+    const [userLogin, setUserLogin] = useState({});
     const [passwordShow, setPasswordShow] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
+
+    useEffect(() => {
+        const remembered = localStorage.getItem("rememberedUser");
+        if (remembered) {
+            try {
+                const parsed = JSON.parse(remembered);
+                setUserLogin(prev => ({
+                    ...prev,
+                    companyid: parsed.companyid,
+                    username: parsed.username
+                }));
+                setRememberMe(true);
+            } catch (e) { }
+        }
+    }, []);
 
 
     useEffect(() => {
@@ -56,10 +72,9 @@ const Login = (props) => {
         enableReinitialize: true,
 
         initialValues: {
-            // email: userLogin.email || "admin@themesbrand.com" || '',
-            companyid: '',
+            companyid: userLogin.companyid || '',
             username: userLogin.username || '',
-            password: userLogin.password || "123456" || '',
+            password: userLogin.password || '',
         },
         validationSchema: Yup.object({
             // email: Yup.string().required("Please Enter Your Email"),
@@ -68,7 +83,7 @@ const Login = (props) => {
             password: Yup.string().required("Please Enter Your Password"),
         }),
         onSubmit: (values) => {
-            dispatch(loginUser(values, props.router.navigate));
+            dispatch(loginUser(values, props.router.navigate, rememberMe));
         }
     });
 
@@ -218,7 +233,7 @@ const Login = (props) => {
                                                 </div>
 
                                                 <div className="form-check">
-                                                    <Input className="form-check-input" type="checkbox" value="" id="auth-remember-check" />
+                                                    <Input className="form-check-input" type="checkbox" id="auth-remember-check" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
                                                     <Label className="form-check-label" htmlFor="auth-remember-check">Remember me</Label>
                                                 </div>
 
