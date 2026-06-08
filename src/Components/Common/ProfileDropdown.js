@@ -48,50 +48,52 @@ const ProfileDropdown = () => {
                             alt="Header Avatar" />
                         <span className="text-start ms-xl-2">
                             <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{fullName || userName}</span>
-                            <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text mb-1">{companyName}</span>
-                            <span className="d-none d-xl-block ms-1 fs-12" style={{ color: "#5A8DEE" }}>{userName} <span className="text-muted">({userRole})</span></span>
+                            <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
+                                {companyName ? `${companyName} (${userRole})` : userRole}
+                            </span>
                         </span>
                     </span>
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-menu-end">
+                    <h6 className="dropdown-header">Welcome {userName}!</h6>
                     <DropdownItem className='p-0'>
                         <Link to="#" className="dropdown-item">
-                            <i className="bx bx-user mr-50 text-muted fs-16 align-middle me-2"></i>
+                            <i className="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Edit Profile</span>
                         </Link>
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
                         <Link to="#" className="dropdown-item">
-                            <i className="bx bx-bar-chart-alt-2 fs-4 avatar-initial rounded-circle bg-label-primary align-middle me-2" style={{ color: "#475F7B" }}></i>
+                            <i className="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Settings</span>
                         </Link>
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
                         <Link to="#" className="dropdown-item">
-                            <i className="bx bx-cog fs-4 avatar-initial rounded-circle bg-label-primary align-middle me-2" style={{ color: "#475F7B" }}></i>
+                            <i className="mdi mdi-format-list-bulleted text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Parameters</span>
                         </Link>
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
                         <Link to="/userrole/list-user-role" className="dropdown-item">
-                            <i className="bx bx-group fs-4 avatar-initial rounded-circle bg-label-primary align-middle me-2" style={{ color: "#475F7B" }}></i>
+                            <i className="mdi mdi-account-multiple-outline text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Role</span>
                         </Link>
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
                         <Link to="/user-list" className="dropdown-item">
-                            <i className="bx bx-user fs-4 avatar-initial rounded-circle bg-label-primary align-middle me-2" style={{ color: "#475F7B" }}></i>
+                            <i className="mdi mdi-account-outline text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">User</span>
                         </Link>
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
                         <Link to="/Sync/list-sync" className="dropdown-item">
-                            <i className="bx bx-cog fs-4 avatar-initial rounded-circle bg-label-primary align-middle me-2" style={{ color: "#475F7B" }}></i>
+                            <i className="mdi mdi-sync text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Sync</span>
                         </Link>
                     </DropdownItem>
@@ -100,7 +102,7 @@ const ProfileDropdown = () => {
 
                     <DropdownItem className='p-0'>
                         <Link to="/logout" className="dropdown-item">
-                            <i className="bx bx-power-off text-muted fs-16 align-middle me-2"></i>
+                            <i className="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle" data-key="t-logout">Logout</span>
                         </Link>
                     </DropdownItem>
