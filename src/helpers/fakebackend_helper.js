@@ -30,6 +30,27 @@ export const postJwtProfile = data => api.create(url.POST_EDIT_JWT_PROFILE, data
 
 export const postFakeProfile = (data) => api.update(url.POST_EDIT_PROFILE + '/' + data.idx, data);
 
+// User Master
+export const getUserMasters = () => api.get(url.GET_USER_MASTER_LIST);
+export const getUserMasterDetail = id => api.get(`${url.GET_USER_MASTER_DETAIL}/${id}`);
+export const addNewUserMaster = data => api.create(url.ADD_USER_MASTER, data);
+export const updateUserMaster = data => api.put(`${url.UPDATE_USER_MASTER}/${data.userID}`, data);
+export const deleteUserMaster = id => api.delete(`${url.DELETE_USER_MASTER}/${id}`);
+
+// UserRole
+export const getUserRoles = () => api.get(url.GET_USER_ROLE_LIST);
+export const getUserRoleDetail = id => api.get(`${url.GET_USER_ROLE_DETAIL}/${id}`);
+export const addNewUserRole = data => api.create(url.ADD_USER_ROLE, data);
+export const updateUserRole = data => api.create(url.UPDATE_USER_ROLE, data); // Uses HttpPost
+export const deleteUserRole = id => api.create(`${url.DELETE_USER_ROLE}?id=${id}`); // Uses HttpPost
+export const getUserRoleDropdown = () => api.get(url.GET_USER_ROLE_DROPDOWN);
+
+// Role Permissions
+export const getRolePermissions = id => api.get(`${url.GET_ROLE_PERMISSIONS}?id=${id}`);
+export const saveRolePermissions = (id, data) => api.create(`${url.SAVE_ROLE_PERMISSIONS}?id=${id}`, data);
+
+export const getUserDropdown = () => api.get(url.GET_USER_MASTER_DROPDOWN);
+
 // Register Method
 export const postJwtRegister = (url, data) => {
   return api.create(url, data)

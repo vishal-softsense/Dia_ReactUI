@@ -40,9 +40,10 @@ const Filter = ({
       <DebouncedInput
         type="text"
         value={(columnFilterValue ?? '')}
-        onChange={(event) => column.setFilterValue(event.target.value)}
+        onChange={(value) => column.setFilterValue(value)}
         placeholder="Search..."
-        className="w-36 border shadow rounded"
+        className="form-control form-control-sm mt-1"
+        debounce={100}
         list={column.id + 'list'}
       />
       <div className="h-1" />
@@ -70,7 +71,7 @@ const DebouncedInput = ({
     }, debounce);
 
     return () => clearTimeout(timeout);
-  }, [debounce, onChange, value]);
+  }, [debounce, value]);
 
   return (
     <input
@@ -106,30 +107,29 @@ const TableContainer = ({
   SearchPlaceholder,
 
 }) => {
-  const [columnFilters, setColumnFilters] = useState ([]);
+  const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
-  const fuzzyFilter = (row, columnId, value, addMeta) => {
-    const itemRank = rankItem(row.getValue(columnId), value);
-    addMeta({
-      itemRank
-    });
-    return itemRank.passed;
-  };
+
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: customPageSize || 10,
+  });
 
   const table = useReactTable({
     columns,
     data,
-    filterFns: {
-      fuzzy: fuzzyFilter,
-    },
     state: {
       columnFilters,
       globalFilter,
+      pagination,
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: fuzzyFilter,
+    onPaginationChange: setPagination,
+    autoResetPageIndex: false,
+    globalFilterFn: 'includesString',
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -153,20 +153,32 @@ const TableContainer = ({
     (customPageSize) && setPageSize((customPageSize));
   }, [customPageSize, setPageSize]);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [globalFilter, columnFilters]);
+
   return (
     <Fragment>
       {isGlobalFilter && <Row className="mb-3">
         <CardBody className="border border-dashed border-end-0 border-start-0">
           <form>
-            <Row>
-              <Col sm={5}>
-                <div className={(isProductsFilter || isContactsFilter || isCompaniesFilter || isNFTRankingFilter) ? "search-box me-2 mb-2 d-inline-block" : "search-box me-2 mb-2 d-inline-block col-12"}>
-                  <DebouncedInput
-                    value={globalFilter ?? ''}
-                    onChange={value => setGlobalFilter((value))}
-                    placeholder={SearchPlaceholder}
-                  />
-                  <i className="bx bx-search-alt search-icon"></i>
+            <Row className="align-items-center g-3">
+              <Col sm={12} md="auto">
+                <div className="d-flex align-items-center">
+                  <span className="me-2 text-muted text-uppercase">Show</span>
+                  <select
+                    className="form-select form-select-sm w-auto"
+                    value={getState().pagination.pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                  >
+                    {[...new Set([10, 25, 50, 100, data.length > 0 ? data.length : 1])].sort((a, b) => a - b).map(pageSize => (
+                      <option key={pageSize} value={pageSize}>
+                        {pageSize === (data.length > 0 ? data.length : 1) ? 'All' : pageSize}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="ms-2 text-muted text-uppercase">Entries</span>
                 </div>
               </Col>
               {isProductsFilter && (
@@ -202,6 +214,19 @@ const TableContainer = ({
               {isTaskListFilter && (
                 <TaskListGlobalFilter />
               )}
+
+              <Col sm={12} md className="d-flex justify-content-md-end mt-2 mt-md-0">
+                <div className="search-box me-2 d-inline-block">
+                  <input
+                    type="text"
+                    className="form-control search"
+                    value={globalFilter ?? ''}
+                    onChange={e => setGlobalFilter(e.target.value)}
+                    placeholder={SearchPlaceholder || "Search..."}
+                  />
+                  <i className="bx bx-search-alt search-icon"></i>
+                </div>
+              </Col>
             </Row>
           </form>
         </CardBody>
@@ -214,22 +239,28 @@ const TableContainer = ({
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className={thClass}  {...{
-                    onClick: header.column.getToggleSortingHandler(),
-                  }}>
+                  <th key={header.id} className={thClass}>
                     {header.isPlaceholder ? null : (
                       <React.Fragment>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {{
-                          asc: ' ',
-                          desc: ' ',
-                        }
-                        [header.column.getIsSorted()] ?? null}
+                        <div
+                          className={`d-flex align-items-center ${header.column.getCanSort() ? 'cursor-pointer' : ''}`}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getCanSort() && (
+                            <span className="ms-2">
+                              {{
+                                asc: <i className="mdi mdi-chevron-up text-muted"></i>,
+                                desc: <i className="mdi mdi-chevron-down text-muted"></i>,
+                              }[header.column.getIsSorted()] ?? <i className="mdi mdi-unfold-more-horizontal text-muted"></i>}
+                            </span>
+                          )}
+                        </div>
                         {header.column.getCanFilter() ? (
-                          <div>
+                          <div className="mt-1">
                             <Filter column={header.column} table={table} />
                           </div>
                         ) : null}
@@ -264,23 +295,28 @@ const TableContainer = ({
 
       <Row className="align-items-center mt-2 g-3 text-center text-sm-start">
         <div className="col-sm">
-          <div className="text-muted">Showing<span className="fw-semibold ms-1">{getState().pagination.pageSize}</span> of <span className="fw-semibold">{data.length}</span> Results
+          <div className="text-muted">
+            Showing <span className="fw-semibold">
+              {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
+            </span> to <span className="fw-semibold">
+              {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
+            </span> of <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> entries
           </div>
         </div>
         <div className="col-sm-auto">
           <ul className="pagination pagination-separated pagination-md justify-content-center justify-content-sm-start mb-0">
             <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
-              <Link to="#" className="page-link" onClick={previousPage}>Previous</Link>
+              <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>Previous</Link>
             </li>
             {getPageOptions().map((item, key) => (
               <React.Fragment key={key}>
-                <li className="page-item">
-                  <Link to="#" className={getState().pagination.pageIndex === item ? "page-link active" : "page-link"} onClick={() => setPageIndex(item)}>{item + 1}</Link>
+                <li className={getState().pagination.pageIndex === item ? "page-item active" : "page-item"}>
+                  <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
                 </li>
               </React.Fragment>
             ))}
             <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
-              <Link to="#" className="page-link" onClick={nextPage}>Next</Link>
+              <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>Next</Link>
             </li>
           </ul>
         </div>

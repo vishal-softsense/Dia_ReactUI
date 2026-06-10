@@ -248,7 +248,25 @@ import BlogListView from "../pages/Pages/Blogs/ListView";
 import BlogGridView from "../pages/Pages/Blogs/GridView";
 import PageBlogOverview from "../pages/Pages/Blogs/Overview";
 
+// User Management
+import ListUser from "../pages/Masters/UserMaster/ListUser";
+import AddEditUser from "../pages/Masters/UserMaster/AddEditUser";
+
+// User Role Management
+import UserRoleList from "../pages/Masters/UserRole/UserRoleList";
+import AddEditUserRole from "../pages/Masters/UserRole/AddEditUserRole";
+import ManageUserPermission from "../pages/Masters/UserRole/ManageUserPermission";
+
 const authProtectedRoutes = [
+  { path: "/user-list", component: <ListUser /> },
+  { path: "/user-add", component: <AddEditUser /> },
+  { path: "/user-edit/:id", component: <AddEditUser /> },
+
+  { path: "/user-role", component: <UserRoleList /> },
+  { path: "/add-user-role", component: <AddEditUserRole /> },
+  { path: "/edit-user-role/:id", component: <AddEditUserRole /> },
+  { path: "/manage-user-permission/:id", component: <ManageUserPermission /> },
+
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
   { path: "/dashboard-crm", component: <DashboardCrm /> },
   { path: "/dashboard", component: <DashboardEcommerce /> },

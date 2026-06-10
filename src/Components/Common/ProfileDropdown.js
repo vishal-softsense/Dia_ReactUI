@@ -78,7 +78,7 @@ const ProfileDropdown = () => {
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
-                        <Link to="/userrole/list-user-role" className="dropdown-item">
+                        <Link to="/user-role" className="dropdown-item">
                             <i className="mdi mdi-account-multiple-outline text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Role</span>
                         </Link>

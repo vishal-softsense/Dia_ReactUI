@@ -13,6 +13,24 @@ export const SOCIAL_LOGIN = "/social-login";
 export const POST_EDIT_JWT_PROFILE = "/post-jwt-profile";
 export const POST_EDIT_PROFILE = "/user";
 
+// User Master
+export const GET_USER_MASTER_LIST = "/api/Masters/UserMaster/list";
+export const GET_USER_MASTER_DETAIL = "/api/Masters/UserMaster"; // append /{id}
+export const ADD_USER_MASTER = "/api/Masters/UserMaster/add";
+export const UPDATE_USER_MASTER = "/api/Masters/UserMaster/edit"; // append /{id}
+export const DELETE_USER_MASTER = "/api/Masters/UserMaster/delete"; // append /{id}
+export const GET_USER_MASTER_DROPDOWN = "/api/Masters/UserMaster/dropdown";
+
+// UserRole Master
+export const GET_USER_ROLE_LIST = "/api/UserRole/list-user-role";
+export const GET_USER_ROLE_DETAIL = "/api/UserRole/edit-user-role"; // append /{id}
+export const ADD_USER_ROLE = "/api/UserRole/add-user-role-save";
+export const UPDATE_USER_ROLE = "/api/UserRole/edit-user-role-save";
+export const DELETE_USER_ROLE = "/api/UserRole/delete-user-role"; // append ?id=
+export const GET_ROLE_PERMISSIONS = "/api/UserRole/fill-role-permission"; // append ?id=
+export const SAVE_ROLE_PERMISSIONS = "/api/UserRole/save-role-permission"; // append ?id=
+export const GET_USER_ROLE_DROPDOWN = "/api/UserRole/dropdown";
+
 // Calendar
 export const GET_EVENTS = "/events";
 export const GET_CATEGORIES = "/categories";
