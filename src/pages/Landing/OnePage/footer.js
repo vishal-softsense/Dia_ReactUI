@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Col, Container, Row } from 'reactstrap';
 
 // Import Images
-import logolight from "../../../assets/images/logo-light.png";
+import logolight from "../../../assets/images/Dialogo-light.png";
 
 const Footer = () => {
     return (
@@ -68,7 +68,7 @@ const Footer = () => {
 
                             <div>
                                 <p className="copy-rights mb-0">
-                                    {new Date().getFullYear()} © Velzon - Themesbrand
+                                    {new Date().getFullYear()} © SoftOnCloud - Themesbrand
                                 </p>
                             </div>
                         </Col>

@@ -12,25 +12,11 @@ const AddEditUserRole = () => {
     const { id } = useParams();
     const isEditMode = !!id;
 
-    const [roleDropdown, setRoleDropdown] = useState([]);
-
     useEffect(() => {
-        fetchDropdown();
         if (isEditMode) {
             fetchRoleData(id);
         }
     }, [id]);
-
-    const fetchDropdown = async () => {
-        try {
-            const res = await getUserRoleDropdown();
-            if (res.success) {
-                setRoleDropdown(res.data);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     const fetchRoleData = async (roleId) => {
         try {
@@ -58,7 +44,6 @@ const AddEditUserRole = () => {
             userTypeID: 0,
             userType: "",
             description: "",
-            underUser: 0,
             companyID: 0 // handled by backend mostly
         },
         validationSchema: Yup.object({
@@ -67,7 +52,7 @@ const AddEditUserRole = () => {
         }),
         onSubmit: async (values) => {
             try {
-                const payload = { ...values, underUser: parseInt(values.underUser) || 0 };
+                const payload = { ...values };
                 let response;
                 if (isEditMode) {
                     response = await updateUserRole(payload);
@@ -127,25 +112,7 @@ const AddEditUserRole = () => {
                                                 </div>
                                             </Col>
 
-                                            <Col md={4}>
-                                                <div className="mb-3">
-                                                    <Label htmlFor="underUser" className="form-label">Under Role</Label>
-                                                    <Input
-                                                        name="underUser"
-                                                        type="select"
-                                                        className="form-control"
-                                                        id="underUser"
-                                                        onChange={validation.handleChange}
-                                                        onBlur={validation.handleBlur}
-                                                        value={validation.values.underUser || 0}
-                                                    >
-                                                        <option value="0">Select Role</option>
-                                                        {roleDropdown.map(item => (
-                                                            <option key={item.userTypeID} value={item.userTypeID}>{item.userType}</option>
-                                                        ))}
-                                                    </Input>
-                                                </div>
-                                            </Col>
+
 
                                             <Col md={12}>
                                                 <div className="mb-3">

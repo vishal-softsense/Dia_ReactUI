@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
 //import images 
-import logoLight from "../../assets/images/logo-light.png";
+import logoLight from "../../assets/images/Dialogo-light.png";
 import ParticlesAuth from "../AuthenticationInner/ParticlesAuth";
 import { createSelector } from "reselect";
 

@@ -4,7 +4,7 @@ import { Card, CardBody, Col, Container, Row } from 'reactstrap';
 import ParticlesAuth from "../ParticlesAuth";
 
 //import images
-import logoLight from "../../../assets/images/logo-light.png";
+import logoLight from "../../../assets/images/Dialogo-light.png";
 
 const BasicLogout = () => {
     document.title = "Log Out | Velzon - React Admin & Dashboard Template";

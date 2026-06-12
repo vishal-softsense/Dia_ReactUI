@@ -60,16 +60,28 @@ const UserRoleList = () => {
                 header: "Role ID",
                 accessorKey: "userTypeID",
                 enableColumnFilter: true,
+                filterFn: (row, id, filterValue) => {
+                    const rowValue = row.getValue(id);
+                    return rowValue != null ? String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+                }
             },
             {
                 header: "Role Name",
                 accessorKey: "userType",
                 enableColumnFilter: true,
+                filterFn: (row, id, filterValue) => {
+                    const rowValue = row.getValue(id);
+                    return rowValue != null ? String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+                }
             },
             {
                 header: "Description",
                 accessorKey: "description",
                 enableColumnFilter: true,
+                filterFn: (row, id, filterValue) => {
+                    const rowValue = row.getValue(id);
+                    return rowValue != null ? String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+                }
             },
             {
                 header: "Actions",

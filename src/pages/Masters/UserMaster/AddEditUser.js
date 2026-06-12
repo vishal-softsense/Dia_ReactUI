@@ -7,6 +7,7 @@ import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { addNewUser, updateUser, getUserDetail } from "../../../slices/thunks";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import { getUserRoleDropdown } from "../../../helpers/fakebackend_helper";
 
 const AddEditUser = () => {
     const dispatch = useDispatch();
@@ -26,7 +27,22 @@ const AddEditUser = () => {
         loading: state.UserManagement.loading,
     }));
 
+    const [roleDropdown, setRoleDropdown] = useState([]);
+
     useEffect(() => {
+        const fetchRoleDropdown = async () => {
+            try {
+                const res = await getUserRoleDropdown();
+                if (res.success) {
+                    setRoleDropdown(res.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch roles", error);
+            }
+        };
+
+        fetchRoleDropdown();
+
         if (isEdit) {
             dispatch(getUserDetail(id));
         }
@@ -204,14 +220,21 @@ const AddEditUser = () => {
                                                         <div>
                                                             <Label htmlFor="userTypeId" className="form-label">Role (User Type ID)</Label>
                                                             <Input
-                                                                type="number"
+                                                                type="select"
                                                                 id="userTypeId"
                                                                 name="userTypeId"
                                                                 className="form-control"
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.userTypeId || 1}
-                                                            />
+                                                            >
+                                                                <option value="0">Select Role</option>
+                                                                {roleDropdown.map((role) => (
+                                                                    <option key={role.userTypeID} value={role.userTypeID}>
+                                                                        {role.userType}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
                                                         </div>
                                                     </Col>
                                                 </Row>

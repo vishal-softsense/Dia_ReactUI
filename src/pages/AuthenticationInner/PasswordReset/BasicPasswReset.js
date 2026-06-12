@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, Card, CardBody, Col, Container, Row, Form, Label, Input, FormFeedback } from 'reactstrap';
 import ParticlesAuth from '../ParticlesAuth';
-import logoLight from "../../../assets/images/logo-light.png";
+import logoLight from "../../../assets/images/Dialogo-light.png";
 
 //formik
 import { useFormik } from 'formik';

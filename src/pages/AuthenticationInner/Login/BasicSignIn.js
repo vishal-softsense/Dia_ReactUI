@@ -5,7 +5,7 @@ import ParticlesAuth from "../ParticlesAuth";
 
 
 //import images
-import logoLight from "../../../assets/images/logo-light.png";
+import logoLight from "../../../assets/images/Dialogo-light.png";
 
 
 const BasicSignIn = () => {

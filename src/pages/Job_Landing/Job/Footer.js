@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Col, Container, Row } from "reactstrap";
-import LogoLight from "../../../assets/images/logo-light.png";
+import LogoLight from "../../../assets/images/Dialogo-light.png";
 
 const Footer = () => {
   return (

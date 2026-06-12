@@ -18,8 +18,8 @@ import {
 } from "reactstrap";
 //Import images
 import dummyUser from "../../../assets/images/users/user-dummy-img.jpg";
-import logoDark from "../../../assets/images/logo-dark.png";
-import logoLight from "../../../assets/images/logo-light.png";
+import logoDark from "../../../assets/images/Dialogo-dark.png";
+import logoLight from "../../../assets/images/Dialogo-light.png";
 
 import classnames from "classnames";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";

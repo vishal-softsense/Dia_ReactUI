@@ -3,7 +3,7 @@ import { Row, Col } from 'reactstrap';
 import { Link } from 'react-router-dom';
 
 //import Images
-import logo_dark from "../../../../assets/images/logo-dark.png";
+import logo_dark from "../../../../assets/images/Dialogo-dark.png";
 
 const SubscribeAction = () => {
     function changeBackground(e) {

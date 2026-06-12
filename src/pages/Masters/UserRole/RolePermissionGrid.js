@@ -51,6 +51,18 @@ const RolePermissionGrid = ({ permissions, onChange }) => {
 
     const handleColumnAllChange = (field, checked) => {
         const newData = gridData.map((row) => {
+            if (field === 'all') {
+                return {
+                    ...row,
+                    all: checked,
+                    select: checked,
+                    write: checked,
+                    edit: checked,
+                    delete: checked,
+                    navigate: checked
+                };
+            }
+
             const updatedRow = { ...row, [field]: checked };
             // Recalculate row 'all' state
             if (

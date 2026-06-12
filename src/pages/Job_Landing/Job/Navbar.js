@@ -7,8 +7,8 @@ import {
   NavbarToggler,
   NavLink,
 } from "reactstrap";
-import LogoDark from "../../../assets/images/logo-dark.png";
-import LogoLight from "../../../assets/images/logo-light.png";
+import LogoDark from "../../../assets/images/Dialogo-dark.png";
+import LogoLight from "../../../assets/images/Dialogo-light.png";
 const Navbar = () => {
   const [isOpenMenu, setisOpenMenu] = useState(false);
   const [navClass, setnavClass] = useState("");

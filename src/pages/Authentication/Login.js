@@ -14,7 +14,7 @@ import { useFormik } from "formik";
 // actions
 import { loginUser, socialLogin, resetLoginFlag } from "../../slices/thunks";
 
-import logoLight from "../../assets/images/logo-light.png";
+import logoLight from "../../assets/images/Dialogo-light.png";
 import { createSelector } from 'reselect';
 //import images
 
@@ -118,9 +118,9 @@ const Login = (props) => {
                                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                                     <div>
                                         <Link to="/" className="d-inline-block auth-logo">
-                                            {/* <img src={logoLight} alt="" height="20" /> */}
-                                            <h2 style={{ color: 'white', fontweight: 'bold' }}>DiaJewSoft</h2>
-                                            {/* <img src={`https://localhost:7169/Upload/logo.png`} alt="DiaJewSoft Logo" height="120" /> */}
+                                            <img src={logoLight} alt="" height="60" />
+                                            {/* <h2 style={{ color: 'white', fontweight: 'bold' }}>DiaJewSoft</h2> */}
+                                            {/* <img src={`../../assets/images/Dialogo-light.png`} alt="DiaJewSoft Logo" height="120" /> */}
                                         </Link>
                                     </div>
                                     {/* <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p> */}

@@ -3,8 +3,8 @@ import { CardBody, Row, Col, Card, Table, CardHeader, Container } from "reactstr
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import { Link } from "react-router-dom";
 
-import logoDark from "../../assets/images/logo-dark.png";
-import logoLight from "../../assets/images/logo-light.png";
+import logoDark from "../../assets/images/Dialogo-dark.png";
+import logoLight from "../../assets/images/Dialogo-light.png";
 
 const InvoiceDetails = () => {
   //Print the Invoice
