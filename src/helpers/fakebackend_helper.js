@@ -45,6 +45,12 @@ export const updateUserRole = data => api.create(url.UPDATE_USER_ROLE, data); //
 export const deleteUserRole = id => api.create(`${url.DELETE_USER_ROLE}?id=${id}`); // Uses HttpPost
 export const getUserRoleDropdown = () => api.get(url.GET_USER_ROLE_DROPDOWN);
 
+// All Master
+export const getAllMasterList = () => api.get(url.GET_ALL_MASTER_LIST);
+
+// Sidebar Menu
+export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);
+
 // Role Permissions
 export const getRolePermissions = id => api.get(`${url.GET_ROLE_PERMISSIONS}?id=${id}`);
 export const saveRolePermissions = (id, data) => api.create(`${url.SAVE_ROLE_PERMISSIONS}?id=${id}`, data);
@@ -189,7 +195,7 @@ export const deleteTask = task => api.delete(url.DELETE_TASK + '/' + task);
 export const getTasks = () => api.get(url.GET_TASKS);
 export const addNewTasks = (card) => api.create(url.ADD_TASKS, card)
 export const updateTasks = (card) => api.put(url.UPDATE_TASKS, card)
-export const deleteTasks = (card) => api.delete(url.DELETE_TASKS, { headers: {card} })
+export const deleteTasks = (card) => api.delete(url.DELETE_TASKS, { headers: { card } })
 
 // CRM
 // get Contacts
@@ -390,3 +396,12 @@ export const getJobApplicationList = () => api.get(url.GET_APPLICATION_LIST);
 
 //API Key
 export const getAPIKey = () => api.get(url.GET_API_KEY);
+
+// Parcel Item Master
+export const getParcelItemMasters = (filter) => api.get(url.GET_PARCEL_ITEM_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
+export const getParcelItemMasterDropdowns = () => api.get(url.GET_PARCEL_ITEM_MASTER_DROPDOWNS);
+export const getParcelItemMasterDetail = id => api.get(`${url.GET_PARCEL_ITEM_MASTER_DETAIL}/${id}`);
+export const checkLotNoExists = lotNo => api.get(`${url.CHECK_LOT_NO_EXISTS}?lotNo=${lotNo}`);
+export const addParcelItemMaster = data => api.create(url.ADD_PARCEL_ITEM_MASTER, data);
+export const updateParcelItemMaster = (id, data) => api.put(`${url.UPDATE_PARCEL_ITEM_MASTER}/${id}`, data);
+export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM_MASTER}/${id}`);

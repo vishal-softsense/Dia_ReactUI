@@ -314,3 +314,5 @@ $value in $theme-colors {
       }
   }
 }
+
+.navbar-menu .navbar-nav .nav-sm .nav-link.hide-default-before::before { display: none !important; content: none !important; }

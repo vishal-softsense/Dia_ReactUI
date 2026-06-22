@@ -52,11 +52,11 @@ const ListUser = () => {
     const columns = React.useMemo(
         () => [
             {
-                header: "ID",
+                header: "Sr. No.",
                 accessorKey: "userID",
-                enableColumnFilter: true,
-                filterFn: (row, id, filterValue) => {
-                    return String(row.getValue(id)).toLowerCase().includes(String(filterValue).toLowerCase());
+                enableColumnFilter: false,
+                cell: (cellProps) => {
+                    return cellProps.row.index + 1;
                 }
             },
             {
@@ -95,33 +95,49 @@ const ListUser = () => {
                 }
             },
             {
-                header: "Edit",
-                id: "edit",
+                header: "Actions",
+                accessorKey: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
                     return (
-                        <Link
-                            to={`/user-edit/${cellProps.row.original.userID}`}
-                            className="text-primary d-inline-block"
-                        >
-                            <i className="bx bxs-edit-alt fs-16"></i>
-                        </Link>
-                    );
-                },
-            },
-            {
-                header: "Delete",
-                id: "delete",
-                enableColumnFilter: false,
-                cell: (cellProps) => {
-                    return (
-                        <Button
-                            color="link"
-                            className="text-danger p-0 d-inline-block"
-                            onClick={() => handleDeleteClick(cellProps.row.original.userID)}
-                        >
-                            <i className="bx bxs-trash fs-16"></i>
-                        </Button>
+                        <div className="d-flex gap-2">
+                            <Link 
+                                to={`/user-edit/${cellProps.row.original.userID}`} 
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#e5f1ff",
+                                    color: "#299cdb",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    width: "30px",
+                                    height: "30px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0"
+                                }}
+                            >
+                                <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
+                            </Link>
+                            <button 
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#ffeded",
+                                    color: "#f06548",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    width: "30px",
+                                    height: "30px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0"
+                                }}
+                                onClick={() => handleDeleteClick(cellProps.row.original.userID)}
+                            >
+                                <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
+                            </button>
+                        </div>
                     );
                 },
             },
@@ -165,11 +181,11 @@ const ListUser = () => {
                     <Row>
                         <Col lg={12}>
                             <Card>
-                                <CardHeader className="d-flex justify-content-between align-items-center border-bottom">
-                                    <h4 className="card-title mb-0">User Master</h4>
-                                    <div className="flex-shrink-0">
-                                        <Link to="/user-add" className="btn btn-primary add-btn">
-                                            Add User
+                                <CardHeader className="d-flex align-items-center">
+                                    <h5 className="card-title mb-0 flex-grow-1">User Master</h5>
+                                    <div>
+                                        <Link to="/user-add" className="btn btn-primary add-btn me-1">
+                                            <i className="ri-add-line align-bottom me-1"></i> Add User
                                         </Link>
                                     </div>
                                 </CardHeader>
@@ -185,12 +201,11 @@ const ListUser = () => {
                                             columns={columns}
                                             data={filteredUsers || []}
                                             isGlobalFilter={true}
-                                            isAddUserList={false}
                                             customPageSize={10}
-                                            className="custom-header-css"
                                             divClass="table-responsive table-card mb-3"
-                                            tableClass="align-middle table-nowrap"
+                                            tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
+                                            SearchPlaceholder="Search Users..."
                                         />
                                     )}
                                 </CardBody>

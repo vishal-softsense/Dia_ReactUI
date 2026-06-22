@@ -41,10 +41,12 @@ const Filter = ({
         type="text"
         value={(columnFilterValue ?? '')}
         onChange={(value) => column.setFilterValue(value)}
-        placeholder="Search..."
+        placeholder=""
         className="form-control form-control-sm mt-1"
+        style={{ height: "26px", fontSize: "11px", padding: "2px 8px" }}
         debounce={100}
         list={column.id + 'list'}
+        id={`filter-${column.id}`}
       />
       <div className="h-1" />
     </>
@@ -57,6 +59,8 @@ const DebouncedInput = ({
   value: initialValue,
   onChange,
   debounce = 500,
+  className,
+  id,
   ...props
 }) => {
   const [value, setValue] = useState(initialValue);
@@ -77,8 +81,8 @@ const DebouncedInput = ({
     <input
       {...props}
       value={value}
-      id="search-bar-0"
-      className="form-control search"
+      id={id || "search-bar-0"}
+      className={className || "form-control search"}
       onChange={(e) => setValue(e.target.value)}
     />
   );
@@ -99,13 +103,15 @@ const TableContainer = ({
   isNFTRankingFilter,
   isTaskListFilter,
   customPageSize,
+  customPageSizes,
   tableClass,
   theadClass,
   trClass,
   thClass,
   divClass,
   SearchPlaceholder,
-
+  isPagination = true,
+  isShowEntries = true,
 }) => {
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -149,6 +155,22 @@ const TableContainer = ({
     getState
   } = table;
 
+  const totalPages = getPageOptions().length;
+  const currentPage = getState().pagination.pageIndex;
+  
+  const getVisiblePages = () => {
+    if (totalPages <= 3) {
+      return getPageOptions();
+    }
+    if (currentPage === 0) {
+      return [0, 1, 2];
+    } else if (currentPage === totalPages - 1) {
+      return [totalPages - 3, totalPages - 2, totalPages - 1];
+    } else {
+      return [currentPage - 1, currentPage, currentPage + 1];
+    }
+  };
+
   useEffect(() => {
     (customPageSize) && setPageSize((customPageSize));
   }, [customPageSize, setPageSize]);
@@ -164,23 +186,26 @@ const TableContainer = ({
         <CardBody className="border border-dashed border-end-0 border-start-0">
           <form>
             <Row className="align-items-center g-3">
-              <Col sm={12} md="auto">
-                <div className="d-flex align-items-center">
-                  <span className="me-2 text-muted text-uppercase">Show</span>
-                  <select
-                    className="form-select form-select-sm w-auto"
-                    value={getState().pagination.pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                  >
-                    {[...new Set([10, 25, 50, 100, data.length > 0 ? data.length : 1])].sort((a, b) => a - b).map(pageSize => (
-                      <option key={pageSize} value={pageSize}>
-                        {pageSize === (data.length > 0 ? data.length : 1) ? 'All' : pageSize}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="ms-2 text-muted text-uppercase">Entries</span>
-                </div>
-              </Col>
+              {isShowEntries && (
+                <Col sm={12} md="auto">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2 text-muted text-uppercase">Show</span>
+                    <select
+                      className="form-select form-select-sm w-auto"
+                      value={getState().pagination.pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                    >
+                      {(customPageSizes || [10, 25, 50, 100]).map(pageSize => (
+                        <option key={pageSize} value={pageSize}>
+                          {pageSize}
+                        </option>
+                      ))}
+                      <option value={999999}>All</option>
+                    </select>
+                    <span className="ms-2 text-muted text-uppercase">Entries</span>
+                  </div>
+                </Col>
+              )}
               {isProductsFilter && (
                 <ProductsGlobalFilter />
               )}
@@ -293,34 +318,36 @@ const TableContainer = ({
         </Table>
       </div>
 
-      <Row className="align-items-center mt-2 g-3 text-center text-sm-start">
-        <div className="col-sm">
-          <div className="text-muted">
-            Showing <span className="fw-semibold">
-              {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
-            </span> to <span className="fw-semibold">
-              {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
-            </span> of <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> entries
+      {isPagination && (
+        <Row className="align-items-center mt-2 g-3 text-center text-sm-start">
+          <div className="col-sm">
+            <div className="text-muted">
+              Showing <span className="fw-semibold">
+                {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
+              </span> to <span className="fw-semibold">
+                {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
+              </span> of <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> entries
+            </div>
           </div>
-        </div>
-        <div className="col-sm-auto">
-          <ul className="pagination pagination-separated pagination-md justify-content-center justify-content-sm-start mb-0">
-            <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
-              <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>Previous</Link>
-            </li>
-            {getPageOptions().map((item, key) => (
-              <React.Fragment key={key}>
-                <li className={getState().pagination.pageIndex === item ? "page-item active" : "page-item"}>
-                  <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
-                </li>
-              </React.Fragment>
-            ))}
-            <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
-              <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>Next</Link>
-            </li>
-          </ul>
-        </div>
-      </Row>
+          <div className="col-sm-auto">
+            <ul className="pagination pagination-separated pagination-md justify-content-center justify-content-sm-start mb-0">
+              <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>Previous</Link>
+              </li>
+              {getVisiblePages().map((item, key) => (
+                <React.Fragment key={key}>
+                  <li className={getState().pagination.pageIndex === item ? "page-item active" : "page-item"}>
+                    <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
+                  </li>
+                </React.Fragment>
+              ))}
+              <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>Next</Link>
+              </li>
+            </ul>
+          </div>
+        </Row>
+      )}
     </Fragment>
   );
 };

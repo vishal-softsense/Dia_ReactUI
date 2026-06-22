@@ -25,12 +25,14 @@ const ProfileDropdown = () => {
     const [fullName, setFullName] = useState("");
 
     useEffect(() => {
-        if (sessionStorage.getItem("authUser")) {
-            const obj = JSON.parse(sessionStorage.getItem("authUser"));
-            setUserName(obj.UserName || obj.user?.username || "Admin");
-            setCompanyName(obj.CompanyName || "");
-            setUserRole(obj.UserRole || "Founder");
-            setFullName(obj.FullName || obj.user?.first_name || "");
+        let authUserStr = sessionStorage.getItem("authUser") || localStorage.getItem("authUser");
+        if (authUserStr) {
+            const obj = JSON.parse(authUserStr);
+            const u = obj.user || obj.User || obj;
+            setUserName(u.UserName || u.userName || u.username || "Admin");
+            setCompanyName(obj.CompanyName || obj.companyName || "");
+            setUserRole(u.UserRole || u.userRole || "Founder");
+            setFullName(u.FullName || u.firstName || u.FirstName || "");
         }
     }, [user]);
 
@@ -47,7 +49,7 @@ const ProfileDropdown = () => {
                         <img className="rounded-circle header-profile-user" src={avatar1}
                             alt="Header Avatar" />
                         <span className="text-start ms-xl-2">
-                            <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{fullName || userName}</span>
+                            <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Admin</span>
                             <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
                                 {companyName ? `${companyName} (${userRole})` : userRole}
                             </span>
@@ -56,12 +58,7 @@ const ProfileDropdown = () => {
                 </DropdownToggle>
                 <DropdownMenu className="dropdown-menu-end">
                     <h6 className="dropdown-header">Welcome {userName}!</h6>
-                    <DropdownItem className='p-0'>
-                        <Link to="#" className="dropdown-item">
-                            <i className="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-                            <span className="align-middle">Edit Profile</span>
-                        </Link>
-                    </DropdownItem>
+
 
                     <DropdownItem className='p-0'>
                         <Link to="#" className="dropdown-item">
@@ -71,7 +68,7 @@ const ProfileDropdown = () => {
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
-                        <Link to="#" className="dropdown-item">
+                        <Link to="/all-master-list" className="dropdown-item">
                             <i className="mdi mdi-format-list-bulleted text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Parameters</span>
                         </Link>

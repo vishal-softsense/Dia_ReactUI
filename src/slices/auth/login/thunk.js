@@ -37,7 +37,7 @@ export const loginUser = (user, history, rememberMe) => async (dispatch) => {
         localStorage.removeItem("authUser");
       }
       dispatch(loginSuccess(data));
-      history('/dashboard')
+      history('/welcome')
     }
   } catch (error) {
     dispatch(apiError(error));
@@ -77,7 +77,7 @@ export const socialLogin = (type, history) => async (dispatch) => {
     if (socialdata) {
       sessionStorage.setItem("authUser", JSON.stringify(response));
       dispatch(loginSuccess(response));
-      history('/dashboard')
+      history('/welcome')
     }
 
   } catch (error) {

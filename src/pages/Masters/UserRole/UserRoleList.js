@@ -57,12 +57,11 @@ const UserRoleList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Role ID",
+                header: "Sr. No.",
                 accessorKey: "userTypeID",
-                enableColumnFilter: true,
-                filterFn: (row, id, filterValue) => {
-                    const rowValue = row.getValue(id);
-                    return rowValue != null ? String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+                enableColumnFilter: false,
+                cell: (cellProps) => {
+                    return cellProps.row.index + 1;
                 }
             },
             {
@@ -90,15 +89,61 @@ const UserRoleList = () => {
                 cell: (cellProps) => {
                     return (
                         <div className="d-flex gap-2">
-                            <Link to={`/edit-user-role/${cellProps.row.original.userTypeID}`} className="btn btn-sm btn-primary">
-                                <i className="ri-pencil-fill align-bottom"></i>
+                            <Link 
+                                to={`/edit-user-role/${cellProps.row.original.userTypeID}`} 
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#e5f1ff",
+                                    color: "#299cdb",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    width: "30px",
+                                    height: "30px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0"
+                                }}
+                            >
+                                <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </Link>
-                            <Link to={`/manage-user-permission/${cellProps.row.original.userTypeID}`} className="btn btn-sm btn-info" title="Manage Permissions">
-                                <i className="ri-shield-keyhole-line align-bottom"></i>
+                            <Link 
+                                to={`/manage-user-permission/${cellProps.row.original.userTypeID}`} 
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#daf4f0",
+                                    color: "#0ab39c",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    width: "30px",
+                                    height: "30px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0"
+                                }}
+                                title="Manage Permissions"
+                            >
+                                <i className="las la-user-lock" style={{ fontSize: "16px" }}></i>
                             </Link>
-                            <Button size="sm" color="danger" onClick={() => handleDeleteClick(cellProps.row.original.userTypeID)}>
-                                <i className="ri-delete-bin-fill align-bottom"></i>
-                            </Button>
+                            <button 
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#ffeded",
+                                    color: "#f06548",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    width: "30px",
+                                    height: "30px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0"
+                                }}
+                                onClick={() => handleDeleteClick(cellProps.row.original.userTypeID)}
+                            >
+                                <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
+                            </button>
                         </div>
                     );
                 },
@@ -119,7 +164,7 @@ const UserRoleList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">User Roles</h5>
                                     <div>
                                         <Link to="/add-user-role" className="btn btn-primary add-btn me-1">
-                                            <i className="ri-add-line align-bottom me-1"></i> Add New
+                                            <i className="ri-add-line align-bottom me-1"></i> Add Role
                                         </Link>
                                     </div>
                                 </CardHeader>
@@ -138,6 +183,7 @@ const UserRoleList = () => {
                                             customPageSize={10}
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
+                                            theadClass="table-light"
                                             SearchPlaceholder="Search Roles..."
                                         />
                                     )}

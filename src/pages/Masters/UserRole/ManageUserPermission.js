@@ -13,6 +13,7 @@ const ManageUserPermission = () => {
     const [roleDetails, setRoleDetails] = useState(null);
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (id) {
@@ -89,12 +90,22 @@ const ManageUserPermission = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">
                                         Permissions for Role: <span className="text-primary">{roleDetails?.userType || "Loading..."}</span>
                                     </h5>
-                                    <div>
-                                        <Link to="/user-role" className="btn btn-light me-2">
+                                    <div className="d-flex align-items-center">
+                                        <div className="search-box me-3">
+                                            <input 
+                                                type="text" 
+                                                className="form-control form-control-sm" 
+                                                placeholder="Search permissions..." 
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                            <i className="ri-search-line search-icon"></i>
+                                        </div>
+                                        <Link to="/user-role" className="btn btn-light btn-sm me-2">
                                             <i className="ri-arrow-left-line align-bottom me-1"></i> Back
                                         </Link>
-                                        <Button color="success" onClick={handleSavePermissions} disabled={loading}>
-                                            <i className="ri-save-line align-bottom me-1"></i> Save Permissions
+                                        <Button color="success" size="sm" onClick={handleSavePermissions} disabled={loading}>
+                                            <i className="ri-save-line align-bottom me-1"></i> Save
                                         </Button>
                                     </div>
                                 </CardHeader>
@@ -109,6 +120,7 @@ const ManageUserPermission = () => {
                                         <RolePermissionGrid 
                                             permissions={permissions} 
                                             onChange={handleGridChange} 
+                                            searchTerm={searchTerm}
                                         />
                                     )}
                                 </CardBody>

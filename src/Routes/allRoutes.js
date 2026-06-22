@@ -257,6 +257,14 @@ import UserRoleList from "../pages/Masters/UserRole/UserRoleList";
 import AddEditUserRole from "../pages/Masters/UserRole/AddEditUserRole";
 import ManageUserPermission from "../pages/Masters/UserRole/ManageUserPermission";
 
+// All Master
+import AllMasterList from "../pages/Masters/AllMaster/AllMasterList";
+
+// Parcel Item Master
+import ParcelItemMasterList from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterList";
+import ParcelItemMasterAdd from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterAdd";
+import ParcelItemMasterEdit from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterEdit";
+
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
   { path: "/user-add", component: <AddEditUser /> },
@@ -266,6 +274,12 @@ const authProtectedRoutes = [
   { path: "/add-user-role", component: <AddEditUserRole /> },
   { path: "/edit-user-role/:id", component: <AddEditUserRole /> },
   { path: "/manage-user-permission/:id", component: <ManageUserPermission /> },
+
+  { path: "/all-master-list", component: <AllMasterList /> },
+
+  { path: "/parcel/list-ParcelItemMaster", component: <ParcelItemMasterList /> },
+  { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },
+  { path: "/parcel/Edit-ParcelItemMaster", component: <ParcelItemMasterEdit /> },
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
   { path: "/dashboard-crm", component: <DashboardCrm /> },

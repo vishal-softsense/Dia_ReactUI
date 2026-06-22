@@ -21,6 +21,12 @@ export const UPDATE_USER_MASTER = "/api/Masters/UserMaster/edit"; // append /{id
 export const DELETE_USER_MASTER = "/api/Masters/UserMaster/delete"; // append /{id}
 export const GET_USER_MASTER_DROPDOWN = "/api/Masters/UserMaster/dropdown";
 
+// All Master
+export const GET_ALL_MASTER_LIST = "/api/AllMaster/all-master-list";
+
+// Sidebar Menu
+export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";
+
 // UserRole Master
 export const GET_USER_ROLE_LIST = "/api/UserRole/list-user-role";
 export const GET_USER_ROLE_DETAIL = "/api/UserRole/edit-user-role"; // append /{id}
@@ -250,3 +256,12 @@ export const GET_APPLICATION_LIST = "/application-list";
 
 //JOB APPLICATION
 export const GET_API_KEY = "/api-key";
+
+// Parcel Item Master
+export const GET_PARCEL_ITEM_MASTER_LIST = "/api/ParcelItemMaster/list";
+export const GET_PARCEL_ITEM_MASTER_DROPDOWNS = "/api/ParcelItemMaster/dropdowns";
+export const GET_PARCEL_ITEM_MASTER_DETAIL = "/api/ParcelItemMaster/detail"; // append /{id}
+export const CHECK_LOT_NO_EXISTS = "/api/ParcelItemMaster/check-lot";
+export const ADD_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/add";
+export const UPDATE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/edit"; // append /{id}
+export const DELETE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/delete"; // append /{id}

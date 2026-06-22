@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input } from 'reactstrap';
 
-const RolePermissionGrid = ({ permissions, onChange }) => {
+const RolePermissionGrid = ({ permissions, onChange, searchTerm = "" }) => {
     const [gridData, setGridData] = useState([]);
 
     useEffect(() => {
@@ -10,8 +10,11 @@ const RolePermissionGrid = ({ permissions, onChange }) => {
         }
     }, [permissions]);
 
-    const handleCellChange = (index, field, checked) => {
+    const handleCellChange = (formID, field, checked) => {
         const newData = [...gridData];
+        const index = newData.findIndex(r => r.formID === formID);
+        if (index === -1) return;
+
         newData[index][field] = checked;
 
         // If any cell in the row becomes unchecked, 'all' should be false
@@ -34,8 +37,11 @@ const RolePermissionGrid = ({ permissions, onChange }) => {
         if (onChange) onChange(newData);
     };
 
-    const handleRowAllChange = (index, checked) => {
+    const handleRowAllChange = (formID, checked) => {
         const newData = [...gridData];
+        const index = newData.findIndex(r => r.formID === formID);
+        if (index === -1) return;
+
         newData[index] = {
             ...newData[index],
             all: checked,
@@ -144,49 +150,49 @@ const RolePermissionGrid = ({ permissions, onChange }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {gridData.map((row, index) => (
-                        <tr key={row.formID || index}>
+                    {gridData.filter(row => (row.formName || "").toLowerCase().includes(searchTerm.toLowerCase())).map((row) => (
+                        <tr key={row.formID}>
                             <td>{row.formName}</td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.all || false}
-                                    onChange={(e) => handleRowAllChange(index, e.target.checked)}
+                                    onChange={(e) => handleRowAllChange(row.formID, e.target.checked)}
                                 />
                             </td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.select || false}
-                                    onChange={(e) => handleCellChange(index, 'select', e.target.checked)}
+                                    onChange={(e) => handleCellChange(row.formID, 'select', e.target.checked)}
                                 />
                             </td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.write || false}
-                                    onChange={(e) => handleCellChange(index, 'write', e.target.checked)}
+                                    onChange={(e) => handleCellChange(row.formID, 'write', e.target.checked)}
                                 />
                             </td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.edit || false}
-                                    onChange={(e) => handleCellChange(index, 'edit', e.target.checked)}
+                                    onChange={(e) => handleCellChange(row.formID, 'edit', e.target.checked)}
                                 />
                             </td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.delete || false}
-                                    onChange={(e) => handleCellChange(index, 'delete', e.target.checked)}
+                                    onChange={(e) => handleCellChange(row.formID, 'delete', e.target.checked)}
                                 />
                             </td>
                             <td className="text-center">
                                 <Input
                                     type="checkbox"
                                     checked={row.navigate || false}
-                                    onChange={(e) => handleCellChange(index, 'navigate', e.target.checked)}
+                                    onChange={(e) => handleCellChange(row.formID, 'navigate', e.target.checked)}
                                 />
                             </td>
                         </tr>
