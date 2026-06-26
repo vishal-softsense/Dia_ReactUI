@@ -54,6 +54,66 @@ export const getShapeMasterDetail = id => api.get(`${url.GET_SHAPE_MASTER_DETAIL
 export const saveShapeMaster = data => api.create(url.SAVE_SHAPE_MASTER, data);
 export const deleteShapeMaster = id => api.create(`${url.DELETE_SHAPE_MASTER}/${id}`);
 
+// Color Master
+export const getColorMasters = () => api.get(url.GET_COLOR_MASTER_LIST);
+export const getColorMasterDetail = id => api.get(`${url.GET_COLOR_MASTER_DETAIL}/${id}`);
+export const saveColorMaster = data => api.create(url.SAVE_COLOR_MASTER, data);
+export const deleteColorMaster = id => api.create(`${url.DELETE_COLOR_MASTER}/${id}`);
+
+// Size Master
+export const getSizeMasters = () => api.get(url.GET_SIZE_MASTER_LIST);
+export const getSizeMasterDetail = id => api.get(`${url.GET_SIZE_MASTER_DETAIL}/${id}`);
+export const saveSizeMaster = data => api.create(url.SAVE_SIZE_MASTER, data);
+export const deleteSizeMaster = id => api.create(`${url.DELETE_SIZE_MASTER}/${id}`);
+
+// Clarity Master
+export const getClarityMasters = () => api.get(url.GET_CLARITY_MASTER_LIST);
+export const getClarityMasterDetail = id => api.get(`${url.GET_CLARITY_MASTER_DETAIL}/${id}`);
+export const saveClarityMaster = data => api.create(url.SAVE_CLARITY_MASTER, data);
+export const deleteClarityMaster = id => api.create(`${url.DELETE_CLARITY_MASTER}/${id}`);
+
+// Sieve Master
+export const getSieveMasters = () => api.get(url.GET_SIEVE_MASTER_LIST);
+export const getSieveMasterDetail = id => api.get(`${url.GET_SIEVE_MASTER_DETAIL}/${id}`);
+export const saveSieveMaster = data => api.create(url.SAVE_SIEVE_MASTER, data);
+export const deleteSieveMaster = id => api.create(`${url.DELETE_SIEVE_MASTER}/${id}`);
+
+// Lab Master
+export const getLabMasters = () => api.get(url.GET_LAB_MASTER_LIST);
+export const getLabMasterDetail = id => api.get(`${url.GET_LAB_MASTER_DETAIL}/${id}`);
+export const saveLabMaster = data => api.create(url.SAVE_LAB_MASTER, data);
+export const deleteLabMaster = id => api.create(`${url.DELETE_LAB_MASTER}/${id}`);
+
+// Prop Master
+export const getPropMasters = () => api.get(url.GET_PROP_MASTER_LIST);
+export const getPropMasterDetail = id => api.get(`${url.GET_PROP_MASTER_DETAIL}/${id}`);
+export const savePropMaster = data => api.create(url.SAVE_PROP_MASTER, data);
+export const deletePropMaster = id => api.create(`${url.DELETE_PROP_MASTER}/${id}`);
+
+// Polish Master
+export const getPolishMasters = () => api.get(url.GET_POLISH_MASTER_LIST);
+export const getPolishMasterDetail = id => api.get(`${url.GET_POLISH_MASTER_DETAIL}/${id}`);
+export const savePolishMaster = data => api.create(url.SAVE_POLISH_MASTER, data);
+export const deletePolishMaster = id => api.create(`${url.DELETE_POLISH_MASTER}/${id}`);
+
+// Sym Master
+export const getSymMasters = () => api.get(url.GET_SYM_MASTER_LIST);
+export const getSymMasterDetail = id => api.get(`${url.GET_SYM_MASTER_DETAIL}/${id}`);
+export const saveSymMaster = data => api.create(url.SAVE_SYM_MASTER, data);
+export const deleteSymMaster = id => api.create(`${url.DELETE_SYM_MASTER}/${id}`);
+
+// FL Master
+export const getFLMasters = () => api.get(url.GET_FL_MASTER_LIST);
+export const getFLMasterDetail = id => api.get(`${url.GET_FL_MASTER_DETAIL}/${id}`);
+export const saveFLMaster = data => api.create(url.SAVE_FL_MASTER, data);
+export const deleteFLMaster = id => api.create(`${url.DELETE_FL_MASTER}/${id}`);
+
+// FLColor Master
+export const getFLColorMasters = () => api.get(url.GET_FLCOLOR_MASTER_LIST);
+export const getFLColorMasterDetail = id => api.get(`${url.GET_FLCOLOR_MASTER_DETAIL}/${id}`);
+export const saveFLColorMaster = data => api.create(url.SAVE_FLCOLOR_MASTER, data);
+export const deleteFLColorMaster = id => api.create(`${url.DELETE_FLCOLOR_MASTER}/${id}`);
+
 
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);

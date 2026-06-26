@@ -30,6 +30,66 @@ export const GET_SHAPE_MASTER_DETAIL = "/api/AllMaster/get-shape"; // append /{i
 export const SAVE_SHAPE_MASTER = "/api/AllMaster/save-shape";
 export const DELETE_SHAPE_MASTER = "/api/AllMaster/delete-shape"; // append /{id}
 
+// Color Master
+export const GET_COLOR_MASTER_LIST = "/api/AllMaster/list-color";
+export const GET_COLOR_MASTER_DETAIL = "/api/AllMaster/get-color"; // append /{id}
+export const SAVE_COLOR_MASTER = "/api/AllMaster/save-color";
+export const DELETE_COLOR_MASTER = "/api/AllMaster/delete-color"; // append /{id}
+
+// Size Master
+export const GET_SIZE_MASTER_LIST = "/api/AllMaster/list-Size";
+export const GET_SIZE_MASTER_DETAIL = "/api/AllMaster/get-Size"; // append /{id}
+export const SAVE_SIZE_MASTER = "/api/AllMaster/save-Size";
+export const DELETE_SIZE_MASTER = "/api/AllMaster/delete-Size"; // append /{id}
+
+// Clarity Master
+export const GET_CLARITY_MASTER_LIST = "/api/AllMaster/list-clarity";
+export const GET_CLARITY_MASTER_DETAIL = "/api/AllMaster/get-clarity"; // append /{id}
+export const SAVE_CLARITY_MASTER = "/api/AllMaster/save-clarity";
+export const DELETE_CLARITY_MASTER = "/api/AllMaster/delete-clarity"; // append /{id}
+
+// Sieve Master
+export const GET_SIEVE_MASTER_LIST = "/api/AllMaster/list-sieve";
+export const GET_SIEVE_MASTER_DETAIL = "/api/AllMaster/get-sieve"; // append /{id}
+export const SAVE_SIEVE_MASTER = "/api/AllMaster/save-sieve";
+export const DELETE_SIEVE_MASTER = "/api/AllMaster/delete-sieve"; // append /{id}
+
+// Lab Master
+export const GET_LAB_MASTER_LIST = "/api/AllMaster/list-lab";
+export const GET_LAB_MASTER_DETAIL = "/api/AllMaster/get-lab"; // append /{id}
+export const SAVE_LAB_MASTER = "/api/AllMaster/save-lab";
+export const DELETE_LAB_MASTER = "/api/AllMaster/delete-lab"; // append /{id}
+
+// Prop Master
+export const GET_PROP_MASTER_LIST = "/api/AllMaster/list-prop";
+export const GET_PROP_MASTER_DETAIL = "/api/AllMaster/get-prop"; // append /{id}
+export const SAVE_PROP_MASTER = "/api/AllMaster/save-prop";
+export const DELETE_PROP_MASTER = "/api/AllMaster/delete-prop"; // append /{id}
+
+// Polish Master
+export const GET_POLISH_MASTER_LIST = "/api/AllMaster/list-polish";
+export const GET_POLISH_MASTER_DETAIL = "/api/AllMaster/get-polish"; // append /{id}
+export const SAVE_POLISH_MASTER = "/api/AllMaster/save-polish";
+export const DELETE_POLISH_MASTER = "/api/AllMaster/delete-polish"; // append /{id}
+
+// Sym Master
+export const GET_SYM_MASTER_LIST = "/api/AllMaster/list-sym";
+export const GET_SYM_MASTER_DETAIL = "/api/AllMaster/get-sym"; // append /{id}
+export const SAVE_SYM_MASTER = "/api/AllMaster/save-sym";
+export const DELETE_SYM_MASTER = "/api/AllMaster/delete-sym"; // append /{id}
+
+// FL Master
+export const GET_FL_MASTER_LIST = "/api/AllMaster/list-fl";
+export const GET_FL_MASTER_DETAIL = "/api/AllMaster/get-fl"; // append /{id}
+export const SAVE_FL_MASTER = "/api/AllMaster/save-fl";
+export const DELETE_FL_MASTER = "/api/AllMaster/delete-fl"; // append /{id}
+
+// FLColor Master
+export const GET_FLCOLOR_MASTER_LIST = "/api/AllMaster/list-flcolor";
+export const GET_FLCOLOR_MASTER_DETAIL = "/api/AllMaster/get-flcolor"; // append /{id}
+export const SAVE_FLCOLOR_MASTER = "/api/AllMaster/save-flcolor";
+export const DELETE_FLCOLOR_MASTER = "/api/AllMaster/delete-flcolor"; // append /{id}
+
 
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";

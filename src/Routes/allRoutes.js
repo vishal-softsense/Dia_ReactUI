@@ -263,6 +263,36 @@ import AllMasterList from "../pages/Masters/ParameterMaster/AllMasterList";
 // Shape Master
 import ShapeMasterList from "../pages/Masters/ParameterMaster/4cMaster/ShapeMasterList";
 
+// Color Master
+import ColorMasterList from "../pages/Masters/ParameterMaster/4cMaster/ColorMasterList";
+
+// Size Master
+import SizeMasterList from "../pages/Masters/ParameterMaster/4cMaster/SizeMasterList";
+
+// Clarity Master
+import ClarityMaster from "../pages/Masters/ParameterMaster/4cMaster/ClarityMasterList";
+
+// Sieve Master
+import SieveMasterList from "../pages/Masters/ParameterMaster/4cMaster/SieveMasterList";
+
+// Lab Master
+import LabMasterList from "../pages/Masters/ParameterMaster/4cMaster/LabMasterList";
+
+// Prop Master
+import PropMasterList from "../pages/Masters/ParameterMaster/4cMaster/PropMasterList";
+
+// Polish Master
+import PolishMasterList from "../pages/Masters/ParameterMaster/4cMaster/PolishMasterList";
+
+// Sym Master
+import SymMasterList from "../pages/Masters/ParameterMaster/4cMaster/SymMasterList";
+
+// Fl Master
+import FlMasterList from "../pages/Masters/ParameterMaster/4cMaster/FlMasterList";
+
+// FlColor Master
+import FlColorMasterList from "../pages/Masters/ParameterMaster/4cMaster/FlColorMasterList";
+
 // Settings Master
 import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
 import PrintFormatList from "../pages/Masters/SettingMaster/PrintFormatList";
@@ -285,6 +315,16 @@ const authProtectedRoutes = [
 
   { path: "/all-master-list", component: <AllMasterList /> },
   { path: "/masters/shape-master", component: <ShapeMasterList /> },
+  { path: "/masters/color-master", component: <ColorMasterList /> },
+  { path: "/masters/size-master", component: <SizeMasterList /> },
+  { path: "/masters/clarity-master", component: <ClarityMaster /> },
+  { path: "/masters/sieve-master", component: <SieveMasterList /> },
+  { path: "/masters/lab-master", component: <LabMasterList /> },
+  { path: "/masters/prop-master", component: <PropMasterList /> },
+  { path: "/masters/polish-master", component: <PolishMasterList /> },
+  { path: "/masters/sym-master", component: <SymMasterList /> },
+  { path: "/masters/fl-master", component: <FlMasterList /> },
+  { path: "/masters/flcolor-master", component: <FlColorMasterList /> },
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
