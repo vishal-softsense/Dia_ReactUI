@@ -29,6 +29,15 @@ fakeBackend();
 // // init firebase backend
 // initFirebaseBackend(firebaseConfig);
 
+// Sync auth user session between sessionStorage and localStorage
+const sessionAuth = sessionStorage.getItem("authUser");
+const localAuth = localStorage.getItem("authUser");
+if (sessionAuth && !localAuth) {
+  localStorage.setItem("authUser", sessionAuth);
+} else if (localAuth && !sessionAuth) {
+  sessionStorage.setItem("authUser", localAuth);
+}
+
 function App() {
   return (
     <React.Fragment>

@@ -33,8 +33,8 @@ export const loginUser = (user, history, rememberMe) => async (dispatch) => {
         }));
       } else {
         sessionStorage.setItem("authUser", JSON.stringify(data));
+        localStorage.setItem("authUser", JSON.stringify(data));
         localStorage.removeItem("rememberedUser");
-        localStorage.removeItem("authUser");
       }
       dispatch(loginSuccess(data));
       history('/welcome')
@@ -76,6 +76,7 @@ export const socialLogin = (type, history) => async (dispatch) => {
       const socialdata = await response;
     if (socialdata) {
       sessionStorage.setItem("authUser", JSON.stringify(response));
+      localStorage.setItem("authUser", JSON.stringify(response));
       dispatch(loginSuccess(response));
       history('/welcome')
     }
