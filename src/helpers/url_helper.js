@@ -24,6 +24,13 @@ export const GET_USER_MASTER_DROPDOWN = "/api/Masters/UserMaster/dropdown";
 // All Master
 export const GET_ALL_MASTER_LIST = "/api/AllMaster/all-master-list";
 
+// Shape Master
+export const GET_SHAPE_MASTER_LIST = "/api/AllMaster/list-shape";
+export const GET_SHAPE_MASTER_DETAIL = "/api/AllMaster/get-shape"; // append /{id}
+export const SAVE_SHAPE_MASTER = "/api/AllMaster/save-shape";
+export const DELETE_SHAPE_MASTER = "/api/AllMaster/delete-shape"; // append /{id}
+
+
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";
 
@@ -265,3 +272,21 @@ export const CHECK_LOT_NO_EXISTS = "/api/ParcelItemMaster/check-lot";
 export const ADD_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/add";
 export const UPDATE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/edit"; // append /{id}
 export const DELETE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/delete"; // append /{id}
+
+// Settings
+export const GET_SETTING_DATA = "/master/get-setting-data";
+export const FILTER_SETTING_DATA = "/master/filter-data";
+export const SUBMIT_SETTING_DATA = "/master/submit-setting-data";
+export const GET_SETTING_DETAIL = "/master/get-setting";
+export const DELETE_SETTING = "/master/delete-setting";
+
+// Print Format Settings
+export const GET_PRINT_FORMAT_DATA = "/master/get-print-format-data";
+export const UPDATE_PRINT_FORMAT = "/print/update-print";
+export const DELETE_PRINT_FORMAT = "/print/delete-print-setting";
+export const GET_INVOICE_FORMAT_SETTING = "/print/get-Invoice-format-setting";
+export const PRINT_PREVIEW = "/print/printPrev";
+
+// Column Abbreviations Settings
+export const GET_COLUMN_ABBREVIATIONS = "/master/get-ColumnAbbreviations-data";
+export const UPDATE_COLUMN_ABBREVIATIONS = "/master/update-ColumnAbbr";

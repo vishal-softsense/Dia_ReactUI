@@ -48,6 +48,13 @@ export const getUserRoleDropdown = () => api.get(url.GET_USER_ROLE_DROPDOWN);
 // All Master
 export const getAllMasterList = () => api.get(url.GET_ALL_MASTER_LIST);
 
+// Shape Master
+export const getShapeMasters = () => api.get(url.GET_SHAPE_MASTER_LIST);
+export const getShapeMasterDetail = id => api.get(`${url.GET_SHAPE_MASTER_DETAIL}/${id}`);
+export const saveShapeMaster = data => api.create(url.SAVE_SHAPE_MASTER, data);
+export const deleteShapeMaster = id => api.create(`${url.DELETE_SHAPE_MASTER}/${id}`);
+
+
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);
 
@@ -405,3 +412,21 @@ export const checkLotNoExists = lotNo => api.get(`${url.CHECK_LOT_NO_EXISTS}?lot
 export const addParcelItemMaster = data => api.create(url.ADD_PARCEL_ITEM_MASTER, data);
 export const updateParcelItemMaster = (id, data) => api.put(`${url.UPDATE_PARCEL_ITEM_MASTER}/${id}`, data);
 export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM_MASTER}/${id}`);
+
+// Settings
+export const getSettingData = () => api.get(url.GET_SETTING_DATA);
+export const filterSettingData = (groupId) => api.get(`${url.FILTER_SETTING_DATA}?groupId=${encodeURIComponent(groupId)}`);
+export const submitSettingData = (data) => api.create(url.SUBMIT_SETTING_DATA, data);
+export const getSettingDetail = (id, name) => api.get(`${url.GET_SETTING_DETAIL}?id=${id}&name=${encodeURIComponent(name)}`);
+export const deleteSetting = (id) => api.create(`${url.DELETE_SETTING}?id=${id}`);
+
+// Print Format Settings
+export const getPrintFormatData = () => api.get(url.GET_PRINT_FORMAT_DATA);
+export const updatePrintFormat = (data) => api.create(url.UPDATE_PRINT_FORMAT, data);
+export const deletePrintFormat = (id) => api.create(`${url.DELETE_PRINT_FORMAT}?ID=${id}`);
+export const getInvoiceFormatSetting = (id, name) => api.get(`${url.GET_INVOICE_FORMAT_SETTING}?Id=${id}&Name=${encodeURIComponent(name)}`);
+export const printPreview = (data) => api.create(url.PRINT_PREVIEW, data);
+
+// Column Abbreviations Settings
+export const getColumnAbbreviations = () => api.get(url.GET_COLUMN_ABBREVIATIONS);
+export const updateColumnAbbreviations = (data) => api.create(url.UPDATE_COLUMN_ABBREVIATIONS, data);

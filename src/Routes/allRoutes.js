@@ -258,7 +258,15 @@ import AddEditUserRole from "../pages/Masters/UserRole/AddEditUserRole";
 import ManageUserPermission from "../pages/Masters/UserRole/ManageUserPermission";
 
 // All Master
-import AllMasterList from "../pages/Masters/AllMaster/AllMasterList";
+import AllMasterList from "../pages/Masters/ParameterMaster/AllMasterList";
+
+// Shape Master
+import ShapeMasterList from "../pages/Masters/ParameterMaster/4cMaster/ShapeMasterList";
+
+// Settings Master
+import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
+import PrintFormatList from "../pages/Masters/SettingMaster/PrintFormatList";
+import ColumnAbbreviationsList from "../pages/Masters/SettingMaster/ColumnAbbreviationsList";
 
 // Parcel Item Master
 import ParcelItemMasterList from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterList";
@@ -276,10 +284,16 @@ const authProtectedRoutes = [
   { path: "/manage-user-permission/:id", component: <ManageUserPermission /> },
 
   { path: "/all-master-list", component: <AllMasterList /> },
+  { path: "/masters/shape-master", component: <ShapeMasterList /> },
+  { path: "/company-settings", component: <SettingMasterList /> },
+  { path: "/Master/SettingMaster", component: <SettingMasterList /> },
+  { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
+  { path: "/ColumnAbbreviations/ColumnAbbreviations", component: <ColumnAbbreviationsList /> },
 
   { path: "/parcel/list-ParcelItemMaster", component: <ParcelItemMasterList /> },
   { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },
   { path: "/parcel/Edit-ParcelItemMaster", component: <ParcelItemMasterEdit /> },
+
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
   { path: "/dashboard-crm", component: <DashboardCrm /> },

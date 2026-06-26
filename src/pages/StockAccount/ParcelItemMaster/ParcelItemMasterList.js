@@ -4,7 +4,10 @@ import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHe
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { getParcelItemMasters, deleteParcelItemMaster } from "../../../helpers/fakebackend_helper";
+import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast } from 'react-toastify';
+
+
 
 const ParcelItemMasterList = () => {
     const navigate = useNavigate();
@@ -60,7 +63,7 @@ const ParcelItemMasterList = () => {
         }
     };
 
-    const exportToCsv = () => {
+    const handleExportExcel = async () => {
         if (parcelItems.length === 0) {
             toast.warning("No data available to export");
             return;
@@ -79,16 +82,10 @@ const ParcelItemMasterList = () => {
             item.purchaseAmount || item.PurchaseAmount || 0
         ]);
 
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "ParcelItemMasterList.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const result = await exportToExcel(headers, rows, "ParcelItems", "ParcelItemMasterList");
+        if (!result.success) {
+            toast.error("Failed to generate Excel file.");
+        }
     };
 
     const columns = useMemo(
@@ -224,8 +221,8 @@ const ParcelItemMasterList = () => {
                                         <Link to="/parcel/add-ParcelItemMaster" className="btn btn-primary add-btn">
                                             <i className="ri-add-line align-bottom me-1"></i> Add Parcel Item
                                         </Link>
-                                        <Button className="btn-soft-success" onClick={exportToCsv} title="CSV Export">
-                                            <i className="ri-file-excel-2-line align-bottom"></i>
+                                        <Button className="btn-soft-success" onClick={handleExportExcel} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                            <i className="ri-file-excel-2-line" style={{ fontSize: "20px" }}></i>
                                         </Button>
                                     </div>
                                 </CardHeader>

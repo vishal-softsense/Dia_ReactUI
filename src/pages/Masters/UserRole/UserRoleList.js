@@ -89,8 +89,8 @@ const UserRoleList = () => {
                 cell: (cellProps) => {
                     return (
                         <div className="d-flex gap-2">
-                            <Link 
-                                to={`/edit-user-role/${cellProps.row.original.userTypeID}`} 
+                            <Link
+                                to={`/edit-user-role/${cellProps.row.original.userTypeID}`}
                                 className="btn"
                                 style={{
                                     backgroundColor: "#e5f1ff",
@@ -107,8 +107,8 @@ const UserRoleList = () => {
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </Link>
-                            <Link 
-                                to={`/manage-user-permission/${cellProps.row.original.userTypeID}`} 
+                            <Link
+                                to={`/manage-user-permission/${cellProps.row.original.userTypeID}`}
                                 className="btn"
                                 style={{
                                     backgroundColor: "#daf4f0",
@@ -126,7 +126,7 @@ const UserRoleList = () => {
                             >
                                 <i className="las la-user-lock" style={{ fontSize: "16px" }}></i>
                             </Link>
-                            <button 
+                            <button
                                 className="btn"
                                 style={{
                                     backgroundColor: "#ffeded",

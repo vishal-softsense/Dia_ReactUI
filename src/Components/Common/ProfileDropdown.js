@@ -61,7 +61,7 @@ const ProfileDropdown = () => {
 
 
                     <DropdownItem className='p-0'>
-                        <Link to="#" className="dropdown-item">
+                        <Link to="/company-settings" className="dropdown-item">
                             <i className="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Settings</span>
                         </Link>
