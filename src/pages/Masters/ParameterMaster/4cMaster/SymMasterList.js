@@ -202,8 +202,9 @@ const SymMasterList = () => {
                 const symGroupPriority = parseFloat(row[4] || 0);
                 const pricingSymID = String(row[5] || "").trim();
 
+                const existing = syms.find(s => String(s.symID || s.SymID).toLowerCase() === symID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     symID,
                     symName,
                     symPriority,

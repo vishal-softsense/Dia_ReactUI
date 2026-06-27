@@ -202,8 +202,9 @@ const FlColorMasterList = () => {
                 const flColorGroupPriority = parseFloat(row[4] || 0);
                 const pricingFLColorID = String(row[5] || "").trim();
 
+                const existing = flColors.find(f => String(f.flColorID || f.FLColorID).toLowerCase() === flColorID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     flColorID,
                     flColorName,
                     flColorPriority,

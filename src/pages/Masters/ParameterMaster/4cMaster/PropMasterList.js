@@ -202,8 +202,9 @@ const PropMasterList = () => {
                 const propGroupPriority = parseFloat(row[4] || 0);
                 const pricingPropID = String(row[5] || "").trim();
 
+                const existing = props.find(p => String(p.propID || p.PropID).toLowerCase() === propID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     propID,
                     propName,
                     propPriority,

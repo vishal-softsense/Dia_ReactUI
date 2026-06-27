@@ -90,6 +90,30 @@ export const GET_FLCOLOR_MASTER_DETAIL = "/api/AllMaster/get-flcolor"; // append
 export const SAVE_FLCOLOR_MASTER = "/api/AllMaster/save-flcolor";
 export const DELETE_FLCOLOR_MASTER = "/api/AllMaster/delete-flcolor"; // append /{id}
 
+// Area Master
+export const GET_AREA_MASTER_LIST = "/api/AllMaster/list-area";
+export const GET_AREA_MASTER_DETAIL = "/api/AllMaster/get-area"; // append /{id}
+export const SAVE_AREA_MASTER = "/api/AllMaster/save-area";
+export const DELETE_AREA_MASTER = "/api/AllMaster/delete-area"; // append /{id}
+
+// City Master
+export const GET_CITY_MASTER_LIST = "/api/AllMaster/list-city";
+export const GET_CITY_MASTER_DETAIL = "/api/AllMaster/get-city"; // append /{id}
+export const SAVE_CITY_MASTER = "/api/AllMaster/save-city";
+export const DELETE_CITY_MASTER = "/api/AllMaster/delete-city"; // append /{id}
+
+// State Master
+export const GET_STATE_MASTER_LIST = "/api/AllMaster/list-state";
+export const GET_STATE_MASTER_DETAIL = "/api/AllMaster/get-state"; // append /{id}
+export const SAVE_STATE_MASTER = "/api/AllMaster/save-state";
+export const DELETE_STATE_MASTER = "/api/AllMaster/delete-state"; // append /{id}
+
+// Country Master
+export const GET_COUNTRY_MASTER_LIST = "/api/AllMaster/list-country";
+export const GET_COUNTRY_MASTER_DETAIL = "/api/AllMaster/get-country"; // append /{id}
+export const SAVE_COUNTRY_MASTER = "/api/AllMaster/save-country";
+export const DELETE_COUNTRY_MASTER = "/api/AllMaster/delete-country"; // append /{id}
+
 
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";

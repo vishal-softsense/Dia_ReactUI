@@ -202,8 +202,9 @@ const FlMasterList = () => {
                 const flGroupPriority = parseFloat(row[4] || 0);
                 const pricingFLID = String(row[5] || "").trim();
 
+                const existing = fls.find(f => String(f.flid || f.FLID).toLowerCase() === flid.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     flid,
                     flName,
                     flPriority,

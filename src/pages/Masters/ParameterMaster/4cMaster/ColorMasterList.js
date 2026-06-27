@@ -202,8 +202,9 @@ const ColorMasterList = () => {
                 const colorGroupPriority = parseFloat(row[4] || 0);
                 const pricingColorID = String(row[5] || "").trim();
 
+                const existing = colors.find(c => String(c.colorID || c.ColorID).toLowerCase() === colorID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     colorID,
                     colorName,
                     colorPriority,

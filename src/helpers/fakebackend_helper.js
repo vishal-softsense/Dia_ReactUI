@@ -114,6 +114,30 @@ export const getFLColorMasterDetail = id => api.get(`${url.GET_FLCOLOR_MASTER_DE
 export const saveFLColorMaster = data => api.create(url.SAVE_FLCOLOR_MASTER, data);
 export const deleteFLColorMaster = id => api.create(`${url.DELETE_FLCOLOR_MASTER}/${id}`);
 
+// Area Master
+export const getAreaMasters = () => api.get(url.GET_AREA_MASTER_LIST);
+export const getAreaMasterDetail = id => api.get(`${url.GET_AREA_MASTER_DETAIL}/${id}`);
+export const saveAreaMaster = data => api.create(url.SAVE_AREA_MASTER, data);
+export const deleteAreaMaster = id => api.create(`${url.DELETE_AREA_MASTER}/${id}`);
+
+// City Master
+export const getCityMasters = () => api.get(url.GET_CITY_MASTER_LIST);
+export const getCityMasterDetail = id => api.get(`${url.GET_CITY_MASTER_DETAIL}/${id}`);
+export const saveCityMaster = data => api.create(url.SAVE_CITY_MASTER, data);
+export const deleteCityMaster = id => api.create(`${url.DELETE_CITY_MASTER}/${id}`);
+
+// State Master
+export const getStateMasters = () => api.get(url.GET_STATE_MASTER_LIST);
+export const getStateMasterDetail = id => api.get(`${url.GET_STATE_MASTER_DETAIL}/${id}`);
+export const saveStateMaster = data => api.create(url.SAVE_STATE_MASTER, data);
+export const deleteStateMaster = id => api.create(`${url.DELETE_STATE_MASTER}/${id}`);
+
+// Country Master
+export const getCountryMasters = () => api.get(url.GET_COUNTRY_MASTER_LIST);
+export const getCountryMasterDetail = id => api.get(`${url.GET_COUNTRY_MASTER_DETAIL}/${id}`);
+export const saveCountryMaster = data => api.create(url.SAVE_COUNTRY_MASTER, data);
+export const deleteCountryMaster = id => api.create(`${url.DELETE_COUNTRY_MASTER}/${id}`);
+
 
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);

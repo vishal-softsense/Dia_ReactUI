@@ -202,8 +202,9 @@ const ClarityMaster = () => {
                 const clarityGroupPriority = parseFloat(row[4] || 0);
                 const pricingClarityID = String(row[5] || "").trim();
 
+                const existing = clarities.find(c => String(c.clarityID || c.ClarityID).toLowerCase() === clarityID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     clarityID,
                     clarityName,
                     clarityPriority,

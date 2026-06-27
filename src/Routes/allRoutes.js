@@ -293,6 +293,15 @@ import FlMasterList from "../pages/Masters/ParameterMaster/4cMaster/FlMasterList
 // FlColor Master
 import FlColorMasterList from "../pages/Masters/ParameterMaster/4cMaster/FlColorMasterList";
 
+// Location Masters
+import AreaMasterList from "../pages/Masters/ParameterMaster/LocationMaster/AreaMasterList";
+import CityMasterList from "../pages/Masters/ParameterMaster/LocationMaster/CityMasterList";
+import StateMasterList from "../pages/Masters/ParameterMaster/LocationMaster/StateMasterList";
+import CountryMasterList from "../pages/Masters/ParameterMaster/LocationMaster/CountryMasterList";
+
+// Welcome Page
+import Welcome from "../pages/Welcome/Welcome";
+
 // Settings Master
 import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
 import PrintFormatList from "../pages/Masters/SettingMaster/PrintFormatList";
@@ -325,6 +334,11 @@ const authProtectedRoutes = [
   { path: "/masters/sym-master", component: <SymMasterList /> },
   { path: "/masters/fl-master", component: <FlMasterList /> },
   { path: "/masters/flcolor-master", component: <FlColorMasterList /> },
+  { path: "/masters/area-master", component: <AreaMasterList /> },
+  { path: "/masters/city-master", component: <CityMasterList /> },
+  { path: "/masters/state-master", component: <StateMasterList /> },
+  { path: "/masters/country-master", component: <CountryMasterList /> },
+  { path: "/welcome", component: <Welcome /> },
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
