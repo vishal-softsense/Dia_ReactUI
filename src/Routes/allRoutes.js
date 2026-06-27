@@ -305,6 +305,17 @@ import TypeMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/TypeM
 import SubTypeMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/SubTypeMasterList";
 import CurrencyMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/CurrencyMasterList";
 
+// Origin Master
+import MinesMasterList from "../pages/Masters/ParameterMaster/OriginMaster/MinesMasterList";
+import RoughMasterList from "../pages/Masters/ParameterMaster/OriginMaster/RoughMasterList";
+
+// Jewellery Master
+import JewCategoryMasterList from "../pages/Masters/ParameterMaster/JewelleryMaster/JewCategoryMasterList";
+import JewSubCategoryMasterList from "../pages/Masters/ParameterMaster/JewelleryMaster/JewSubCategoryMasterList";
+import JewMetalMasterList from "../pages/Masters/ParameterMaster/JewelleryMaster/JewMetalMasterList";
+import JewMetalPurityMasterList from "../pages/Masters/ParameterMaster/JewelleryMaster/JewMetalPurityMasterList";
+import JewColorMasterList from "../pages/Masters/ParameterMaster/JewelleryMaster/JewColorMasterList";
+
 // Welcome Page
 import Welcome from "../pages/Welcome/Welcome";
 
@@ -348,6 +359,15 @@ const authProtectedRoutes = [
   { path: "/masters/type-master", component: <TypeMasterList /> },
   { path: "/masters/subtype-master", component: <SubTypeMasterList /> },
   { path: "/masters/currency-master", component: <CurrencyMasterList /> },
+  { path: "/masters/mines-master", component: <MinesMasterList /> },
+  { path: "/masters/rough-master", component: <RoughMasterList /> },
+
+  // Jewellery Master
+  { path: "/masters/jewcategory-master", component: <JewCategoryMasterList /> },
+  { path: "/masters/jewsubcategory-master", component: <JewSubCategoryMasterList /> },
+  { path: "/masters/jewmetal-master", component: <JewMetalMasterList /> },
+  { path: "/masters/jewmetalpurity-master", component: <JewMetalPurityMasterList /> },
+  { path: "/masters/jewcolor-master", component: <JewColorMasterList /> },
   { path: "/welcome", component: <Welcome /> },
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },

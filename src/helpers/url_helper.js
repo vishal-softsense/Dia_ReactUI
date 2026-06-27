@@ -136,6 +136,48 @@ export const DELETE_SUBTYPE_MASTER = "/api/AllMaster/delete-subtype"; // append 
 export const GET_CURRENCY_MASTER_LIST = "/api/AllMaster/list-currency";
 export const GET_CURRENCY_MASTER_DETAIL = "/api/AllMaster/get-currency"; // append /{id}
 
+// Mines Master
+export const GET_MINES_MASTER_LIST = "/api/AllMaster/list-mines";
+export const GET_MINES_MASTER_DETAIL = "/api/AllMaster/get-mines"; // append /{id}
+export const SAVE_MINES_MASTER = "/api/AllMaster/submit-mines";
+export const DELETE_MINES_MASTER = "/api/AllMaster/delete-mines"; // append /{id}
+
+// Rough Master
+export const GET_ROUGH_MASTER_LIST = "/api/AllMaster/list-rough";
+export const GET_ROUGH_MASTER_DETAIL = "/api/AllMaster/get-rough"; // append /{id}
+export const SAVE_ROUGH_MASTER = "/api/AllMaster/submit-rough";
+export const DELETE_ROUGH_MASTER = "/api/AllMaster/delete-rough"; // append /{id}
+
+// Jewellery Category Master
+export const GET_JEW_CATEGORY_MASTER_LIST = "/api/AllMaster/list-jew-category";
+export const GET_JEW_CATEGORY_MASTER_DETAIL = "/api/AllMaster/get-jew-category"; // append /{id}
+export const SAVE_JEW_CATEGORY_MASTER = "/api/AllMaster/submit-jew-category";
+export const DELETE_JEW_CATEGORY_MASTER = "/api/AllMaster/delete-jew-category"; // append /{id}
+
+// Jewellery SubCategory Master
+export const GET_JEW_SUBCATEGORY_MASTER_LIST = "/api/AllMaster/list-jew-subcategory";
+export const GET_JEW_SUBCATEGORY_MASTER_DETAIL = "/api/AllMaster/get-jew-subcategory"; // append /{id}
+export const SAVE_JEW_SUBCATEGORY_MASTER = "/api/AllMaster/submit-jew-subcategory";
+export const DELETE_JEW_SUBCATEGORY_MASTER = "/api/AllMaster/delete-jew-subcategory"; // append /{id}
+
+// Jewellery Metal Master
+export const GET_JEW_METAL_MASTER_LIST = "/api/AllMaster/list-jew-metal";
+export const GET_JEW_METAL_MASTER_DETAIL = "/api/AllMaster/get-jew-metal"; // append /{id}
+export const SAVE_JEW_METAL_MASTER = "/api/AllMaster/submit-jew-metal";
+export const DELETE_JEW_METAL_MASTER = "/api/AllMaster/delete-jew-metal"; // append /{id}
+
+// Jewellery Metal Purity Master
+export const GET_JEW_METAL_PURITY_MASTER_LIST = "/api/AllMaster/list-jew-metal-purity";
+export const GET_JEW_METAL_PURITY_MASTER_DETAIL = "/api/AllMaster/get-jew-metal-purity"; // append /{id}
+export const SAVE_JEW_METAL_PURITY_MASTER = "/api/AllMaster/submit-jew-metal-purity";
+export const DELETE_JEW_METAL_PURITY_MASTER = "/api/AllMaster/delete-jew-metal-priority"; // append /{id}
+
+// Jewellery Color Master
+export const GET_JEW_COLOR_MASTER_LIST = "/api/AllMaster/list-jew-color";
+export const GET_JEW_COLOR_MASTER_DETAIL = "/api/AllMaster/get-jew-color"; // append /{id}
+export const SAVE_JEW_COLOR_MASTER = "/api/AllMaster/submit-jew-color";
+export const DELETE_JEW_COLOR_MASTER = "/api/AllMaster/delete-jew-color"; // append /{id}
+
 
 
 // Sidebar Menu
