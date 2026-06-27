@@ -202,8 +202,9 @@ const LabMasterList = () => {
                 const certGroupPriority = parseFloat(row[4] || 0);
                 const pricingCertID = String(row[5] || "").trim();
 
+                const existing = labs.find(l => String(l.certID || l.CertID).toLowerCase() === certID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     certID,
                     certName,
                     certPriority,

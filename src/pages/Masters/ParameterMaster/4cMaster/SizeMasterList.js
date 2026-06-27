@@ -207,8 +207,9 @@ const SizeMasterList = () => {
                 const sizeGroupName = String(row[5] || "").trim();
                 const sizeGroupPriority = parseFloat(row[6] || 0);
 
+                const existing = sizes.find(s => String(s.sizeID || s.SizeID).toLowerCase() === sizeID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     sizeID,
                     sizeName,
                     fCarat,

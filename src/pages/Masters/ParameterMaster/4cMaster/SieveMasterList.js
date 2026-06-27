@@ -181,8 +181,9 @@ const SieveMasterList = () => {
 
                 const sievePriority = parseFloat(row[2] || 0);
 
+                const existing = sieves.find(s => String(s.sieveID || s.SieveID).toLowerCase() === sieveID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     sieveID,
                     sieveName,
                     sievePriority

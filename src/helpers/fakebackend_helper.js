@@ -114,6 +114,96 @@ export const getFLColorMasterDetail = id => api.get(`${url.GET_FLCOLOR_MASTER_DE
 export const saveFLColorMaster = data => api.create(url.SAVE_FLCOLOR_MASTER, data);
 export const deleteFLColorMaster = id => api.create(`${url.DELETE_FLCOLOR_MASTER}/${id}`);
 
+// Area Master
+export const getAreaMasters = () => api.get(url.GET_AREA_MASTER_LIST);
+export const getAreaMasterDetail = id => api.get(`${url.GET_AREA_MASTER_DETAIL}/${id}`);
+export const saveAreaMaster = data => api.create(url.SAVE_AREA_MASTER, data);
+export const deleteAreaMaster = id => api.create(`${url.DELETE_AREA_MASTER}/${id}`);
+
+// City Master
+export const getCityMasters = () => api.get(url.GET_CITY_MASTER_LIST);
+export const getCityMasterDetail = id => api.get(`${url.GET_CITY_MASTER_DETAIL}/${id}`);
+export const saveCityMaster = data => api.create(url.SAVE_CITY_MASTER, data);
+export const deleteCityMaster = id => api.create(`${url.DELETE_CITY_MASTER}/${id}`);
+
+// State Master
+export const getStateMasters = () => api.get(url.GET_STATE_MASTER_LIST);
+export const getStateMasterDetail = id => api.get(`${url.GET_STATE_MASTER_DETAIL}/${id}`);
+export const saveStateMaster = data => api.create(url.SAVE_STATE_MASTER, data);
+export const deleteStateMaster = id => api.create(`${url.DELETE_STATE_MASTER}/${id}`);
+
+// Country Master
+export const getCountryMasters = () => api.get(url.GET_COUNTRY_MASTER_LIST);
+export const getCountryMasterDetail = id => api.get(`${url.GET_COUNTRY_MASTER_DETAIL}/${id}`);
+export const saveCountryMaster = data => api.create(url.SAVE_COUNTRY_MASTER, data);
+export const deleteCountryMaster = id => api.create(`${url.DELETE_COUNTRY_MASTER}/${id}`);
+
+// Term Master
+export const getTermMasters = () => api.get(url.GET_TERM_MASTER_LIST);
+export const getTermMasterDetail = id => api.get(`${url.GET_TERM_MASTER_DETAIL}/${id}`);
+export const saveTermMaster = data => api.create(url.SAVE_TERM_MASTER, data);
+export const deleteTermMaster = id => api.create(`${url.DELETE_TERM_MASTER}/${id}`);
+
+// Type Master
+export const getTypeMasters = () => api.get(url.GET_TYPE_MASTER_LIST);
+export const getTypeMasterDetail = id => api.get(`${url.GET_TYPE_MASTER_DETAIL}/${id}`);
+export const saveTypeMaster = data => api.create(url.SAVE_TYPE_MASTER, data);
+export const deleteTypeMaster = id => api.create(`${url.DELETE_TYPE_MASTER}/${id}`);
+
+// SubType Master
+export const getSubTypeMasters = () => api.get(url.GET_SUBTYPE_MASTER_LIST);
+export const getSubTypeMasterDetail = id => api.get(`${url.GET_SUBTYPE_MASTER_DETAIL}/${id}`);
+export const saveSubTypeMaster = data => api.create(url.SAVE_SUBTYPE_MASTER, data);
+export const deleteSubTypeMaster = id => api.create(`${url.DELETE_SUBTYPE_MASTER}/${id}`);
+
+// Currency Master
+export const getCurrencyMasters = () => api.get(url.GET_CURRENCY_MASTER_LIST);
+export const getCurrencyMasterDetail = id => api.get(`${url.GET_CURRENCY_MASTER_DETAIL}/${id}`);
+
+// Mines Master
+export const getMinesMasters = () => api.get(url.GET_MINES_MASTER_LIST);
+export const getMinesMasterDetail = id => api.get(`${url.GET_MINES_MASTER_DETAIL}/${id}`);
+export const saveMinesMaster = data => api.create(url.SAVE_MINES_MASTER, data);
+export const deleteMinesMaster = id => api.create(`${url.DELETE_MINES_MASTER}/${id}`);
+
+// Rough Master
+export const getRoughMasters = () => api.get(url.GET_ROUGH_MASTER_LIST);
+export const getRoughMasterDetail = id => api.get(`${url.GET_ROUGH_MASTER_DETAIL}/${id}`);
+export const saveRoughMaster = data => api.create(url.SAVE_ROUGH_MASTER, data);
+export const deleteRoughMaster = id => api.create(`${url.DELETE_ROUGH_MASTER}/${id}`);
+
+// Jewellery Category Master
+export const getJewCategoryMasters = () => api.get(url.GET_JEW_CATEGORY_MASTER_LIST);
+export const getJewCategoryMasterDetail = id => api.get(`${url.GET_JEW_CATEGORY_MASTER_DETAIL}/${id}`);
+export const saveJewCategoryMaster = data => api.create(url.SAVE_JEW_CATEGORY_MASTER, data);
+export const deleteJewCategoryMaster = id => api.create(`${url.DELETE_JEW_CATEGORY_MASTER}/${id}`);
+
+// Jewellery SubCategory Master
+export const getJewSubCategoryMasters = () => api.get(url.GET_JEW_SUBCATEGORY_MASTER_LIST);
+export const getJewSubCategoryMasterDetail = id => api.get(`${url.GET_JEW_SUBCATEGORY_MASTER_DETAIL}/${id}`);
+export const saveJewSubCategoryMaster = data => api.create(url.SAVE_JEW_SUBCATEGORY_MASTER, data);
+export const deleteJewSubCategoryMaster = id => api.create(`${url.DELETE_JEW_SUBCATEGORY_MASTER}/${id}`);
+
+// Jewellery Metal Master
+export const getJewMetalMasters = () => api.get(url.GET_JEW_METAL_MASTER_LIST);
+export const getJewMetalMasterDetail = id => api.get(`${url.GET_JEW_METAL_MASTER_DETAIL}/${id}`);
+export const saveJewMetalMaster = data => api.create(url.SAVE_JEW_METAL_MASTER, data);
+export const deleteJewMetalMaster = id => api.create(`${url.DELETE_JEW_METAL_MASTER}/${id}`);
+export const getJewMetalMastersPurity = metalType => api.get(`${url.GET_JEW_METAL_MASTER_LIST}?metalType=${metalType}`);
+
+// Jewellery Metal Purity Master
+export const getJewMetalPurityMasters = () => api.get(url.GET_JEW_METAL_PURITY_MASTER_LIST);
+export const getJewMetalPurityMasterDetail = id => api.get(`${url.GET_JEW_METAL_PURITY_MASTER_DETAIL}/${id}`);
+export const saveJewMetalPurityMaster = data => api.create(url.SAVE_JEW_METAL_PURITY_MASTER, data);
+export const deleteJewMetalPurityMaster = id => api.create(`${url.DELETE_JEW_METAL_PURITY_MASTER}/${id}`);
+
+// Jewellery Color Master
+export const getJewColorMasters = () => api.get(url.GET_JEW_COLOR_MASTER_LIST);
+export const getJewColorMasterDetail = id => api.get(`${url.GET_JEW_COLOR_MASTER_DETAIL}/${id}`);
+export const saveJewColorMaster = data => api.create(url.SAVE_JEW_COLOR_MASTER, data);
+export const deleteJewColorMaster = id => api.create(`${url.DELETE_JEW_COLOR_MASTER}/${id}`);
+
+
 // Brown Master
 export const getBrownMasters = () => api.get(url.GET_BROWN_MASTER_LIST);
 export const getBrownMasterDetail = id => api.get(`${url.GET_BROWN_MASTER_DETAIL}/${id}`);

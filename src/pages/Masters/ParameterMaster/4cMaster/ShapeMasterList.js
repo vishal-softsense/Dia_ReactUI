@@ -205,8 +205,9 @@ const ShapeMasterList = () => {
                 const shapeGroupPriority = parseFloat(row[4] || 0);
                 const pricingShapeID = String(row[5] || "").trim();
 
+                const existing = shapes.find(s => String(s.shapeID || s.ShapeID).toLowerCase() === shapeID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     shapeID,
                     shapeName,
                     shapePriority,

@@ -202,8 +202,9 @@ const PolishMasterList = () => {
                 const polishGroupPriority = parseFloat(row[4] || 0);
                 const pricingPolishID = String(row[5] || "").trim();
 
+                const existing = polishes.find(p => String(p.polishID || p.PolishID).toLowerCase() === polishID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     polishID,
                     polishName,
                     polishPriority,

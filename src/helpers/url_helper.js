@@ -90,6 +90,95 @@ export const GET_FLCOLOR_MASTER_DETAIL = "/api/AllMaster/get-flcolor"; // append
 export const SAVE_FLCOLOR_MASTER = "/api/AllMaster/save-flcolor";
 export const DELETE_FLCOLOR_MASTER = "/api/AllMaster/delete-flcolor"; // append /{id}
 
+// Area Master
+export const GET_AREA_MASTER_LIST = "/api/AllMaster/list-area";
+export const GET_AREA_MASTER_DETAIL = "/api/AllMaster/get-area"; // append /{id}
+export const SAVE_AREA_MASTER = "/api/AllMaster/save-area";
+export const DELETE_AREA_MASTER = "/api/AllMaster/delete-area"; // append /{id}
+
+// City Master
+export const GET_CITY_MASTER_LIST = "/api/AllMaster/list-city";
+export const GET_CITY_MASTER_DETAIL = "/api/AllMaster/get-city"; // append /{id}
+export const SAVE_CITY_MASTER = "/api/AllMaster/save-city";
+export const DELETE_CITY_MASTER = "/api/AllMaster/delete-city"; // append /{id}
+
+// State Master
+export const GET_STATE_MASTER_LIST = "/api/AllMaster/list-state";
+export const GET_STATE_MASTER_DETAIL = "/api/AllMaster/get-state"; // append /{id}
+export const SAVE_STATE_MASTER = "/api/AllMaster/save-state";
+export const DELETE_STATE_MASTER = "/api/AllMaster/delete-state"; // append /{id}
+
+// Country Master
+export const GET_COUNTRY_MASTER_LIST = "/api/AllMaster/list-country";
+export const GET_COUNTRY_MASTER_DETAIL = "/api/AllMaster/get-country"; // append /{id}
+export const SAVE_COUNTRY_MASTER = "/api/AllMaster/save-country";
+export const DELETE_COUNTRY_MASTER = "/api/AllMaster/delete-country"; // append /{id}
+
+// Term Master
+export const GET_TERM_MASTER_LIST = "/api/AllMaster/list-term";
+export const GET_TERM_MASTER_DETAIL = "/api/AllMaster/get-term"; // append /{id}
+export const SAVE_TERM_MASTER = "/api/AllMaster/submit-term";
+export const DELETE_TERM_MASTER = "/api/AllMaster/delete-term"; // append /{id}
+
+// Type Master
+export const GET_TYPE_MASTER_LIST = "/api/AllMaster/list-type";
+export const GET_TYPE_MASTER_DETAIL = "/api/AllMaster/get-type"; // append /{id}
+export const SAVE_TYPE_MASTER = "/api/AllMaster/submit-type";
+export const DELETE_TYPE_MASTER = "/api/AllMaster/delete-type"; // append /{id}
+
+// SubType Master
+export const GET_SUBTYPE_MASTER_LIST = "/api/AllMaster/list-subtype";
+export const GET_SUBTYPE_MASTER_DETAIL = "/api/AllMaster/get-subtype"; // append /{id}
+export const SAVE_SUBTYPE_MASTER = "/api/AllMaster/submit-subtype";
+export const DELETE_SUBTYPE_MASTER = "/api/AllMaster/delete-subtype"; // append /{id}
+
+// Currency Master
+export const GET_CURRENCY_MASTER_LIST = "/api/AllMaster/list-currency";
+export const GET_CURRENCY_MASTER_DETAIL = "/api/AllMaster/get-currency"; // append /{id}
+
+// Mines Master
+export const GET_MINES_MASTER_LIST = "/api/AllMaster/list-mines";
+export const GET_MINES_MASTER_DETAIL = "/api/AllMaster/get-mines"; // append /{id}
+export const SAVE_MINES_MASTER = "/api/AllMaster/submit-mines";
+export const DELETE_MINES_MASTER = "/api/AllMaster/delete-mines"; // append /{id}
+
+// Rough Master
+export const GET_ROUGH_MASTER_LIST = "/api/AllMaster/list-rough";
+export const GET_ROUGH_MASTER_DETAIL = "/api/AllMaster/get-rough"; // append /{id}
+export const SAVE_ROUGH_MASTER = "/api/AllMaster/submit-rough";
+export const DELETE_ROUGH_MASTER = "/api/AllMaster/delete-rough"; // append /{id}
+
+// Jewellery Category Master
+export const GET_JEW_CATEGORY_MASTER_LIST = "/api/AllMaster/list-jew-category";
+export const GET_JEW_CATEGORY_MASTER_DETAIL = "/api/AllMaster/get-jew-category"; // append /{id}
+export const SAVE_JEW_CATEGORY_MASTER = "/api/AllMaster/submit-jew-category";
+export const DELETE_JEW_CATEGORY_MASTER = "/api/AllMaster/delete-jew-category"; // append /{id}
+
+// Jewellery SubCategory Master
+export const GET_JEW_SUBCATEGORY_MASTER_LIST = "/api/AllMaster/list-jew-subcategory";
+export const GET_JEW_SUBCATEGORY_MASTER_DETAIL = "/api/AllMaster/get-jew-subcategory"; // append /{id}
+export const SAVE_JEW_SUBCATEGORY_MASTER = "/api/AllMaster/submit-jew-subcategory";
+export const DELETE_JEW_SUBCATEGORY_MASTER = "/api/AllMaster/delete-jew-subcategory"; // append /{id}
+
+// Jewellery Metal Master
+export const GET_JEW_METAL_MASTER_LIST = "/api/AllMaster/list-jew-metal";
+export const GET_JEW_METAL_MASTER_DETAIL = "/api/AllMaster/get-jew-metal"; // append /{id}
+export const SAVE_JEW_METAL_MASTER = "/api/AllMaster/submit-jew-metal";
+export const DELETE_JEW_METAL_MASTER = "/api/AllMaster/delete-jew-metal"; // append /{id}
+
+// Jewellery Metal Purity Master
+export const GET_JEW_METAL_PURITY_MASTER_LIST = "/api/AllMaster/list-jew-metal-purity";
+export const GET_JEW_METAL_PURITY_MASTER_DETAIL = "/api/AllMaster/get-jew-metal-purity"; // append /{id}
+export const SAVE_JEW_METAL_PURITY_MASTER = "/api/AllMaster/submit-jew-metal-purity";
+export const DELETE_JEW_METAL_PURITY_MASTER = "/api/AllMaster/delete-jew-metal-priority"; // append /{id}
+
+// Jewellery Color Master
+export const GET_JEW_COLOR_MASTER_LIST = "/api/AllMaster/list-jew-color";
+export const GET_JEW_COLOR_MASTER_DETAIL = "/api/AllMaster/get-jew-color"; // append /{id}
+export const SAVE_JEW_COLOR_MASTER = "/api/AllMaster/submit-jew-color";
+export const DELETE_JEW_COLOR_MASTER = "/api/AllMaster/delete-jew-color"; // append /{id}
+
+
 // Brown Master
 export const GET_BROWN_MASTER_LIST = "/api/AllMaster/list-brown";
 export const GET_BROWN_MASTER_DETAIL = "/api/AllMaster/get-brown"; // append /{id}
