@@ -114,6 +114,11 @@ export const getFLColorMasterDetail = id => api.get(`${url.GET_FLCOLOR_MASTER_DE
 export const saveFLColorMaster = data => api.create(url.SAVE_FLCOLOR_MASTER, data);
 export const deleteFLColorMaster = id => api.create(`${url.DELETE_FLCOLOR_MASTER}/${id}`);
 
+// Brown Master
+export const getBrownMasters = () => api.get(url.GET_BROWN_MASTER_LIST);
+export const getBrownMasterDetail = id => api.get(`${url.GET_BROWN_MASTER_DETAIL}/${id}`);
+export const saveBrownMaster = data => api.create(url.SAVE_BROWN_MASTER, data);
+export const deleteBrownMaster = id => api.create(`${url.DELETE_BROWN_MASTER}/${id}`);
 
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);

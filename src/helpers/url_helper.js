@@ -90,6 +90,12 @@ export const GET_FLCOLOR_MASTER_DETAIL = "/api/AllMaster/get-flcolor"; // append
 export const SAVE_FLCOLOR_MASTER = "/api/AllMaster/save-flcolor";
 export const DELETE_FLCOLOR_MASTER = "/api/AllMaster/delete-flcolor"; // append /{id}
 
+// Brown Master
+export const GET_BROWN_MASTER_LIST = "/api/AllMaster/list-brown";
+export const GET_BROWN_MASTER_DETAIL = "/api/AllMaster/get-brown"; // append /{id}
+export const SAVE_BROWN_MASTER = "/api/AllMaster/save-brown";
+export const DELETE_BROWN_MASTER = "/api/AllMaster/delete-brown"; // append /{id}
+
 
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";

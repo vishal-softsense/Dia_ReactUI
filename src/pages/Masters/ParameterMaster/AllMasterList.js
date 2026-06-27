@@ -97,7 +97,8 @@ const AllMasterList = () => {
                                     border: "none",
                                     borderRadius: "6px",
                                     fontSize: "12px",
-                                    padding: "4px 10px",
+                                    // padding: "4px 10px",
+                                    padding: "0.467rem 1.5rem",
                                     display: "inline-flex",
                                     alignItems: "center",
                                     justifyContent: "center"
