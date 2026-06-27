@@ -53,36 +53,39 @@ const ParcelItemMasterAdd = () => {
 
     const loadDropdowns = async () => {
         try {
+
             const response = await getParcelItemMasterDropdowns();
-            if (response.success || response.Success) {
-                const data = response.data || response.Data || {};
-                setDropdowns({
-                    shape: data.shape || [],
-                    color: data.color || [],
-                    size: data.size || [],
-                    clarity: data.clarity || [],
-                    sieve: data.sieve || [],
-                    itemGroup: data.itemGroup || [],
-                    category: data.category || [],
-                    productType: data.productType || []
-                });
-                // Set defaults if available
-                setForm(prev => ({
-                    ...prev,
-                    category: data.category?.[0]?.id || "",
-                    productType: data.productType?.[0]?.id || ""
-                }));
-            } else {
-                toast.error("Failed to load dropdown data");
-            }
-        } catch (error) {
-            toast.error("Error loading dropdown data");
+
+            console.log(response);
+
+            const list = response.data || response.Data || [];
+
+            setDropdowns({
+                shape: list.filter(x => x.type === "Shape"),
+                color: list.filter(x => x.type === "Color"),
+                size: list.filter(x => x.type === "Size"),
+                clarity: list.filter(x => x.type === "Clarity"),
+                sieve: list.filter(x => x.type === "Sieve"),
+                itemGroup: list.filter(x => x.type === "ItemGroup"),
+                category: list.filter(x => x.type === "Category"),
+                productType: list.filter(x => x.type === "ProductType")
+            });
+
+        } catch (e) {
+
+            console.log(e);
+
+            toast.error("Failed to load dropdowns");
+
         }
     };
-
     // Calculate ItemName dynamically based on dropdown values
     useEffect(() => {
-        const shapeName = dropdowns.shape.find(x => x.id === form.shapeId)?.name || "";
+        const shapeName =
+            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.name ||
+            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.Name ||
+            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.ShapeName ||
+            "";
         const colorName = dropdowns.color.find(x => x.id === form.colorId)?.name || "";
         const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
         const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
@@ -99,14 +102,14 @@ const ParcelItemMasterAdd = () => {
         const val = parseFloat(value) || 0;
         setForm(prev => {
             const updated = { ...prev, [field]: val };
-            
+
             // Purchase calculations
             if (field === "weight" || field === "purchaseRate" || field === "pDollorRate") {
                 updated.purchaseAmount = updated.weight * updated.purchaseRate;
                 updated.masterCurrencyRate = updated.purchaseRate * updated.pDollorRate;
                 updated.masterCurrencyAmount = updated.masterCurrencyRate * updated.weight;
             }
-            
+
             // Asking calculations
             if (field === "weight" || field === "askingRate" || field === "pDollorRate") {
                 updated.askingAmount = updated.weight * updated.askingRate;
@@ -193,10 +196,10 @@ const ParcelItemMasterAdd = () => {
                                     <Col md={3}>
                                         <FormGroup>
                                             <Label>Stock ID / LotNo <span className="text-danger">*</span></Label>
-                                            <Input 
-                                                type="text" 
+                                            <Input
+                                                type="text"
                                                 className={`form-control ${lotNoExists ? 'is-invalid' : ''}`}
-                                                placeholder="Stock ID/ LotNo" 
+                                                placeholder="Stock ID/ LotNo"
                                                 value={form.lotNo}
                                                 onChange={(e) => handleTextChange("lotNo", e.target.value)}
                                                 onBlur={handleLotNoBlur}
@@ -211,14 +214,21 @@ const ParcelItemMasterAdd = () => {
                                     <Col md={2}>
                                         <FormGroup>
                                             <Label>Shape</Label>
+
                                             <select
                                                 className="form-select"
                                                 value={form.shapeId}
                                                 onChange={(e) => handleTextChange("shapeId", e.target.value)}
                                             >
                                                 <option value="">Select Shape</option>
-                                                {dropdowns.shape.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+
+                                                {dropdowns.shape.map((item, index) => (
+                                                    <option
+                                                        key={index}
+                                                        value={item.id}
+                                                    >
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -232,8 +242,11 @@ const ParcelItemMasterAdd = () => {
                                                 onChange={(e) => handleTextChange("colorId", e.target.value)}
                                             >
                                                 <option value="">Select Color</option>
-                                                {dropdowns.color.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+
+                                                {dropdowns.color.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -247,8 +260,11 @@ const ParcelItemMasterAdd = () => {
                                                 onChange={(e) => handleTextChange("clarityId", e.target.value)}
                                             >
                                                 <option value="">Select Clarity</option>
-                                                {dropdowns.clarity.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+
+                                                {dropdowns.clarity.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -262,8 +278,11 @@ const ParcelItemMasterAdd = () => {
                                                 onChange={(e) => handleTextChange("sizeId", e.target.value)}
                                             >
                                                 <option value="">Select Size</option>
-                                                {dropdowns.size.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+
+                                                {dropdowns.size.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -277,8 +296,11 @@ const ParcelItemMasterAdd = () => {
                                                 onChange={(e) => handleTextChange("sieveId", e.target.value)}
                                             >
                                                 <option value="">Select Sieve</option>
-                                                {dropdowns.sieve.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+
+                                                {dropdowns.sieve.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -305,9 +327,12 @@ const ParcelItemMasterAdd = () => {
                                                 value={form.itemGroupID}
                                                 onChange={(e) => handleTextChange("itemGroupID", e.target.value)}
                                             >
-                                                <option value="">Select GroupID</option>
-                                                {dropdowns.itemGroup.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+                                                <option value="">Select Group</option>
+
+                                                {dropdowns.itemGroup.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -337,8 +362,12 @@ const ParcelItemMasterAdd = () => {
                                                 value={form.category}
                                                 onChange={(e) => handleTextChange("category", e.target.value)}
                                             >
-                                                {dropdowns.category.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+                                                <option value="">Select Category</option>
+
+                                                {dropdowns.category.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
@@ -365,8 +394,12 @@ const ParcelItemMasterAdd = () => {
                                                 value={form.productType}
                                                 onChange={(e) => handleTextChange("productType", e.target.value)}
                                             >
-                                                {dropdowns.productType.map(item => (
-                                                    <option key={item.id} value={item.id}>{item.name}</option>
+                                                <option value="">Select Product Type</option>
+
+                                                {dropdowns.productType.map((item, index) => (
+                                                    <option key={index} value={item.id}>
+                                                        {item.textName || item.name || item.id}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </FormGroup>
