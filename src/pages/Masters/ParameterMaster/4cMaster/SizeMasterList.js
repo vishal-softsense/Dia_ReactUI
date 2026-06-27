@@ -168,7 +168,8 @@ const SizeMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Size ID", "Size Name", "From Carat", "To Carat", "Size Priority", "Size Group Name", "Size Group Priority"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

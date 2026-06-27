@@ -164,7 +164,8 @@ const ClarityMaster = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Clarity ID", "Clarity Name", "Clarity Priority", "Clarity Group Name", "Clarity Group Priority", "Pricing Clarity ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

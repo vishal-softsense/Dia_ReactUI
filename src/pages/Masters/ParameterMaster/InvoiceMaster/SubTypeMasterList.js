@@ -146,7 +146,8 @@ const SubTypeMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["SubType ID", "SubType Name", "SubType Priority"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

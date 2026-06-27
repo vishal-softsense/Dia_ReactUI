@@ -146,7 +146,8 @@ const RoughMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Rough ID", "Rough Name", "Rough Priority"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

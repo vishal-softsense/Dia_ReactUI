@@ -210,6 +210,42 @@ export const getBrownMasterDetail = id => api.get(`${url.GET_BROWN_MASTER_DETAIL
 export const saveBrownMaster = data => api.create(url.SAVE_BROWN_MASTER, data);
 export const deleteBrownMaster = id => api.create(`${url.DELETE_BROWN_MASTER}/${id}`);
 
+// Green Master
+export const getGreenMasters = () => api.get(url.GET_GREEN_MASTER_LIST);
+export const getGreenMasterDetail = id => api.get(`${url.GET_GREEN_MASTER_DETAIL}/${id}`);
+export const saveGreenMaster = data => api.create(url.SAVE_GREEN_MASTER, data);
+export const deleteGreenMaster = id => api.create(`${url.DELETE_GREEN_MASTER}/${id}`);
+
+// Milky Master
+export const getMilkyMasters = () => api.get(url.GET_MILKY_MASTER_LIST);
+export const getMilkyMasterDetail = id => api.get(`${url.GET_MILKY_MASTER_DETAIL}/${id}`);
+export const saveMilkyMaster = data => api.create(url.SAVE_MILKY_MASTER, data);
+export const deleteMilkyMaster = id => api.create(`${url.DELETE_MILKY_MASTER}/${id}`);
+
+// Luster Master
+export const getLusterMasters = () => api.get(url.GET_LUSTER_MASTER_LIST);
+export const getLusterMasterDetail = id => api.get(`${url.GET_LUSTER_MASTER_DETAIL}/${id}`);
+export const saveLusterMaster = data => api.create(url.SAVE_LUSTER_MASTER, data);
+export const deleteLusterMaster = id => api.create(`${url.DELETE_LUSTER_MASTER}/${id}`);
+
+// Natts Master
+export const getNattsMasters = () => api.get(url.GET_NATTS_MASTER_LIST);
+export const getNattsMasterDetail = id => api.get(`${url.GET_NATTS_MASTER_DETAIL}/${id}`);
+export const saveNattsMaster = data => api.create(url.SAVE_NATTS_MASTER, data);
+export const deleteNattsMaster = id => api.create(`${url.DELETE_NATTS_MASTER}/${id}`);
+
+// HA Master
+export const getHAMasters = () => api.get(url.GET_HA_MASTER_LIST);
+export const getHAMasterDetail = id => api.get(`${url.GET_HA_MASTER_DETAIL}/${id}`);
+export const saveHAMaster = data => api.create(url.SAVE_HA_MASTER, data);
+export const deleteHAMaster = id => api.create(`${url.DELETE_HA_MASTER}/${id}`);
+
+// Shade Master
+export const getShadeMasters = () => api.get(url.GET_SHADE_MASTER_LIST);
+export const getShadeMasterDetail = id => api.get(`${url.GET_SHADE_MASTER_DETAIL}/${id}`);
+export const saveShadeMaster = data => api.create(url.SAVE_SHADE_MASTER, data);
+export const deleteShadeMaster = id => api.create(`${url.DELETE_SHADE_MASTER}/${id}`);
+
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);
 

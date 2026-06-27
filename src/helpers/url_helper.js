@@ -185,6 +185,42 @@ export const GET_BROWN_MASTER_DETAIL = "/api/AllMaster/get-brown"; // append /{i
 export const SAVE_BROWN_MASTER = "/api/AllMaster/save-brown";
 export const DELETE_BROWN_MASTER = "/api/AllMaster/delete-brown"; // append /{id}
 
+// Green Master
+export const GET_GREEN_MASTER_LIST = "/api/AllMaster/list-green";
+export const GET_GREEN_MASTER_DETAIL = "/api/AllMaster/get-green"; // append /{id}
+export const SAVE_GREEN_MASTER = "/api/AllMaster/save-green";
+export const DELETE_GREEN_MASTER = "/api/AllMaster/delete-green"; // append /{id}
+
+// Milky Master
+export const GET_MILKY_MASTER_LIST = "/api/AllMaster/list-milky";
+export const GET_MILKY_MASTER_DETAIL = "/api/AllMaster/get-milky"; // append /{id}
+export const SAVE_MILKY_MASTER = "/api/AllMaster/save-milky";
+export const DELETE_MILKY_MASTER = "/api/AllMaster/delete-milky"; // append /{id}
+
+// Luster Master
+export const GET_LUSTER_MASTER_LIST = "/api/AllMaster/list-luster";
+export const GET_LUSTER_MASTER_DETAIL = "/api/AllMaster/get-luster"; // append /{id}
+export const SAVE_LUSTER_MASTER = "/api/AllMaster/save-luster";
+export const DELETE_LUSTER_MASTER = "/api/AllMaster/delete-luster"; // append /{id}
+
+// Natts Master
+export const GET_NATTS_MASTER_LIST = "/api/AllMaster/list-natts";
+export const GET_NATTS_MASTER_DETAIL = "/api/AllMaster/get-natts"; // append /{id}
+export const SAVE_NATTS_MASTER = "/api/AllMaster/save-natts";
+export const DELETE_NATTS_MASTER = "/api/AllMaster/delete-natts"; // append /{id}
+
+// HA Master
+export const GET_HA_MASTER_LIST = "/api/AllMaster/list-ha";
+export const GET_HA_MASTER_DETAIL = "/api/AllMaster/get-ha"; // append /{id}
+export const SAVE_HA_MASTER = "/api/AllMaster/save-ha";
+export const DELETE_HA_MASTER = "/api/AllMaster/delete-ha"; // append /{id}
+
+// Shade Master
+export const GET_SHADE_MASTER_LIST = "/api/AllMaster/list-shade";
+export const GET_SHADE_MASTER_DETAIL = "/api/AllMaster/get-shade"; // append /{id}
+export const SAVE_SHADE_MASTER = "/api/AllMaster/save-shade";
+export const DELETE_SHADE_MASTER = "/api/AllMaster/delete-shade"; // append /{id}
+
 
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";

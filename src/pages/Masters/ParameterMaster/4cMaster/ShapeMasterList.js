@@ -167,7 +167,8 @@ const ShapeMasterList = () => {
         const fileExtension = file.name.split('.').pop().toLowerCase();
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Shape ID", "Shape Name", "Shape Priority", "Shape Group Name", "Shape Group Priority", "Pricing Shape ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

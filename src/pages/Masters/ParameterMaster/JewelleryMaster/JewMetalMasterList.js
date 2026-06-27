@@ -214,7 +214,8 @@ const JewMetalMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Metal ID", "Metal Name", "Metal Priority", "Metal Type", "Metal Color", "Metal Purity", "Metal 24KT Ratio"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

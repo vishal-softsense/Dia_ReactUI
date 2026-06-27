@@ -321,6 +321,12 @@ import Welcome from "../pages/Welcome/Welcome";
 
 // Brown  Master
 import BrownMasterList from "../pages/Masters/ParameterMaster/GradingMaster/BrownMasterList";
+import GreenMasterList from "../pages/Masters/ParameterMaster/GradingMaster/GreenMasterList";
+import MilkyMasterList from "../pages/Masters/ParameterMaster/GradingMaster/MilkyMasterList";
+import LusterMasterList from "../pages/Masters/ParameterMaster/GradingMaster/LusterMasterList";
+import NattsMasterList from "../pages/Masters/ParameterMaster/GradingMaster/NattsMasterList";
+import HAMasterList from "../pages/Masters/ParameterMaster/GradingMaster/HAMasterList";
+import ShadeMasterList from "../pages/Masters/ParameterMaster/GradingMaster/ShadeMasterList";
 
 // Settings Master
 import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
@@ -373,6 +379,12 @@ const authProtectedRoutes = [
   { path: "/masters/jewcolor-master", component: <JewColorMasterList /> },
   { path: "/welcome", component: <Welcome /> },
   { path: "/masters/brown-master", component: <BrownMasterList /> },
+  { path: "/masters/green-master", component: <GreenMasterList /> },
+  { path: "/masters/milky-master", component: <MilkyMasterList /> },
+  { path: "/masters/luster-master", component: <LusterMasterList /> },
+  { path: "/masters/natts-master", component: <NattsMasterList /> },
+  { path: "/masters/ha-master", component: <HAMasterList /> },
+  { path: "/masters/shade-master", component: <ShadeMasterList /> },
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },

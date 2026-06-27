@@ -164,7 +164,8 @@ const SymMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Symmetry ID", "Symmetry Name", "Symmetry Priority", "Symmetry Group Name", "Symmetry Group Priority", "Pricing Symmetry ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

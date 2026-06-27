@@ -1,22 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-    Container,
-    Row,
-    Col,
-    Card,
-    CardHeader,
-    CardBody,
-    Button,
-    Modal,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Form,
-    Label,
-    Input,
-    FormFeedback,
-    Progress
-} from "reactstrap";
+import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -262,7 +245,8 @@ const handleDeleteConfirm = async () => {
         const fileExtension = file.name.split('.').pop().toLowerCase();
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Brown ID", "Brown Name", "Brown Priority", "Brown Group Name", "Brown Group Priority", "Pricing Brown ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;
@@ -300,8 +284,9 @@ const handleDeleteConfirm = async () => {
                 const brownGroupPriority = parseFloat(row[4] || 0);
                 const pricingBrownID = String(row[5] || "").trim();
 
+                const existing = brownList.find(x => String(x.brownID || x.BrownID).toLowerCase() === brownID.toLowerCase());
                 const payload = {
-                    id: 0,
+                    id: existing ? (existing.id || existing.ID) : 0,
                     brownID,
                     brownName,
                     brownPriority,
@@ -808,7 +793,7 @@ const handleDownloadTemplate = async () => {
            <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>Are you sure?</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete shape <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
+                                Are you sure you want to delete Brown <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
                             </p>
                         </div>
             <br />

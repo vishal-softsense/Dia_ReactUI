@@ -164,7 +164,8 @@ const ColorMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Color ID", "Color Name", "Color Priority", "Color Group Name", "Color Group Priority", "Pricing Color ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

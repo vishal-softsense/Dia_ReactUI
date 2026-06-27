@@ -40,7 +40,7 @@ export const exportToExcel = async (headers, rows, sheetName = "Sheet1", fileNam
  * @param {File} file - The file object from the input element
  * @returns {Promise<{success: boolean, rows?: Array<Array<any>>, error?: any}>}
  */
-export const parseExcelFile = async (file) => {
+export const parseExcelFile = async (file, expectedHeaders = null) => {
     try {
         const XLSX = await loadXlsx();
         const arrayBuffer = await file.arrayBuffer();
@@ -49,6 +49,20 @@ export const parseExcelFile = async (file) => {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (expectedHeaders && expectedHeaders.length > 0) {
+            if (!rows || rows.length === 0) {
+                return { success: false, error: new Error("The selected file contains no data.") };
+            }
+            const importedHeaders = rows[0] ? rows[0].map(h => String(h || "").trim().toLowerCase()) : [];
+            const matches = expectedHeaders.every((h, idx) => {
+                return importedHeaders[idx] === h.trim().toLowerCase();
+            });
+            if (!matches) {
+                return { success: false, error: new Error("Invalid Excel format. The headers do not match the expected template.") };
+            }
+        }
+
         return { success: true, rows };
     } catch (error) {
         console.error("Error parsing Excel file:", error);

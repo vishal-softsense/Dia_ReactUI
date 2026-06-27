@@ -164,7 +164,8 @@ const LabMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["LAB ID", "LAB Name", "LAB Priority", "LAB Group Name", "LAB Group Priority", "Pricing LAB ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;

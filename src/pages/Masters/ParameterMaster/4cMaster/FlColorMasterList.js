@@ -164,7 +164,8 @@ const FlColorMasterList = () => {
         setImportProgress({ current: 0, total: 0 });
 
         try {
-            const parsed = await parseExcelFile(file);
+            const expectedHeaders = ["Fluorescence Color ID", "Fluorescence Color Name", "Fluorescence Color Priority", "Fluorescence Color Group Name", "Fluorescence Color Group Priority", "Pricing Fluorescence Color ID"];
+            const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
             
             const rows = parsed.rows;
