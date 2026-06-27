@@ -136,10 +136,10 @@ const ParcelItemMasterEdit = () => {
     // Calculate ItemName dynamically based on dropdown values
     useEffect(() => {
         if (loading) return; // Wait until loaded to avoid overriding prefilled name
-        const shapeName = dropdowns.shape.find(x => x.id === form.shapeId)?.name || "";
-        const colorName = dropdowns.color.find(x => x.id === form.colorId)?.name || "";
-        const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
-        const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
+        const shapeName = dropdowns.shape.find(x => x.id === form.shapeId)?.textName || dropdowns.shape.find(x => x.id === form.shapeId)?.name || "";
+        const colorName = dropdowns.color.find(x => x.id === form.colorId)?.textName || dropdowns.color.find(x => x.id === form.colorId)?.name || "";
+        const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.textName || dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
+        const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.textName || dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
 
         const dynamicName = [shapeName, colorName, sizeName, clarityName].filter(Boolean).join(" ");
         setForm(prev => ({
@@ -256,7 +256,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select Shape</option>
                                                     {dropdowns.shape.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -271,7 +271,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select Color</option>
                                                     {dropdowns.color.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -286,7 +286,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select Clarity</option>
                                                     {dropdowns.clarity.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -301,7 +301,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select Size</option>
                                                     {dropdowns.size.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -316,7 +316,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select Sieve</option>
                                                     {dropdowns.sieve.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -345,7 +345,7 @@ const ParcelItemMasterEdit = () => {
                                                 >
                                                     <option value="">Select GroupID</option>
                                                     {dropdowns.itemGroup.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -376,7 +376,7 @@ const ParcelItemMasterEdit = () => {
                                                     onChange={(e) => handleTextChange("category", e.target.value)}
                                                 >
                                                     {dropdowns.category.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>
@@ -404,7 +404,7 @@ const ParcelItemMasterEdit = () => {
                                                     onChange={(e) => handleTextChange("productType", e.target.value)}
                                                 >
                                                     {dropdowns.productType.map(item => (
-                                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                                        <option key={item.id} value={item.id}>{item.textName || item.name || item.id}</option>
                                                     ))}
                                                 </select>
                                             </FormGroup>

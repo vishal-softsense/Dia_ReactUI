@@ -53,42 +53,30 @@ const ParcelItemMasterAdd = () => {
 
     const loadDropdowns = async () => {
         try {
-
             const response = await getParcelItemMasterDropdowns();
-
-            console.log(response);
-
-            const list = response.data || response.Data || [];
-
-            setDropdowns({
-                shape: list.filter(x => x.type === "Shape"),
-                color: list.filter(x => x.type === "Color"),
-                size: list.filter(x => x.type === "Size"),
-                clarity: list.filter(x => x.type === "Clarity"),
-                sieve: list.filter(x => x.type === "Sieve"),
-                itemGroup: list.filter(x => x.type === "ItemGroup"),
-                category: list.filter(x => x.type === "Category"),
-                productType: list.filter(x => x.type === "ProductType")
-            });
-
+            if (response.success || response.Success) {
+                const data = response.data || response.Data || {};
+                setDropdowns({
+                    shape: data.shape || [],
+                    color: data.color || [],
+                    size: data.size || [],
+                    clarity: data.clarity || [],
+                    sieve: data.sieve || [],
+                    itemGroup: data.itemGroup || [],
+                    category: data.category || [],
+                    productType: data.productType || []
+                });
+            }
         } catch (e) {
-
-            console.log(e);
-
+            console.error(e);
             toast.error("Failed to load dropdowns");
-
         }
     };
-    // Calculate ItemName dynamically based on dropdown values
     useEffect(() => {
-        const shapeName =
-            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.name ||
-            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.Name ||
-            dropdowns.shape.find(x => (x.id || x.ID) == form.shapeId)?.ShapeName ||
-            "";
-        const colorName = dropdowns.color.find(x => x.id === form.colorId)?.name || "";
-        const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
-        const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
+        const shapeName = dropdowns.shape.find(x => x.id === form.shapeId)?.textName || dropdowns.shape.find(x => x.id === form.shapeId)?.name || "";
+        const colorName = dropdowns.color.find(x => x.id === form.colorId)?.textName || dropdowns.color.find(x => x.id === form.colorId)?.name || "";
+        const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.textName || dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
+        const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.textName || dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
 
         const dynamicName = [shapeName, colorName, sizeName, clarityName].filter(Boolean).join(" ");
         setForm(prev => ({
