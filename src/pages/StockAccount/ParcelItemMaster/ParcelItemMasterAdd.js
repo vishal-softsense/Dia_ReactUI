@@ -73,10 +73,17 @@ const ParcelItemMasterAdd = () => {
         }
     };
     useEffect(() => {
-        const shapeName = dropdowns.shape.find(x => x.id === form.shapeId)?.textName || dropdowns.shape.find(x => x.id === form.shapeId)?.name || "";
-        const colorName = dropdowns.color.find(x => x.id === form.colorId)?.textName || dropdowns.color.find(x => x.id === form.colorId)?.name || "";
-        const sizeName = dropdowns.size.find(x => x.id === form.sizeId)?.textName || dropdowns.size.find(x => x.id === form.sizeId)?.name || "";
-        const clarityName = dropdowns.clarity.find(x => x.id === form.clarityId)?.textName || dropdowns.clarity.find(x => x.id === form.clarityId)?.name || "";
+        const shapeItem = dropdowns.shape.find(x => x.id == form.shapeId || x.ID == form.shapeId);
+        const shapeName = shapeItem?.textName || shapeItem?.name || shapeItem?.id || shapeItem?.ID || "";
+
+        const colorItem = dropdowns.color.find(x => x.id == form.colorId || x.ID == form.colorId);
+        const colorName = colorItem?.textName || colorItem?.name || colorItem?.id || colorItem?.ID || "";
+
+        const sizeItem = dropdowns.size.find(x => x.id == form.sizeId || x.ID == form.sizeId);
+        const sizeName = sizeItem?.textName || sizeItem?.name || sizeItem?.id || sizeItem?.ID || "";
+
+        const clarityItem = dropdowns.clarity.find(x => x.id == form.clarityId || x.ID == form.clarityId);
+        const clarityName = clarityItem?.textName || clarityItem?.name || clarityItem?.id || clarityItem?.ID || "";
 
         const dynamicName = [shapeName, colorName, sizeName, clarityName].filter(Boolean).join(" ");
         setForm(prev => ({
