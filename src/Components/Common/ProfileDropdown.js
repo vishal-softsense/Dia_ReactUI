@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
+import { getSettingData } from '../../helpers/fakebackend_helper';
 
 //import images
 import avatar1 from "../../assets/images/users/avatar-1.jpg";
@@ -23,6 +24,7 @@ const ProfileDropdown = () => {
     const [companyName, setCompanyName] = useState("");
     const [userRole, setUserRole] = useState("Founder");
     const [fullName, setFullName] = useState("");
+    const [displayCompanyName, setDisplayCompanyName] = useState(localStorage.getItem("companySettingName") || "Admin");
 
     useEffect(() => {
         let authUserStr = sessionStorage.getItem("authUser") || localStorage.getItem("authUser");
@@ -34,6 +36,39 @@ const ProfileDropdown = () => {
             setUserRole(u.UserRole || u.userRole || "Founder");
             setFullName(u.FullName || u.firstName || u.FirstName || "");
         }
+    }, [user]);
+
+    useEffect(() => {
+        const fetchCompanySetting = async () => {
+            try {
+                const response = await getSettingData();
+                if (response && (response.success || response.Success)) {
+                    const data = response.data || response.Data || [];
+                    const companySetting = data.find(item => (item.Name || item.name || "").toLowerCase() === "company");
+                    if (companySetting) {
+                        const val = companySetting.Value ?? companySetting.value ?? "Admin";
+                        setDisplayCompanyName(val);
+                        localStorage.setItem("companySettingName", val);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching company setting in header:", error);
+            }
+        };
+
+        fetchCompanySetting();
+
+        const handleUpdate = () => {
+            const val = localStorage.getItem("companySettingName");
+            if (val) {
+                setDisplayCompanyName(val);
+            }
+        };
+
+        window.addEventListener("companyNameUpdated", handleUpdate);
+        return () => {
+            window.removeEventListener("companyNameUpdated", handleUpdate);
+        };
     }, [user]);
 
     //Dropdown Toggle
@@ -49,7 +84,7 @@ const ProfileDropdown = () => {
                         <img className="rounded-circle header-profile-user" src={avatar1}
                             alt="Header Avatar" />
                         <span className="text-start ms-xl-2">
-                            <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Admin</span>
+                            <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{displayCompanyName}</span>
                             <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
                                 {companyName ? `${companyName} (${userRole})` : userRole}
                             </span>

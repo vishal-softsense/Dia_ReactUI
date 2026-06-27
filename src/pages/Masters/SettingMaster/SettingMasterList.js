@@ -85,6 +85,10 @@ const SettingMasterList = () => {
                 const response = await submitSettingData(payload);
                 if (response.success || response.Success) {
                     toast.success(response.data || response.Data || "Setting updated successfully");
+                    if ((values.name || "").toLowerCase() === "company") {
+                        localStorage.setItem("companySettingName", values.value);
+                        window.dispatchEvent(new Event("companyNameUpdated"));
+                    }
                     setSettingModal(false);
                     loadTabData(activeTab);
                 } else {
