@@ -114,6 +114,29 @@ export const GET_COUNTRY_MASTER_DETAIL = "/api/AllMaster/get-country"; // append
 export const SAVE_COUNTRY_MASTER = "/api/AllMaster/save-country";
 export const DELETE_COUNTRY_MASTER = "/api/AllMaster/delete-country"; // append /{id}
 
+// Term Master
+export const GET_TERM_MASTER_LIST = "/api/AllMaster/list-term";
+export const GET_TERM_MASTER_DETAIL = "/api/AllMaster/get-term"; // append /{id}
+export const SAVE_TERM_MASTER = "/api/AllMaster/submit-term";
+export const DELETE_TERM_MASTER = "/api/AllMaster/delete-term"; // append /{id}
+
+// Type Master
+export const GET_TYPE_MASTER_LIST = "/api/AllMaster/list-type";
+export const GET_TYPE_MASTER_DETAIL = "/api/AllMaster/get-type"; // append /{id}
+export const SAVE_TYPE_MASTER = "/api/AllMaster/submit-type";
+export const DELETE_TYPE_MASTER = "/api/AllMaster/delete-type"; // append /{id}
+
+// SubType Master
+export const GET_SUBTYPE_MASTER_LIST = "/api/AllMaster/list-subtype";
+export const GET_SUBTYPE_MASTER_DETAIL = "/api/AllMaster/get-subtype"; // append /{id}
+export const SAVE_SUBTYPE_MASTER = "/api/AllMaster/submit-subtype";
+export const DELETE_SUBTYPE_MASTER = "/api/AllMaster/delete-subtype"; // append /{id}
+
+// Currency Master
+export const GET_CURRENCY_MASTER_LIST = "/api/AllMaster/list-currency";
+export const GET_CURRENCY_MASTER_DETAIL = "/api/AllMaster/get-currency"; // append /{id}
+
+
 
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";

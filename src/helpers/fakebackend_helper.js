@@ -138,6 +138,29 @@ export const getCountryMasterDetail = id => api.get(`${url.GET_COUNTRY_MASTER_DE
 export const saveCountryMaster = data => api.create(url.SAVE_COUNTRY_MASTER, data);
 export const deleteCountryMaster = id => api.create(`${url.DELETE_COUNTRY_MASTER}/${id}`);
 
+// Term Master
+export const getTermMasters = () => api.get(url.GET_TERM_MASTER_LIST);
+export const getTermMasterDetail = id => api.get(`${url.GET_TERM_MASTER_DETAIL}/${id}`);
+export const saveTermMaster = data => api.create(url.SAVE_TERM_MASTER, data);
+export const deleteTermMaster = id => api.create(`${url.DELETE_TERM_MASTER}/${id}`);
+
+// Type Master
+export const getTypeMasters = () => api.get(url.GET_TYPE_MASTER_LIST);
+export const getTypeMasterDetail = id => api.get(`${url.GET_TYPE_MASTER_DETAIL}/${id}`);
+export const saveTypeMaster = data => api.create(url.SAVE_TYPE_MASTER, data);
+export const deleteTypeMaster = id => api.create(`${url.DELETE_TYPE_MASTER}/${id}`);
+
+// SubType Master
+export const getSubTypeMasters = () => api.get(url.GET_SUBTYPE_MASTER_LIST);
+export const getSubTypeMasterDetail = id => api.get(`${url.GET_SUBTYPE_MASTER_DETAIL}/${id}`);
+export const saveSubTypeMaster = data => api.create(url.SAVE_SUBTYPE_MASTER, data);
+export const deleteSubTypeMaster = id => api.create(`${url.DELETE_SUBTYPE_MASTER}/${id}`);
+
+// Currency Master
+export const getCurrencyMasters = () => api.get(url.GET_CURRENCY_MASTER_LIST);
+export const getCurrencyMasterDetail = id => api.get(`${url.GET_CURRENCY_MASTER_DETAIL}/${id}`);
+
+
 
 // Sidebar Menu
 export const getSidebarMenu = () => api.get(url.GET_SIDEBAR_MENU);

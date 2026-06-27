@@ -299,6 +299,12 @@ import CityMasterList from "../pages/Masters/ParameterMaster/LocationMaster/City
 import StateMasterList from "../pages/Masters/ParameterMaster/LocationMaster/StateMasterList";
 import CountryMasterList from "../pages/Masters/ParameterMaster/LocationMaster/CountryMasterList";
 
+// Invoice/Invoice Master
+import TermMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/TermMasterList";
+import TypeMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/TypeMasterList";
+import SubTypeMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/SubTypeMasterList";
+import CurrencyMasterList from "../pages/Masters/ParameterMaster/InvoiceMaster/CurrencyMasterList";
+
 // Welcome Page
 import Welcome from "../pages/Welcome/Welcome";
 
@@ -338,6 +344,10 @@ const authProtectedRoutes = [
   { path: "/masters/city-master", component: <CityMasterList /> },
   { path: "/masters/state-master", component: <StateMasterList /> },
   { path: "/masters/country-master", component: <CountryMasterList /> },
+  { path: "/masters/term-master", component: <TermMasterList /> },
+  { path: "/masters/type-master", component: <TypeMasterList /> },
+  { path: "/masters/subtype-master", component: <SubTypeMasterList /> },
+  { path: "/masters/currency-master", component: <CurrencyMasterList /> },
   { path: "/welcome", component: <Welcome /> },
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
