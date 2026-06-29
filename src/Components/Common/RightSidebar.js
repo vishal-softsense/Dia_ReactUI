@@ -116,6 +116,8 @@ const RightSidebar = (props) => {
         if (element) {
             if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
                 element.style.display = "block";
+                element.style.backgroundColor = "#405189";
+                element.style.border = "none";
             } else {
                 element.style.display = "none";
             }
