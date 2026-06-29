@@ -189,7 +189,7 @@ export const getJewMetalMasters = () => api.get(url.GET_JEW_METAL_MASTER_LIST);
 export const getJewMetalMasterDetail = id => api.get(`${url.GET_JEW_METAL_MASTER_DETAIL}/${id}`);
 export const saveJewMetalMaster = data => api.create(url.SAVE_JEW_METAL_MASTER, data);
 export const deleteJewMetalMaster = id => api.create(`${url.DELETE_JEW_METAL_MASTER}/${id}`);
-export const getJewMetalMastersPurity = metalType => api.get(`${url.GET_JEW_METAL_MASTER_LIST}?metalType=${metalType}`);
+export const getJewMetalMastersPurity = (metalType) => api.get(`${url.GET_JEW_PURITY_BY_METAL}?metalType=${encodeURIComponent(metalType)}`);
 
 // Jewellery Metal Purity Master
 export const getJewMetalPurityMasters = () => api.get(url.GET_JEW_METAL_PURITY_MASTER_LIST);

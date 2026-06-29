@@ -165,6 +165,7 @@ export const GET_JEW_METAL_MASTER_LIST = "/api/AllMaster/list-jew-metal";
 export const GET_JEW_METAL_MASTER_DETAIL = "/api/AllMaster/get-jew-metal"; // append /{id}
 export const SAVE_JEW_METAL_MASTER = "/api/AllMaster/submit-jew-metal";
 export const DELETE_JEW_METAL_MASTER = "/api/AllMaster/delete-jew-metal"; // append /{id}
+export const GET_JEW_PURITY_BY_METAL = "/api/AllMaster/list-jew-purity-by-metal"; // append ?metalType=
 
 // Jewellery Metal Purity Master
 export const GET_JEW_METAL_PURITY_MASTER_LIST = "/api/AllMaster/list-jew-metal-purity";

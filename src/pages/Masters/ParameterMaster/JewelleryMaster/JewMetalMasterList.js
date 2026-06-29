@@ -36,7 +36,13 @@ const JewMetalMasterList = () => {
             // Fetch colors
             const colResponse = await getJewColorMasters();
             if (colResponse.success || colResponse.Success) {
-                setColors(colResponse.data || colResponse.Data || []);
+                const colorData = colResponse.data || colResponse.Data || [];
+                setColors(colorData);
+                if (colorData.length === 0) {
+                    toast.warning("No Metal Colors found. Please add Jewellery Colors first.");
+                }
+            } else {
+                toast.error("Failed to load Metal Colors: " + (colResponse.message || colResponse.Message || colResponse.data || colResponse.Data || ""));
             }
 
             // Fetch metals list
@@ -47,7 +53,7 @@ const JewMetalMasterList = () => {
                 toast.error(response.message || response.Message || "Failed to fetch Jewellery Metal data");
             }
         } catch (error) {
-            toast.error("Failed to fetch initial data");
+            toast.error("Failed to fetch initial data: " + error.message);
         }
         setLoading(false);
     };
@@ -635,11 +641,15 @@ const JewMetalMasterList = () => {
                                         invalid={validation.touched.metalColor && validation.errors.metalColor ? true : false}
                                     >
                                         <option value="" disabled>Select Metal Color</option>
-                                        {colors.map((c) => (
-                                            <option key={c.id || c.ID} value={c.jewColorID || c.JewColorID}>
-                                                {c.jewColorID || c.JewColorID}
-                                            </option>
-                                        ))}
+                                        {colors.length === 0 ? (
+                                            <option value="" disabled>-- No colors available --</option>
+                                        ) : (
+                                            colors.map((c) => (
+                                                <option key={c.id || c.ID || c.jewColorID || c.JewColorID} value={c.jewColorID || c.JewColorID}>
+                                                    {c.jewColorName || c.JewColorName || c.jewColorID || c.JewColorID}
+                                                </option>
+                                            ))
+                                        )}
                                     </Input>
                                     {validation.touched.metalColor && validation.errors.metalColor ? (
                                         <FormFeedback type="invalid">{validation.errors.metalColor}</FormFeedback>
@@ -661,7 +671,9 @@ const JewMetalMasterList = () => {
                                         disabled={!validation.values.metalType}
                                         invalid={validation.touched.metalPurity && validation.errors.metalPurity ? true : false}
                                     >
-                                        <option value="" disabled>Select Metal Purity</option>
+                                        <option value="" disabled>
+                                            {validation.values.metalType ? "Select Metal Purity" : "Select Metal Type first"}
+                                        </option>
                                         {purities.map((p, idx) => (
                                             <option key={idx} value={p.metalPurityID || p.MetalPurityID}>
                                                 {p.metalPurityID || p.MetalPurityID}
