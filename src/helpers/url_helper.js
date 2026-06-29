@@ -471,6 +471,7 @@ export const FILTER_SETTING_DATA = "/master/filter-data";
 export const SUBMIT_SETTING_DATA = "/master/submit-setting-data";
 export const GET_SETTING_DETAIL = "/master/get-setting";
 export const DELETE_SETTING = "/master/delete-setting";
+export const UPLOAD_COMPANY_LOGO = "/master/upload-logo";
 
 // Print Format Settings
 export const GET_PRINT_FORMAT_DATA = "/master/get-print-format-data";

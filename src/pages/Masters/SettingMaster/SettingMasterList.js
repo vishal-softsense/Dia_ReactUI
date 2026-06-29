@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
-import { getSettingData, filterSettingData, submitSettingData } from "../../../helpers/fakebackend_helper";
+import { getSettingData, filterSettingData, submitSettingData, uploadCompanyLogo } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from "react-toastify";
 import classnames from "classnames";
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import { api } from "../../../config";
 
 const SettingMasterList = () => {
     const [loading, setLoading] = useState(false);
@@ -13,6 +14,56 @@ const SettingMasterList = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [settingsList, setSettingsList] = useState([]);
     const [settingModal, setSettingModal] = useState(false);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+
+    const resolveCompanyLogoUrl = (path) => {
+        if (!path || typeof path !== "string" || !path.trim()) {
+            return "";
+        }
+        const trimmed = path.trim();
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        const baseUrl = (api.API_URL || "").replace(/\/$/, "");
+        if (trimmed.startsWith("/")) {
+            return `${baseUrl}${trimmed}`;
+        }
+        return `${baseUrl}/${trimmed}`;
+    };
+
+    const handleLogoUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+        if (!allowedExtensions.exec(file.name)) {
+            toast.error("Only JPG, JPEG, or PNG files are allowed");
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("File size must be less than 2MB");
+            return;
+        }
+
+        setUploadingLogo(true);
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const response = await uploadCompanyLogo(formData);
+            if (response && response.success) {
+                settingValidation.setFieldValue("value", response.path);
+                toast.success("Logo uploaded successfully. Click Save Changes to apply.");
+            } else {
+                toast.error(response?.message || response?.Message || "Logo upload failed");
+            }
+        } catch (error) {
+            toast.error("Error occurred while uploading logo: " + (error.message || error));
+        } finally {
+            setUploadingLogo(false);
+        }
+    };
 
     const tabs = [
         { id: "COMPANY", label: "Company", icon: "ri-building-line" },
@@ -273,6 +324,53 @@ const SettingMasterList = () => {
                                         <FormFeedback type="invalid">{settingValidation.errors.value}</FormFeedback>
                                     ) : null}
                                 </div>
+
+                                {(settingValidation.values.name || "").toLowerCase() === "companyloginlogo" && (
+                                    <div className="mb-3">
+                                        <Label className="form-label">Company Logo Image</Label>
+                                        <div className="d-flex flex-column align-items-center gap-2 p-3 border border-dashed rounded bg-light">
+                                            {uploadingLogo ? (
+                                                <div className="text-center py-3">
+                                                    <Spinner size="sm" color="primary" className="me-2" />
+                                                    <span>Uploading logo...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {settingValidation.values.value ? (
+                                                        <img
+                                                            src={resolveCompanyLogoUrl(settingValidation.values.value)}
+                                                            alt="Company Logo Preview"
+                                                            style={{ maxHeight: "80px", maxWidth: "150px", objectFit: "contain", borderRadius: "4px", backgroundColor: "#fff", padding: "4px" }}
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://placehold.co/150x80?text=No+Preview";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="text-muted fs-12">No logo selected</div>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        accept=".jpg,.jpeg,.png"
+                                                        className="d-none"
+                                                        id="logo-upload-input"
+                                                        onChange={handleLogoUpload}
+                                                    />
+                                                    <Button
+                                                        color="primary"
+                                                        size="sm"
+                                                        type="button"
+                                                        className="mt-2"
+                                                        onClick={() => document.getElementById("logo-upload-input").click()}
+                                                    >
+                                                        <i className="ri-upload-2-fill me-1"></i> Choose Logo File
+                                                    </Button>
+                                                    <span className="text-muted fs-11">JPG, JPEG, PNG (Max 2MB)</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </ModalBody>
                             <ModalFooter>
                                 <Button type="button" color="light" onClick={() => setSettingModal(false)}>Close</Button>

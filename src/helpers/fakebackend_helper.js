@@ -610,6 +610,11 @@ export const filterSettingData = (groupId) => api.get(`${url.FILTER_SETTING_DATA
 export const submitSettingData = (data) => api.create(url.SUBMIT_SETTING_DATA, data);
 export const getSettingDetail = (id, name) => api.get(`${url.GET_SETTING_DETAIL}?id=${id}&name=${encodeURIComponent(name)}`);
 export const deleteSetting = (id) => api.create(`${url.DELETE_SETTING}?id=${id}`);
+export const uploadCompanyLogo = (data) => api.create(url.UPLOAD_COMPANY_LOGO, data, {
+  headers: {
+    "Content-Type": undefined
+  }
+});
 
 // Print Format Settings
 export const getPrintFormatData = () => api.get(url.GET_PRINT_FORMAT_DATA);
