@@ -4,9 +4,27 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
 import { getSettingData } from '../../helpers/fakebackend_helper';
+import { api } from '../../config';
 
 //import images
 import avatar1 from "../../assets/images/users/avatar-1.jpg";
+
+const COMPANY_LOGIN_LOGO_KEY = "companyLoginLogo";
+
+const resolveCompanyLogoUrl = (path) => {
+    if (!path || typeof path !== "string" || !path.trim()) {
+        return "";
+    }
+    const trimmed = path.trim();
+    if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+    }
+    const baseUrl = (api.API_URL || "").replace(/\/$/, "");
+    if (trimmed.startsWith("/")) {
+        return `${baseUrl}${trimmed}`;
+    }
+    return `${baseUrl}/${trimmed}`;
+};
 
 const ProfileDropdown = () => {
 
@@ -25,6 +43,39 @@ const ProfileDropdown = () => {
     const [userRole, setUserRole] = useState("Founder");
     const [fullName, setFullName] = useState("");
     const [displayCompanyName, setDisplayCompanyName] = useState(localStorage.getItem("companySettingName") || "Admin");
+    const [companyLogoUrl, setCompanyLogoUrl] = useState(() => resolveCompanyLogoUrl(localStorage.getItem(COMPANY_LOGIN_LOGO_KEY) || ""));
+
+    const applyCompanyLogo = (rawPath, source = "settings") => {
+        const resolvedUrl = resolveCompanyLogoUrl(rawPath);
+        if (!rawPath || !String(rawPath).trim()) {
+            console.warn("[CompanyLoginLogo] Logo path is empty.", { source, rawPath });
+            setCompanyLogoUrl("");
+            return;
+        }
+        if (!resolvedUrl) {
+            console.error("[CompanyLoginLogo] Could not build logo URL.", { source, rawPath });
+            setCompanyLogoUrl("");
+            return;
+        }
+        localStorage.setItem(COMPANY_LOGIN_LOGO_KEY, String(rawPath).trim());
+        setCompanyLogoUrl(resolvedUrl);
+    };
+
+    const handleLogoImageError = (event) => {
+        const failedUrl = event?.target?.src || companyLogoUrl;
+        const rawPath = localStorage.getItem(COMPANY_LOGIN_LOGO_KEY) || "";
+        console.error("[CompanyLoginLogo] Failed to load company logo image.", {
+            failedUrl,
+            rawPathFromSettings: rawPath,
+            apiBaseUrl: api.API_URL,
+            hint: "Check that CompanyLoginLogo path exists and is reachable (e.g. /Upload/logo.png on API server)."
+        });
+        setCompanyLogoUrl("");
+        if (event?.target) {
+            event.target.onerror = null;
+            event.target.src = avatar1;
+        }
+    };
 
     useEffect(() => {
         let authUserStr = sessionStorage.getItem("authUser") || localStorage.getItem("authUser");
@@ -50,24 +101,51 @@ const ProfileDropdown = () => {
                         setDisplayCompanyName(val);
                         localStorage.setItem("companySettingName", val);
                     }
+
+                    const logoSetting = data.find(item => (item.Name || item.name || "").toLowerCase() === "companyloginlogo");
+                    if (logoSetting) {
+                        const logoPath = logoSetting.Value ?? logoSetting.value ?? "";
+                        applyCompanyLogo(logoPath, "get-setting-data");
+                    } else {
+                        console.warn("[CompanyLoginLogo] Setting not found in API response.", {
+                            source: "get-setting-data",
+                            hint: "Ensure CompanyLoginLogo exists in Company settings."
+                        });
+                    }
+                } else {
+                    console.error("[CompanyLoginLogo] Settings API returned unsuccessful response.", {
+                        source: "get-setting-data",
+                        response
+                    });
                 }
             } catch (error) {
-                console.error("Error fetching company setting in header:", error);
+                console.error("[CompanyLoginLogo] Error fetching company settings in header.", {
+                    source: "get-setting-data",
+                    apiBaseUrl: api.API_URL,
+                    error
+                });
             }
         };
 
         fetchCompanySetting();
 
-        const handleUpdate = () => {
+        const handleCompanyNameUpdate = () => {
             const val = localStorage.getItem("companySettingName");
             if (val) {
                 setDisplayCompanyName(val);
             }
         };
 
-        window.addEventListener("companyNameUpdated", handleUpdate);
+        const handleCompanyLogoUpdate = () => {
+            const logoPath = localStorage.getItem(COMPANY_LOGIN_LOGO_KEY) || "";
+            applyCompanyLogo(logoPath, "companyLogoUpdated");
+        };
+
+        window.addEventListener("companyNameUpdated", handleCompanyNameUpdate);
+        window.addEventListener("companyLogoUpdated", handleCompanyLogoUpdate);
         return () => {
-            window.removeEventListener("companyNameUpdated", handleUpdate);
+            window.removeEventListener("companyNameUpdated", handleCompanyNameUpdate);
+            window.removeEventListener("companyLogoUpdated", handleCompanyLogoUpdate);
         };
     }, [user]);
 
@@ -81,8 +159,20 @@ const ProfileDropdown = () => {
             <Dropdown isOpen={isProfileDropdown} toggle={toggleProfileDropdown} className="ms-sm-3 header-item topbar-user">
                 <DropdownToggle tag="button" type="button" className="btn">
                     <span className="d-flex align-items-center">
-                        <img className="rounded-circle header-profile-user" src={avatar1}
-                            alt="Header Avatar" />
+                        <img
+                            className="header-profile-user"
+                            src={companyLogoUrl || avatar1}
+                            alt="Company Logo"
+                            onError={handleLogoImageError}
+                            style={{
+                                height: "55px",
+                                width: "60px",
+                                objectFit: "contain",
+                                boxShadow: "none",
+                                borderRadius: 0,
+                                backgroundColor: "#fff"
+                            }}
+                        />
                         <span className="text-start ms-xl-2">
                             <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{displayCompanyName}</span>
                             <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">

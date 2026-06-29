@@ -89,6 +89,10 @@ const SettingMasterList = () => {
                         localStorage.setItem("companySettingName", values.value);
                         window.dispatchEvent(new Event("companyNameUpdated"));
                     }
+                    if ((values.name || "").toLowerCase() === "companyloginlogo") {
+                        localStorage.setItem("companyLoginLogo", values.value);
+                        window.dispatchEvent(new Event("companyLogoUpdated"));
+                    }
                     setSettingModal(false);
                     loadTabData(activeTab);
                 } else {
