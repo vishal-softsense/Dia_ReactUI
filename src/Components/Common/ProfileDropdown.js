@@ -156,10 +156,7 @@ const ProfileDropdown = () => {
     };
     return (
         <React.Fragment>
-            <Dropdown isOpen={isProfileDropdown} toggle={toggleProfileDropdown} className="ms-sm-3 header-item topbar-user" style={{
-                                
-                                backgroundColor: "transparent"
-                            }}>
+            <Dropdown isOpen={isProfileDropdown} toggle={toggleProfileDropdown} className="ms-sm-3 header-item topbar-user">
                 <DropdownToggle tag="button" type="button" className="btn" >
                     <span className="d-flex align-items-center">
                         <img
