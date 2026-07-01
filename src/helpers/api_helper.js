@@ -29,7 +29,8 @@ axios.interceptors.response.use(
   function (error) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     let message;
-    switch (error.status) {
+    const status = error.response?.status || error.status;
+    switch (status) {
       case 500:
         message = "Internal Server Error";
         break;
@@ -40,7 +41,7 @@ axios.interceptors.response.use(
         message = "Sorry! the data you are looking for could not be found";
         break;
       default:
-        message = error.message || error;
+        message = error.response?.data?.message || error.response?.data?.Message || error.message || error;
     }
     return Promise.reject(message);
   }

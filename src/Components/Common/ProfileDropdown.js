@@ -170,7 +170,7 @@ const ProfileDropdown = () => {
                                 objectFit: "contain",
                                 boxShadow: "none",
                                 borderRadius: 0,
-                                backgroundColor: "#fff"
+                                // backgroundColor: "#fff"
                             }}
                         />
                         <span className="text-start ms-xl-2">

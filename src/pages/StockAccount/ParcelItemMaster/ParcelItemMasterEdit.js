@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, FormGroup, Label, Input } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getParcelItemMasterDropdowns, getParcelItemMasterDetail, updateParcelItemMaster } from "../../../helpers/fakebackend_helper";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 const ParcelItemMasterEdit = () => {
     const navigate = useNavigate();
@@ -128,7 +128,8 @@ const ParcelItemMasterEdit = () => {
                 navigate("/parcel/list-ParcelItemMaster");
             }
         } catch (error) {
-            toast.error("Error loading parcel item details");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Error loading parcel item details");
+            toast.error(errMsg);
             navigate("/parcel/list-ParcelItemMaster");
         }
     };
@@ -197,13 +198,13 @@ const ParcelItemMasterEdit = () => {
         try {
             const response = await updateParcelItemMaster(form.itemCode, form);
             if (response.success || response.Success) {
-                toast.success(response.message || response.Message || "Parcel Item updated successfully");
-                navigate("/parcel/list-ParcelItemMaster");
+                navigate("/parcel/list-ParcelItemMaster", { state: { successMessage: response.message || response.Message || "Parcel Item updated successfully." } });
             } else {
                 toast.error(response.message || response.Message || "Failed to update parcel item");
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || error.response?.data?.Message || "An error occurred while updating");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "An error occurred while updating");
+            toast.error(errMsg);
         }
         setSubmitting(false);
     };
@@ -573,6 +574,7 @@ const ParcelItemMasterEdit = () => {
                     )}
                 </Container>
             </div>
+            <ToastContainer closeButton={false} limit={1} />
         </React.Fragment>
     );
 };

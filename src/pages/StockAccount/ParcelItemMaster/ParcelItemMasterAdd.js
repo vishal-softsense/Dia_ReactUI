@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, FormGroup, Label, Input } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getParcelItemMasterDropdowns, checkLotNoExists, addParcelItemMaster } from "../../../helpers/fakebackend_helper";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 const ParcelItemMasterAdd = () => {
     const navigate = useNavigate();
@@ -135,6 +135,8 @@ const ParcelItemMasterAdd = () => {
                 }
             }
         } catch (error) {
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Error checking LotNo existence");
+            toast.error(errMsg);
             console.error("Error checking LotNo existence", error);
         }
     };
@@ -154,13 +156,13 @@ const ParcelItemMasterAdd = () => {
         try {
             const response = await addParcelItemMaster(form);
             if (response.success || response.Success) {
-                toast.success(response.message || response.Message || "Parcel Item Added successfully");
-                navigate("/parcel/list-ParcelItemMaster");
+                navigate("/parcel/list-ParcelItemMaster", { state: { successMessage: response.message || response.Message || "Parcel Item saved successfully." } });
             } else {
                 toast.error(response.message || response.Message || "Failed to add parcel item");
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || error.response?.data?.Message || "An error occurred while adding");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "An error occurred while adding");
+            toast.error(errMsg);
         }
         setSubmitting(false);
     };
@@ -555,6 +557,7 @@ const ParcelItemMasterAdd = () => {
                     </form>
                 </Container>
             </div>
+            <ToastContainer closeButton={false} limit={1} />
         </React.Fragment>
     );
 };

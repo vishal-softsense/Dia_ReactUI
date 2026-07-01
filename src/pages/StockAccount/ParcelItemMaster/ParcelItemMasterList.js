@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { getParcelItemMasters, deleteParcelItemMaster } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 
 
 const ParcelItemMasterList = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [parcelItems, setParcelItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
@@ -18,8 +19,12 @@ const ParcelItemMasterList = () => {
     const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => {
+        if (location.state?.successMessage) {
+            toast.success(location.state.successMessage);
+            window.history.replaceState({}, document.title);
+        }
         fetchParcelItems();
-    }, []);
+    }, [location.state]);
 
     const fetchParcelItems = async (filter = "") => {
         setLoading(true);
@@ -56,7 +61,8 @@ const ParcelItemMasterList = () => {
                     toast.error(response.message || response.Message || "Problem in deleting item");
                 }
             } catch (error) {
-                toast.error(error.response?.data?.message || error.response?.data?.Message || "Failed to delete parcel item");
+                const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Failed to delete parcel item");
+                toast.error(errMsg);
             }
             setDeleteModal(false);
             setItemToDelete(null);
@@ -270,6 +276,7 @@ const ParcelItemMasterList = () => {
                     </div>
                 </ModalBody>
             </Modal>
+            <ToastContainer closeButton={false} limit={1} />
         </React.Fragment>
     );
 };
