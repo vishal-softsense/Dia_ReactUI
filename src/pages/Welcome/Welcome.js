@@ -42,9 +42,6 @@ const Welcome = () => {
             <div className="circle three"></div>
 
             <Container className="hero">
-
-
-
                 <h5>{greeting}</h5>
 
                 <h1>Welcome to DiaJewSoft</h1>
@@ -54,9 +51,6 @@ const Welcome = () => {
                 <p>
                     Inventory Management • Purchase • Sales • Accounts
                 </p>
-
-
-
             </Container>
 
             <style>{`
@@ -463,7 +457,6 @@ height:220px;
 }
 
 `}</style>
-
         </div>
     );
 };
