@@ -1,162 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Input } from 'reactstrap';
-
-//SimpleBar
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Input } from "reactstrap";
 import SimpleBar from "simplebar-react";
+import axios from "axios";
+import { api } from "../../config";
 
-//import images
-import image2 from "../../assets/images/users/avatar-2.jpg";
-import image3 from "../../assets/images/users/avatar-3.jpg";
-import image5 from "../../assets/images/users/avatar-5.jpg";
 
 const SearchOption = () => {
+
     const [value, setValue] = useState("");
-    const onChangeData = (value) => {
-        setValue(value);
+    const [menuList, setMenuList] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    const onChangeData = async (e) => {
+
+        const text = e.target.value;
+
+        setValue(text);
+
+        if (text.trim() === "") {
+            setMenuList([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+
+            let authUserStr = sessionStorage.getItem("authUser") || localStorage.getItem("authUser");
+            let token = null;
+            if (authUserStr) {
+                const obj = JSON.parse(authUserStr);
+                token = obj.token || obj.Token;
+            }
+
+            const response = await axios.get(
+                `${api.API_URL}/api/common/get-menu-list`,
+                {
+                    params: {
+                        searchby: text
+                    },
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            console.log("Response :", response);
+
+            let result = [];
+
+            if (Array.isArray(response)) {
+                result = response;
+            }
+            else if (Array.isArray(response?.data)) {
+                result = response.data;
+            }
+            else if (Array.isArray(response?.Data)) {
+                result = response.Data;
+            }
+
+            setMenuList(result);
+            setShowDropdown(true);
+
+
+        }
+        catch (err) {
+
+            console.error(err);
+
+            setMenuList([]);
+            setShowDropdown(true);
+
+        }
+        finally {
+
+            setLoading(false);
+
+        }
+
     };
 
-    useEffect(() => {
-        var searchOptions = document.getElementById("search-close-options");
-        var dropdown = document.getElementById("search-dropdown");
-        var searchInput = document.getElementById("search-options");
+    const clearSearch = () => {
 
-        searchInput.addEventListener("focus", function () {
-            var inputLength = searchInput.value.length;
-            if (inputLength > 0) {
-                dropdown.classList.add("show");
-                searchOptions.classList.remove("d-none");
-            } else {
-                dropdown.classList.remove("show");
-                searchOptions.classList.add("d-none");
-            }
-        });
+        setValue("");
+        setMenuList([]);
+        setShowDropdown(false);
 
-        searchInput.addEventListener("keyup", function () {
-            var inputLength = searchInput.value.length;
-            if (inputLength > 0) {
-                dropdown.classList.add("show");
-                searchOptions.classList.remove("d-none");
-            } else {
-                dropdown.classList.remove("show");
-                searchOptions.classList.add("d-none");
-            }
-        });
-
-        searchOptions.addEventListener("click", function () {
-            searchInput.value = "";
-            dropdown.classList.remove("show");
-            searchOptions.classList.add("d-none");
-        });
-
-        document.body.addEventListener("click", function (e) {
-            if (e.target.getAttribute('id') !== "search-options") {
-                dropdown.classList.remove("show");
-                searchOptions.classList.add("d-none");
-            }
-        });
-    }, []);
+    };
 
     return (
-        <React.Fragment>
-            <form className="app-search d-none d-md-block">
-                <div className="position-relative">
-                    <Input type="text" className="form-control" placeholder="Search..."
-                        id="search-options"
-                        value={value}
-                        onChange={e => {
-                            onChangeData(e.target.value);
-                        }} />
-                    <span className="mdi mdi-magnify search-widget-icon"></span>
-                    <span className="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none"
-                        id="search-close-options"></span>
-                </div>
-                <div className="dropdown-menu dropdown-menu-lg" id="search-dropdown">
-                    <SimpleBar style={{ height: "320px" }}>
 
-                        <div className="dropdown-header">
-                            <h6 className="text-overflow text-muted mb-0 text-uppercase">Recent Searches</h6>
-                        </div>
+        <form className="app-search d-none d-md-block">
 
-                        <div className="dropdown-item bg-transparent text-wrap">
-                            <Link to="/" className="btn btn-soft-secondary btn-sm rounded-pill">how to setup <i
-                                className="mdi mdi-magnify ms-1"></i></Link>
-                            <Link to="/" className="btn btn-soft-secondary btn-sm rounded-pill">buttons <i
-                                className="mdi mdi-magnify ms-1"></i></Link>
-                        </div>
+            <div className="position-relative">
 
-                        <div className="dropdown-header mt-2">
-                            <h6 className="text-overflow text-muted mb-1 text-uppercase">Pages</h6>
-                        </div>
+                <Input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search Menu..."
+                    autoComplete="off"
+                    value={value}
+                    onChange={onChangeData}
+                />
 
+                <span className="mdi mdi-magnify search-widget-icon"></span>
 
-                        <Link to="#" className="dropdown-item notify-item">
-                            <i className="ri-bubble-chart-line align-middle fs-18 text-muted me-2"></i>
-                            <span>Analytics Dashboard</span>
-                        </Link>
+                {
+                    value !== "" &&
 
+                    <span
+                        className="mdi mdi-close-circle search-widget-icon search-widget-icon-close"
+                        style={{ cursor: "pointer" }}
+                        onClick={clearSearch}
+                    ></span>
 
-                        <Link to="#" className="dropdown-item notify-item">
-                            <i className="ri-lifebuoy-line align-middle fs-18 text-muted me-2"></i>
-                            <span>Help Center</span>
-                        </Link>
+                }
 
+            </div>
 
-                        <Link to="#" className="dropdown-item notify-item">
-                            <i className="ri-user-settings-line align-middle fs-18 text-muted me-2"></i>
-                            <span>My account settings</span>
-                        </Link>
+            {
+                showDropdown &&
 
+                <div
+                    className="dropdown-menu show"
+                    style={{
+                        display: "block",
+                        width: "100%",
+                        zIndex: 9999
+                    }}
+                >
 
-                        <div className="dropdown-header mt-2">
-                            <h6 className="text-overflow text-muted mb-2 text-uppercase">Members</h6>
-                        </div>
+                    <SimpleBar style={{ maxHeight: 300 }}>
 
-                        <div className="notification-list">
+                        {
+                            loading ?
 
-                            <Link to="#" className="dropdown-item notify-item py-2">
-                                <div className="d-flex">
-                                    <img src={image2} className="me-3 rounded-circle avatar-xs"
-                                        alt="user-pic" />
-                                    <div className="flex-grow-1">
-                                        <h6 className="m-0">Angela Bernier</h6>
-                                        <span className="fs-11 mb-0 text-muted">Manager</span>
-                                    </div>
+                                <div className="dropdown-item text-center">
+                                    Loading...
                                 </div>
-                            </Link>
 
-                            <Link to="#" className="dropdown-item notify-item py-2">
-                                <div className="d-flex">
-                                    <img src={image3} className="me-3 rounded-circle avatar-xs"
-                                        alt="user-pic" />
-                                    <div className="flex-grow-1">
-                                        <h6 className="m-0">David Grasso</h6>
-                                        <span className="fs-11 mb-0 text-muted">Web Designer</span>
-                                    </div>
-                                </div>
-                            </Link>
+                                :
 
-                            <Link to="#" className="dropdown-item notify-item py-2">
-                                <div className="d-flex">
-                                    <img src={image5} className="me-3 rounded-circle avatar-xs"
-                                        alt="user-pic" />
-                                    <div className="flex-grow-1">
-                                        <h6 className="m-0">Mike Bunch</h6>
-                                        <span className="fs-11 mb-0 text-muted">React Developer</span>
+                                menuList.length > 0 ?
+
+                                    menuList.map((item, index) => (
+
+                                        <Link
+                                            key={index}
+                                            to={item.id ? item.id.replace("../", "/") : "#"}
+                                            className="dropdown-item notify-item"
+                                            onClick={clearSearch}
+                                        >
+
+                                            <div className="fw-semibold">
+                                                {item.text}
+                                            </div>
+
+                                            <small className="text-muted">
+                                                {item.group}
+                                            </small>
+
+                                        </Link>
+
+                                    ))
+
+                                    :
+
+                                    <div className="dropdown-item text-center">
+                                        No Menu Found
                                     </div>
-                                </div>
-                            </Link>
-                        </div>
+
+                        }
+
                     </SimpleBar>
 
-                    <div className="text-center pt-3 pb-1">
-                        <Link to="/pages-search-results" className="btn btn-primary btn-sm">View All Results <i
-                            className="ri-arrow-right-line ms-1"></i></Link>
-                    </div>
                 </div>
-            </form>
-        </React.Fragment>
+
+            }
+
+        </form>
+
     );
+
 };
 
 export default SearchOption;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -7,8 +7,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from 'react-toastify';
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import { useTranslation } from "react-i18next";
 
 const JewMetalMasterList = () => {
+    const { t } = useTranslation();
     const [metals, setMetals] = useState([]);
     const [colors, setColors] = useState([]);
     const [purities, setPurities] = useState([]); // purity options based on metal type
@@ -375,7 +377,7 @@ const JewMetalMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title="Edit Metal"
+                                title={t("Edit Metal")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -394,7 +396,7 @@ const JewMetalMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title="Delete Metal"
+                                title={t("Delete Metal")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -482,21 +484,21 @@ const JewMetalMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Jewellery Metal Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Jewellery Metal Master")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Jewellery Metal List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Jewellery Metal List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Metal
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title="Import Excel">
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
                                         </Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
                                     </div>
@@ -505,7 +507,7 @@ const JewMetalMasterList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -517,7 +519,7 @@ const JewMetalMasterList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Metals..."
+                                            SearchPlaceholder={t("Search Metals...")}
                                         />
                                     )}
                                 </CardBody>
@@ -541,13 +543,13 @@ const JewMetalMasterList = () => {
                         <Row className="gy-3">
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalID" className="form-label">Metal ID <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalID" className="form-label">{t("Metal ID")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalID"
                                         type="text"
                                         className="form-control"
                                         id="metalID"
-                                        placeholder="Enter Metal ID"
+                                        placeholder={t("Enter Metal ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.metalID || ""}
@@ -561,13 +563,13 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalName" className="form-label">Metal Name <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalName" className="form-label">{t("Metal Name")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalName"
                                         type="text"
                                         className="form-control"
                                         id="metalName"
-                                        placeholder="Enter Metal Name"
+                                        placeholder={t("Enter Metal Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.metalName || ""}
@@ -581,13 +583,13 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalPriority" className="form-label">Metal Priority <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalPriority" className="form-label">{t("Metal Priority")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalPriority"
                                         type="text"
                                         className="form-control"
                                         id="metalPriority"
-                                        placeholder="Enter Metal Priority"
+                                        placeholder={t("Enter Metal Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.metalPriority !== undefined ? validation.values.metalPriority : ""}
@@ -601,7 +603,7 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalType" className="form-label">Metal Type <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalType" className="form-label">{t("Metal Type")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalType"
                                         type="select"
@@ -616,10 +618,10 @@ const JewMetalMasterList = () => {
                                         value={validation.values.metalType || ""}
                                         invalid={validation.touched.metalType && validation.errors.metalType ? true : false}
                                     >
-                                        <option value="" disabled>Select Metal Type</option>
-                                        <option value="Gold">Gold</option>
-                                        <option value="Silver">Silver</option>
-                                        <option value="Platinum">Platinum</option>
+                                        <option value="" disabled>{t("Select Metal Type")}</option>
+                                        <option value="Gold">{t("Gold")}</option>
+                                        <option value="Silver">{t("Silver")}</option>
+                                        <option value="Platinum">{t("Platinum")}</option>
                                     </Input>
                                     {validation.touched.metalType && validation.errors.metalType ? (
                                         <FormFeedback type="invalid">{validation.errors.metalType}</FormFeedback>
@@ -629,7 +631,7 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalColor" className="form-label">Metal Color <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalColor" className="form-label">{t("Metal Color")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalColor"
                                         type="select"
@@ -640,9 +642,9 @@ const JewMetalMasterList = () => {
                                         value={validation.values.metalColor || ""}
                                         invalid={validation.touched.metalColor && validation.errors.metalColor ? true : false}
                                     >
-                                        <option value="" disabled>Select Metal Color</option>
+                                        <option value="" disabled>{t("Select Metal Color")}</option>
                                         {colors.length === 0 ? (
-                                            <option value="" disabled>-- No colors available --</option>
+                                            <option value="" disabled>{t("-- No colors available --")}</option>
                                         ) : (
                                             colors.map((c) => (
                                                 <option key={c.id || c.ID || c.jewColorID || c.JewColorID} value={c.jewColorID || c.JewColorID}>
@@ -659,7 +661,7 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metalPurity" className="form-label">Metal Purity <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metalPurity" className="form-label">{t("Metal Purity")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metalPurity"
                                         type="select"
@@ -688,13 +690,13 @@ const JewMetalMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="metal24KTRatio" className="form-label">Metal 24KT Ratio <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="metal24KTRatio" className="form-label">{t("Metal 24KT Ratio")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="metal24KTRatio"
                                         type="text"
                                         className="form-control"
                                         id="metal24KTRatio"
-                                        placeholder="Enter Metal 24KT Ratio"
+                                        placeholder={t("Enter Metal 24KT Ratio")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.metal24KTRatio !== undefined ? validation.values.metal24KTRatio : ""}
@@ -708,7 +710,7 @@ const JewMetalMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>Cancel</Button>
+                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
                         <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
                     </ModalFooter>
                 </Form>
@@ -716,7 +718,7 @@ const JewMetalMasterList = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -726,25 +728,25 @@ const JewMetalMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete metal <strong>{metalToDelete?.metalName || metalToDelete?.MetalName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Jewellery Metal Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Jewellery Metal Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download JewMetalMaster File Template Format</Label>
+                        <Label className="form-label">{t("Download JewMetalMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -755,7 +757,7 @@ const JewMetalMasterList = () => {
                     <hr />
 
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -768,7 +770,7 @@ const JewMetalMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -776,8 +778,8 @@ const JewMetalMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer closeButton={false} limit={1} />

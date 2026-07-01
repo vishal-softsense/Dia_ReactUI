@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Input, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getPrintFormatData, updatePrintFormat, getInvoiceFormatSetting, printPreview } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const PrintFormatList = () => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [printFormatsList, setPrintFormatsList] = useState([]);
@@ -121,7 +123,7 @@ const PrintFormatList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Print Format Settings" pageTitle="Masters" />
+                    <BreadCrumb title={t("Print Format Settings")} pageTitle="Masters" />
                     <ToastContainer closeButton={false} limit={1} />
                     
                     <Row>
@@ -139,7 +141,7 @@ const PrintFormatList = () => {
                                                 className="form-control"
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                placeholder="Search settings..."
+                                                placeholder={t("Search settings...")}
                                             />
                                             <i className="bx bx-search-alt search-icon"></i>
                                         </div>
@@ -149,16 +151,16 @@ const PrintFormatList = () => {
                                     {loading ? (
                                         <div className="d-flex justify-content-center align-items-center py-5">
                                             <Spinner color="primary" />
-                                            <span className="ms-2">Loading print formats...</span>
+                                            <span className="ms-2">{t("Loading print formats...")}</span>
                                         </div>
                                     ) : (
                                         <div className="table-responsive table-card">
                                             <table className="table table-hover table-striped align-middle table-nowrap mb-0">
                                                 <thead className="table-light">
                                                     <tr>
-                                                        <th>Format Setting Name</th>
-                                                        <th>Active Format / Condition</th>
-                                                        <th style={{ width: "100px" }}>Actions</th>
+                                                        <th>{t("Format Setting Name")}</th>
+                                                        <th>{t("Active Format / Condition")}</th>
+                                                        <th style={{ width: "100px" }}>{t("Actions")}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -174,7 +176,7 @@ const PrintFormatList = () => {
                                                                         color="soft-primary" 
                                                                         size="sm" 
                                                                         onClick={() => handleEditPrintSetting(item)}
-                                                                        title="Edit Format Setting"
+                                                                        title={t("Edit Format Setting")}
                                                                     >
                                                                         <i className="ri-edit-line"></i> Edit
                                                                     </Button>
@@ -183,7 +185,7 @@ const PrintFormatList = () => {
                                                         ))
                                                     ) : (
                                                         <tr>
-                                                            <td colSpan="3" className="text-center py-4">No print formats found.</td>
+                                                            <td colSpan="3" className="text-center py-4">{t("No print formats found.")}</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -202,13 +204,13 @@ const PrintFormatList = () => {
                             toggle={() => setPrintModal(false)}
                             close={<button className="btn-close btn-close-white" onClick={() => setPrintModal(false)}></button>}
                         >
-                            <span className="text-white">Edit Print Format Setting</span>
+                            <span className="text-white">{t("Edit Print Format Setting")}</span>
                         </ModalHeader>
                         <ModalBody>
                             {selectedPrintSetting && (
                                 <>
                                     <div className="mb-3">
-                                        <Label className="form-label">Print Setting Name</Label>
+                                        <Label className="form-label">{t("Print Setting Name")}</Label>
                                         <Input
                                             type="text"
                                             value={selectedPrintSetting.Name || selectedPrintSetting.name || ""}
@@ -221,24 +223,24 @@ const PrintFormatList = () => {
                                       (selectedPrintSetting.Name || selectedPrintSetting.name) === "MemoConditions" || 
                                       (selectedPrintSetting.Name || selectedPrintSetting.name) === "Information") ? (
                                         <div className="mb-3">
-                                            <Label className="form-label">Conditions / Information Content</Label>
+                                            <Label className="form-label">{t("Conditions / Information Content")}</Label>
                                             <Input
                                                 type="textarea"
                                                 rows="6"
                                                 value={printConditions}
                                                 onChange={(e) => setPrintConditions(e.target.value)}
-                                                placeholder="Enter terms and conditions text..."
+                                                placeholder={t("Enter terms and conditions text...")}
                                             />
                                         </div>
                                     ) : (
                                         <div className="mb-3">
-                                            <Label className="form-label">Select Print Format</Label>
+                                            <Label className="form-label">{t("Select Print Format")}</Label>
                                             <Input
                                                 type="select"
                                                 value={selectedPrintFormat}
                                                 onChange={(e) => setSelectedPrintFormat(e.target.value)}
                                             >
-                                                <option value="">Select Invoice format</option>
+                                                <option value="">{t("Select Invoice format")}</option>
                                                 {invoiceFormatOptions.map((opt, i) => (
                                                     <option key={i} value={opt.Value ?? opt.value}>{opt.Text ?? opt.text}</option>
                                                 ))}
@@ -266,8 +268,8 @@ const PrintFormatList = () => {
                                 )}
                             </div>
                             <div className="d-flex gap-2">
-                                <Button type="button" color="light" onClick={() => setPrintModal(false)}>Close</Button>
-                                <Button type="button" color="primary" onClick={handleSavePrintSetting}>Save</Button>
+                                <Button type="button" color="light" onClick={() => setPrintModal(false)}>{t("Close")}</Button>
+                                <Button type="button" color="primary" onClick={handleSavePrintSetting}>{t("Save")}</Button>
                             </div>
                         </ModalFooter>
                     </Modal>

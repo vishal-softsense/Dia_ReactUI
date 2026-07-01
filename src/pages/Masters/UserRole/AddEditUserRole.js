@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, FormFeedback, Input, Label, Form } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -6,8 +6,10 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 import { getUserRoleDetail, addNewUserRole, updateUserRole, getUserRoleDropdown } from "../../../helpers/fakebackend_helper";
 import { toast } from 'react-toastify';
+import { useTranslation } from "react-i18next";
 
 const AddEditUserRole = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
@@ -92,13 +94,13 @@ const AddEditUserRole = () => {
                                         <Row className="gy-4">
                                             <Col md={4}>
                                                 <div className="mb-3">
-                                                    <Label htmlFor="userType" className="form-label">Role Name <span className="text-danger">*</span></Label>
+                                                    <Label htmlFor="userType" className="form-label">{t("Role Name")} <span className="text-danger">*</span></Label>
                                                     <Input
                                                         name="userType"
                                                         type="text"
                                                         className="form-control"
                                                         id="userType"
-                                                        placeholder="Enter Role Name"
+                                                        placeholder={t("Enter Role Name")}
                                                         onChange={validation.handleChange}
                                                         onBlur={validation.handleBlur}
                                                         value={validation.values.userType || ""}
@@ -116,13 +118,13 @@ const AddEditUserRole = () => {
 
                                             <Col md={12}>
                                                 <div className="mb-3">
-                                                    <Label htmlFor="description" className="form-label">Description <span className="text-danger">*</span></Label>
+                                                    <Label htmlFor="description" className="form-label">{t("Description")} <span className="text-danger">*</span></Label>
                                                     <Input
                                                         name="description"
                                                         type="textarea"
                                                         className="form-control"
                                                         id="description"
-                                                        placeholder="Enter Description"
+                                                        placeholder={t("Enter Description")}
                                                         onChange={validation.handleChange}
                                                         onBlur={validation.handleBlur}
                                                         value={validation.values.description || ""}
@@ -138,7 +140,7 @@ const AddEditUserRole = () => {
                                         </Row>
 
                                         <div className="hstack gap-2 justify-content-end mt-4">
-                                            <Link to="/user-role" className="btn btn-light">Cancel</Link>
+                                            <Link to="/user-role" className="btn btn-light">{t("Cancel")}</Link>
                                             <Button type="submit" color="primary">
                                                 {isEditMode ? "Update Role" : "Add Role"}
                                             </Button>

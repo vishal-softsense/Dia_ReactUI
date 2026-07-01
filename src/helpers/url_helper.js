@@ -226,6 +226,8 @@ export const DELETE_SHADE_MASTER = "/api/AllMaster/delete-shade"; // append /{id
 // Sidebar Menu
 export const GET_SIDEBAR_MENU = "/api/Menu/sidebar-menu";
 
+export const GET_SIDEBAR_MENUSearch = "/api/common/get-menu-list";
+
 // UserRole Master
 export const GET_USER_ROLE_LIST = "/api/UserRole/list-user-role";
 export const GET_USER_ROLE_DETAIL = "/api/UserRole/edit-user-role"; // append /{id}

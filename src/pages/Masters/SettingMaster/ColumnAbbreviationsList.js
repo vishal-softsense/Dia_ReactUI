@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Input, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getColumnAbbreviations, updateColumnAbbreviations } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, parseExcelFile } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const ColumnAbbreviationsList = () => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [columnAbbrList, setColumnAbbrList] = useState([]);
@@ -152,7 +154,7 @@ const ColumnAbbreviationsList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Column Abbreviations" pageTitle="Masters" />
+                    <BreadCrumb title={t("Column Abbreviations")} pageTitle="Masters" />
                     <ToastContainer closeButton={false} limit={1} />
                     
                     <Row>
@@ -170,7 +172,7 @@ const ColumnAbbreviationsList = () => {
                                                 className="form-control"
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                placeholder="Search columns..."
+                                                placeholder={t("Search columns...")}
                                             />
                                             <i className="bx bx-search-alt search-icon"></i>
                                         </div>
@@ -186,15 +188,15 @@ const ColumnAbbreviationsList = () => {
                                     {loading ? (
                                         <div className="d-flex justify-content-center align-items-center py-5">
                                             <Spinner color="primary" />
-                                            <span className="ms-2">Loading abbreviations...</span>
+                                            <span className="ms-2">{t("Loading abbreviations...")}</span>
                                         </div>
                                     ) : (
                                         <div className="table-responsive table-card" style={{ maxHeight: "600px", overflowY: "auto" }}>
                                             <table className="table table-bordered table-striped align-middle table-nowrap mb-0">
                                                 <thead className="table-light sticky-top">
                                                     <tr>
-                                                        <th style={{ width: "50%" }}>Column Name</th>
-                                                        <th>Abbreviation Value</th>
+                                                        <th style={{ width: "50%" }}>{t("Column Name")}</th>
+                                                        <th>{t("Abbreviation Value")}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -210,7 +212,7 @@ const ColumnAbbreviationsList = () => {
                                                                             className="form-control form-control-sm border-light-subtle bg-transparent"
                                                                             value={item.Abbreviation ?? item.abbreviation ?? ""}
                                                                             onChange={(e) => handleAbbrChange(itemId, e.target.value)}
-                                                                            placeholder="e.g. SHP, CRT, AMT"
+                                                                            placeholder={t("e.g. SHP, CRT, AMT")}
                                                                         />
                                                                     </td>
                                                                 </tr>
@@ -218,7 +220,7 @@ const ColumnAbbreviationsList = () => {
                                                         })
                                                     ) : (
                                                         <tr>
-                                                            <td colSpan="2" className="text-center py-4">No columns found.</td>
+                                                            <td colSpan="2" className="text-center py-4">{t("No columns found.")}</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -237,23 +239,23 @@ const ColumnAbbreviationsList = () => {
                             toggle={() => setImportModal(false)}
                             close={<button className="btn-close btn-close-white" onClick={() => setImportModal(false)}></button>}
                         >
-                            <span className="text-white">Import File</span>
+                            <span className="text-white">{t("Import File")}</span>
                         </ModalHeader>
                         <ModalBody className="p-4">
                             <div className="mb-4">
-                                <Label className="form-label fw-bold text-uppercase fs-12 text-muted mb-2">Select File to Import</Label>
+                                <Label className="form-label fw-bold text-uppercase fs-12 text-muted mb-2">{t("Select File to Import")}</Label>
                                 <Input
                                     type="file"
                                     accept=".xlsx, .xls"
                                     onChange={(e) => setImportFile(e.target.files[0])}
                                 />
                                 <small className="text-muted mt-2 d-block">
-                                    Excel file must contain two headers: <strong>ColumnName</strong> and <strong>Abbreviation</strong>.
+                                    Excel file must contain two headers: <strong>{t("ColumnName")}</strong> {t("and")} <strong>{t("Abbreviation")}</strong>.
                                 </small>
                             </div>
                             
                             <div className="border-top pt-3">
-                                <Label className="form-label fw-bold text-uppercase fs-12 text-muted mb-2">Download Column Abbreviation Format</Label>
+                                <Label className="form-label fw-bold text-uppercase fs-12 text-muted mb-2">{t("Download Column Abbreviation Format")}</Label>
                                 <div className="mt-1">
                                     <Button color="primary" onClick={handleDownloadAbbrTemplate} className="d-flex align-items-center gap-1">
                                         <i className="ri-download-cloud-2-line fs-16"></i> Download
@@ -262,8 +264,8 @@ const ColumnAbbreviationsList = () => {
                             </div>
                         </ModalBody>
                         <ModalFooter className="bg-light-subtle">
-                            <Button color="light" onClick={() => setImportModal(false)}>Close</Button>
-                            <Button color="primary" onClick={handleImportAbbr} disabled={!importFile}>Accept</Button>
+                            <Button color="light" onClick={() => setImportModal(false)}>{t("Close")}</Button>
+                            <Button color="primary" onClick={handleImportAbbr} disabled={!importFile}>{t("Accept")}</Button>
                         </ModalFooter>
                     </Modal>
 

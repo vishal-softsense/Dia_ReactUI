@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { getUserRoles, deleteUserRole } from "../../../helpers/fakebackend_helper";
 import { toast } from 'react-toastify';
+import { useTranslation } from "react-i18next";
 
 const UserRoleList = () => {
+    const { t } = useTranslation();
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleteModal, setDeleteModal] = useState(false);
@@ -122,7 +124,7 @@ const UserRoleList = () => {
                                     justifyContent: "center",
                                     padding: "0"
                                 }}
-                                title="Manage Permissions"
+                                title={t("Manage Permissions")}
                             >
                                 <i className="las la-user-lock" style={{ fontSize: "16px" }}></i>
                             </Link>
@@ -156,12 +158,12 @@ const UserRoleList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="User Role List" pageTitle="Masters" />
+                    <BreadCrumb title={t("User Role List")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">User Roles</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("User Roles")}</h5>
                                     <div>
                                         <Link to="/add-user-role" className="btn btn-primary add-btn me-1">
                                             <i className="ri-add-line align-bottom me-1"></i> Add Role
@@ -172,7 +174,7 @@ const UserRoleList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="sr-only">Loading...</span>
+                                                <span className="sr-only">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -184,7 +186,7 @@ const UserRoleList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Roles..."
+                                            SearchPlaceholder={t("Search Roles...")}
                                         />
                                     )}
                                 </CardBody>
@@ -196,7 +198,7 @@ const UserRoleList = () => {
 
             {/* Delete Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -206,7 +208,7 @@ const UserRoleList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to remove this record?
                             </p>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -8,8 +8,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from "react-toastify";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
 
 const LusterMasterList = () => {
+    const { t } = useTranslation();
 
     document.title = "Luster Master";
 
@@ -339,7 +341,7 @@ const LusterMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleEditClick(row)}
-                            title="Edit Luster"
+                            title={t("Edit Luster")}
                         >
                             <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -358,7 +360,7 @@ const LusterMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleDeleteClick(row)}
-                            title="Delete Luster"
+                            title={t("Delete Luster")}
                         >
                             <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -396,12 +398,12 @@ const LusterMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Luster Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Luster Master")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center justify-content-between">
-                                    <h5 className="card-title mb-0 flex-grow-1">Luster List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Luster List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Luster
@@ -412,7 +414,7 @@ const LusterMasterList = () => {
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
-                                            title="Export Excel"
+                                            title={t("Export Excel")}
                                             style={{
                                                 height: "37.5px",
                                                 display: "inline-flex",
@@ -435,7 +437,7 @@ const LusterMasterList = () => {
                                             data={lusterList}
                                             isGlobalFilter={true}
                                             customPageSize={50}
-                                            SearchPlaceholder="Search Luster..."
+                                            SearchPlaceholder={t("Search Luster...")}
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
@@ -456,11 +458,11 @@ const LusterMasterList = () => {
                     <ModalBody>
                         <Row className="gy-3">
                             <Col md={12}>
-                                <Label className="form-label">Luster ID <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Luster ID")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="lusterID"
                                     type="text"
-                                    placeholder="Enter Luster ID"
+                                    placeholder={t("Enter Luster ID")}
                                     value={validation.values.lusterID}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -469,11 +471,11 @@ const LusterMasterList = () => {
                                 <FormFeedback>{validation.errors.lusterID}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Luster Name <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Luster Name")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="lusterName"
                                     type="text"
-                                    placeholder="Enter Luster Name"
+                                    placeholder={t("Enter Luster Name")}
                                     value={validation.values.lusterName}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -482,11 +484,11 @@ const LusterMasterList = () => {
                                 <FormFeedback>{validation.errors.lusterName}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Luster Priority <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Luster Priority")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="lusterPriority"
                                     type="number"
-                                    placeholder="Enter Luster Priority"
+                                    placeholder={t("Enter Luster Priority")}
                                     value={validation.values.lusterPriority}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -495,31 +497,31 @@ const LusterMasterList = () => {
                                 <FormFeedback>{validation.errors.lusterPriority}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Luster Group Name</Label>
+                                <Label className="form-label">{t("Luster Group Name")}</Label>
                                 <Input
                                     name="lusterGroupName"
                                     type="text"
-                                    placeholder="Enter Luster Group Name"
+                                    placeholder={t("Enter Luster Group Name")}
                                     value={validation.values.lusterGroupName}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Luster Group Priority</Label>
+                                <Label className="form-label">{t("Luster Group Priority")}</Label>
                                 <Input
                                     name="lusterGroupPriority"
                                     type="number"
-                                    placeholder="Enter Luster Group Priority"
+                                    placeholder={t("Enter Luster Group Priority")}
                                     value={validation.values.lusterGroupPriority}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Pricing Luster ID</Label>
+                                <Label className="form-label">{t("Pricing Luster ID")}</Label>
                                 <Input
                                     name="pricingLusterID"
                                     type="text"
-                                    placeholder="Enter Pricing Luster ID"
+                                    placeholder={t("Enter Pricing Luster ID")}
                                     value={validation.values.pricingLusterID}
                                     onChange={validation.handleChange}
                                 />
@@ -527,18 +529,18 @@ const LusterMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="light" type="button" onClick={() => setFormModal(false)}>Cancel</Button>
-                        <Button color="primary" type="submit">Save</Button>
+                        <Button color="light" type="button" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button color="primary" type="submit">{t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Luster Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Luster Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download Luster Master File Template Format</Label>
+                        <Label className="form-label">{t("Download Luster Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -547,7 +549,7 @@ const LusterMasterList = () => {
                     </div>
                     <hr />
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -559,7 +561,7 @@ const LusterMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -567,14 +569,14 @@ const LusterMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -584,15 +586,15 @@ const LusterMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete Luster <strong>{lusterToDelete?.lusterID || lusterToDelete?.lusterName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>

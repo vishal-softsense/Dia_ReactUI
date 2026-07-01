@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getRolePermissions, saveRolePermissions, getUserRoleDetail } from "../../../helpers/fakebackend_helper";
 import { toast } from 'react-toastify';
 import RolePermissionGrid from "./RolePermissionGrid";
+import { useTranslation } from "react-i18next";
 
 const ManageUserPermission = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -82,7 +84,7 @@ const ManageUserPermission = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Manage Permissions" pageTitle="Masters" />
+                    <BreadCrumb title={t("Manage Permissions")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -95,7 +97,7 @@ const ManageUserPermission = () => {
                                             <input 
                                                 type="text" 
                                                 className="form-control form-control-sm" 
-                                                placeholder="Search permissions..." 
+                                                placeholder={t("Search permissions...")} 
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
@@ -113,7 +115,7 @@ const ManageUserPermission = () => {
                                     {loading ? (
                                         <div className="text-center my-4">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="sr-only">Loading...</span>
+                                                <span className="sr-only">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (

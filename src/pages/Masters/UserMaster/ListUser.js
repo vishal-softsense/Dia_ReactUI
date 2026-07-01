@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody } from "reactstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { getUsers, deleteUser, fetchUserDropdown } from "../../../slices/thunks";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import { useTranslation } from "react-i18next";
 
 const ListUser = () => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
 
     const { users, userDropdown, loading } = useSelector((state) => ({
@@ -151,20 +153,20 @@ const ListUser = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="User Management" pageTitle="Masters" />
+                    <BreadCrumb title={t("User Management")} pageTitle="Masters" />
 
                     <Card>
                         <CardBody>
                             <Row className="g-3">
                                 <Col lg={4}>
                                     <div>
-                                        <label className="form-label mb-0">Users</label>
+                                        <label className="form-label mb-0">{t("Users")}</label>
                                         <select
                                             className="form-select"
                                             value={selectedUserFilter}
                                             onChange={(e) => setSelectedUserFilter(e.target.value)}
                                         >
-                                            <option value="All">All</option>
+                                            <option value="All">{t("All")}</option>
                                             {userDropdown && userDropdown.map(item => (
                                                 <option key={item.userID} value={item.userID}>{item.userName}</option>
                                             ))}
@@ -172,7 +174,7 @@ const ListUser = () => {
                                     </div>
                                 </Col>
                                 <Col lg={2} className="d-flex align-items-end">
-                                    <Button color="primary" className="w-100" onClick={handleSearch}>Search</Button>
+                                    <Button color="primary" className="w-100" onClick={handleSearch}>{t("Search")}</Button>
                                 </Col>
                             </Row>
                         </CardBody>
@@ -182,7 +184,7 @@ const ListUser = () => {
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">User Master</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("User Master")}</h5>
                                     <div>
                                         <Link to="/user-add" className="btn btn-primary add-btn me-1">
                                             <i className="ri-add-line align-bottom me-1"></i> Add User
@@ -193,7 +195,7 @@ const ListUser = () => {
                                     {loading ? (
                                         <div className="text-center">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="sr-only">Loading...</span>
+                                                <span className="sr-only">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -205,7 +207,7 @@ const ListUser = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Users..."
+                                            SearchPlaceholder={t("Search Users...")}
                                         />
                                     )}
                                 </CardBody>
@@ -222,13 +224,13 @@ const ListUser = () => {
                     <div className="mt-2 text-center">
                         <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style={{ width: "100px", height: "100px" }}></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure ?</h4>
-                            <p className="text-muted mx-4 mb-0">Are you sure you want to remove this user?</p>
+                            <h4>{t("Are you sure ?")}</h4>
+                            <p className="text-muted mx-4 mb-0">{t("Are you sure you want to remove this user?")}</p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>Close</button>
-                        <button type="button" className="btn w-sm btn-danger " id="delete-record" onClick={handleDeleteConfirm}>Yes, Delete It!</button>
+                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>{t("Close")}</button>
+                        <button type="button" className="btn w-sm btn-danger " id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</button>
                     </div>
                 </ModalBody>
             </Modal>

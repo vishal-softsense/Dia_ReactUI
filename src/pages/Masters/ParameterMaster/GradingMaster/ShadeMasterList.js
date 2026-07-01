@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -8,8 +8,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from "react-toastify";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
 
 const ShadeMasterList = () => {
+    const { t } = useTranslation();
 
     document.title = "Shade Master";
 
@@ -339,7 +341,7 @@ const ShadeMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleEditClick(row)}
-                            title="Edit Shade"
+                            title={t("Edit Shade")}
                         >
                             <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -358,7 +360,7 @@ const ShadeMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleDeleteClick(row)}
-                            title="Delete Shade"
+                            title={t("Delete Shade")}
                         >
                             <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -396,12 +398,12 @@ const ShadeMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Shade Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Shade Master")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center justify-content-between">
-                                    <h5 className="card-title mb-0 flex-grow-1">Shade List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Shade List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Shade
@@ -412,7 +414,7 @@ const ShadeMasterList = () => {
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
-                                            title="Export Excel"
+                                            title={t("Export Excel")}
                                             style={{
                                                 height: "37.5px",
                                                 display: "inline-flex",
@@ -435,7 +437,7 @@ const ShadeMasterList = () => {
                                             data={shadeList}
                                             isGlobalFilter={true}
                                             customPageSize={50}
-                                            SearchPlaceholder="Search Shade..."
+                                            SearchPlaceholder={t("Search Shade...")}
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
@@ -456,11 +458,11 @@ const ShadeMasterList = () => {
                     <ModalBody>
                         <Row className="gy-3">
                             <Col md={12}>
-                                <Label className="form-label">Shade ID <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Shade ID")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="shadeID"
                                     type="text"
-                                    placeholder="Enter Shade ID"
+                                    placeholder={t("Enter Shade ID")}
                                     value={validation.values.shadeID}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -469,11 +471,11 @@ const ShadeMasterList = () => {
                                 <FormFeedback>{validation.errors.shadeID}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Shade Name <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Shade Name")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="shadeName"
                                     type="text"
-                                    placeholder="Enter Shade Name"
+                                    placeholder={t("Enter Shade Name")}
                                     value={validation.values.shadeName}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -482,11 +484,11 @@ const ShadeMasterList = () => {
                                 <FormFeedback>{validation.errors.shadeName}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Shade Priority <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Shade Priority")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="shadePriority"
                                     type="number"
-                                    placeholder="Enter Shade Priority"
+                                    placeholder={t("Enter Shade Priority")}
                                     value={validation.values.shadePriority}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -495,31 +497,31 @@ const ShadeMasterList = () => {
                                 <FormFeedback>{validation.errors.shadePriority}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Shade Group Name</Label>
+                                <Label className="form-label">{t("Shade Group Name")}</Label>
                                 <Input
                                     name="shadeGroupName"
                                     type="text"
-                                    placeholder="Enter Shade Group Name"
+                                    placeholder={t("Enter Shade Group Name")}
                                     value={validation.values.shadeGroupName}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Shade Group Priority</Label>
+                                <Label className="form-label">{t("Shade Group Priority")}</Label>
                                 <Input
                                     name="shadeGroupPriority"
                                     type="number"
-                                    placeholder="Enter Shade Group Priority"
+                                    placeholder={t("Enter Shade Group Priority")}
                                     value={validation.values.shadeGroupPriority}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Pricing Shade ID</Label>
+                                <Label className="form-label">{t("Pricing Shade ID")}</Label>
                                 <Input
                                     name="pricingShadeID"
                                     type="text"
-                                    placeholder="Enter Pricing Shade ID"
+                                    placeholder={t("Enter Pricing Shade ID")}
                                     value={validation.values.pricingShadeID}
                                     onChange={validation.handleChange}
                                 />
@@ -527,18 +529,18 @@ const ShadeMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="light" type="button" onClick={() => setFormModal(false)}>Cancel</Button>
-                        <Button color="primary" type="submit">Save</Button>
+                        <Button color="light" type="button" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button color="primary" type="submit">{t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Shade Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Shade Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download Shade Master File Template Format</Label>
+                        <Label className="form-label">{t("Download Shade Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -547,7 +549,7 @@ const ShadeMasterList = () => {
                     </div>
                     <hr />
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -559,7 +561,7 @@ const ShadeMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -567,14 +569,14 @@ const ShadeMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -584,15 +586,15 @@ const ShadeMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete Shade <strong>{shadeToDelete?.shadeID || shadeToDelete?.shadeName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>

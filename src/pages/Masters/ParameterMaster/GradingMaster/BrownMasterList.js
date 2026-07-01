@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -8,8 +8,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from "react-toastify";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
 
 const BrownMasterList = () => {
+    const { t } = useTranslation();
 
     document.title = "Brown Master";
 
@@ -476,7 +478,7 @@ const handleDownloadTemplate = async () => {
                 <Container fluid>
 
                     <BreadCrumb
-                        title="Brown Master"
+                        title={t("Brown Master")}
                         pageTitle="Masters"
                     />
 
@@ -515,7 +517,7 @@ const handleDownloadTemplate = async () => {
                                             color="soft-success"
                                             className="btn-icon"
                                             onClick={handleExport}
-                                            title="Export Excel"
+                                            title={t("Export Excel")}
                                             style={{
                                                 height: "37.5px",
                                                 width: "40px",
@@ -551,7 +553,7 @@ const handleDownloadTemplate = async () => {
                                             data={brownList}
                                             isGlobalFilter={true}
                                             customPageSize={50}
-                                            SearchPlaceholder="Search..."
+                                            SearchPlaceholder={t("Search...")}
                                             divClass="table-responsive"
                                             tableClass="align-middle table-nowrap"
                                             theadClass="table-light"
@@ -597,7 +599,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="brownID"
                                     type="text"
-                                    placeholder="Enter Brown ID"
+                                    placeholder={t("Enter Brown ID")}
                                     value={validation.values.brownID}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -620,7 +622,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="brownName"
                                     type="text"
-                                    placeholder="Enter Brown Name"
+                                    placeholder={t("Enter Brown Name")}
                                     value={validation.values.brownName}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -643,7 +645,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="brownPriority"
                                     type="number"
-                                    placeholder="Enter Brown Priority"
+                                    placeholder={t("Enter Brown Priority")}
                                     value={validation.values.brownPriority}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -666,7 +668,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="brownGroupName"
                                     type="text"
-                                    placeholder="Enter Brown Group Name"
+                                    placeholder={t("Enter Brown Group Name")}
                                     value={validation.values.brownGroupName}
                                     onChange={validation.handleChange}
                                 />
@@ -680,7 +682,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="brownGroupPriority"
                                     type="number"
-                                    placeholder="Enter Brown Group Priority"
+                                    placeholder={t("Enter Brown Group Priority")}
                                     value={validation.values.brownGroupPriority}
                                     onChange={validation.handleChange}
                                 />
@@ -694,7 +696,7 @@ const handleDownloadTemplate = async () => {
                                 <Input
                                     name="pricingBrownID"
                                     type="text"
-                                    placeholder="Enter Pricing Brown ID"
+                                    placeholder={t("Enter Pricing Brown ID")}
                                     value={validation.values.pricingBrownID}
                                     onChange={validation.handleChange}
                                 />
@@ -732,10 +734,10 @@ const handleDownloadTemplate = async () => {
 
             {/* Import Excel Modal */}
                         <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                            <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Brown Master Excel</ModalHeader>
+                            <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Brown Master Excel")}</ModalHeader>
                             <ModalBody>
                                 <div className="mb-4">
-                                    <Label className="form-label">Download Brown Master File Template Format</Label>
+                                    <Label className="form-label">{t("Download Brown Master File Template Format")}</Label>
                                     <div>
                                         <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                             <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -746,7 +748,7 @@ const handleDownloadTemplate = async () => {
                                 <hr />
             
                                 <div className="mb-3">
-                                    <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                                    <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                                     <Input
                                         type="file"
                                         id="importFile"
@@ -759,7 +761,7 @@ const handleDownloadTemplate = async () => {
                                 {importing && (
                                     <div className="mt-3">
                                         <div className="d-flex justify-content-between mb-1">
-                                            <span className="text-muted">Processing rows...</span>
+                                            <span className="text-muted">{t("Processing rows...")}</span>
                                             <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                                         </div>
                                         <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -767,8 +769,8 @@ const handleDownloadTemplate = async () => {
                                 )}
                             </ModalBody>
                             <ModalFooter>
-                                <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                                <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                                <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                                <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                             </ModalFooter>
                         </Modal>
 
@@ -791,7 +793,7 @@ const handleDownloadTemplate = async () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
            <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete Brown <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
                             </p>
@@ -802,8 +804,8 @@ const handleDownloadTemplate = async () => {
 
         </h5>
 <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                                <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                                <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                                <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                             </div>
     </ModalBody>
 

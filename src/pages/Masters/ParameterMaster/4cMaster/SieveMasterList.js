@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -7,8 +7,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from 'react-toastify';
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import { useTranslation } from "react-i18next";
 
 const SieveMasterList = () => {
+    const { t } = useTranslation();
     const [sieves, setSieves] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -289,7 +291,7 @@ const SieveMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title="Edit Sieve"
+                                title={t("Edit Sieve")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -308,7 +310,7 @@ const SieveMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title="Delete Sieve"
+                                title={t("Delete Sieve")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -356,21 +358,21 @@ const SieveMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Sieve Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Sieve Master")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Sieve Master List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Sieve Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Sieve
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title="Import Excel">
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
                                         </Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
                                     </div>
@@ -379,7 +381,7 @@ const SieveMasterList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -391,7 +393,7 @@ const SieveMasterList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Sieves..."
+                                            SearchPlaceholder={t("Search Sieves...")}
                                         />
                                     )}
                                 </CardBody>
@@ -415,13 +417,13 @@ const SieveMasterList = () => {
                         <Row className="gy-3">
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="sieveID" className="form-label">Sieve ID <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="sieveID" className="form-label">{t("Sieve ID")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="sieveID"
                                         type="text"
                                         className="form-control"
                                         id="sieveID"
-                                        placeholder="Enter Sieve ID"
+                                        placeholder={t("Enter Sieve ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.sieveID || ""}
@@ -435,13 +437,13 @@ const SieveMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="sieveName" className="form-label">Sieve Name <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="sieveName" className="form-label">{t("Sieve Name")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="sieveName"
                                         type="text"
                                         className="form-control"
                                         id="sieveName"
-                                        placeholder="Enter Sieve Name"
+                                        placeholder={t("Enter Sieve Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.sieveName || ""}
@@ -455,13 +457,13 @@ const SieveMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="sievePriority" className="form-label">Sieve Priority <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="sievePriority" className="form-label">{t("Sieve Priority")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="sievePriority"
                                         type="text"
                                         className="form-control"
                                         id="sievePriority"
-                                        placeholder="Enter Sieve Priority"
+                                        placeholder={t("Enter Sieve Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.sievePriority !== undefined ? validation.values.sievePriority : ""}
@@ -475,7 +477,7 @@ const SieveMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>Cancel</Button>
+                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
                         <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
                     </ModalFooter>
                 </Form>
@@ -483,7 +485,7 @@ const SieveMasterList = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -493,25 +495,25 @@ const SieveMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete sieve <strong>{sieveToDelete?.sieveName || sieveToDelete?.SieveName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Sieve Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Sieve Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download SieveMaster File Template Format</Label>
+                        <Label className="form-label">{t("Download SieveMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -522,7 +524,7 @@ const SieveMasterList = () => {
                     <hr />
 
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -535,7 +537,7 @@ const SieveMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -543,8 +545,8 @@ const SieveMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer closeButton={false} limit={1} />

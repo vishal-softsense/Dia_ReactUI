@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, TabContent, TabPane } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { getAllMasterList } from "../../../helpers/fakebackend_helper";
 import { toast } from 'react-toastify';
 import classnames from "classnames";
+import { useTranslation } from "react-i18next";
 
 const AllMasterList = () => {
+    const { t } = useTranslation();
     const [allMasters, setAllMasters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("Main");
@@ -141,20 +143,20 @@ const AllMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="All Master List" pageTitle="Masters" />
+                    <BreadCrumb title={t("All Master List")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex justify-content-between align-items-center border-bottom">
-                                    <h4 className="card-title mb-0">All Master List</h4>
+                                    <h4 className="card-title mb-0">{t("All Master List")}</h4>
                                     <div className="search-box">
                                         <input
                                             type="text"
                                             className="form-control search"
                                             value={searchQuery}
                                             onChange={e => setSearchQuery(e.target.value)}
-                                            placeholder="Search masters..."
+                                            placeholder={t("Search masters...")}
                                         />
                                         <i className="bx bx-search-alt search-icon"></i>
                                     </div>
@@ -186,7 +188,7 @@ const AllMasterList = () => {
                                                             {loading ? (
                                                                 <div className="text-center mt-3">
                                                                     <div className="spinner-border text-primary" role="status">
-                                                                        <span className="visually-hidden">Loading...</span>
+                                                                        <span className="visually-hidden">{t("Loading...")}</span>
                                                                     </div>
                                                                 </div>
                                                             ) : (

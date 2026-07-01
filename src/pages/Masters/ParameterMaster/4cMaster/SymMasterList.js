@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -7,8 +7,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from 'react-toastify';
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import { useTranslation } from "react-i18next";
 
 const SymMasterList = () => {
+    const { t } = useTranslation();
     const [syms, setSyms] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -316,7 +318,7 @@ const SymMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title="Edit Symmetry"
+                                title={t("Edit Symmetry")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -335,7 +337,7 @@ const SymMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title="Delete Symmetry"
+                                title={t("Delete Symmetry")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -413,21 +415,21 @@ const SymMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Symmetry Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Symmetry Master")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Symmetry Master List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Symmetry Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Symmetry
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title="Import Excel">
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
                                         </Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
                                     </div>
@@ -436,7 +438,7 @@ const SymMasterList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -448,7 +450,7 @@ const SymMasterList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Symmetries..."
+                                            SearchPlaceholder={t("Search Symmetries...")}
                                         />
                                     )}
                                 </CardBody>
@@ -472,13 +474,13 @@ const SymMasterList = () => {
                         <Row className="gy-3">
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="symID" className="form-label">Symmetry ID <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="symID" className="form-label">{t("Symmetry ID")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="symID"
                                         type="text"
                                         className="form-control"
                                         id="symID"
-                                        placeholder="Enter Symmetry ID"
+                                        placeholder={t("Enter Symmetry ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.symID || ""}
@@ -492,13 +494,13 @@ const SymMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="symName" className="form-label">Symmetry Name <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="symName" className="form-label">{t("Symmetry Name")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="symName"
                                         type="text"
                                         className="form-control"
                                         id="symName"
-                                        placeholder="Enter Symmetry Name"
+                                        placeholder={t("Enter Symmetry Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.symName || ""}
@@ -512,13 +514,13 @@ const SymMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="symPriority" className="form-label">Symmetry Priority <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="symPriority" className="form-label">{t("Symmetry Priority")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="symPriority"
                                         type="text"
                                         className="form-control"
                                         id="symPriority"
-                                        placeholder="Enter Symmetry Priority"
+                                        placeholder={t("Enter Symmetry Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.symPriority !== undefined ? validation.values.symPriority : ""}
@@ -532,13 +534,13 @@ const SymMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="symGroupName" className="form-label">Group Name</Label>
+                                    <Label htmlFor="symGroupName" className="form-label">{t("Group Name")}</Label>
                                     <Input
                                         name="symGroupName"
                                         type="text"
                                         className="form-control"
                                         id="symGroupName"
-                                        placeholder="Enter Symmetry Group Name"
+                                        placeholder={t("Enter Symmetry Group Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.symGroupName || ""}
@@ -552,13 +554,13 @@ const SymMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="symGroupPriority" className="form-label">Group Priority</Label>
+                                    <Label htmlFor="symGroupPriority" className="form-label">{t("Group Priority")}</Label>
                                     <Input
                                         name="symGroupPriority"
                                         type="text"
                                         className="form-control"
                                         id="symGroupPriority"
-                                        placeholder="Enter Symmetry Group Priority"
+                                        placeholder={t("Enter Symmetry Group Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.symGroupPriority !== undefined ? validation.values.symGroupPriority : ""}
@@ -572,13 +574,13 @@ const SymMasterList = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="pricingSymID" className="form-label">Pricing ID</Label>
+                                    <Label htmlFor="pricingSymID" className="form-label">{t("Pricing ID")}</Label>
                                     <Input
                                         name="pricingSymID"
                                         type="text"
                                         className="form-control"
                                         id="pricingSymID"
-                                        placeholder="Enter Pricing Symmetry ID"
+                                        placeholder={t("Enter Pricing Symmetry ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.pricingSymID || ""}
@@ -592,7 +594,7 @@ const SymMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>Cancel</Button>
+                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
                         <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
                     </ModalFooter>
                 </Form>
@@ -600,7 +602,7 @@ const SymMasterList = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -610,25 +612,25 @@ const SymMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete symmetry <strong>{symToDelete?.symName || symToDelete?.SymName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Symmetry Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Symmetry Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download SymmetryMaster File Template Format</Label>
+                        <Label className="form-label">{t("Download SymmetryMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -639,7 +641,7 @@ const SymMasterList = () => {
                     <hr />
 
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -652,7 +654,7 @@ const SymMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -660,8 +662,8 @@ const SymMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer closeButton={false} limit={1} />

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Table, Input } from 'reactstrap';
+import { useTranslation } from "react-i18next";
 
 const RolePermissionGrid = ({ permissions, onChange, searchTerm = "" }) => {
+    const { t } = useTranslation();
     const [gridData, setGridData] = useState([]);
 
     useEffect(() => {
@@ -98,7 +100,7 @@ const RolePermissionGrid = ({ permissions, onChange, searchTerm = "" }) => {
             <Table className="table-bordered table-striped table-hover align-middle mb-0">
                 <thead className="table-light">
                     <tr>
-                        <th style={{ width: '30%' }}>Form Name</th>
+                        <th style={{ width: '30%' }}>{t("Form Name")}</th>
                         <th className="text-center">
                             All<br />
                             <Input
@@ -199,7 +201,7 @@ const RolePermissionGrid = ({ permissions, onChange, searchTerm = "" }) => {
                     ))}
                     {gridData.length === 0 && (
                         <tr>
-                            <td colSpan="7" className="text-center py-4">No permissions data available</td>
+                            <td colSpan="7" className="text-center py-4">{t("No permissions data available")}</td>
                         </tr>
                     )}
                 </tbody>

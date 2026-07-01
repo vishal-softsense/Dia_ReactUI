@@ -4,12 +4,15 @@ import { initReactI18next } from "react-i18next";
 
 import translationGr from "./locales/gr.json";
 import translationIT from "./locales/it.json";
-import translationRS from "./locales/ru.json";
+import translationRS from "./locales/rus.json";
 import translationSP from "./locales/sp.json";
 import translationENG from "./locales/en.json";
-import translationCN from "./locales/ch.json";
+import translationCN from "./locales/cn.json";
 import translationFR from "./locales/fr.json";
 import translationAR from "./locales/ar.json";
+import translationHN from "./locales/hn.json";
+import translationGJ from "./locales/gj.json";
+
 
 
 // the translations
@@ -37,6 +40,12 @@ const resources = {
   },
   ar: {
     translation: translationAR,
+  },
+  hn: {
+    translation: translationHN,
+  },
+  gj: {
+    translation: translationGJ,
   },
 };
 

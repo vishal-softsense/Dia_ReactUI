@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
 import { getCurrencyMasters } from "../../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../../helpers/excel_helper";
 import { toast, ToastContainer } from 'react-toastify';
+import { useTranslation } from "react-i18next";
 
 const CurrencyMasterList = () => {
+    const { t } = useTranslation();
     const [currencies, setCurrencies] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -144,15 +146,15 @@ const CurrencyMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Currency Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Currency Master")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Currency Master List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Currency Master List")}</h5>
                                     <div className="d-flex gap-2">
-                                        <Button className="btn-soft-success" onClick={handleExportData} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
                                     </div>
@@ -161,7 +163,7 @@ const CurrencyMasterList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -173,7 +175,7 @@ const CurrencyMasterList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Currencies..."
+                                            SearchPlaceholder={t("Search Currencies...")}
                                         />
                                     )}
                                 </CardBody>

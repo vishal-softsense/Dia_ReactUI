@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, CardFooter, Form, Label, Input, FormFeedback, Button, Nav, NavItem, NavLink, TabContent, TabPane } from "reactstrap";
 import classnames from "classnames";
@@ -8,8 +8,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { addNewUser, updateUser, getUserDetail } from "../../../slices/thunks";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getUserRoleDropdown } from "../../../helpers/fakebackend_helper";
+import { useTranslation } from "react-i18next";
 
 const AddEditUser = () => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { id } = useParams();
@@ -137,17 +139,17 @@ const AddEditUser = () => {
 
                                         <TabContent activeTab={activeTab}>
                                             <TabPane tabId="1">
-                                                <h5 className="mb-3"><i className="bx bx-user me-1"></i> Account Details</h5>
+                                                <h5 className="mb-3"><i className="bx bx-user me-1"></i> {t("Account Details")}</h5>
                                                 <Row className="g-3">
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="userName" className="form-label">Username</Label>
+                                                            <Label htmlFor="userName" className="form-label">{t("Username")}</Label>
                                                             <Input
                                                                 type="text"
                                                                 id="userName"
                                                                 name="userName"
                                                                 className="form-control"
-                                                                placeholder="Enter Username"
+                                                                placeholder={t("Enter Username")}
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.userName || ""}
@@ -166,7 +168,7 @@ const AddEditUser = () => {
                                                                 id="password"
                                                                 name="password"
                                                                 className="form-control"
-                                                                placeholder="Enter Password"
+                                                                placeholder={t("Enter Password")}
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.password || ""}
@@ -179,13 +181,13 @@ const AddEditUser = () => {
                                                     </Col>
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="confirmPassword" className="form-label">Confirm Password</Label>
+                                                            <Label htmlFor="confirmPassword" className="form-label">{t("Confirm Password")}</Label>
                                                             <Input
                                                                 type="password"
                                                                 id="confirmPassword"
                                                                 name="confirmPassword"
                                                                 className="form-control"
-                                                                placeholder="Confirm Password"
+                                                                placeholder={t("Confirm Password")}
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.confirmPassword || ""}
@@ -199,13 +201,13 @@ const AddEditUser = () => {
 
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="email" className="form-label">Email</Label>
+                                                            <Label htmlFor="email" className="form-label">{t("Email")}</Label>
                                                             <Input
                                                                 type="email"
                                                                 id="email"
                                                                 name="email"
                                                                 className="form-control"
-                                                                placeholder="Email Address"
+                                                                placeholder={t("Email Address")}
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.email || ""}
@@ -218,7 +220,7 @@ const AddEditUser = () => {
                                                     </Col>
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="userTypeId" className="form-label">Role (User Type ID)</Label>
+                                                            <Label htmlFor="userTypeId" className="form-label">{t("Role (User Type ID)")}</Label>
                                                             <Input
                                                                 type="select"
                                                                 id="userTypeId"
@@ -228,7 +230,7 @@ const AddEditUser = () => {
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.userTypeId || 1}
                                                             >
-                                                                <option value="0">Select Role</option>
+                                                                <option value="0">{t("Select Role")}</option>
                                                                 {roleDropdown.map((role) => (
                                                                     <option key={role.userTypeID} value={role.userTypeID}>
                                                                         {role.userType}
@@ -241,17 +243,17 @@ const AddEditUser = () => {
                                             </TabPane>
 
                                             <TabPane tabId="2">
-                                                <h5 className="mb-3"><i className="bx bx-info-circle me-1"></i> Personal Info</h5>
+                                                <h5 className="mb-3"><i className="bx bx-info-circle me-1"></i> {t("Personal Info")}</h5>
                                                 <Row className="g-3">
                                                     <Col lg={3}>
                                                         <div>
-                                                            <Label htmlFor="firstName" className="form-label">First Name</Label>
+                                                            <Label htmlFor="firstName" className="form-label">{t("First Name")}</Label>
                                                             <Input
                                                                 type="text"
                                                                 id="firstName"
                                                                 name="firstName"
                                                                 className="form-control"
-                                                                placeholder="Enter First name"
+                                                                placeholder={t("Enter First name")}
                                                                 onChange={formik.handleChange}
                                                                 onBlur={formik.handleBlur}
                                                                 value={formik.values.firstName || ""}
@@ -264,81 +266,81 @@ const AddEditUser = () => {
                                                     </Col>
                                                     <Col lg={3}>
                                                         <div>
-                                                            <Label htmlFor="lastName" className="form-label">Last Name</Label>
-                                                            <Input type="text" id="lastName" name="lastName" className="form-control" placeholder="Enter Last Name" onChange={formik.handleChange} value={formik.values.lastName || ""} />
+                                                            <Label htmlFor="lastName" className="form-label">{t("Last Name")}</Label>
+                                                            <Input type="text" id="lastName" name="lastName" className="form-control" placeholder={t("Enter Last Name")} onChange={formik.handleChange} value={formik.values.lastName || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={3}>
                                                         <div>
-                                                            <Label htmlFor="mobileNo" className="form-label">Mobile No</Label>
-                                                            <Input type="text" id="mobileNo" name="mobileNo" className="form-control" placeholder="Enter Mobile No" onChange={formik.handleChange} value={formik.values.mobileNo || ""} />
+                                                            <Label htmlFor="mobileNo" className="form-label">{t("Mobile No")}</Label>
+                                                            <Input type="text" id="mobileNo" name="mobileNo" className="form-control" placeholder={t("Enter Mobile No")} onChange={formik.handleChange} value={formik.values.mobileNo || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={3}>
                                                         <div>
-                                                            <Label htmlFor="birthDate" className="form-label">Birth Date</Label>
-                                                            <Input type="date" id="birthDate" name="birthDate" className="form-control" placeholder="Enter Birth Date" onChange={formik.handleChange} value={formik.values.birthDate || ""} />
+                                                            <Label htmlFor="birthDate" className="form-label">{t("Birth Date")}</Label>
+                                                            <Input type="date" id="birthDate" name="birthDate" className="form-control" placeholder={t("Enter Birth Date")} onChange={formik.handleChange} value={formik.values.birthDate || ""} />
                                                         </div>
                                                     </Col>
 
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="address1" className="form-label">Address line 1</Label>
-                                                            <Input type="text" id="address1" name="address1" className="form-control" placeholder="Enter Your House no./ Flate no." onChange={formik.handleChange} value={formik.values.address1 || ""} />
+                                                            <Label htmlFor="address1" className="form-label">{t("Address line 1")}</Label>
+                                                            <Input type="text" id="address1" name="address1" className="form-control" placeholder={t("Enter Your House no./ Flate no.")} onChange={formik.handleChange} value={formik.values.address1 || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={6}>
                                                         <div>
-                                                            <Label htmlFor="landmark" className="form-label">Landmark</Label>
-                                                            <Input type="text" id="landmark" name="landmark" className="form-control" placeholder="Enter a LandMark" onChange={formik.handleChange} value={formik.values.landmark || ""} />
+                                                            <Label htmlFor="landmark" className="form-label">{t("Landmark")}</Label>
+                                                            <Input type="text" id="landmark" name="landmark" className="form-control" placeholder={t("Enter a LandMark")} onChange={formik.handleChange} value={formik.values.landmark || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="city" className="form-label">City</Label>
-                                                            <Input type="text" id="city" name="city" className="form-control" placeholder="Enter City" onChange={formik.handleChange} value={formik.values.city || ""} />
+                                                            <Label htmlFor="city" className="form-label">{t("City")}</Label>
+                                                            <Input type="text" id="city" name="city" className="form-control" placeholder={t("Enter City")} onChange={formik.handleChange} value={formik.values.city || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="state" className="form-label">State</Label>
-                                                            <Input type="text" id="state" name="state" className="form-control" placeholder="Enter State" onChange={formik.handleChange} value={formik.values.state || ""} />
+                                                            <Label htmlFor="state" className="form-label">{t("State")}</Label>
+                                                            <Input type="text" id="state" name="state" className="form-control" placeholder={t("Enter State")} onChange={formik.handleChange} value={formik.values.state || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={4}>
                                                         <div>
-                                                            <Label htmlFor="country" className="form-label">Country</Label>
-                                                            <Input type="text" id="country" name="country" className="form-control" placeholder="Enter Country" onChange={formik.handleChange} value={formik.values.country || ""} />
+                                                            <Label htmlFor="country" className="form-label">{t("Country")}</Label>
+                                                            <Input type="text" id="country" name="country" className="form-control" placeholder={t("Enter Country")} onChange={formik.handleChange} value={formik.values.country || ""} />
                                                         </div>
                                                     </Col>
                                                 </Row>
                                             </TabPane>
 
                                             <TabPane tabId="3">
-                                                <h5 className="mb-3"><i className="bx bx-link me-1"></i> Social Links</h5>
+                                                <h5 className="mb-3"><i className="bx bx-link me-1"></i> {t("Social Links")}</h5>
                                                 <Row className="g-3">
                                                     <Col lg={6}>
                                                         <div>
-                                                            <Label htmlFor="twitter" className="form-label">Twitter</Label>
-                                                            <Input type="text" id="twitter" name="twitter" className="form-control" placeholder="Twitter" onChange={formik.handleChange} value={formik.values.twitter || ""} />
+                                                            <Label htmlFor="twitter" className="form-label">{t("Twitter")}</Label>
+                                                            <Input type="text" id="twitter" name="twitter" className="form-control" placeholder={t("Twitter")} onChange={formik.handleChange} value={formik.values.twitter || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={6}>
                                                         <div>
-                                                            <Label htmlFor="facebook" className="form-label">Facebook</Label>
-                                                            <Input type="text" id="facebook" name="facebook" className="form-control" placeholder="Facebook" onChange={formik.handleChange} value={formik.values.facebook || ""} />
+                                                            <Label htmlFor="facebook" className="form-label">{t("Facebook")}</Label>
+                                                            <Input type="text" id="facebook" name="facebook" className="form-control" placeholder={t("Facebook")} onChange={formik.handleChange} value={formik.values.facebook || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={6}>
                                                         <div>
-                                                            <Label htmlFor="instagram" className="form-label">Instagram</Label>
-                                                            <Input type="text" id="instagram" name="instagram" className="form-control" placeholder="Instagram" onChange={formik.handleChange} value={formik.values.instagram || ""} />
+                                                            <Label htmlFor="instagram" className="form-label">{t("Instagram")}</Label>
+                                                            <Input type="text" id="instagram" name="instagram" className="form-control" placeholder={t("Instagram")} onChange={formik.handleChange} value={formik.values.instagram || ""} />
                                                         </div>
                                                     </Col>
                                                     <Col lg={6}>
                                                         <div>
-                                                            <Label htmlFor="linkedin" className="form-label">Linkedin</Label>
-                                                            <Input type="text" id="linkedin" name="linkedin" className="form-control" placeholder="Linkedin" onChange={formik.handleChange} value={formik.values.linkedin || ""} />
+                                                            <Label htmlFor="linkedin" className="form-label">{t("Linkedin")}</Label>
+                                                            <Input type="text" id="linkedin" name="linkedin" className="form-control" placeholder={t("Linkedin")} onChange={formik.handleChange} value={formik.values.linkedin || ""} />
                                                         </div>
                                                     </Col>
                                                 </Row>
@@ -349,13 +351,13 @@ const AddEditUser = () => {
                                     <CardFooter>
                                         <Row>
                                             <Col md={3} className="d-flex align-items-center">
-                                                <Link to="/user-list" className="btn btn-primary w-md">Back to list</Link>
+                                                <Link to="/user-list" className="btn btn-primary w-md">{t("Back to list")}</Link>
                                             </Col>
                                             <Col md={9} className="d-flex justify-content-end gap-2 mt-3 mt-md-0">
                                                 <Button type="submit" color="primary" disabled={loading} className="w-md">
                                                     {loading ? "Saving..." : (isEdit ? "Update User" : "Create User")}
                                                 </Button>
-                                                <button type="reset" onClick={formik.handleReset} className="btn btn-light w-md">Cancel</button>
+                                                <button type="reset" onClick={formik.handleReset} className="btn btn-light w-md">{t("Cancel")}</button>
                                             </Col>
                                         </Row>
                                     </CardFooter>

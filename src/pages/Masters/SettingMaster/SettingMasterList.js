@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getSettingData, filterSettingData, submitSettingData, uploadCompanyLogo } from "../../../helpers/fakebackend_helper";
@@ -7,8 +7,10 @@ import classnames from "classnames";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { api } from "../../../config";
+import { useTranslation } from "react-i18next";
 
 const SettingMasterList = () => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("COMPANY");
     const [searchQuery, setSearchQuery] = useState("");
@@ -84,7 +86,7 @@ const SettingMasterList = () => {
     }, [activeTab]);
 
     const loadTabData = async (tab) => {
-        setLoading(true);
+        //setLoading(true);
         setSearchQuery("");
         try {
             let response;
@@ -101,7 +103,7 @@ const SettingMasterList = () => {
         } catch (error) {
             toast.error("Failed to load setting data");
         }
-        setLoading(false);
+        //setLoading(false);
     };
 
     const handleTabChange = (tab) => {
@@ -186,7 +188,7 @@ const SettingMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Settings Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Settings Master")} pageTitle="Masters" />
                     <ToastContainer closeButton={false} limit={1} />
                     
                     <Row>
@@ -204,7 +206,7 @@ const SettingMasterList = () => {
                                                 className="form-control"
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                placeholder="Search settings..."
+                                                placeholder={t("Search settings...")}
                                             />
                                             <i className="bx bx-search-alt search-icon"></i>
                                         </div>
@@ -234,7 +236,7 @@ const SettingMasterList = () => {
                                             {loading ? (
                                                 <div className="d-flex justify-content-center align-items-center py-5">
                                                     <Spinner color="primary" />
-                                                    <span className="ms-2">Loading settings...</span>
+                                                    <span className="ms-2">{t("Loading settings...")}</span>
                                                 </div>
                                             ) : (
                                                 <div className="p-3">
@@ -242,9 +244,9 @@ const SettingMasterList = () => {
                                                         <table className="table table-hover table-striped align-middle table-nowrap mb-0">
                                                             <thead className="table-light">
                                                                 <tr>
-                                                                    <th>Setting Name</th>
-                                                                    <th>Setting Value</th>
-                                                                    <th style={{ width: "100px" }}>Actions</th>
+                                                                    <th>{t("Setting Name")}</th>
+                                                                    <th>{t("Setting Value")}</th>
+                                                                    <th style={{ width: "100px" }}>{t("Actions")}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -264,7 +266,7 @@ const SettingMasterList = () => {
                                                                                     color="soft-primary" 
                                                                                     size="sm" 
                                                                                     onClick={() => handleEditSetting(item)}
-                                                                                    title="Edit Setting"
+                                                                                    title={t("Edit Setting")}
                                                                                 >
                                                                                     <i className="ri-edit-line"></i> Edit
                                                                                 </Button>
@@ -273,7 +275,7 @@ const SettingMasterList = () => {
                                                                     ))
                                                                 ) : (
                                                                     <tr>
-                                                                        <td colSpan="3" className="text-center py-4">No settings found matching your search.</td>
+                                                                        <td colSpan="3" className="text-center py-4">{t("No settings found matching your search.")}</td>
                                                                     </tr>
                                                                 )}
                                                             </tbody>
@@ -295,12 +297,12 @@ const SettingMasterList = () => {
                             toggle={() => setSettingModal(false)}
                             close={<button className="btn-close btn-close-white" onClick={() => setSettingModal(false)}></button>}
                         >
-                            <span className="text-white">Edit Company Setting</span>
+                            <span className="text-white">{t("Edit Company Setting")}</span>
                         </ModalHeader>
                         <Form onSubmit={settingValidation.handleSubmit}>
                             <ModalBody>
                                 <div className="mb-3">
-                                    <Label className="form-label">Setting Name</Label>
+                                    <Label className="form-label">{t("Setting Name")}</Label>
                                     <Input
                                         type="text"
                                         name="name"
@@ -310,11 +312,11 @@ const SettingMasterList = () => {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <Label className="form-label">Setting Value</Label>
+                                    <Label className="form-label">{t("Setting Value")}</Label>
                                     <Input
                                         type={isPasswordSetting(settingValidation.values.name) ? "password" : "text"}
                                         name="value"
-                                        placeholder="Enter setting value"
+                                        placeholder={t("Enter setting value")}
                                         value={settingValidation.values.value}
                                         onChange={settingValidation.handleChange}
                                         onBlur={settingValidation.handleBlur}
@@ -327,12 +329,12 @@ const SettingMasterList = () => {
 
                                 {(settingValidation.values.name || "").toLowerCase() === "companyloginlogo" && (
                                     <div className="mb-3">
-                                        <Label className="form-label">Company Logo Image</Label>
+                                        <Label className="form-label">{t("Company Logo Image")}</Label>
                                         <div className="d-flex flex-column align-items-center gap-2 p-3 border border-dashed rounded bg-light">
                                             {uploadingLogo ? (
                                                 <div className="text-center py-3">
                                                     <Spinner size="sm" color="primary" className="me-2" />
-                                                    <span>Uploading logo...</span>
+                                                    <span>{t("Uploading logo...")}</span>
                                                 </div>
                                             ) : (
                                                 <>
@@ -347,7 +349,7 @@ const SettingMasterList = () => {
                                                             }}
                                                         />
                                                     ) : (
-                                                        <div className="text-muted fs-12">No logo selected</div>
+                                                        <div className="text-muted fs-12">{t("No logo selected")}</div>
                                                     )}
                                                     <input
                                                         type="file"
@@ -365,7 +367,7 @@ const SettingMasterList = () => {
                                                     >
                                                         <i className="ri-upload-2-fill me-1"></i> Choose Logo File
                                                     </Button>
-                                                    <span className="text-muted fs-11">JPG, JPEG, PNG (Max 2MB)</span>
+                                                    <span className="text-muted fs-11">{t("JPG, JPEG, PNG (Max 2MB)")}</span>
                                                 </>
                                             )}
                                         </div>
@@ -373,8 +375,8 @@ const SettingMasterList = () => {
                                 )}
                             </ModalBody>
                             <ModalFooter>
-                                <Button type="button" color="light" onClick={() => setSettingModal(false)}>Close</Button>
-                                <Button type="submit" color="primary">Save Changes</Button>
+                                <Button type="button" color="light" onClick={() => setSettingModal(false)}>{t("Close")}</Button>
+                                <Button type="submit" color="primary">{t("Save Changes")}</Button>
                             </ModalFooter>
                         </Form>
                     </Modal>

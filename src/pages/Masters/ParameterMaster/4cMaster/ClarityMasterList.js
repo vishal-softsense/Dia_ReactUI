@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -7,8 +7,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from 'react-toastify';
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import { useTranslation } from "react-i18next";
 
 const ClarityMaster = () => {
+    const { t } = useTranslation();
     const [clarities, setClarities] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -163,7 +165,7 @@ const ClarityMaster = () => {
         setImporting(true);
         setImportProgress({ current: 0, total: 0 });
 
-        try {
+        try {            
             const expectedHeaders = ["Clarity ID", "Clarity Name", "Clarity Priority", "Clarity Group Name", "Clarity Group Priority", "Pricing Clarity ID"];
             const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
@@ -294,7 +296,7 @@ const ClarityMaster = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Action"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -316,7 +318,7 @@ const ClarityMaster = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title="Edit Clarity"
+                                title={t("Edit Clarity")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -335,7 +337,7 @@ const ClarityMaster = () => {
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title="Delete Clarity"
+                                title={t("Delete Clarity")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -344,7 +346,7 @@ const ClarityMaster = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "clarityID",
                 accessorFn: (row) => row.clarityID || row.ClarityID,
                 enableColumnFilter: true,
@@ -354,7 +356,7 @@ const ClarityMaster = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "clarityName",
                 accessorFn: (row) => row.clarityName || row.ClarityName,
                 enableColumnFilter: true,
@@ -364,7 +366,7 @@ const ClarityMaster = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "clarityPriority",
                 accessorFn: (row) => row.clarityPriority !== undefined ? row.clarityPriority : row.ClarityPriority,
                 enableColumnFilter: true,
@@ -373,18 +375,28 @@ const ClarityMaster = () => {
                     return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
                 }
             },
+            // {
+            //     header: "Group Name",
+            //     accessorKey: "clarityGroupName",
+            //     accessorFn: (row) => row.clarityGroupName || row.ClarityGroupName,
+            //     enableColumnFilter: true,
+            //     filterFn: (row, id, filterValue) => {
+            //         const val = row.getValue(id);
+            //         return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+            //     }
+            // },
             {
-                header: "Group Name",
-                accessorKey: "clarityGroupName",
-                accessorFn: (row) => row.clarityGroupName || row.ClarityGroupName,
-                enableColumnFilter: true,
-                filterFn: (row, id, filterValue) => {
-                    const val = row.getValue(id);
-                    return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
-                }
-            },
+    header: t("Group Name"),
+    accessorKey: "clarityGroupName",
+    accessorFn: (row) => row.clarityGroupName || row.ClarityGroupName,
+    enableColumnFilter: true,
+    filterFn: (row, id, filterValue) => {
+        const val = row.getValue(id);
+        return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
+    }
+},
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "clarityGroupPriority",
                 accessorFn: (row) => row.clarityGroupPriority !== undefined ? row.clarityGroupPriority : row.ClarityGroupPriority,
                 enableColumnFilter: true,
@@ -394,7 +406,7 @@ const ClarityMaster = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingClarityID",
                 accessorFn: (row) => row.pricingClarityID || row.PricingClarityID,
                 enableColumnFilter: true,
@@ -413,21 +425,21 @@ const ClarityMaster = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Clarity Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Clarity Master")} pageTitle="Masters" />
 
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Clarity Master List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Clarity Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Clarity
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title="Import Excel">
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
                                         </Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
                                     </div>
@@ -436,7 +448,7 @@ const ClarityMaster = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -448,7 +460,7 @@ const ClarityMaster = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Search Clarities..."
+                                            SearchPlaceholder={t("Search Clarities...")}
                                         />
                                     )}
                                 </CardBody>
@@ -472,13 +484,13 @@ const ClarityMaster = () => {
                         <Row className="gy-3">
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="clarityID" className="form-label">Clarity ID <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="clarityID" className="form-label">{t("Clarity ID")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="clarityID"
                                         type="text"
                                         className="form-control"
                                         id="clarityID"
-                                        placeholder="Enter Clarity ID"
+                                        placeholder={t("Enter Clarity ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.clarityID || ""}
@@ -492,13 +504,13 @@ const ClarityMaster = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="clarityName" className="form-label">Clarity Name <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="clarityName" className="form-label">{t("Clarity Name")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="clarityName"
                                         type="text"
                                         className="form-control"
                                         id="clarityName"
-                                        placeholder="Enter Clarity Name"
+                                        placeholder={t("Enter Clarity Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.clarityName || ""}
@@ -512,13 +524,13 @@ const ClarityMaster = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="clarityPriority" className="form-label">Clarity Priority <span className="text-danger">*</span></Label>
+                                    <Label htmlFor="clarityPriority" className="form-label">{t("Clarity Priority")} <span className="text-danger">*</span></Label>
                                     <Input
                                         name="clarityPriority"
                                         type="text"
                                         className="form-control"
                                         id="clarityPriority"
-                                        placeholder="Enter Clarity Priority"
+                                        placeholder={t("Enter Clarity Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.clarityPriority !== undefined ? validation.values.clarityPriority : ""}
@@ -532,13 +544,13 @@ const ClarityMaster = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="clarityGroupName" className="form-label">Group Name</Label>
+                                    <Label htmlFor="clarityGroupName" className="form-label">{t("Group Name")}</Label>
                                     <Input
                                         name="clarityGroupName"
                                         type="text"
                                         className="form-control"
                                         id="clarityGroupName"
-                                        placeholder="Enter Clarity Group Name"
+                                        placeholder={t("Enter Clarity Group Name")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.clarityGroupName || ""}
@@ -552,13 +564,13 @@ const ClarityMaster = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="clarityGroupPriority" className="form-label">Group Priority</Label>
+                                    <Label htmlFor="clarityGroupPriority" className="form-label">{t("Group Priority")}</Label>
                                     <Input
                                         name="clarityGroupPriority"
                                         type="text"
                                         className="form-control"
                                         id="clarityGroupPriority"
-                                        placeholder="Enter Clarity Group Priority"
+                                        placeholder={t("Enter Clarity Group Priority")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.clarityGroupPriority !== undefined ? validation.values.clarityGroupPriority : ""}
@@ -572,13 +584,13 @@ const ClarityMaster = () => {
 
                             <Col md={12}>
                                 <div>
-                                    <Label htmlFor="pricingClarityID" className="form-label">Pricing ID</Label>
+                                    <Label htmlFor="pricingClarityID" className="form-label">{t("Pricing ID")}</Label>
                                     <Input
                                         name="pricingClarityID"
                                         type="text"
                                         className="form-control"
                                         id="pricingClarityID"
-                                        placeholder="Enter Pricing Clarity ID"
+                                        placeholder={t("Enter Pricing Clarity ID")}
                                         onChange={validation.handleChange}
                                         onBlur={validation.handleBlur}
                                         value={validation.values.pricingClarityID || ""}
@@ -592,7 +604,7 @@ const ClarityMaster = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>Cancel</Button>
+                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
                         <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
                     </ModalFooter>
                 </Form>
@@ -600,7 +612,7 @@ const ClarityMaster = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -610,25 +622,25 @@ const ClarityMaster = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete clarity <strong>{clarityToDelete?.clarityName || clarityToDelete?.ClarityName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Clarity Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Clarity Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download ClarityMaster File Template Format</Label>
+                        <Label className="form-label">{t("Download ClarityMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -639,7 +651,7 @@ const ClarityMaster = () => {
                     <hr />
 
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -652,7 +664,7 @@ const ClarityMaster = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -660,8 +672,8 @@ const ClarityMaster = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer closeButton={false} limit={1} />

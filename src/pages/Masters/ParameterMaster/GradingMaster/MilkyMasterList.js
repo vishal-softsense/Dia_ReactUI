@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -8,8 +8,10 @@ import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper"
 import { toast, ToastContainer } from "react-toastify";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
 
 const MilkyMasterList = () => {
+    const { t } = useTranslation();
 
     document.title = "Milky Master";
 
@@ -339,7 +341,7 @@ const MilkyMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleEditClick(row)}
-                            title="Edit Milky"
+                            title={t("Edit Milky")}
                         >
                             <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -358,7 +360,7 @@ const MilkyMasterList = () => {
                                 padding: "0"
                             }}
                             onClick={() => handleDeleteClick(row)}
-                            title="Delete Milky"
+                            title={t("Delete Milky")}
                         >
                             <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                         </button>
@@ -396,12 +398,12 @@ const MilkyMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Milky Master" pageTitle="Masters" />
+                    <BreadCrumb title={t("Milky Master")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center justify-content-between">
-                                    <h5 className="card-title mb-0 flex-grow-1">Milky List</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Milky List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Milky
@@ -412,7 +414,7 @@ const MilkyMasterList = () => {
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
-                                            title="Export Excel"
+                                            title={t("Export Excel")}
                                             style={{
                                                 height: "37.5px",
                                                 display: "inline-flex",
@@ -435,7 +437,7 @@ const MilkyMasterList = () => {
                                             data={milkyList}
                                             isGlobalFilter={true}
                                             customPageSize={50}
-                                            SearchPlaceholder="Search Milky..."
+                                            SearchPlaceholder={t("Search Milky...")}
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
@@ -456,11 +458,11 @@ const MilkyMasterList = () => {
                     <ModalBody>
                         <Row className="gy-3">
                             <Col md={12}>
-                                <Label className="form-label">Milky ID <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Milky ID")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="milkyID"
                                     type="text"
-                                    placeholder="Enter Milky ID"
+                                    placeholder={t("Enter Milky ID")}
                                     value={validation.values.milkyID}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -469,11 +471,11 @@ const MilkyMasterList = () => {
                                 <FormFeedback>{validation.errors.milkyID}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Milky Name <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Milky Name")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="milkyName"
                                     type="text"
-                                    placeholder="Enter Milky Name"
+                                    placeholder={t("Enter Milky Name")}
                                     value={validation.values.milkyName}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -482,11 +484,11 @@ const MilkyMasterList = () => {
                                 <FormFeedback>{validation.errors.milkyName}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Milky Priority <span className="text-danger">*</span></Label>
+                                <Label className="form-label">{t("Milky Priority")} <span className="text-danger">*</span></Label>
                                 <Input
                                     name="milkyPriority"
                                     type="number"
-                                    placeholder="Enter Milky Priority"
+                                    placeholder={t("Enter Milky Priority")}
                                     value={validation.values.milkyPriority}
                                     onChange={validation.handleChange}
                                     onBlur={validation.handleBlur}
@@ -495,31 +497,31 @@ const MilkyMasterList = () => {
                                 <FormFeedback>{validation.errors.milkyPriority}</FormFeedback>
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Milky Group Name</Label>
+                                <Label className="form-label">{t("Milky Group Name")}</Label>
                                 <Input
                                     name="milkyGroupName"
                                     type="text"
-                                    placeholder="Enter Milky Group Name"
+                                    placeholder={t("Enter Milky Group Name")}
                                     value={validation.values.milkyGroupName}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Milky Group Priority</Label>
+                                <Label className="form-label">{t("Milky Group Priority")}</Label>
                                 <Input
                                     name="milkyGroupPriority"
                                     type="number"
-                                    placeholder="Enter Milky Group Priority"
+                                    placeholder={t("Enter Milky Group Priority")}
                                     value={validation.values.milkyGroupPriority}
                                     onChange={validation.handleChange}
                                 />
                             </Col>
                             <Col md={12}>
-                                <Label className="form-label">Pricing Milky ID</Label>
+                                <Label className="form-label">{t("Pricing Milky ID")}</Label>
                                 <Input
                                     name="pricingMilkyID"
                                     type="text"
-                                    placeholder="Enter Pricing Milky ID"
+                                    placeholder={t("Enter Pricing Milky ID")}
                                     value={validation.values.pricingMilkyID}
                                     onChange={validation.handleChange}
                                 />
@@ -527,18 +529,18 @@ const MilkyMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="light" type="button" onClick={() => setFormModal(false)}>Cancel</Button>
-                        <Button color="primary" type="submit">Save</Button>
+                        <Button color="light" type="button" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button color="primary" type="submit">{t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>Import Milky Master Excel</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Milky Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
-                        <Label className="form-label">Download Milky Master File Template Format</Label>
+                        <Label className="form-label">{t("Download Milky Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
                                 <i className="ri-download-2-line align-bottom me-1"></i> Download Format
@@ -547,7 +549,7 @@ const MilkyMasterList = () => {
                     </div>
                     <hr />
                     <div className="mb-3">
-                        <Label htmlFor="importFile" className="form-label">Select Excel File To Import</Label>
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
                         <Input
                             type="file"
                             id="importFile"
@@ -559,7 +561,7 @@ const MilkyMasterList = () => {
                     {importing && (
                         <div className="mt-3">
                             <div className="d-flex justify-content-between mb-1">
-                                <span className="text-muted">Processing rows...</span>
+                                <span className="text-muted">{t("Processing rows...")}</span>
                                 <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
                             </div>
                             <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
@@ -567,14 +569,14 @@ const MilkyMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>Close</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>Submit</Button>
+                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -584,15 +586,15 @@ const MilkyMasterList = () => {
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
+                            <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 Are you sure you want to delete Milky <strong>{milkyToDelete?.milkyID || milkyToDelete?.milkyName}</strong>?
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>Cancel</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>Yes, Delete It!</Button>
+                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>

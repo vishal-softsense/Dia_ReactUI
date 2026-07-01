@@ -61,51 +61,261 @@ const Welcome = () => {
 
             <style>{`
 
+/* ==========================
+   PAGE
+========================== */
+
 .welcome-page{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    overflow:hidden;
 
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-position:relative;
-overflow:hidden;
+    background:linear-gradient(-45deg,#eef4ff,#ffffff,#f7fbff,#edf5ff);
+    background-size:400% 400%;
+    animation:bgMove 12s ease infinite;
+    transition:all .4s ease;
+}
 
-background:linear-gradient(-45deg,#eef2ff,#ffffff,#f6fbff,#edf4ff);
+/* ==========================
+   DARK MODE
+========================== */
 
-background-size:400% 400%;
+[data-bs-theme="dark"] .welcome-page,
+[data-layout-mode="dark"] .welcome-page,
+html[data-bs-theme="dark"] .welcome-page,
+body[data-bs-theme="dark"] .welcome-page{
 
-animation:bg 15s ease infinite;
+    background:#212529 !important;
 
 }
 
-@keyframes bg{
-
-0%{background-position:0% 50%;}
-
-50%{background-position:100% 50%;}
-
-100%{background-position:0% 50%;}
-
-}
+/* ==========================
+   CENTER CONTENT
+========================== */
 
 .hero{
 
-position:relative;
-
-text-align:center;
-
-z-index:5;
-
-animation:fade 1s ease;
+    position:relative;
+    z-index:10;
+    text-align:center;
+    animation:fadeUp .8s ease;
 
 }
 
-@keyframes fade{
+/* ==========================
+   GREETING
+========================== */
+
+.hero h5{
+
+    color:#405189;
+    font-size:22px;
+    font-weight:600;
+    margin-bottom:15px;
+
+}
+
+[data-bs-theme="dark"] .hero h5,
+[data-layout-mode="dark"] .hero h5{
+
+    color:#adb5bd;
+
+}
+
+/* ==========================
+   TITLE
+========================== */
+
+.hero h1{
+
+    font-size:68px;
+    font-weight:800;
+    color:#405189;
+    letter-spacing:-2px;
+    margin-bottom:10px;
+    animation:titleGlow 3s infinite;
+
+}
+
+[data-bs-theme="dark"] .hero h1,
+[data-layout-mode="dark"] .hero h1{
+
+    color:#ffffff;
+
+}
+
+/* ==========================
+   USER NAME
+========================== */
+
+.hero h3{
+
+    color:#0ab39c;
+    font-size:34px;
+    font-weight:700;
+    margin-top:10px;
+    animation:userFloat 3s ease-in-out infinite;
+
+}
+
+/* ==========================
+   SUB TITLE
+========================== */
+
+.hero p{
+
+    font-size:22px;
+    color:#6c757d;
+    margin-top:20px;
+
+}
+
+[data-bs-theme="dark"] .hero p,
+[data-layout-mode="dark"] .hero p{
+
+    color:#ced4da;
+
+}
+
+/* ==========================
+   TIME
+========================== */
+
+.clock{
+
+    margin-top:35px;
+    color:#405189;
+    font-size:20px;
+    font-weight:600;
+    animation:pulse 2s infinite;
+
+}
+
+[data-bs-theme="dark"] .clock,
+[data-layout-mode="dark"] .clock{
+
+    color:#ffffff;
+
+}
+
+/* ==========================
+   FLOATING CIRCLES
+========================== */
+
+.circle{
+
+    position:absolute;
+    border-radius:50%;
+    animation:circleMove 8s ease-in-out infinite alternate;
+
+}
+
+/* Left */
+
+.one{
+
+    width:280px;
+    height:280px;
+    background:#405189;
+    opacity:.12;
+
+    left:-90px;
+    top:70px;
+
+}
+
+/* Right Top */
+
+.two{
+
+    width:180px;
+    height:180px;
+    background:#f7b84b;
+    opacity:.16;
+
+    right:120px;
+    top:70px;
+
+}
+
+/* Right Bottom */
+
+.three{
+
+    width:330px;
+    height:330px;
+    background:#0ab39c;
+    opacity:.15;
+
+    right:-120px;
+    bottom:-120px;
+
+}
+
+/* Dark circles */
+
+[data-bs-theme="dark"] .one,
+[data-layout-mode="dark"] .one{
+
+    background:#4b6cb7;
+    opacity:.10;
+
+}
+
+[data-bs-theme="dark"] .two,
+[data-layout-mode="dark"] .two{
+
+    background:#ffc107;
+    opacity:.08;
+
+}
+
+[data-bs-theme="dark"] .three,
+[data-layout-mode="dark"] .three{
+
+    background:#20c997;
+    opacity:.08;
+
+}
+
+/* ==========================
+   BACKGROUND ANIMATION
+========================== */
+
+@keyframes bgMove{
+
+0%{
+
+background-position:0% 50%;
+
+}
+
+50%{
+
+background-position:100% 50%;
+
+}
+
+100%{
+
+background-position:0% 50%;
+
+}
+
+}
+
+/* ==========================
+   FADE
+========================== */
+
+@keyframes fadeUp{
 
 from{
 
 opacity:0;
-
 transform:translateY(40px);
 
 }
@@ -113,96 +323,83 @@ transform:translateY(40px);
 to{
 
 opacity:1;
-
 transform:translateY(0);
 
 }
 
 }
 
-.diamond{
+/* ==========================
+   FLOAT
+========================== */
 
-font-size:85px;
+@keyframes circleMove{
 
-animation:float 3s ease-in-out infinite;
-
-margin-bottom:25px;
-
-}
-
-@keyframes float{
-
-0%,100%{
+0%{
 
 transform:translateY(0px);
 
 }
 
+100%{
+
+transform:translateY(25px);
+
+}
+
+}
+
+/* ==========================
+   USER FLOAT
+========================== */
+
+@keyframes userFloat{
+
+0%,100%{
+
+transform:translateY(0);
+
+}
+
 50%{
 
-transform:translateY(-15px);
+transform:translateY(-6px);
 
 }
 
 }
 
-h1{
+/* ==========================
+   GLOW
+========================== */
 
-font-size:55px;
+@keyframes titleGlow{
 
-font-weight:700;
+0%,100%{
 
-color:#405189;
-
-margin-bottom:10px;
-
-}
-
-h3{
-
-color:#0ab39c;
-
-font-weight:600;
-
-margin-top:10px;
+text-shadow:0 0 0 rgba(64,81,137,.15);
 
 }
 
-h5{
+50%{
 
-color:#405189;
-
-font-weight:600;
-
-margin-bottom:15px;
+text-shadow:0 0 18px rgba(64,81,137,.20);
 
 }
 
-p{
-
-font-size:20px;
-
-color:#6c757d;
-
-margin-top:20px;
-
 }
 
-.clock{
-
-margin-top:35px;
-
-font-size:22px;
-
-font-weight:600;
-
-color:#405189;
-
-animation:pulse 2s infinite;
-
-}
+/* ==========================
+   CLOCK
+========================== */
 
 @keyframes pulse{
+
+0%,100%{
+
+transform:scale(1);
+
+}
 
 50%{
 
@@ -212,71 +409,54 @@ transform:scale(1.05);
 
 }
 
-.circle{
+/* ==========================
+   MOBILE
+========================== */
 
-position:absolute;
+@media(max-width:768px){
 
-border-radius:50%;
+.hero h1{
 
-opacity:.18;
+font-size:42px;
 
-animation:move 10s infinite alternate;
+}
+
+.hero h3{
+
+font-size:24px;
+
+}
+
+.hero p{
+
+font-size:18px;
+
+}
+
+.hero h5{
+
+font-size:18px;
 
 }
 
 .one{
 
-width:220px;
-
-height:220px;
-
-background:#405189;
-
-left:-80px;
-
-top:80px;
+width:180px;
+height:180px;
 
 }
 
 .two{
 
-width:300px;
-
-height:300px;
-
-background:#0ab39c;
-
-right:-120px;
-
-bottom:40px;
+width:120px;
+height:120px;
 
 }
 
 .three{
 
-width:150px;
-
-height:150px;
-
-background:#f7b84b;
-
-right:20%;
-
-top:8%;
-
-}
-
-@keyframes move{
-
-from{
-
-transform:translateY(0px);
-
-}
-
-to{
-
-transform:translateY(30px);
+width:220px;
+height:220px;
 
 }
 

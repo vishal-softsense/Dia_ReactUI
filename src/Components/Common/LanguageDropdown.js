@@ -7,27 +7,49 @@ import i18n from "../../i18n";
 import languages from "../../common/languages";
 
 
+// RTL languages that require right-to-left document direction
+const RTL_LANGUAGES = ['ar', 'hb'];
+
+const applyDirection = (lang) => {
+    const isRTL = RTL_LANGUAGES.includes(lang);
+    const dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute('dir', dir);
+    if (isRTL) {
+        document.body.classList.add('rtl');
+    } else {
+        document.body.classList.remove('rtl');
+    }
+};
+
 const LanguageDropdown = () => {
-    // Declare a new state variable, which we'll call "menu"
-    const [selectedLang, setSelectedLang] = useState("");
+    const [selectedLang, setSelectedLang] = useState("en");
 
     useEffect(() => {
-        const currentLanguage = localStorage.getItem("I18N_LANGUAGE");
-        setSelectedLang(currentLanguage);
+        // On mount: restore language from sessionStorage → localStorage → default 'en'
+        const savedLang =
+            sessionStorage.getItem('languages') ||
+            localStorage.getItem('I18N_LANGUAGE') ||
+            'en';
+        const validLang = languages[savedLang] ? savedLang : 'en';
+        setSelectedLang(validLang);
+        i18n.changeLanguage(validLang);
+        applyDirection(validLang);
     }, []);
 
-    const changeLanguageAction = lang => {
-        //set language as i18n
+    const changeLanguageAction = (lang) => {
         i18n.changeLanguage(lang);
-        localStorage.setItem("I18N_LANGUAGE", lang);
+        // Persist in both stores to match jQuery behaviour
+        sessionStorage.setItem('languages', lang);
+        localStorage.setItem('I18N_LANGUAGE', lang);
         setSelectedLang(lang);
+        applyDirection(lang);
     };
-
 
     const [isLanguageDropdown, setIsLanguageDropdown] = useState(false);
     const toggleLanguageDropdown = () => {
         setIsLanguageDropdown(!isLanguageDropdown);
     };
+
     return (
         <React.Fragment>
             <Dropdown isOpen={isLanguageDropdown} toggle={toggleLanguageDropdown} className="ms-1 topbar-head-dropdown header-item">
@@ -44,12 +66,11 @@ const LanguageDropdown = () => {
                         <DropdownItem
                             key={key}
                             onClick={() => changeLanguageAction(key)}
-                            className={`notify-item ${selectedLang === key ? "active" : "none"
-                                }`}
+                            className={`notify-item ${selectedLang === key ? "active" : "none"}`}
                         >
                             <img
                                 src={get(languages, `${key}.flag`)}
-                                alt="Skote"
+                                alt={get(languages, `${key}.label`)}
                                 className="me-2 rounded"
                                 height="18"
                             />
