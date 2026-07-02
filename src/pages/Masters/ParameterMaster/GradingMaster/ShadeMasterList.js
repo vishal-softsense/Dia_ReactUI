@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const ShadeMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Shade Master";
+    document.title = `${t("Shade Master")} | ${t("Admin")}`;
 
     const [shadeList, setShadeList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const ShadeMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const ShadeMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.shadeID || row.ShadeID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.shadeName || row.ShadeName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.shadePriority || row.ShadePriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.shadeGroupName || row.ShadeGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.shadeGroupPriority || row.ShadeGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingShadeID || row.PricingShadeID
         }
     ], [shadeList]);
@@ -398,7 +398,7 @@ const ShadeMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Shade Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Shade Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const ShadeMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Shade List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Shade
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Shade")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const ShadeMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Shade Master" : "Add Shade Master"}
+                        {isEdit ? t("Edit Shade Master") : t("Add Shade Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const ShadeMasterList = () => {
                         <Label className="form-label">{t("Download Shade Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const ShadeMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Shade <strong>{shadeToDelete?.shadeID || shadeToDelete?.shadeName}</strong>?
+                                {t("Are you sure you want to delete Shade")} <strong>{shadeToDelete?.shadeID || shadeToDelete?.shadeName}</strong>?
                             </p>
                         </div>
                     </div>

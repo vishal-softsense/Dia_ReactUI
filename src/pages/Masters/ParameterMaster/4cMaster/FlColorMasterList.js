@@ -296,7 +296,7 @@ const FlColorMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "flColorID",
                 accessorFn: (row) => row.flColorID || row.FLColorID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "flColorName",
                 accessorFn: (row) => row.flColorName || row.FLColorName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "flColorPriority",
                 accessorFn: (row) => row.flColorPriority !== undefined ? row.flColorPriority : row.FLColorPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "flColorGroupName",
                 accessorFn: (row) => row.flColorGroupName || row.FLColorGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "flColorGroupPriority",
                 accessorFn: (row) => row.flColorGroupPriority !== undefined ? row.flColorGroupPriority : row.FLColorGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const FlColorMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingFLColorID",
                 accessorFn: (row) => row.pricingFLColorID || row.PricingFLColorID,
                 enableColumnFilter: true,
@@ -406,7 +406,7 @@ const FlColorMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
     document.title = "Fluorescence Color Master | Admin";
@@ -415,7 +415,7 @@ const FlColorMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Fluorescence Color Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Fluorescence Color Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -595,7 +595,7 @@ const FlColorMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>

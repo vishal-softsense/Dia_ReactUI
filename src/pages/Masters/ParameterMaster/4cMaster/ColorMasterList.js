@@ -296,7 +296,7 @@ const ColorMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "colorID",
                 accessorFn: (row) => row.colorID || row.ColorID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "colorName",
                 accessorFn: (row) => row.colorName || row.ColorName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "colorPriority",
                 accessorFn: (row) => row.colorPriority !== undefined ? row.colorPriority : row.ColorPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "colorGroupName",
                 accessorFn: (row) => row.colorGroupName || row.ColorGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "colorGroupPriority",
                 accessorFn: (row) => row.colorGroupPriority !== undefined ? row.colorGroupPriority : row.ColorGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const ColorMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingColorID",
                 accessorFn: (row) => row.pricingColorID || row.PricingColorID,
                 enableColumnFilter: true,
@@ -406,16 +406,16 @@ const ColorMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Color Master | Admin";
+    document.title = `${t("Color Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Color Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Color Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -424,7 +424,7 @@ const ColorMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Color Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Color
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Color")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -463,7 +463,7 @@ const ColorMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Color Master" : "Add Color Master"}
+                    {isEdit ? t("Edit Color Master") : t("Add Color Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -595,7 +595,7 @@ const ColorMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -614,7 +614,7 @@ const ColorMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete color <strong>{colorToDelete?.colorName || colorToDelete?.ColorName}</strong>?
+                                {t("Are you sure you want to delete color")} <strong>{colorToDelete?.colorName || colorToDelete?.ColorName}</strong>?
                             </p>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-﻿{
+{
   "$ Rate": "Курс $",
   "+/-Amount": "+/- Сумма",
   "4'C MASTER": "Мастер 4'C",
@@ -1016,11 +1016,9 @@
   "Width": "Ширина",
   "Write": "Написать",
   "Zip Code": "Почтовый индекс",
-
   "Solitaire & Parcel": "Солитер и посылка",
   "Grading Comparison Report": "Отчет о сравнении оценок",
   "Rate Revise Report": "Отчет об изменении ставок",
-
   "Jewellery": "Ювелирные изделия",
   "Jewellery Design Master": "Мастер ювелирного дизайна",
   "Add Jewellery Design": "Добавить дизайн ювелирных изделий",
@@ -1092,22 +1090,26 @@
   "OtherCharges": "Прочие сборы",
   "HallmarkCharges": "Сборы за пробу",
   "FinalAmount": "Итоговая сумма",
-
   "Jewellery Category Master": "Мастер категорий ювелирных изделий",
   "Add Jewellery Category": "Добавить категорию ювелирных изделий",
   "Jewellery SubCategory Master": "Мастер подкатегорий ювелирных изделий",
   "Add Jewellery SubCategory": "Добавить подкатегорию ювелирных изделий",
   "Jewellery Metal Master": "Мастер металлов ювелирных изделий",
   "Add Jewellery Metal": "Добавить металл ювелирных изделий",
-
   "MetalColor": "Цвет металла",
   "MetalPurity": "Чистота металла",
   "Metal24KTRatio": "Соотношение металла 24К",
   "Jewellery MetalPurity Master": "Мастер чистоты металла ювелирных изделий",
   "Add Jewellery MetalPurity": "Добавить чистоту металла ювелирных изделий",
-
   "MetalPurityToPureRatio": "Соотношение чистоты металла к чистому металлу",
   "Jewellery Color Master": "Мастер цветов ювелирных изделий",
-  "Add Jewellery Color": "Добавить цвет ювелирных изделий"
-
+  "Add Jewellery Color": "Добавить цвет ювелирных изделий",
+  "Welcome": "Добро пожаловать",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "Доброе утро ☀️",
+  "Good Afternoon 🌤️": "Добрый день 🌤️",
+  "Good Evening 🌙": "Добрый вечер 🌙",
+  "Welcome to DiaJewSoft": "Добро пожаловать в DiaJewSoft",
+  "Inventory Management • Purchase • Sales • Accounts": "Управление запасами • Закупки • Продажи • Счета",
+  "Good Night 🌃": "Спокойной ночи 🌃"
 }

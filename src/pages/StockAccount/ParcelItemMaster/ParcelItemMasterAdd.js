@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, FormGroup, Label, Input } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getParcelItemMasterDropdowns, checkLotNoExists, addParcelItemMaster } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from 'react-toastify';
+import Select from "react-select";
 
 const ParcelItemMasterAdd = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [dropdowns, setDropdowns] = useState({
         shape: [],
@@ -131,7 +134,7 @@ const ParcelItemMasterAdd = () => {
                 const exists = response.exists || response.Exists || false;
                 setLotNoExists(exists);
                 if (exists) {
-                    toast.warning("LotNo Already Exists");
+                    toast.warning(t("LotNo Already Exists"));
                 }
             }
         } catch (error) {
@@ -148,7 +151,7 @@ const ParcelItemMasterAdd = () => {
             return;
         }
         if (lotNoExists) {
-            toast.error("LotNo Already Exists");
+            toast.error(t("LotNo Already Exists"));
             return;
         }
 
@@ -167,24 +170,48 @@ const ParcelItemMasterAdd = () => {
         setSubmitting(false);
     };
 
-    document.title = "Add Parcel Item Master | Admin";
+    // Map dropdown arrays to react-select options
+    const shapeOptions = dropdowns.shape.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+    const colorOptions = dropdowns.color.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+    const clarityOptions = dropdowns.clarity.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+    const sizeOptions = dropdowns.size.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+    const sieveOptions = dropdowns.sieve.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+    const itemGroupOptions = dropdowns.itemGroup.map(item => ({
+        value: item.id || item.ID,
+        label: item.textName || item.name || item.id || item.ID
+    }));
+
+    document.title = `${t("Add Parcel Item Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Add Parcel Item Master" pageTitle="Stock & Account" />
+                    <BreadCrumb title={t("Add Parcel Item Master")} pageTitle={t("Stock & Account")} />
 
                     <form onSubmit={handleSubmit}>
                         <Card>
                             <CardHeader className="d-flex align-items-center">
-                                <h5 className="card-title mb-0 flex-grow-1">Parcel Item Details</h5>
+                                <h5 className="card-title mb-0 flex-grow-1">{t("Parcel Item Details")}</h5>
                                 <div className="d-flex gap-2">
-                                    <Button color="light" type="button" onClick={() => navigate("/parcel/list-ParcelItemMaster")}>
-                                        Cancel
-                                    </Button>
+                                    <Button color="light" type="button" onClick={() => navigate("/parcel/list-ParcelItemMaster")}>{t("Cancel")}</Button>
                                     <Button color="primary" type="submit" disabled={submitting}>
-                                        {submitting ? "Submitting..." : "Submit"}
+                                        submitting ? t("Submitting...") : t("Submit")
                                     </Button>
                                 </div>
                             </CardHeader>
@@ -192,17 +219,17 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={3}>
                                         <FormGroup>
-                                            <Label>Stock ID / LotNo <span className="text-danger">*</span></Label>
+                                            <Label>{t("Stock ID / LotNo")} <span className="text-danger">*</span></Label>
                                             <Input
                                                 type="text"
                                                 className={`form-control ${lotNoExists ? 'is-invalid' : ''}`}
-                                                placeholder="Stock ID/ LotNo"
+                                                placeholder={t("Stock ID/ LotNo")}
                                                 value={form.lotNo}
                                                 onChange={(e) => handleTextChange("lotNo", e.target.value)}
                                                 onBlur={handleLotNoBlur}
                                                 required
                                             />
-                                            {lotNoExists && <div className="invalid-feedback">LotNo Already Exists</div>}
+                                            {lotNoExists && <div className="invalid-feedback">{t("LotNo Already Exists")}</div>}
                                         </FormGroup>
                                     </Col>
                                 </Row>
@@ -210,96 +237,72 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={2}>
                                         <FormGroup>
-                                            <Label>Shape</Label>
-
-                                            <select
-                                                className="form-select"
-                                                value={form.shapeId}
-                                                onChange={(e) => handleTextChange("shapeId", e.target.value)}
-                                            >
-                                                <option value="">Select Shape</option>
-
-                                                {dropdowns.shape.map((item, index) => (
-                                                    <option
-                                                        key={index}
-                                                        value={item.id}
-                                                    >
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Shape")}</Label>
+                                            <Select
+                                                value={shapeOptions.find(opt => opt.value == form.shapeId) || null}
+                                                onChange={(selected) => handleTextChange("shapeId", selected ? selected.value : "")}
+                                                options={shapeOptions}
+                                                placeholder={t("Select Shape")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                     <Col md={2}>
                                         <FormGroup>
-                                            <Label>Color</Label>
-                                            <select
-                                                className="form-select"
-                                                value={form.colorId}
-                                                onChange={(e) => handleTextChange("colorId", e.target.value)}
-                                            >
-                                                <option value="">Select Color</option>
-
-                                                {dropdowns.color.map((item, index) => (
-                                                    <option key={index} value={item.id}>
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Color")}</Label>
+                                            <Select
+                                                value={colorOptions.find(opt => opt.value == form.colorId) || null}
+                                                onChange={(selected) => handleTextChange("colorId", selected ? selected.value : "")}
+                                                options={colorOptions}
+                                                placeholder={t("Select Color")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                     <Col md={2}>
                                         <FormGroup>
-                                            <Label>Clarity</Label>
-                                            <select
-                                                className="form-select"
-                                                value={form.clarityId}
-                                                onChange={(e) => handleTextChange("clarityId", e.target.value)}
-                                            >
-                                                <option value="">Select Clarity</option>
-
-                                                {dropdowns.clarity.map((item, index) => (
-                                                    <option key={index} value={item.id}>
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Clarity")}</Label>
+                                            <Select
+                                                value={clarityOptions.find(opt => opt.value == form.clarityId) || null}
+                                                onChange={(selected) => handleTextChange("clarityId", selected ? selected.value : "")}
+                                                options={clarityOptions}
+                                                placeholder={t("Select Clarity")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                     <Col md={2}>
                                         <FormGroup>
-                                            <Label>Size</Label>
-                                            <select
-                                                className="form-select"
-                                                value={form.sizeId}
-                                                onChange={(e) => handleTextChange("sizeId", e.target.value)}
-                                            >
-                                                <option value="">Select Size</option>
-
-                                                {dropdowns.size.map((item, index) => (
-                                                    <option key={index} value={item.id}>
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Size")}</Label>
+                                            <Select
+                                                value={sizeOptions.find(opt => opt.value == form.sizeId) || null}
+                                                onChange={(selected) => handleTextChange("sizeId", selected ? selected.value : "")}
+                                                options={sizeOptions}
+                                                placeholder={t("Select Size")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                     <Col md={2}>
                                         <FormGroup>
-                                            <Label>Sieve/MM</Label>
-                                            <select
-                                                className="form-select"
-                                                value={form.sieveId}
-                                                onChange={(e) => handleTextChange("sieveId", e.target.value)}
-                                            >
-                                                <option value="">Select Sieve</option>
-
-                                                {dropdowns.sieve.map((item, index) => (
-                                                    <option key={index} value={item.id}>
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Sieve/MM")}</Label>
+                                            <Select
+                                                value={sieveOptions.find(opt => opt.value == form.sieveId) || null}
+                                                onChange={(selected) => handleTextChange("sieveId", selected ? selected.value : "")}
+                                                options={sieveOptions}
+                                                placeholder={t("Select Sieve")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                 </Row>
@@ -307,10 +310,10 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Stock Name</Label>
+                                            <Label>{t("Stock Name")}</Label>
                                             <Input
                                                 type="text"
-                                                placeholder="Stock Name"
+                                                placeholder={t("Stock Name")}
                                                 value={form.itemName}
                                                 onChange={(e) => handleTextChange("itemName", e.target.value)}
                                             />
@@ -318,29 +321,25 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={3}>
                                         <FormGroup>
-                                            <Label>Stock GroupID</Label>
-                                            <select
-                                                className="form-select"
-                                                value={form.itemGroupID}
-                                                onChange={(e) => handleTextChange("itemGroupID", e.target.value)}
-                                            >
-                                                <option value="">Select Group</option>
-
-                                                {dropdowns.itemGroup.map((item, index) => (
-                                                    <option key={index} value={item.id}>
-                                                        {item.textName || item.name || item.id}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Label>{t("Stock GroupID")}</Label>
+                                            <Select
+                                                value={itemGroupOptions.find(opt => opt.value == form.itemGroupID) || null}
+                                                onChange={(selected) => handleTextChange("itemGroupID", selected ? selected.value : "")}
+                                                options={itemGroupOptions}
+                                                placeholder={t("Select Group")}
+                                                isSearchable={true}
+                                                isClearable={true}
+                                                classNamePrefix="react-select"
+                                            />
                                         </FormGroup>
                                     </Col>
                                     <Col md={5}>
                                         <FormGroup>
-                                            <Label>Description</Label>
+                                            <Label>{t("Description")}</Label>
                                             <Input
                                                 type="textarea"
                                                 rows="2"
-                                                placeholder="Description"
+                                                placeholder={t("Description")}
                                                 value={form.publicCommnets}
                                                 onChange={(e) => handleTextChange("publicCommnets", e.target.value)}
                                             />
@@ -353,13 +352,13 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Stock Type</Label>
+                                            <Label>{t("Stock Type")}</Label>
                                             <select
                                                 className="form-select"
                                                 value={form.category}
                                                 onChange={(e) => handleTextChange("category", e.target.value)}
                                             >
-                                                <option value="">Select Category</option>
+                                                <option value="">{t("Select Category")}</option>
 
                                                 {dropdowns.category.map((item, index) => (
                                                     <option key={index} value={item.id}>
@@ -371,27 +370,27 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Stock SubType</Label>
+                                            <Label>{t("Stock SubType")}</Label>
                                             <select
                                                 className="form-select"
                                                 value={form.instruction}
                                                 onChange={(e) => handleTextChange("instruction", e.target.value)}
                                             >
-                                                <option value="Polished">Polished</option>
-                                                <option value="Makeble">Makeble</option>
-                                                <option value="Rough">Rough</option>
+                                                <option value="Polished">{t("Polished")}</option>
+                                                <option value="Makeble">{t("Makeble")}</option>
+                                                <option value="Rough">{t("Rough")}</option>
                                             </select>
                                         </FormGroup>
                                     </Col>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Grown / Process Type</Label>
+                                            <Label>{t("Grown / Process Type")}</Label>
                                             <select
                                                 className="form-select"
                                                 value={form.productType}
                                                 onChange={(e) => handleTextChange("productType", e.target.value)}
                                             >
-                                                <option value="">Select Product Type</option>
+                                                <option value="">{t("Select Product Type")}</option>
 
                                                 {dropdowns.productType.map((item, index) => (
                                                     <option key={index} value={item.id}>
@@ -408,7 +407,7 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Opening Weight / Carats</Label>
+                                            <Label>{t("Opening Weight / Carats")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -420,7 +419,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Opening Pcs</Label>
+                                            <Label>{t("Opening Pcs")}</Label>
                                             <Input
                                                 type="number"
                                                 className="text-end"
@@ -431,7 +430,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={4}>
                                         <FormGroup>
-                                            <Label>Base Currency Rate</Label>
+                                            <Label>{t("Base Currency Rate")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -446,7 +445,7 @@ const ParcelItemMasterAdd = () => {
                                 <Row className="mt-3">
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Purchase / Cost Price (USD / Carat)</Label>
+                                            <Label>{t("Purchase / Cost Price (USD / Carat)")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -458,7 +457,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Purchase / Cost USD Amount</Label>
+                                            <Label>{t("Purchase / Cost USD Amount")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -473,7 +472,7 @@ const ParcelItemMasterAdd = () => {
                                 <Row className="mt-3">
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Purchase / Cost Price (INR / Carat)</Label>
+                                            <Label>{t("Purchase / Cost Price (INR / Carat)")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -485,7 +484,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Purchase / Cost INR Amount</Label>
+                                            <Label>{t("Purchase / Cost INR Amount")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -502,7 +501,7 @@ const ParcelItemMasterAdd = () => {
                                 <Row>
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Asking Price (USD / Carat)</Label>
+                                            <Label>{t("Asking Price (USD / Carat)")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -514,7 +513,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Asking USD Amount</Label>
+                                            <Label>{t("Asking USD Amount")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -529,7 +528,7 @@ const ParcelItemMasterAdd = () => {
                                 <Row className="mt-3">
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Asking Price (INR / Carat)</Label>
+                                            <Label>{t("Asking Price (INR / Carat)")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -541,7 +540,7 @@ const ParcelItemMasterAdd = () => {
                                     </Col>
                                     <Col md={6}>
                                         <FormGroup>
-                                            <Label>Asking INR Amount</Label>
+                                            <Label>{t("Asking INR Amount")}</Label>
                                             <Input
                                                 type="number"
                                                 step="any"

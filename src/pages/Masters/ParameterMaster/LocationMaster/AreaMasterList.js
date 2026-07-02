@@ -263,10 +263,9 @@ const AreaMasterList = () => {
     };
 
     // Table Columns Configuration
-    const columns = useMemo(
-        () => [
+    const columns = useMemo(() => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -326,7 +325,7 @@ const AreaMasterList = () => {
                 }
             },
             {
-                header: "Area Name",
+                header: t("Area Name"),
                 accessorKey: "areaName",
                 accessorFn: (row) => row.areaName || row.AreaName,
                 enableColumnFilter: true,
@@ -345,17 +344,15 @@ const AreaMasterList = () => {
                     return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
                 }
             }
-        ],
-        []
-    );
+        ], [t]);
 
-    document.title = "Area Master | Admin";
+    document.title = `${t("Area Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Area Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Area Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -364,11 +361,9 @@ const AreaMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Area Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Area
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Area")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
@@ -403,7 +398,7 @@ const AreaMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Area Master" : "Add Area Master"}
+                    {isEdit ? t("Edit Area Master") : t("Add Area Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -475,7 +470,7 @@ const AreaMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -494,7 +489,7 @@ const AreaMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                              <h4>{t("Are you sure?")}</h4>
                              <p className="text-muted mx-4 mb-0">
-                                 Are you sure you want to delete area <strong>{areaToDelete?.areaName || areaToDelete?.AreaName}</strong>?
+                                 {t("Are you sure you want to delete area")} <strong>{areaToDelete?.areaName || areaToDelete?.AreaName}</strong>?
                              </p>
                         </div>
                     </div>
@@ -513,8 +508,7 @@ const AreaMasterList = () => {
                         <Label className="form-label">{t("Download AreaMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
 

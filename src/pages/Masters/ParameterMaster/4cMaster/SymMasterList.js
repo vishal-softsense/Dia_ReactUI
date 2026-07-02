@@ -296,7 +296,7 @@ const SymMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "symID",
                 accessorFn: (row) => row.symID || row.SymID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "symName",
                 accessorFn: (row) => row.symName || row.SymName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "symPriority",
                 accessorFn: (row) => row.symPriority !== undefined ? row.symPriority : row.SymPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "symGroupName",
                 accessorFn: (row) => row.symGroupName || row.SymGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "symGroupPriority",
                 accessorFn: (row) => row.symGroupPriority !== undefined ? row.symGroupPriority : row.SymGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const SymMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingSymID",
                 accessorFn: (row) => row.pricingSymID || row.PricingSymID,
                 enableColumnFilter: true,
@@ -406,7 +406,7 @@ const SymMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
     document.title = "Symmetry Master | Admin";
@@ -415,7 +415,7 @@ const SymMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Symmetry Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Symmetry Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -424,7 +424,7 @@ const SymMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Symmetry Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Symmetry
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Sym")}metry
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -595,7 +595,7 @@ const SymMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>

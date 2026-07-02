@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -10,6 +11,7 @@ import { toast, ToastContainer } from 'react-toastify';
 
 
 const ParcelItemMasterList = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const [parcelItems, setParcelItems] = useState([]);
@@ -97,7 +99,7 @@ const ParcelItemMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -145,49 +147,49 @@ const ParcelItemMasterList = () => {
                 }
             },
             {
-                header: "Lot No",
+                header: t("Lot No"),
                 accessorKey: "lotNo",
                 accessorFn: (row) => row.lotNo || row.LotNo,
                 enableColumnFilter: true,
             },
             {
-                header: "Item Name",
+                header: t("Item Name"),
                 accessorKey: "itemName",
                 accessorFn: (row) => row.itemName || row.ItemName,
                 enableColumnFilter: true,
             },
             {
-                header: "Shape",
+                header: t("Shape"),
                 accessorKey: "shapeId",
                 accessorFn: (row) => row.shapeId || row.ShapeId,
                 enableColumnFilter: true,
             },
             {
-                header: "Color",
+                header: t("Color"),
                 accessorKey: "colorId",
                 accessorFn: (row) => row.colorId || row.ColorId,
                 enableColumnFilter: true,
             },
             {
-                header: "Size",
+                header: t("Size"),
                 accessorKey: "sizeId",
                 accessorFn: (row) => row.sizeId || row.SizeId,
                 enableColumnFilter: true,
             },
             {
-                header: "Clarity",
+                header: t("Clarity"),
                 accessorKey: "clarityId",
                 accessorFn: (row) => row.clarityId || row.ClarityId,
                 enableColumnFilter: true,
             },
             {
-                header: "Sieve",
+                header: t("Sieve"),
                 accessorKey: "sieveId",
                 accessorFn: (row) => row.sieveId || row.SieveId,
                 enableColumnFilter: true,
             },
             {
-                header: "Weight",
+                header: t("Weight"),
                 accessorKey: "weight",
                 accessorFn: (row) => row.weight || row.Weight,
                 enableColumnFilter: true,
@@ -197,7 +199,7 @@ const ParcelItemMasterList = () => {
                 }
             },
             {
-                header: "Purchase Amount",
+                header: t("Purchase Amount"),
                 accessorKey: "purchaseAmount",
                 accessorFn: (row) => row.purchaseAmount || row.PurchaseAmount,
                 enableColumnFilter: true,
@@ -208,24 +210,22 @@ const ParcelItemMasterList = () => {
             }
 
         ],
-        [navigate]
-    );
+        [navigate, t]);
 
-    document.title = "Parcel Item Master | Admin";
+    document.title = `${t("Parcel Item Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="Parcel Item Master" pageTitle="Stock & Account" />
+                    <BreadCrumb title={t("Parcel Item Master")} pageTitle={t("Stock & Account")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Parcel Items</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1">{t("Parcel Items")}</h5>
                                     <div className="d-flex gap-2">
-                                        <Link to="/parcel/add-ParcelItemMaster" className="btn btn-primary add-btn">
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Parcel Item
+                                        <Link to="/parcel/add-ParcelItemMaster" className="btn btn-primary add-btn"><i className="ri-add-line align-bottom me-1"></i> {t("Add Parcel Item")}
                                         </Link>
                                         <Button className="btn-soft-success" onClick={handleExportExcel} title="Export to Excel" style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "20px" }}></i>
@@ -249,7 +249,7 @@ const ParcelItemMasterList = () => {
                                             divClass="table-responsive table-card mb-3"
                                             tableClass="align-middle table-nowrap mb-0"
                                             theadClass="table-light"
-                                            SearchPlaceholder="Filter items..."
+                                            SearchPlaceholder={t("Filter items...")}
                                         />
                                     )}
                                 </CardBody>
@@ -261,18 +261,18 @@ const ParcelItemMasterList = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style={{ width: "100px", height: "100px" }}></lord-icon>
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure?</h4>
-                            <p className="text-muted mx-4 mb-0">Do you really want to delete this parcel item? This action cannot be undone.</p>
+                            <h4>{t("Are you sure?")}</h4>
+                            <p className="text-muted mx-4 mb-0">{t("Do you really want to delete this parcel item? This action cannot be undone.")}</p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>Cancel</button>
-                        <button type="button" className="btn w-sm btn-danger" id="delete-record" onClick={handleDeleteConfirm}>Yes, Delete It!</button>
+                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>{t("Cancel")}</button>
+                        <button type="button" className="btn w-sm btn-danger" id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</button>
                     </div>
                 </ModalBody>
             </Modal>

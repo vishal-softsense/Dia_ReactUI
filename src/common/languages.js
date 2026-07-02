@@ -56,16 +56,16 @@ const languages = {
     flag: flagrussia,
     dir: "ltr",
   },
-  gr: {
-    label: "Deutsche",
-    flag: flaggermany,
-    dir: "ltr",
-  },
-  it: {
-    label: "Italiana",
-    flag: flagitaly,
-    dir: "ltr",
-  },
+  // gr: {
+  //   label: "Deutsche",
+  //   flag: flaggermany,
+  //   dir: "ltr",
+  // },
+  // it: {
+  //   label: "Italiana",
+  //   flag: flagitaly,
+  //   dir: "ltr",
+  // },
 };
 
 export default languages;

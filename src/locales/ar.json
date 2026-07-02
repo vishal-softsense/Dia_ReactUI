@@ -1,4 +1,4 @@
-﻿{
+{
   "$ Rate": "سعر الدولار",
   "+/-Amount": "+/- المبلغ",
   "4'C MASTER": "4'C الرئيسي",
@@ -1016,11 +1016,9 @@
   "Width": "عرض",
   "Write": "اكتب",
   "Zip Code": "الرمز البريدي",
-
   "Solitaire & Parcel": "الماس الفردي والطرود",
   "Grading Comparison Report": "تقرير مقارنة التقييم",
   "Rate Revise Report": "تقرير تعديل الأسعار",
-
   "Jewellery": "مجوهرات",
   "Jewellery Design Master": "رئيس تصميم المجوهرات",
   "Add Jewellery Design": "إضافة تصميم مجوهرات",
@@ -1095,23 +1093,26 @@
   "Jewellery Stock Master": "رئيس مخزون المجوهرات",
   "StockID": "معرّف المخزون",
   "Add Jewellery Stock": "إضافة مخزون المجوهرات",
-
   "Jewellery Category Master": "الماستر الرئيسي لفئة المجوهرات",
   "Add Jewellery Category": "إضافة فئة مجوهرات",
   "Jewellery SubCategory Master": "الماستر الرئيسي للفئة الفرعية للمجوهرات",
   "Add Jewellery SubCategory": "إضافة فئة فرعية للمجوهرات",
   "Jewellery Metal Master": "الماستر الرئيسي لمعدن المجوهرات",
   "Add Jewellery Metal": "إضافة معدن مجوهرات",
-
   "MetalColor": "لون المعدن",
   "MetalPurity": "نقاء المعدن",
   "Metal24KTRatio": "نسبة المعدن 24 قيراط",
   "Jewellery MetalPurity Master": "الماستر الرئيسي لنقاء معدن المجوهرات",
   "Add Jewellery MetalPurity": "إضافة نقاء معدن المجوهرات",
-
   "MetalPurityToPureRatio": "نسبة نقاء المعدن إلى المعدن النقي",
   "Jewellery Color Master": "الماستر الرئيسي لألوان المجوهرات",
-  "Add Jewellery Color": "إضافة لون مجوهرات"
-
-
+  "Add Jewellery Color": "إضافة لون مجوهرات",
+  "Welcome": "مرحباً",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "صباح الخير ☀️",
+  "Good Afternoon 🌤️": "مساء الخير 🌤️",
+  "Good Evening 🌙": "مساء الخير 🌙",
+  "Welcome to DiaJewSoft": "مرحباً بكم في DiaJewSoft",
+  "Inventory Management • Purchase • Sales • Accounts": "إدارة المخزون • الشراء • المبيعات • الحسابات",
+  "Good Night 🌃": "ليلة سعيدة 🌃"
 }

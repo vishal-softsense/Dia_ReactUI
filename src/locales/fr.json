@@ -1,4 +1,4 @@
-﻿{
+{
   "$ Rate": "Taux en $",
   "+/-Amount": "Montant +/-",
   "4'C MASTER": "Maître 4'C",
@@ -1016,11 +1016,9 @@
   "Width": "Largeur",
   "Write": "Écrire",
   "Zip Code": "Code postal",
-
   "Solitaire & Parcel": "Solitaire & Colis",
   "Grading Comparison Report": "Rapport de comparaison de notation",
   "Rate Revise Report": "Rapport de révision des tarifs",
-
   "Jewellery": "Bijoux",
   "Jewellery Design Master": "Maître de conception de bijoux",
   "Add Jewellery Design": "Ajouter une conception de bijoux",
@@ -1095,22 +1093,26 @@
   "Jewellery Stock Master": "Maître du stock de bijoux",
   "StockID": "ID de stock",
   "Add Jewellery Stock": "Ajouter un stock de bijoux",
-
   "Jewellery Category Master": "Maître des catégories de bijoux",
   "Add Jewellery Category": "Ajouter une catégorie de bijoux",
   "Jewellery SubCategory Master": "Maître des sous-catégories de bijoux",
   "Add Jewellery SubCategory": "Ajouter une sous-catégorie de bijoux",
   "Jewellery Metal Master": "Maître des métaux de bijoux",
   "Add Jewellery Metal": "Ajouter un métal de bijoux",
-
   "MetalColor": "Couleur du métal",
   "MetalPurity": "Pureté du métal",
   "Metal24KTRatio": "Proportion de métal 24K",
   "Jewellery MetalPurity Master": "Maître de la pureté du métal de bijoux",
   "Add Jewellery MetalPurity": "Ajouter la pureté du métal de bijoux",
-
   "MetalPurityToPureRatio": "Rapport pureté métal à métal pur",
   "Jewellery Color Master": "Maître des couleurs de bijoux",
-  "Add Jewellery Color": "Ajouter une couleur de bijoux"
-
+  "Add Jewellery Color": "Ajouter une couleur de bijoux",
+  "Welcome": "Bienvenue",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "Bonjour ☀️",
+  "Good Afternoon 🌤️": "Bon après-midi 🌤️",
+  "Good Evening 🌙": "Bonsoir 🌙",
+  "Welcome to DiaJewSoft": "Bienvenue chez DiaJewSoft",
+  "Inventory Management • Purchase • Sales • Accounts": "Gestion des stocks • Achats • Ventes • Comptes",
+  "Good Night 🌃": "Bonne nuit 🌃"
 }

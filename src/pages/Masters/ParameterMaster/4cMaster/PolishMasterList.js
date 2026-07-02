@@ -296,7 +296,7 @@ const PolishMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "polishID",
                 accessorFn: (row) => row.polishID || row.PolishID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "polishName",
                 accessorFn: (row) => row.polishName || row.PolishName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "polishPriority",
                 accessorFn: (row) => row.polishPriority !== undefined ? row.polishPriority : row.PolishPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "polishGroupName",
                 accessorFn: (row) => row.polishGroupName || row.PolishGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "polishGroupPriority",
                 accessorFn: (row) => row.polishGroupPriority !== undefined ? row.polishGroupPriority : row.PolishGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const PolishMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingPolishID",
                 accessorFn: (row) => row.pricingPolishID || row.PricingPolishID,
                 enableColumnFilter: true,
@@ -406,16 +406,16 @@ const PolishMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Polish Master | Admin";
+    document.title = `${t("Polish Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Polish Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Polish Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -424,7 +424,7 @@ const PolishMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Polish Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Polish
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Polish")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -463,7 +463,7 @@ const PolishMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Polish Master" : "Add Polish Master"}
+                    {isEdit ? t("Edit Polish Master") : t("Add Polish Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -595,7 +595,7 @@ const PolishMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -614,7 +614,7 @@ const PolishMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete polish <strong>{polishToDelete?.polishName || polishToDelete?.PolishName}</strong>?
+                                {t("Are you sure you want to delete polish")} <strong>{polishToDelete?.polishName || polishToDelete?.PolishName}</strong>?
                             </p>
                         </div>
                     </div>

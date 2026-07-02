@@ -269,7 +269,7 @@ const JewCategoryMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -319,7 +319,7 @@ const JewCategoryMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "categoryID",
                 accessorFn: (row) => row.categoryID || row.CategoryID,
                 enableColumnFilter: true,
@@ -329,7 +329,7 @@ const JewCategoryMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "categoryName",
                 accessorFn: (row) => row.categoryName || row.CategoryName,
                 enableColumnFilter: true,
@@ -339,7 +339,7 @@ const JewCategoryMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "categoryPriority",
                 accessorFn: (row) => row.categoryPriority !== undefined ? row.categoryPriority : row.CategoryPriority,
                 enableColumnFilter: true,
@@ -352,13 +352,13 @@ const JewCategoryMasterList = () => {
         [categories]
     );
 
-    document.title = "Jewellery Category Master | Admin";
+    document.title = `${t("Jewellery Category Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Jewellery Category Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Jewellery Category Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -367,11 +367,9 @@ const JewCategoryMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Jewellery Category List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Category
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Category")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
@@ -406,7 +404,7 @@ const JewCategoryMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Jewellery Category" : "Add Jewellery Category"}
+                    {isEdit ? t("Edit Jewellery Category") : t("Add Jewellery Category")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -478,7 +476,7 @@ const JewCategoryMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -497,7 +495,7 @@ const JewCategoryMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete category <strong>{categoryToDelete?.categoryName || categoryToDelete?.CategoryName}</strong>?
+                                {t("Are you sure you want to delete category")} <strong>{categoryToDelete?.categoryName || categoryToDelete?.CategoryName}</strong>?
                             </p>
                         </div>
                     </div>
@@ -516,8 +514,7 @@ const JewCategoryMasterList = () => {
                         <Label className="form-label">{t("Download JewCategoryMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
 

@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const BrownMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Brown Master";
+    document.title = `${t("Brown Master")} | ${t("Admin")}`;
 
     const [brownList, setBrownList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -404,7 +404,7 @@ const handleDownloadTemplate = async () => {
 };
     const columns = useMemo(() => [
 {
-    header: "Actions",
+    header: t("Actions"),
     id: "actions",
     enableColumnFilter: false,
 
@@ -438,36 +438,36 @@ const handleDownloadTemplate = async () => {
 
 },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.brownID || row.BrownID
         },
 
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.brownName || row.BrownName
         },
 
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.brownPriority || row.BrownPriority
         },
 
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.brownGroupName || row.BrownGroupName
         },
 
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.brownGroupPriority || row.BrownGroupPriority
         },
 
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingBrownID || row.PricingBrownID
         }
 
-    ], []);
+    ], [t]);
 
     return (
 
@@ -479,7 +479,7 @@ const handleDownloadTemplate = async () => {
 
                     <BreadCrumb
                         title={t("Brown Master")}
-                        pageTitle="Masters"
+                        pageTitle={t("Masters")}
                     />
 
                     <Row>
@@ -490,9 +490,7 @@ const handleDownloadTemplate = async () => {
 
                                 <CardHeader className="d-flex align-items-center justify-content-between">
 
-                                    <h5 className="card-title mb-0">
-                                        Brown Master
-                                    </h5>
+                                    <h5 className="card-title mb-0">{t("Brown Master")}</h5>
 
                                     <div className="d-flex gap-2">
 
@@ -505,14 +503,12 @@ const handleDownloadTemplate = async () => {
                                             }}
                                         >
                                             <i className="ri-add-line align-bottom me-1"></i>
-                                            Add Brown
+                                            {t("Add Brown")}
                                         </Button>
                                         <Button
                                             color="soft-success"
                                             onClick={() => setImportModal(true)}
-                                        >
-                                            Import Excel
-                                        </Button>
+                                        >{t("Import Excel")}</Button>
                                         <Button
                                             color="soft-success"
                                             className="btn-icon"
@@ -584,7 +580,7 @@ const handleDownloadTemplate = async () => {
                     }}
                 >
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Brown Master" : "Add Brown Master"}
+                        {isEdit ? t("Edit Brown Master") : t("Add Brown Master")}
                     </ModalHeader>
 
                     <ModalBody>
@@ -593,7 +589,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Brown ID <span className="text-danger">*</span>
+                                    {t("Brown ID")}<span className="text-danger">*</span>
                                 </Label>
 
                                 <Input
@@ -616,7 +612,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Brown Name <span className="text-danger">*</span>
+                                    {t("Brown Name")}<span className="text-danger">*</span>
                                 </Label>
 
                                 <Input
@@ -639,7 +635,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Brown Priority <span className="text-danger">*</span>
+                                    {t("Brown Priority")}<span className="text-danger">*</span>
                                 </Label>
 
                                 <Input
@@ -662,7 +658,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Brown Group Name
+                                    {t("Brown Group Name")}
                                 </Label>
 
                                 <Input
@@ -676,7 +672,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Brown Group Priority
+                                    {t("Brown Group Priority")}
                                 </Label>
 
                                 <Input
@@ -690,7 +686,7 @@ const handleDownloadTemplate = async () => {
 
                             <Col md={12}>
                                 <Label className="form-label">
-                                    Pricing Brown ID
+                                    {t("Pricing Brown ID")}
                                 </Label>
 
                                 <Input
@@ -715,16 +711,12 @@ const handleDownloadTemplate = async () => {
                                 validation.resetForm();
                                 setFormModal(false);
                             }}
-                        >
-                            Cancel
-                        </Button>
+                        >{t("Cancel")}</Button>
 
                         <Button
                             color="primary"
                             type="submit"
-                        >
-                            Save
-                        </Button>
+                        >{t("Save")}</Button>
 
                     </ModalFooter>
 
@@ -740,8 +732,7 @@ const handleDownloadTemplate = async () => {
                                     <Label className="form-label">{t("Download Brown Master File Template Format")}</Label>
                                     <div>
                                         <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                            <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                                        </Button>
+                                            <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                                     </div>
                                 </div>
             
@@ -795,7 +786,7 @@ const handleDownloadTemplate = async () => {
            <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Brown <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
+                                {t("Are you sure you want to delete Brown")} <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
                             </p>
                         </div>
             <br />

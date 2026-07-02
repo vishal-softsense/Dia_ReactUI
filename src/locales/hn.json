@@ -1,4 +1,4 @@
-﻿{
+{
   "$ Rate": "डॉलर दर",
   "+/-Amount": "+/- राशि",
   "4'C MASTER": "4'C मास्टर",
@@ -1016,13 +1016,10 @@
   "Width": "चौड़ाई",
   "Write": "लिखें",
   "Zip Code": "पिन कोड",
-
   "DashBoard": "डैशबोर्ड",
   "Solitaire & Parcel": "सोलिटेयर & पार्सल",
   "Grading Comparison Report": "ग्रेडिंग तुलना रिपोर्ट",
   "Rate Revise Report": "दर संशोधन रिपोर्ट",
-
-
   "Jewellery": "आभूषण",
   "Jewellery Design Master": "आभूषण डिज़ाइन मास्टर",
   "Add Jewellery Design": "आभूषण डिज़ाइन जोड़ें",
@@ -1097,22 +1094,26 @@
   "Jewellery Stock Master": "आभूषण स्टॉक मास्टर",
   "StockID": "स्टॉक आईडी",
   "Add Jewellery Stock": "आभूषण स्टॉक जोड़ें",
-
   "Jewellery Category Master": "आभूषण श्रेणी मास्टर",
   "Add Jewellery Category": "आभूषण श्रेणी जोड़ें",
   "Jewellery SubCategory Master": "आभूषण उप-श्रेणी मास्टर",
   "Add Jewellery SubCategory": "आभूषण उप-श्रेणी जोड़ें",
   "Jewellery Metal Master": "आभूषण धातु मास्टर",
   "Add Jewellery Metal": "आभूषण धातु जोड़ें",
-
   "MetalColor": "धातु रंग",
   "MetalPurity": "धातु की शुद्धता",
   "Metal24KTRatio": "24KT धातु अनुपात",
   "Jewellery MetalPurity Master": "आभूषण धातु शुद्धता मास्टर",
   "Add Jewellery MetalPurity": "आभूषण धातु शुद्धता जोड़ें",
-
   "MetalPurityToPureRatio": "धातु शुद्धता से शुद्ध अनुपात",
   "Jewellery Color Master": "आभूषण रंग मास्टर",
-  "Add Jewellery Color": "आभूषण रंग जोड़ें"
-
+  "Add Jewellery Color": "आभूषण रंग जोड़ें",
+  "Welcome": "स्वागत",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "शुभ प्रभात ☀️",
+  "Good Afternoon 🌤️": "शुभ दोपहर 🌤️",
+  "Good Evening 🌙": "शुभ संध्या 🌙",
+  "Welcome to DiaJewSoft": "DiaJewSoft में आपका स्वागत है",
+  "Inventory Management • Purchase • Sales • Accounts": "इन्वेंटरी प्रबंधन • खरीद • बिक्री • खाते",
+  "Good Night 🌃": "शुभ रात्रि 🌃"
 }

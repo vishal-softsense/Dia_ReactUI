@@ -303,7 +303,7 @@ const SizeMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -353,7 +353,7 @@ const SizeMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "sizeID",
                 accessorFn: (row) => row.sizeID || row.SizeID,
                 enableColumnFilter: true,
@@ -363,7 +363,7 @@ const SizeMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "sizeName",
                 accessorFn: (row) => row.sizeName || row.SizeName,
                 enableColumnFilter: true,
@@ -393,7 +393,7 @@ const SizeMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "sizePriority",
                 accessorFn: (row) => row.sizePriority !== undefined ? row.sizePriority : row.SizePriority,
                 enableColumnFilter: true,
@@ -403,7 +403,7 @@ const SizeMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "sizeGroupName",
                 accessorFn: (row) => row.sizeGroupName || row.SizeGroupName,
                 enableColumnFilter: true,
@@ -413,7 +413,7 @@ const SizeMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "sizeGroupPriority",
                 accessorFn: (row) => row.sizeGroupPriority !== undefined ? row.sizeGroupPriority : row.SizeGroupPriority,
                 enableColumnFilter: true,
@@ -423,16 +423,16 @@ const SizeMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Size Master | Admin";
+    document.title = `${t("Size Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Size Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Size Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -441,7 +441,7 @@ const SizeMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Size Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Size
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Size")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -480,7 +480,7 @@ const SizeMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Size Master" : "Add Size Master"}
+                    {isEdit ? t("Edit Size Master") : t("Add Size Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -632,7 +632,7 @@ const SizeMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -651,7 +651,7 @@ const SizeMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete size <strong>{sizeToDelete?.sizeName || sizeToDelete?.SizeName}</strong>?
+                                {t("Are you sure you want to delete size")} <strong>{sizeToDelete?.sizeName || sizeToDelete?.SizeName}</strong>?
                             </p>
                         </div>
                     </div>

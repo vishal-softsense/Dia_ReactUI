@@ -285,7 +285,7 @@ const JewMetalPurityMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -335,7 +335,7 @@ const JewMetalPurityMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "metalPurityID",
                 accessorFn: (row) => row.metalPurityID || row.MetalPurityID,
                 enableColumnFilter: true,
@@ -345,7 +345,7 @@ const JewMetalPurityMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "metalPurityName",
                 accessorFn: (row) => row.metalPurityName || row.MetalPurityName,
                 enableColumnFilter: true,
@@ -355,7 +355,7 @@ const JewMetalPurityMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "metalPurityPriority",
                 accessorFn: (row) => row.metalPurityPriority !== undefined ? row.metalPurityPriority : row.MetalPurityPriority,
                 enableColumnFilter: true,
@@ -365,7 +365,7 @@ const JewMetalPurityMasterList = () => {
                 }
             },
             {
-                header: "Metal",
+                header: t("Metal"),
                 accessorKey: "metal",
                 accessorFn: (row) => row.metal || row.Metal,
                 enableColumnFilter: true,
@@ -375,7 +375,7 @@ const JewMetalPurityMasterList = () => {
                 }
             },
             {
-                header: "Pure Ratio",
+                header: t("Pure Ratio"),
                 accessorKey: "metalPurityToPureRatio",
                 accessorFn: (row) => row.metalPurityToPureRatio !== undefined ? row.metalPurityToPureRatio : row.MetalPurityToPureRatio,
                 enableColumnFilter: true,
@@ -388,13 +388,13 @@ const JewMetalPurityMasterList = () => {
         [purities]
     );
 
-    document.title = "Jewellery Metal Purity Master | Admin";
+    document.title = `${t("Jewellery Metal Purity Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Jewellery Metal Purity Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Jewellery Metal Purity Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -403,11 +403,9 @@ const JewMetalPurityMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Jewellery Metal Purity List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add MetalPurity
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add MetalPurity")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
@@ -442,7 +440,7 @@ const JewMetalPurityMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Jewellery MetalPurity" : "Add Jewellery MetalPurity"}
+                    {isEdit ? t("Edit Jewellery MetalPurity") : t("Add Jewellery MetalPurity")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -558,7 +556,7 @@ const JewMetalPurityMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -577,7 +575,7 @@ const JewMetalPurityMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete metal purity <strong>{purityToDelete?.metalPurityName || purityToDelete?.MetalPurityName}</strong>?
+                                {t("Are you sure you want to delete metal purity")} <strong>{purityToDelete?.metalPurityName || purityToDelete?.MetalPurityName}</strong>?
                             </p>
                         </div>
                     </div>
@@ -596,8 +594,7 @@ const JewMetalPurityMasterList = () => {
                         <Label className="form-label">{t("Download JewMetalPurityMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
 

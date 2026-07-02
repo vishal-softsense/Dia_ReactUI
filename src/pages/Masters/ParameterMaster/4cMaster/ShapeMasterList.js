@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -299,7 +299,7 @@ const ShapeMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -349,7 +349,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "shapeID",
                 accessorFn: (row) => row.shapeID || row.ShapeID,
                 enableColumnFilter: true,
@@ -359,7 +359,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "shapeName",
                 accessorFn: (row) => row.shapeName || row.ShapeName,
                 enableColumnFilter: true,
@@ -369,7 +369,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "shapePriority",
                 accessorFn: (row) => row.shapePriority !== undefined ? row.shapePriority : row.ShapePriority,
                 enableColumnFilter: true,
@@ -379,7 +379,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "shapeGroupName",
                 accessorFn: (row) => row.shapeGroupName || row.ShapeGroupName,
                 enableColumnFilter: true,
@@ -389,7 +389,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "shapeGroupPriority",
                 accessorFn: (row) => row.shapeGroupPriority !== undefined ? row.shapeGroupPriority : row.ShapeGroupPriority,
                 enableColumnFilter: true,
@@ -399,7 +399,7 @@ const ShapeMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingShapeID",
                 accessorFn: (row) => row.pricingShapeID || row.PricingShapeID,
                 enableColumnFilter: true,
@@ -409,16 +409,16 @@ const ShapeMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Shape Master | Admin";
+    document.title = `${t("Shape Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Shape Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Shape Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -427,10 +427,10 @@ const ShapeMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Shape Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Shape
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Shape")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
+                                            {t("Import Excel")}
                                         </Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
@@ -466,7 +466,7 @@ const ShapeMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Shape Master" : "Add Shape Master"}
+                    {isEdit ? t("Edit Shape Master") : t("Add Shape Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -598,7 +598,7 @@ const ShapeMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -617,7 +617,7 @@ const ShapeMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete shape <strong>{shapeToDelete?.shapeName || shapeToDelete?.ShapeName}</strong>?
+                                {t("Are you sure you want to delete shape")} <strong>{shapeToDelete?.shapeName || shapeToDelete?.ShapeName}</strong>?
                             </p>
                         </div>
                     </div>
@@ -636,7 +636,7 @@ const ShapeMasterList = () => {
                         <Label className="form-label">{t("Download ShapeMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
+                                <i className="ri-download-2-line align-bottom me-1"></i> {t("Download Format")}
                             </Button>
                         </div>
                     </div>

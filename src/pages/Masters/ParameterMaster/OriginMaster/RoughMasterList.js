@@ -266,10 +266,9 @@ const RoughMasterList = () => {
     };
 
     // Table Columns Configuration
-    const columns = useMemo(
-        () => [
+    const columns = useMemo(() => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -319,7 +318,7 @@ const RoughMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "roughID",
                 accessorFn: (row) => row.roughID || row.RoughID,
                 enableColumnFilter: true,
@@ -329,7 +328,7 @@ const RoughMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "roughName",
                 accessorFn: (row) => row.roughName || row.RoughName,
                 enableColumnFilter: true,
@@ -339,7 +338,7 @@ const RoughMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "roughPriority",
                 accessorFn: (row) => row.roughPriority !== undefined ? row.roughPriority : row.RoughPriority,
                 enableColumnFilter: true,
@@ -348,17 +347,15 @@ const RoughMasterList = () => {
                     return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
                 }
             }
-        ],
-        []
-    );
+        ], [t]);
 
-    document.title = "Rough Master | Admin";
+    document.title = `${t("Rough Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Rough Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Rough Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -367,11 +364,9 @@ const RoughMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Rough Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Rough
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Rough")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
@@ -406,7 +401,7 @@ const RoughMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Rough Master" : "Add Rough Master"}
+                    {isEdit ? t("Edit Rough Master") : t("Add Rough Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -478,7 +473,7 @@ const RoughMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -497,7 +492,7 @@ const RoughMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete rough <strong>{roughToDelete?.roughName || roughToDelete?.RoughName}</strong>?
+                                {t("Are you sure you want to delete rough")} <strong>{roughToDelete?.roughName || roughToDelete?.RoughName}</strong>?
                             </p>
                         </div>
                     </div>
@@ -516,8 +511,7 @@ const RoughMasterList = () => {
                         <Label className="form-label">{t("Download RoughMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
 

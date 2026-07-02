@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const NattsMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Natts Master";
+    document.title = `${t("Natts Master")} | ${t("Admin")}`;
 
     const [nattsList, setNattsList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const NattsMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const NattsMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.nattsID || row.NattsID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.nattsName || row.NattsName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.nattsPriority || row.NattsPriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.nattsGroupName || row.NattsGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.nattsGroupPriority || row.NattsGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingNattsID || row.PricingNattsID
         }
     ], [nattsList]);
@@ -398,7 +398,7 @@ const NattsMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Natts Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Natts Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const NattsMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Natts List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Natts
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Natts")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const NattsMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Natts Master" : "Add Natts Master"}
+                        {isEdit ? t("Edit Natts Master") : t("Add Natts Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const NattsMasterList = () => {
                         <Label className="form-label">{t("Download Natts Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const NattsMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Natts <strong>{nattsToDelete?.nattsID || nattsToDelete?.nattsName}</strong>?
+                                {t("Are you sure you want to delete Natts")} <strong>{nattsToDelete?.nattsID || nattsToDelete?.nattsName}</strong>?
                             </p>
                         </div>
                     </div>

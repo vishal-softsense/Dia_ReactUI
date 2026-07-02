@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const HAMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "HA Master";
+    document.title = `${t("HA Master")} | ${t("Admin")}`;
 
     const [haList, setHaList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const HAMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const HAMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.haID || row.HAID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.haName || row.HAName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.haPriority || row.HAPriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.haGroupName || row.HAGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.haGroupPriority || row.HAGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingHAID || row.PricingHAID
         }
     ], [haList]);
@@ -398,7 +398,7 @@ const HAMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("HA Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("HA Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const HAMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("HA List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add HA
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add HA")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const HAMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit HA Master" : "Add HA Master"}
+                        {isEdit ? t("Edit HA Master") : t("Add HA Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const HAMasterList = () => {
                         <Label className="form-label">{t("Download HA Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const HAMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete HA <strong>{haToDelete?.haID || haToDelete?.haName}</strong>?
+                                {t("Are you sure you want to delete HA")} <strong>{haToDelete?.haID || haToDelete?.haName}</strong>?
                             </p>
                         </div>
                     </div>

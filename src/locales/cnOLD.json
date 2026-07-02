@@ -1,4 +1,4 @@
-﻿{
+{
   "Dashboard": "仪表板",
   "Master & Setting": "硕士及设置",
   "Master Setting": "主设置",
@@ -34,6 +34,13 @@
   "Import Grading": "导入分级",
   "Import Price": "进口价格",
   "Get Lab Data": "获取实验室数据",
-  "Account Group Master": "帳戶組主"
-
+  "Account Group Master": "帳戶組主",
+  "Welcome": "欢迎",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "早上好 ☀️",
+  "Good Afternoon 🌤️": "下午好 🌤️",
+  "Good Evening 🌙": "晚上好 🌙",
+  "Welcome to DiaJewSoft": "欢迎来到 DiaJewSoft",
+  "Inventory Management • Purchase • Sales • Accounts": "库存管理 • 采购 • 销售 • 账目",
+  "Good Night 🌃": "晚安 🌃"
 }

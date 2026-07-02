@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const GreenMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Green Master";
+    document.title = `${t("Green Master")} | ${t("Admin")}`;
 
     const [greenList, setGreenList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const GreenMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const GreenMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.greenID || row.GreenID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.greenName || row.GreenName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.greenPriority || row.GreenPriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.greenGroupName || row.GreenGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.greenGroupPriority || row.GreenGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingGreenID || row.PricingGreenID
         }
     ], [greenList]);
@@ -398,7 +398,7 @@ const GreenMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Green Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Green Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const GreenMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Green List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Green
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Green")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const GreenMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Green Master" : "Add Green Master"}
+                        {isEdit ? t("Edit Green Master") : t("Add Green Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const GreenMasterList = () => {
                         <Label className="form-label">{t("Download Green Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const GreenMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Green <strong>{greenToDelete?.greenID || greenToDelete?.greenName}</strong>?
+                                {t("Are you sure you want to delete Green")} <strong>{greenToDelete?.greenID || greenToDelete?.greenName}</strong>?
                             </p>
                         </div>
                     </div>

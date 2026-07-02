@@ -40,10 +40,9 @@ const AllMasterList = () => {
         }
     };
 
-    const columns = useMemo(
-        () => [
+    const columns = useMemo(() => [
             {
-                header: "Name",
+                header: t("Name"),
                 id: "name",
                 accessorFn: (row) => row.name || row.Name,
                 enableColumnFilter: false,
@@ -57,7 +56,7 @@ const AllMasterList = () => {
                 }
             },
             {
-                header: "Count",
+                header: t("Count"),
                 id: "count",
                 accessorFn: (row) => row.count || row.Count,
                 enableColumnFilter: false,   // Change 2: removed column filter
@@ -80,7 +79,7 @@ const AllMasterList = () => {
                 }
             },
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -105,18 +104,15 @@ const AllMasterList = () => {
                                     alignItems: "center",
                                     justifyContent: "center"
                                 }}
-                            >
-                                <i className="ri-settings-2-line me-1"></i> Manage
+                            ><i className="ri-settings-2-line me-1"></i> {t("Manage")}
                             </a>
                         </div>
                     );
                 }
             }
-        ],
-        []
-    );
+        ], [t]);
 
-    document.title = "All Master List | Admin";
+    document.title = `${t("All Master List")} | ${t("Admin")}`;
 
     // Filtering data by Type (case-insensitive and handles PascalCase/camelCase) and Search Query
     const getFilteredData = (type) => {
@@ -174,7 +170,7 @@ const AllMasterList = () => {
                                                         onClick={() => toggleTab(tab.id)}
                                                     >
                                                         <i className={tab.icon} style={{ fontSize: "15px" }}></i>
-                                                        {tab.label}
+                                                        {t(tab.label)}
                                                     </button>
                                                 ))}
                                             </div>
@@ -207,7 +203,7 @@ const AllMasterList = () => {
                                                                     {/* Summary footer */}
                                                                     <div className="p-2 bg-light text-muted border-top rounded-bottom" style={{ fontSize: "12px" }}>
                                                                         <i className="ri-list-check me-1"></i>
-                                                                        <strong>{filteredData.length}</strong> masters in this category
+                                                                        <strong>{filteredData.length}</strong> {t("masters in this category")}
                                                                     </div>
                                                                 </>
                                                             )}

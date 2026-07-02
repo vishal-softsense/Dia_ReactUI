@@ -376,7 +376,7 @@ const ClarityMaster = () => {
                 }
             },
             // {
-            //     header: "Group Name",
+            //     header: t("Group Name"),
             //     accessorKey: "clarityGroupName",
             //     accessorFn: (row) => row.clarityGroupName || row.ClarityGroupName,
             //     enableColumnFilter: true,
@@ -416,16 +416,16 @@ const ClarityMaster = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Clarity Master | Admin";
+    document.title = `${t("Clarity Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Clarity Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Clarity Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -434,7 +434,7 @@ const ClarityMaster = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Clarity Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Clarity
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Clarity")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -473,7 +473,7 @@ const ClarityMaster = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Clarity Master" : "Add Clarity Master"}
+                    {isEdit ? t("Edit Clarity Master") : t("Add Clarity Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -605,7 +605,7 @@ const ClarityMaster = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -624,7 +624,7 @@ const ClarityMaster = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete clarity <strong>{clarityToDelete?.clarityName || clarityToDelete?.ClarityName}</strong>?
+                                {t("Are you sure you want to delete clarity")} <strong>{clarityToDelete?.clarityName || clarityToDelete?.ClarityName}</strong>?
                             </p>
                         </div>
                     </div>

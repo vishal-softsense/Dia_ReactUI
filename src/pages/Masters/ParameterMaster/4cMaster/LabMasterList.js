@@ -296,7 +296,7 @@ const LabMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "certID",
                 accessorFn: (row) => row.certID || row.CertID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "certName",
                 accessorFn: (row) => row.certName || row.CertName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "certPriority",
                 accessorFn: (row) => row.certPriority !== undefined ? row.certPriority : row.CertPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "certGroupName",
                 accessorFn: (row) => row.certGroupName || row.CertGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "certGroupPriority",
                 accessorFn: (row) => row.certGroupPriority !== undefined ? row.certGroupPriority : row.CertGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const LabMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingCertID",
                 accessorFn: (row) => row.pricingCertID || row.PricingCertID,
                 enableColumnFilter: true,
@@ -406,7 +406,7 @@ const LabMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
     document.title = "LAB Master | Admin";
@@ -415,7 +415,7 @@ const LabMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("LAB Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("LAB Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -595,7 +595,7 @@ const LabMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -614,7 +614,7 @@ const LabMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete LAB <strong>{labToDelete?.certName || labToDelete?.CertName}</strong>?
+                                {t("Are you sure you want to delete lab")} <strong>{labToDelete?.certName || labToDelete?.CertName}</strong>?
                             </p>
                         </div>
                     </div>

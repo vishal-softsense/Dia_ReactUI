@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const LusterMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Luster Master";
+    document.title = `${t("Luster Master")} | ${t("Admin")}`;
 
     const [lusterList, setLusterList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const LusterMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const LusterMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.lusterID || row.LusterID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.lusterName || row.LusterName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.lusterPriority || row.LusterPriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.lusterGroupName || row.LusterGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.lusterGroupPriority || row.LusterGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingLusterID || row.PricingLusterID
         }
     ], [lusterList]);
@@ -398,7 +398,7 @@ const LusterMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Luster Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Luster Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const LusterMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Luster List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Luster
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Luster")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const LusterMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Luster Master" : "Add Luster Master"}
+                        {isEdit ? t("Edit Luster Master") : t("Add Luster Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const LusterMasterList = () => {
                         <Label className="form-label">{t("Download Luster Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const LusterMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Luster <strong>{lusterToDelete?.lusterID || lusterToDelete?.lusterName}</strong>?
+                                {t("Are you sure you want to delete Luster")} <strong>{lusterToDelete?.lusterID || lusterToDelete?.lusterName}</strong>?
                             </p>
                         </div>
                     </div>

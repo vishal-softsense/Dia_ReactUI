@@ -296,7 +296,7 @@ const PropMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -346,7 +346,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "propID",
                 accessorFn: (row) => row.propID || row.PropID,
                 enableColumnFilter: true,
@@ -356,7 +356,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "propName",
                 accessorFn: (row) => row.propName || row.PropName,
                 enableColumnFilter: true,
@@ -366,7 +366,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "propPriority",
                 accessorFn: (row) => row.propPriority !== undefined ? row.propPriority : row.PropPriority,
                 enableColumnFilter: true,
@@ -376,7 +376,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "Group Name",
+                header: t("Group Name"),
                 accessorKey: "propGroupName",
                 accessorFn: (row) => row.propGroupName || row.PropGroupName,
                 enableColumnFilter: true,
@@ -386,7 +386,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "Group Priority",
+                header: t("Group Priority"),
                 accessorKey: "propGroupPriority",
                 accessorFn: (row) => row.propGroupPriority !== undefined ? row.propGroupPriority : row.PropGroupPriority,
                 enableColumnFilter: true,
@@ -396,7 +396,7 @@ const PropMasterList = () => {
                 }
             },
             {
-                header: "Pricing ID",
+                header: t("Pricing ID"),
                 accessorKey: "pricingPropID",
                 accessorFn: (row) => row.pricingPropID || row.PricingPropID,
                 enableColumnFilter: true,
@@ -406,7 +406,7 @@ const PropMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
     document.title = "Proportion Master | Admin";
@@ -415,7 +415,7 @@ const PropMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Proportion Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Proportion Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -424,7 +424,7 @@ const PropMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Proportion Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Proportion
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Prop")}ortion
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -595,7 +595,7 @@ const PropMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>

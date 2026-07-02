@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { CardBody, Col, Row, Table } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   // Table as ReactTable,
@@ -113,6 +114,7 @@ const TableContainer = ({
   isPagination = true,
   isShowEntries = true,
 }) => {
+  const { t } = useTranslation();
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
@@ -189,7 +191,7 @@ const TableContainer = ({
               {isShowEntries && (
                 <Col sm={12} md="auto">
                   <div className="d-flex align-items-center">
-                    <span className="me-2 text-muted text-uppercase">Show</span>
+                    <span className="me-2 text-muted text-uppercase">{t("Show")}</span>
                     <select
                       className="form-select form-select-sm w-auto"
                       value={getState().pagination.pageSize}
@@ -200,9 +202,9 @@ const TableContainer = ({
                           {pageSize}
                         </option>
                       ))}
-                      <option value={999999}>All</option>
+                      <option value={999999}>{t("All")}</option>
                     </select>
-                    <span className="ms-2 text-muted text-uppercase">Entries</span>
+                    <span className="ms-2 text-muted text-uppercase">{t("Entries")}</span>
                   </div>
                 </Col>
               )}
@@ -322,17 +324,17 @@ const TableContainer = ({
         <Row className="align-items-center mt-2 g-3 text-center text-sm-start">
           <div className="col-sm">
             <div className="text-muted">
-              Showing <span className="fw-semibold">
+              {t("Showing")} <span className="fw-semibold">
                 {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
-              </span> to <span className="fw-semibold">
+              </span> {t("to")} <span className="fw-semibold">
                 {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
-              </span> of <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> entries
+              </span> {t("of")} <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> {t("entries")}
             </div>
           </div>
           <div className="col-sm-auto">
             <ul className="pagination pagination-separated pagination-md justify-content-center justify-content-sm-start mb-0">
               <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
-                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>Previous</Link>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>{t("Previous")}</Link>
               </li>
               {getVisiblePages().map((item, key) => (
                 <React.Fragment key={key}>
@@ -342,7 +344,7 @@ const TableContainer = ({
                 </React.Fragment>
               ))}
               <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
-                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>Next</Link>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>{t("Next")}</Link>
               </li>
             </ul>
           </div>

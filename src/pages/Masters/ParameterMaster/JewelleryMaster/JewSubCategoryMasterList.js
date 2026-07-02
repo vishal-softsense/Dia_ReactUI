@@ -301,7 +301,7 @@ const JewSubCategoryMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -351,7 +351,7 @@ const JewSubCategoryMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "subCategoryID",
                 accessorFn: (row) => row.subCategoryID || row.SubCategoryID,
                 enableColumnFilter: true,
@@ -361,7 +361,7 @@ const JewSubCategoryMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "subCategoryName",
                 accessorFn: (row) => row.subCategoryName || row.SubCategoryName,
                 enableColumnFilter: true,
@@ -371,7 +371,7 @@ const JewSubCategoryMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "subCategoryPriority",
                 accessorFn: (row) => row.subCategoryPriority !== undefined ? row.subCategoryPriority : row.SubCategoryPriority,
                 enableColumnFilter: true,
@@ -394,13 +394,13 @@ const JewSubCategoryMasterList = () => {
         [subCategories, categories]
     );
 
-    document.title = "Jewellery SubCategory Master | Admin";
+    document.title = `${t("Jewellery SubCategory Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Jewellery SubCategory Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Jewellery SubCategory Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -409,11 +409,9 @@ const JewSubCategoryMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Jewellery SubCategory List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add SubCategory
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add SubCategory")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
                                         </Button>
@@ -448,7 +446,7 @@ const JewSubCategoryMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Jewellery SubCategory" : "Add Jewellery SubCategory"}
+                    {isEdit ? t("Edit Jewellery SubCategory") : t("Add Jewellery SubCategory")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -546,7 +544,7 @@ const JewSubCategoryMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -565,7 +563,7 @@ const JewSubCategoryMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete subcategory <strong>{subCategoryToDelete?.subCategoryName || subCategoryToDelete?.SubCategoryName}</strong>?
+                                {t("Are you sure you want to delete subcategory")} <strong>{subCategoryToDelete?.subCategoryName || subCategoryToDelete?.SubCategoryName}</strong>?
                             </p>
                         </div>
                     </div>
@@ -584,8 +582,7 @@ const JewSubCategoryMasterList = () => {
                         <Label className="form-label">{t("Download JewSubCategoryMaster File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
 

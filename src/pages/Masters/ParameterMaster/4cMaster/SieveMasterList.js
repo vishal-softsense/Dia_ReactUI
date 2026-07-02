@@ -269,7 +269,7 @@ const SieveMasterList = () => {
     const columns = useMemo(
         () => [
             {
-                header: "Actions",
+                header: t("Actions"),
                 id: "actions",
                 enableColumnFilter: false,
                 cell: (cellProps) => {
@@ -319,7 +319,7 @@ const SieveMasterList = () => {
                 }
             },
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "sieveID",
                 accessorFn: (row) => row.sieveID || row.SieveID,
                 enableColumnFilter: true,
@@ -329,7 +329,7 @@ const SieveMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "sieveName",
                 accessorFn: (row) => row.sieveName || row.SieveName,
                 enableColumnFilter: true,
@@ -339,7 +339,7 @@ const SieveMasterList = () => {
                 }
             },
             {
-                header: "Priority",
+                header: t("Priority"),
                 accessorKey: "sievePriority",
                 accessorFn: (row) => row.sievePriority !== undefined ? row.sievePriority : row.SievePriority,
                 enableColumnFilter: true,
@@ -349,16 +349,16 @@ const SieveMasterList = () => {
                 }
             }
         ],
-        []
+        [t]
     );
 
-    document.title = "Sieve Master | Admin";
+    document.title = `${t("Sieve Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Sieve Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Sieve Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>
@@ -367,7 +367,7 @@ const SieveMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Sieve Master List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Sieve
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Sieve")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
                                             Import Excel
@@ -406,7 +406,7 @@ const SieveMasterList = () => {
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? "Edit Sieve Master" : "Add Sieve Master"}
+                    {isEdit ? t("Edit Sieve Master") : t("Add Sieve Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -478,7 +478,7 @@ const SieveMasterList = () => {
                     </ModalBody>
                     <ModalFooter>
                         <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? "Update" : "Save"}</Button>
+                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
@@ -497,7 +497,7 @@ const SieveMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete sieve <strong>{sieveToDelete?.sieveName || sieveToDelete?.SieveName}</strong>?
+                                {t("Are you sure you want to delete sieve")} <strong>{sieveToDelete?.sieveName || sieveToDelete?.SieveName}</strong>?
                             </p>
                         </div>
                     </div>

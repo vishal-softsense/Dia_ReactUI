@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const MilkyMasterList = () => {
     const { t } = useTranslation();
 
-    document.title = "Milky Master";
+    document.title = `${t("Milky Master")} | ${t("Admin")}`;
 
     const [milkyList, setMilkyList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -319,7 +319,7 @@ const MilkyMasterList = () => {
 
     const columns = useMemo(() => [
         {
-            header: "Actions",
+            header: t("Actions"),
             id: "actions",
             enableColumnFilter: false,
             cell: (cellProps) => {
@@ -369,27 +369,27 @@ const MilkyMasterList = () => {
             }
         },
         {
-            header: "ID",
+            header: t("ID"),
             accessorFn: row => row.milkyID || row.MilkyID
         },
         {
-            header: "Name",
+            header: t("Name"),
             accessorFn: row => row.milkyName || row.MilkyName
         },
         {
-            header: "Priority",
+            header: t("Priority"),
             accessorFn: row => row.milkyPriority || row.MilkyPriority
         },
         {
-            header: "Group Name",
+            header: t("Group Name"),
             accessorFn: row => row.milkyGroupName || row.MilkyGroupName
         },
         {
-            header: "Group Priority",
+            header: t("Group Priority"),
             accessorFn: row => row.milkyGroupPriority || row.MilkyGroupPriority
         },
         {
-            header: "Pricing ID",
+            header: t("Pricing ID"),
             accessorFn: row => row.pricingMilkyID || row.PricingMilkyID
         }
     ], [milkyList]);
@@ -398,7 +398,7 @@ const MilkyMasterList = () => {
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Milky Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Milky Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
                             <Card>
@@ -406,11 +406,9 @@ const MilkyMasterList = () => {
                                     <h5 className="card-title mb-0 flex-grow-1">{t("Milky List")}</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Milky
+                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Milky")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)}>
-                                            Import Excel
-                                        </Button>
+                                        <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
                                         <Button
                                             className="btn-soft-success"
                                             onClick={handleExport}
@@ -453,7 +451,7 @@ const MilkyMasterList = () => {
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
                     <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? "Edit Milky Master" : "Add Milky Master"}
+                        {isEdit ? t("Edit Milky Master") : t("Add Milky Master")}
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -543,8 +541,7 @@ const MilkyMasterList = () => {
                         <Label className="form-label">{t("Download Milky Master File Template Format")}</Label>
                         <div>
                             <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
-                            </Button>
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
                     <hr />
@@ -588,7 +585,7 @@ const MilkyMasterList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to delete Milky <strong>{milkyToDelete?.milkyID || milkyToDelete?.milkyName}</strong>?
+                                {t("Are you sure you want to delete Milky")} <strong>{milkyToDelete?.milkyID || milkyToDelete?.milkyName}</strong>?
                             </p>
                         </div>
                     </div>

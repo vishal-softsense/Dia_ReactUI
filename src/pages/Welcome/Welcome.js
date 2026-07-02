@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Container } from "reactstrap";
+import { useTranslation } from "react-i18next";
 
 const Welcome = () => {
-    document.title = "Welcome | DiaJewSoft";
+    const { t } = useTranslation();
+    document.title = `${t("Welcome")} | ${t("DiaJewSoft")}`;
 
     const [userName, setUserName] = useState("Admin");
     const [time, setTime] = useState(new Date());
@@ -28,11 +30,15 @@ const Welcome = () => {
     const hour = time.getHours();
 
     const greeting =
-        hour < 12
-            ? "Good Morning ☀️"
-            : hour < 17
-                ? "Good Afternoon 🌤️"
-                : "Good Evening 🌙";
+        hour < 5
+            ? t("Good Night 🌃")
+            : hour < 12
+                ? t("Good Morning ☀️")
+                : hour < 17
+                    ? t("Good Afternoon 🌤️")
+                    : hour < 22
+                        ? t("Good Evening 🌙")
+                        : t("Good Night 🌃");
 
     return (
         <div className="welcome-page">
@@ -47,12 +53,12 @@ const Welcome = () => {
 
                 <h5>{greeting}</h5>
 
-                <h1>Welcome to DiaJewSoft</h1>
+                <h1>{t("Welcome to DiaJewSoft")}</h1>
 
                 <h3>{userName}</h3>
 
                 <p>
-                    Inventory Management • Purchase • Sales • Accounts
+                    {t("Inventory Management • Purchase • Sales • Accounts")}
                 </p>
 
 

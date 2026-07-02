@@ -64,10 +64,9 @@ const CurrencyMasterList = () => {
     };
 
     // Table Columns Configuration
-    const columns = useMemo(
-        () => [
+    const columns = useMemo(() => [
             {
-                header: "ID",
+                header: t("ID"),
                 accessorKey: "id",
                 accessorFn: (row) => row.id || row.ID,
                 enableColumnFilter: true,
@@ -77,7 +76,7 @@ const CurrencyMasterList = () => {
                 }
             },
             {
-                header: "Name",
+                header: t("Name"),
                 accessorKey: "name",
                 accessorFn: (row) => row.name || row.Name,
                 enableColumnFilter: true,
@@ -87,7 +86,7 @@ const CurrencyMasterList = () => {
                 }
             },
             {
-                header: "Symbol",
+                header: t("Symbol"),
                 accessorKey: "symbol",
                 accessorFn: (row) => row.symbol || row.Symbol,
                 enableColumnFilter: true,
@@ -136,17 +135,15 @@ const CurrencyMasterList = () => {
                     return val ? String(val).toLowerCase().includes(String(filterValue).toLowerCase()) : false;
                 }
             }
-        ],
-        []
-    );
+        ], [t]);
 
-    document.title = "Currency Master | Admin";
+    document.title = `${t("Currency Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Currency Master")} pageTitle="Masters" />
+                    <BreadCrumb title={t("Currency Master")} pageTitle={t("Masters")} />
 
                     <Row>
                         <Col lg={12}>

@@ -1,4 +1,4 @@
-﻿{
+{
   "$ Rate": "美元汇率",
   "+/-Amount": "金额 +/-",
   "4'C MASTER": "4'C 主档",
@@ -1016,11 +1016,9 @@
   "Width": "宽度",
   "Write": "写",
   "Zip Code": "邮政编码",
-
   "Solitaire & Parcel": "单颗钻石和包裹",
   "Grading Comparison Report": "等级比较报告",
   "Rate Revise Report": "费率修订报告",
-
   "Jewellery": "珠宝",
   "Jewellery Design Master": "珠宝设计主文件",
   "Add Jewellery Design": "添加珠宝设计",
@@ -1095,22 +1093,26 @@
   "Jewellery Stock Master": "珠宝库存主表",
   "StockID": "库存编号",
   "Add Jewellery Stock": "添加珠宝库存",
-
   "Jewellery Category Master": "珠宝类别主数据",
   "Add Jewellery Category": "添加珠宝类别",
   "Jewellery SubCategory Master": "珠宝子类别主数据",
   "Add Jewellery SubCategory": "添加珠宝子类别",
   "Jewellery Metal Master": "珠宝金属主数据",
   "Add Jewellery Metal": "添加珠宝金属",
-
   "MetalColor": "金属颜色",
   "MetalPurity": "金属纯度",
   "Metal24KTRatio": "24K金属比例",
   "Jewellery MetalPurity Master": "珠宝金属纯度主数据",
   "Add Jewellery MetalPurity": "添加珠宝金属纯度",
-
   "MetalPurityToPureRatio": "金属纯度与纯金比例",
   "Jewellery Color Master": "珠宝颜色主数据",
-  "Add Jewellery Color": "添加珠宝颜色"
-
+  "Add Jewellery Color": "添加珠宝颜色",
+  "Welcome": "欢迎",
+  "DiaJewSoft": "DiaJewSoft",
+  "Good Morning ☀️": "早上好 ☀️",
+  "Good Afternoon 🌤️": "下午好 🌤️",
+  "Good Evening 🌙": "晚上好 🌙",
+  "Welcome to DiaJewSoft": "欢迎来到 DiaJewSoft",
+  "Inventory Management • Purchase • Sales • Accounts": "库存管理 • 采购 • 销售 • 账目",
+  "Good Night 🌃": "晚安 🌃"
 }
