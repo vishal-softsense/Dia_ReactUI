@@ -273,40 +273,26 @@ const CountryMasterList = () => {
                     return (
                         <div className="d-flex gap-2">
                             <button
-                                className="btn"
+                                className="btn btn-soft-primary btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#e5f1ff",
-                                    color: "#299cdb",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title={t("Edit Country")}
+                                title={t("Edit")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
                             <button
-                                className="btn"
+                                className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#ffeded",
-                                    color: "#f06548",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title={t("Delete Country")}
+                                title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -356,16 +342,21 @@ const CountryMasterList = () => {
 
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("Country Master List")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-map-pin-2-line fs-20 text-primary"></i>
+                                        {t("Country Master List")}
+                                    </h5>
                                     <div className="d-flex gap-2">
-                                        <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Country")}
+                                        <Button color="primary" className="add-btn rounded-3 d-inline-flex align-items-center gap-1" onClick={handleAddClick}>
+                                            <i className="ri-add-line align-bottom"></i> {t("Add Country")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>{t("Import Excel")}</Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                                            <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
+                                        <Button color="soft-success" className="btn-soft-success rounded-3 d-inline-flex align-items-center gap-1" onClick={() => setImportModal(true)} title={t("Import Excel")}>
+                                            <i className="ri-file-excel-line"></i> {t("Import Excel")}
+                                        </Button>
+                                        <Button className="btn-soft-success rounded-3" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                            <i className="ri-file-excel-2-line fs-18"></i>
                                         </Button>
                                     </div>
                                 </CardHeader>
@@ -396,8 +387,8 @@ const CountryMasterList = () => {
             </div>
 
             {/* Add / Edit Form Modal */}
-            <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
-                <ModalHeader toggle={() => setFormModal(false)}>
+            <Modal isOpen={formModal} toggle={() => setFormModal(false)} className="modal-dialog-centered">
+                <ModalHeader className="bg-primary pb-3 text-white" toggle={() => setFormModal(false)}>
                     {isEdit ? t("Edit Country Master") : t("Add Country Master")}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
@@ -476,8 +467,8 @@ const CountryMasterList = () => {
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
+                <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -501,8 +492,8 @@ const CountryMasterList = () => {
             </Modal>
 
             {/* Import Excel Modal */}
-            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Country Master Excel")}</ModalHeader>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
+                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Country Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download CountryMaster File Template Format")}</Label>

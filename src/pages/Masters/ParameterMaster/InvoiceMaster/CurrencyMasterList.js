@@ -147,9 +147,12 @@ const CurrencyMasterList = () => {
 
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("Currency Master List")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-file-list-3-line fs-20 text-primary"></i>
+                                        {t("Currency Master List")}
+                                    </h5>
                                     <div className="d-flex gap-2">
                                         <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                             <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>

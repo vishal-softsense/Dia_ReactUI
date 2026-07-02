@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -304,40 +304,26 @@ const ColorMasterList = () => {
                     return (
                         <div className="d-flex gap-2">
                             <button
-                                className="btn"
+                                className="btn btn-soft-primary btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#e5f1ff",
-                                    color: "#299cdb",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title={t("Edit Color")}
+                                title={t("Edit")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
                             <button
-                                className="btn"
+                                className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#ffeded",
-                                    color: "#f06548",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title={t("Delete Color")}
+                                title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -419,18 +405,21 @@ const ColorMasterList = () => {
 
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("Color Master List")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-palette-line fs-20 text-primary"></i>
+                                        {t("Color Master List")}
+                                    </h5>
                                     <div className="d-flex gap-2">
-                                        <Button color="primary" className="add-btn" onClick={handleAddClick}>
-                                            <i className="ri-add-line align-bottom me-1"></i> {t("Add Color")}
+                                        <Button color="primary" className="add-btn rounded-3 d-inline-flex align-items-center gap-1" onClick={handleAddClick}>
+                                            <i className="ri-add-line align-bottom"></i> {t("Add Color")}
                                         </Button>
-                                        <Button color="soft-success" onClick={() => setImportModal(true)} title={t("Import Excel")}>
-                                            Import Excel
+                                        <Button color="soft-success" className="btn-soft-success rounded-3 d-inline-flex align-items-center gap-1" onClick={() => setImportModal(true)} title={t("Import Excel")}>
+                                            <i className="ri-file-excel-line"></i> {t("Import Excel")}
                                         </Button>
-                                        <Button className="btn-soft-success" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                                            <i className="ri-file-excel-2-line" style={{ fontSize: "25px" }}></i>
+                                        <Button className="btn-soft-success rounded-3" onClick={handleExportData} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                            <i className="ri-file-excel-2-line fs-18"></i>
                                         </Button>
                                     </div>
                                 </CardHeader>
@@ -462,8 +451,8 @@ const ColorMasterList = () => {
 
             {/* Add / Edit Form Modal */}
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
-                <ModalHeader toggle={() => setFormModal(false)}>
-                    {isEdit ? t("Edit Color Master") : t("Add Color Master")}
+                <ModalHeader toggle={() => setFormModal(false)} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{isEdit ? t("Edit Color Master") : t("Add Color Master")}</span>
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -594,15 +583,17 @@ const ColorMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
+                        <Button type="button" color="light" className="rounded-3" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button type="submit" color="primary" className="rounded-3">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)} className="bg-danger p-3 border-0">
+                    <span className="text-white fw-bold">{t("Confirm Delete")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -619,21 +610,23 @@ const ColorMasterList = () => {
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
+                        <Button type="button" color="light" className="w-sm rounded-3" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm rounded-3" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
             <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Color Master Excel")}</ModalHeader>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{t("Import Color Master Excel")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download ColorMaster File Template Format")}</Label>
                         <div>
-                            <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                <i className="ri-download-2-line align-bottom me-1"></i> Download Format
+                            <Button color="primary" onClick={handleDownloadTemplate} size="sm" className="rounded-3">
+                                <i className="ri-download-2-line align-bottom me-1"></i> {t("Download Format")}
                             </Button>
                         </div>
                     </div>
@@ -662,8 +655,8 @@ const ColorMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
+                    <Button color="light" className="rounded-3" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" className="rounded-3" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer closeButton={false} limit={1} />

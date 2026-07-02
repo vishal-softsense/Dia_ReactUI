@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
-import { Container, Row, Col, Card, CardBody, CardHeader, TabContent, TabPane } from "reactstrap";
+import React, { useEffect, useState, useMemo } from "react";
+import { Container, Row, Col, Card, CardBody, CardHeader, TabContent, TabPane, Nav, NavItem, NavLink } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { getAllMasterList } from "../../../helpers/fakebackend_helper";
@@ -37,6 +37,18 @@ const AllMasterList = () => {
         if (activeTab !== tab) {
             setActiveTab(tab);
             setSearchQuery("");
+        }
+    };
+
+    const getTabColor = (id) => {
+        switch (id) {
+            case "Main": return "#2970FF";
+            case "Grading": return "#10B981";
+            case "Location": return "#EF4444";
+            case "Invoice": return "#8B5CF6";
+            case "Origin": return "#F59E0B";
+            case "Jewellery": return "#EC4899";
+            default: return "#4A5568";
         }
     };
 
@@ -85,6 +97,7 @@ const AllMasterList = () => {
                 cell: (cellProps) => {
                     const rawUrl = cellProps.row.original.url || cellProps.row.original.URL || "";
                     const targetUrl = rawUrl;
+                    const activeColor = getTabColor(activeTab);
                     return (
                         <div className="d-flex gap-2">
                             <a
@@ -93,12 +106,11 @@ const AllMasterList = () => {
                                 rel="noreferrer"
                                 className="btn"
                                 style={{
-                                    backgroundColor: "#e5f1ff",
-                                    color: "#299cdb",
+                                    backgroundColor: `${activeColor}15`,
+                                    color: activeColor,
                                     border: "none",
                                     borderRadius: "6px",
                                     fontSize: "12px",
-                                    // padding: "4px 10px",
                                     padding: "0.467rem 1.5rem",
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -110,7 +122,7 @@ const AllMasterList = () => {
                     );
                 }
             }
-        ], [t]);
+        ], [t, activeTab]);
 
     document.title = `${t("All Master List")} | ${t("Admin")}`;
 
@@ -143,9 +155,12 @@ const AllMasterList = () => {
 
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex justify-content-between align-items-center border-bottom">
-                                    <h4 className="card-title mb-0">{t("All Master List")}</h4>
+                            <Card className="shadow-lg border-0 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">
+                                    <h5 className="card-title mb-0 fs-16 fw-semibold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-focus-3-line align-middle text-primary fs-20"></i>
+                                        {t("All Master List")}
+                                    </h5>
                                     <div className="search-box">
                                         <input
                                             type="text"
@@ -157,60 +172,92 @@ const AllMasterList = () => {
                                         <i className="bx bx-search-alt search-icon"></i>
                                     </div>
                                 </CardHeader>
-                                <CardBody>
-                                    <Row>
-                                        <Col md={3}>
-                                            {/* Change 4: sidebar tabs with icons */}
-                                            <div className="list-group mt-1">
-                                                {tabs.map((tab) => (
-                                                    <button
-                                                        key={tab.id}
-                                                        type="button"
-                                                        className={classnames("list-group-item list-group-item-action d-flex align-items-center gap-2", { active: activeTab === tab.id })}
-                                                        onClick={() => toggleTab(tab.id)}
-                                                    >
-                                                        <i className={tab.icon} style={{ fontSize: "15px" }}></i>
-                                                        {t(tab.label)}
-                                                    </button>
-                                                ))}
+                                <CardBody className="p-0">
+                                    <Row className="g-0">
+                                        <Col md={3} className="bg-light border-end">
+                                            <div className="p-3">
+                                                <p className="text-muted text-uppercase fs-11 fw-semibold mb-3">{t("Select Category")}</p>
+                                                <Nav pills className="flex-column gap-2">
+                                                    {tabs.map((tab) => {
+                                                        const color = getTabColor(tab.id);
+                                                        return (
+                                                            <NavItem key={tab.id}>
+                                                                <NavLink
+                                                                    className={classnames("d-flex justify-content-between align-items-center py-3 border-0 rounded-3 cursor-pointer transition-all", { 
+                                                                        "bg-white shadow text-dark border-start-3": activeTab === tab.id,
+                                                                        "text-muted": activeTab !== tab.id
+                                                                    })}
+                                                                    onClick={() => toggleTab(tab.id)}
+                                                                    style={activeTab === tab.id ? { borderLeft: `4px solid ${color}` } : {}}
+                                                                >
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <div
+                                                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                                                            style={{ width: "28px", height: "28px", backgroundColor: `${color}15`, color: color }}
+                                                                        >
+                                                                            <i className={classnames(tab.icon, "fs-14")}></i>
+                                                                        </div>
+                                                                        <span className="fw-semibold fs-13">{t(tab.label)}</span>
+                                                                    </div>
+                                                                </NavLink>
+                                                            </NavItem>
+                                                        );
+                                                    })}
+                                                </Nav>
                                             </div>
                                         </Col>
                                         <Col md={9}>
-                                            <TabContent activeTab={activeTab} className="text-muted mt-4">
-                                                {tabs.map((tab) => {
-                                                    const filteredData = getFilteredData(tab.id);
-                                                    return (
-                                                        <TabPane tabId={tab.id} key={tab.id}>
-                                                            {loading ? (
-                                                                <div className="text-center mt-3">
-                                                                    <div className="spinner-border text-primary" role="status">
-                                                                        <span className="visually-hidden">{t("Loading...")}</span>
+                                            <div className="p-4">
+                                                <TabContent activeTab={activeTab}>
+                                                    {tabs.map((tab) => {
+                                                        const filteredData = getFilteredData(tab.id);
+                                                        const color = getTabColor(tab.id);
+                                                        return (
+                                                            <TabPane tabId={tab.id} key={tab.id}>
+                                                                <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom">
+                                                                    <div>
+                                                                        <h4 className="fw-bold mb-1" style={{ color: color }}>
+                                                                            {t(tab.label)} {t("Masters")}
+                                                                        </h4>
+                                                                        <p className="text-muted mb-0 fs-12">
+                                                                            {t("View and configure parameters under the")} {t(tab.label)} {t("group.")}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
-                                                            ) : (
-                                                                <>
-                                                                    <TableContainer
-                                                                        columns={columns}
-                                                                        data={filteredData}
-                                                                        isGlobalFilter={false}
-                                                                        customPageSize={9999}
-                                                                        isPagination={false}
-                                                                        isShowEntries={false}
-                                                                        divClass="table-responsive table-card mb-2"
-                                                                        tableClass="align-middle table-nowrap mb-0"
-                                                                        theadClass="table-light"
-                                                                    />
-                                                                    {/* Summary footer */}
-                                                                    <div className="p-2 bg-light text-muted border-top rounded-bottom" style={{ fontSize: "12px" }}>
-                                                                        <i className="ri-list-check me-1"></i>
-                                                                        <strong>{filteredData.length}</strong> {t("masters in this category")}
+
+                                                                {loading ? (
+                                                                    <div className="d-flex justify-content-center align-items-center py-5">
+                                                                        <div className="spinner-border text-primary" role="status">
+                                                                            <span className="visually-hidden">{t("Loading...")}</span>
+                                                                        </div>
                                                                     </div>
-                                                                </>
-                                                            )}
-                                                        </TabPane>
-                                                    );
-                                                })}
-                                            </TabContent>
+                                                                ) : (
+                                                                    <>
+                                                                        <TableContainer
+                                                                            columns={columns}
+                                                                            data={filteredData}
+                                                                            isGlobalFilter={false}
+                                                                            customPageSize={9999}
+                                                                            isPagination={false}
+                                                                            isShowEntries={false}
+                                                                            divClass="table-responsive table-card mb-3"
+                                                                            tableClass="align-middle table-nowrap mb-0"
+                                                                            theadClass="table-light"
+                                                                        />
+                                                                        {/* Summary footer */}
+                                                                        <div className="p-3 bg-light text-muted border-top rounded-bottom fs-13 d-flex align-items-center gap-1">
+                                                                            <i className="ri-list-check me-1 text-primary fs-16"></i>
+                                                                            <span>
+                                                                                {t("Total of")} <strong className="text-primary">{filteredData.length}</strong> {t("sub-masters in this category")}
+                                                                            </span>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </TabPane>
+                                                        );
+                                                    })}
+                                                </TabContent>
+                                            </div>
                                         </Col>
                                     </Row>
                                 </CardBody>

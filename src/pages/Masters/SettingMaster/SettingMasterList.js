@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
-import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner } from "reactstrap";
+import React, { useEffect, useState, useMemo } from "react";
+import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner, Nav, NavItem, NavLink } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getSettingData, filterSettingData, submitSettingData, uploadCompanyLogo } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from "react-toastify";
@@ -182,6 +182,25 @@ const SettingMasterList = () => {
         return name === "RapPassword" || name === "Password";
     };
 
+    const getTabColor = (id) => {
+        switch (id) {
+            case "COMPANY": return "#2970FF";
+            case "DEFAULT STOCK SETTING": return "#EF4444";
+            case "EMAIL SETTINGS": return "#06B6D4";
+            case "INVOICE AND MEMO": return "#6366F1";
+            case "LAB": return "#14B8A6";
+            case "ONLINE STOCK UPLOAD": return "#10B981";
+            case "PACKET": return "#F59E0B";
+            case "REPORT": return "#8B5CF6";
+            case "SYSTEM SETTINGS": return "#EC4899";
+            case "PRINT FORMAT": return "#10B981";
+            case "COLUMN ABBR": return "#6B7280";
+            default: return "#4A5568";
+        }
+    };
+
+    const activeTabObj = tabs.find(t => t.id === activeTab) || {};
+
     document.title = "Company Settings | Velzon";
 
     return (
@@ -193,10 +212,11 @@ const SettingMasterList = () => {
                     
                     <Row>
                         <Col lg={12}>
-                            <Card className="shadow">
-                                <CardHeader className="d-flex justify-content-between align-items-center bg-transparent border-bottom">
-                                    <h5 className="card-title mb-0 fs-16 fw-semibold text-primary">
-                                        <i className="ri-settings-4-line align-middle me-1"></i> System & Company Settings
+                            <Card className="shadow-lg border-0 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">
+                                    <h5 className="card-title mb-0 fs-16 fw-semibold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-settings-4-line align-middle text-primary fs-20"></i>
+                                        {t("System & Company Settings Manager")}
                                     </h5>
                                     
                                     <div className="d-flex align-items-center gap-2">
@@ -212,41 +232,67 @@ const SettingMasterList = () => {
                                         </div>
                                     </div>
                                 </CardHeader>
-                                <CardBody>
-                                    <Row>
-                                        <Col md={3}>
-                                            <div className="nav flex-column nav-pills list-group mt-1">
-                                                {tabs.map((tab) => (
-                                                    <button
-                                                        key={tab.id}
-                                                        type="button"
-                                                        className={classnames("list-group-item list-group-item-action d-flex align-items-center gap-2 text-start py-2 border-0 rounded-2 mb-1", { 
-                                                            "bg-primary text-white shadow-sm active": activeTab === tab.id 
-                                                        })}
-                                                        onClick={() => handleTabChange(tab)}
-                                                    >
-                                                        <i className={tab.icon} style={{ fontSize: "16px" }}></i>
-                                                        <span className="fw-medium">{tab.label}</span>
-                                                    </button>
-                                                ))}
+                                <CardBody className="p-0">
+                                    <Row className="g-0">
+                                        <Col md={3} className="bg-light border-end">
+                                            <div className="p-3">
+                                                <p className="text-muted text-uppercase fs-11 fw-semibold mb-3">{t("Select Category")}</p>
+                                                <Nav pills className="flex-column gap-2">
+                                                    {tabs.map((tab) => {
+                                                        const color = getTabColor(tab.id);
+                                                        return (
+                                                            <NavItem key={tab.id}>
+                                                                <NavLink
+                                                                    className={classnames("d-flex justify-content-between align-items-center py-3 border-0 rounded-3 cursor-pointer transition-all", { 
+                                                                        "bg-white shadow text-dark border-start-3": activeTab === tab.id,
+                                                                        "text-muted": activeTab !== tab.id
+                                                                    })}
+                                                                    onClick={() => handleTabChange(tab)}
+                                                                    style={activeTab === tab.id ? { borderLeft: `4px solid ${color}` } : {}}
+                                                                >
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <div
+                                                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                                                            style={{ width: "28px", height: "28px", backgroundColor: `${color}15`, color: color }}
+                                                                        >
+                                                                            <i className={classnames(tab.icon, "fs-14")}></i>
+                                                                        </div>
+                                                                        <span className="fw-semibold fs-13">{t(tab.label)}</span>
+                                                                    </div>
+                                                                </NavLink>
+                                                            </NavItem>
+                                                        );
+                                                    })}
+                                                </Nav>
                                             </div>
                                         </Col>
                                         
-                                        <Col md={9} className="border-start">
-                                            {loading ? (
-                                                <div className="d-flex justify-content-center align-items-center py-5">
-                                                    <Spinner color="primary" />
-                                                    <span className="ms-2">{t("Loading settings...")}</span>
+                                        <Col md={9}>
+                                            <div className="p-4">
+                                                <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom">
+                                                    <div>
+                                                        <h4 className="fw-bold mb-1" style={{ color: getTabColor(activeTab) }}>
+                                                            {t(activeTabObj.label || activeTab)} {t("Settings")}
+                                                        </h4>
+                                                        <p className="text-muted mb-0 fs-12">
+                                                            {t("Manage values and options under the")} {t(activeTabObj.label || activeTab)} {t("category.")}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="p-3">
+
+                                                {loading ? (
+                                                    <div className="d-flex justify-content-center align-items-center py-5">
+                                                        <Spinner color="primary" />
+                                                        <span className="ms-2 fw-medium text-muted">{t("Loading settings...")}</span>
+                                                    </div>
+                                                ) : (
                                                     <div className="table-responsive table-card">
-                                                        <table className="table table-hover table-striped align-middle table-nowrap mb-0">
+                                                        <table className="table table-hover align-middle table-nowrap mb-0">
                                                             <thead className="table-light">
                                                                 <tr>
-                                                                    <th>{t("Setting Name")}</th>
-                                                                    <th>{t("Setting Value")}</th>
-                                                                    <th style={{ width: "100px" }}>{t("Actions")}</th>
+                                                                    <th className="py-3 fs-12 text-uppercase text-muted fw-semibold">{t("Setting Name")}</th>
+                                                                    <th className="py-3 fs-12 text-uppercase text-muted fw-semibold">{t("Setting Value")}</th>
+                                                                    <th className="py-3 fs-12 text-uppercase text-muted fw-semibold text-end" style={{ width: "120px" }}>{t("Actions")}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -261,28 +307,30 @@ const SettingMasterList = () => {
                                                                                     <span className="text-muted">{item.Value ?? item.value ?? ""}</span>
                                                                                 )}
                                                                             </td>
-                                                                            <td>
+                                                                            <td className="text-end">
                                                                                 <Button 
                                                                                     color="soft-primary" 
                                                                                     size="sm" 
                                                                                     onClick={() => handleEditSetting(item)}
                                                                                     title={t("Edit Setting")}
+                                                                                    className="btn-soft-primary border-0"
+                                                                                    style={{ color: getTabColor(activeTab), backgroundColor: `${getTabColor(activeTab)}15` }}
                                                                                 >
-                                                                                    <i className="ri-edit-line"></i> Edit
+                                                                                    <i className="ri-edit-line me-1"></i> {t("Edit")}
                                                                                 </Button>
                                                                             </td>
                                                                         </tr>
                                                                     ))
                                                                 ) : (
                                                                     <tr>
-                                                                        <td colSpan="3" className="text-center py-4">{t("No settings found matching your search.")}</td>
+                                                                        <td colSpan="3" className="text-center py-4 text-muted">{t("No settings found matching your search.")}</td>
                                                                     </tr>
                                                                 )}
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </Col>
                                     </Row>
                                 </CardBody>

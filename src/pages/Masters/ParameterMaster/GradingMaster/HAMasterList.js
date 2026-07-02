@@ -401,9 +401,12 @@ const HAMasterList = () => {
                     <BreadCrumb title={t("HA Master")} pageTitle={t("Masters")} />
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center justify-content-between">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("HA List")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-medal-line fs-20 text-primary"></i>
+                                        {t("HA List")}
+                                    </h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> {t("Add HA")}
@@ -534,8 +537,8 @@ const HAMasterList = () => {
             </Modal>
 
             {/* Import Excel Modal */}
-            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import HA Master Excel")}</ModalHeader>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
+                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import HA Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download HA Master File Template Format")}</Label>
@@ -572,8 +575,8 @@ const HAMasterList = () => {
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
+                <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon

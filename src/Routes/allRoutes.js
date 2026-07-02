@@ -332,6 +332,7 @@ import ShadeMasterList from "../pages/Masters/ParameterMaster/GradingMaster/Shad
 import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
 import PrintFormatList from "../pages/Masters/SettingMaster/PrintFormatList";
 import ColumnAbbreviationsList from "../pages/Masters/SettingMaster/ColumnAbbreviationsList";
+import Sync from "../pages/Masters/SyncMaster/Sync";
 
 // Parcel Item Master
 import ParcelItemMasterList from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterList";
@@ -389,6 +390,7 @@ const authProtectedRoutes = [
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
   { path: "/ColumnAbbreviations/ColumnAbbreviations", component: <ColumnAbbreviationsList /> },
+  { path: "/masters/sync-master", component: <Sync /> },
 
   { path: "/parcel/list-ParcelItemMaster", component: <ParcelItemMasterList /> },
   { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },

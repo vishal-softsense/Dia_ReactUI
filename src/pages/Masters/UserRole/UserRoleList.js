@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -93,35 +93,22 @@ const UserRoleList = () => {
                         <div className="d-flex gap-2">
                             <Link
                                 to={`/edit-user-role/${cellProps.row.original.userTypeID}`}
-                                className="btn"
+                                className="btn btn-soft-primary btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#e5f1ff",
-                                    color: "#299cdb",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
+                                title={t("Edit")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </Link>
                             <Link
                                 to={`/manage-user-permission/${cellProps.row.original.userTypeID}`}
-                                className="btn"
+                                className="btn btn-soft-success btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#daf4f0",
-                                    color: "#0ab39c",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 title={t("Manage Permissions")}
@@ -129,20 +116,14 @@ const UserRoleList = () => {
                                 <i className="las la-user-lock" style={{ fontSize: "16px" }}></i>
                             </Link>
                             <button
-                                className="btn"
+                                className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#ffeded",
-                                    color: "#f06548",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(cellProps.row.original.userTypeID)}
+                                title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -151,7 +132,7 @@ const UserRoleList = () => {
                 },
             },
         ],
-        []
+        [t]
     );
 
     return (
@@ -161,12 +142,15 @@ const UserRoleList = () => {
                     <BreadCrumb title={t("User Role List")} pageTitle="Masters" />
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("User Roles")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-user-shared-line fs-20 text-primary"></i>
+                                        {t("User Roles & Permissions")}
+                                    </h5>
                                     <div>
-                                        <Link to="/add-user-role" className="btn btn-primary add-btn me-1">
-                                            <i className="ri-add-line align-bottom me-1"></i> Add Role
+                                        <Link to="/add-user-role" className="btn btn-primary add-btn rounded-3 d-inline-flex align-items-center gap-1">
+                                            <i className="ri-add-line align-bottom"></i> {t("Add Role")}
                                         </Link>
                                     </div>
                                 </CardHeader>
@@ -174,7 +158,7 @@ const UserRoleList = () => {
                                     {loading ? (
                                         <div className="text-center my-3">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="sr-only">{t("Loading...")}</span>
+                                                <span className="visually-hidden">{t("Loading...")}</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -198,7 +182,9 @@ const UserRoleList = () => {
 
             {/* Delete Modal */}
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+                <ModalHeader toggle={() => setDeleteModal(false)} className="bg-danger p-3 border-0">
+                    <span className="text-white fw-bold">{t("Confirm Delete")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -210,24 +196,24 @@ const UserRoleList = () => {
                         <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
-                                Are you sure you want to remove this record?
+                                {t("Are you sure you want to remove this record?")}
                             </p>
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
                         <button
                             type="button"
-                            className="btn w-sm btn-light"
+                            className="btn w-sm btn-light rounded-3"
                             onClick={() => setDeleteModal(false)}
                         >
-                            Close
+                            {t("Close")}
                         </button>
                         <button
                             type="button"
-                            className="btn w-sm btn-danger"
+                            className="btn w-sm btn-danger rounded-3"
                             onClick={handleDeleteConfirm}
                         >
-                            Yes, Delete It!
+                            {t("Yes, Delete It!")}
                         </button>
                     </div>
                 </ModalBody>

@@ -486,9 +486,9 @@ const handleDownloadTemplate = async () => {
 
                         <Col lg={12}>
 
-                            <Card>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
 
-                                <CardHeader className="d-flex align-items-center justify-content-between">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
 
                                     <h5 className="card-title mb-0">{t("Brown Master")}</h5>
 
@@ -725,8 +725,8 @@ const handleDownloadTemplate = async () => {
             </Modal>
 
             {/* Import Excel Modal */}
-                        <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                            <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Brown Master Excel")}</ModalHeader>
+                        <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
+                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Brown Master Excel")}</ModalHeader>
                             <ModalBody>
                                 <div className="mb-4">
                                     <Label className="form-label">{t("Download Brown Master File Template Format")}</Label>

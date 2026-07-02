@@ -626,3 +626,7 @@ export const printPreview = (data) => api.create(url.PRINT_PREVIEW, data);
 // Column Abbreviations Settings
 export const getColumnAbbreviations = () => api.get(url.GET_COLUMN_ABBREVIATIONS);
 export const updateColumnAbbreviations = (data) => api.create(url.UPDATE_COLUMN_ABBREVIATIONS, data);
+
+// Sync Settings
+export const getSyncSettings = (companyId) => api.get(`${url.GET_SYNC_SETTINGS}?companyId=${companyId}`);
+export const saveSyncSettings = (data, enable) => api.create(`${url.SAVE_SYNC_SETTINGS}?enable=${enable ? 1 : 0}`, data);

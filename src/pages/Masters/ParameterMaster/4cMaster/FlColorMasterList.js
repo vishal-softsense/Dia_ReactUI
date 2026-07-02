@@ -304,40 +304,26 @@ const FlColorMasterList = () => {
                     return (
                         <div className="d-flex gap-2">
                             <button
-                                className="btn"
+                                className="btn btn-soft-primary btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#e5f1ff",
-                                    color: "#299cdb",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleEditClick(rowData)}
-                                title={t("Edit Fluorescence Color")}
+                                title={t("Edit")}
                             >
                                 <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
                             </button>
                             <button
-                                className="btn"
+                                className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{
-                                    backgroundColor: "#ffeded",
-                                    color: "#f06548",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    width: "30px",
-                                    height: "30px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    width: "32px",
+                                    height: "32px",
                                     padding: "0"
                                 }}
                                 onClick={() => handleDeleteClick(rowData)}
-                                title={t("Delete Fluorescence Color")}
+                                title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
                             </button>
@@ -419,9 +405,12 @@ const FlColorMasterList = () => {
 
                     <Row>
                         <Col lg={12}>
-                            <Card>
-                                <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">{t("Fluorescence Color Master List")}</h5>
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-palette-line fs-20 text-primary"></i>
+                                        {t("Fluorescence Color Master List")}
+                                    </h5>
                                     <div className="d-flex gap-2">
                                         <Button color="primary" className="add-btn" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> Add Fluorescence Color
@@ -461,8 +450,8 @@ const FlColorMasterList = () => {
             </div>
 
             {/* Add / Edit Form Modal */}
-            <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
-                <ModalHeader toggle={() => setFormModal(false)}>
+            <Modal isOpen={formModal} toggle={() => setFormModal(false)} className="modal-dialog-centered">
+                <ModalHeader className="bg-primary pb-3 text-white" toggle={() => setFormModal(false)}>
                     {isEdit ? "Edit Fluorescence Color Master" : "Add Fluorescence Color Master"}
                 </ModalHeader>
                 <Form onSubmit={(e) => {
@@ -601,8 +590,8 @@ const FlColorMasterList = () => {
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-                <ModalHeader toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
+                <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -626,8 +615,8 @@ const FlColorMasterList = () => {
             </Modal>
 
             {/* Import Excel Modal */}
-            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
-                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Fluorescence Color Master Excel")}</ModalHeader>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
+                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Fluorescence Color Master Excel")}</ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download FLColorMaster File Template Format")}</Label>

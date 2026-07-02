@@ -214,7 +214,7 @@ const ProfileDropdown = () => {
                     </DropdownItem>
 
                     <DropdownItem className='p-0'>
-                        <Link to="/Sync/list-sync" className="dropdown-item">
+                        <Link to="/masters/sync-master" className="dropdown-item">
                             <i className="mdi mdi-sync text-muted fs-16 align-middle me-1"></i>
                             <span className="align-middle">Sync</span>
                         </Link>

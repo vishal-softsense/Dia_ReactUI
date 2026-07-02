@@ -485,3 +485,7 @@ export const PRINT_PREVIEW = "/print/printPrev";
 // Column Abbreviations Settings
 export const GET_COLUMN_ABBREVIATIONS = "/master/get-ColumnAbbreviations-data";
 export const UPDATE_COLUMN_ABBREVIATIONS = "/master/update-ColumnAbbr";
+
+// Sync Settings
+export const GET_SYNC_SETTINGS = "/api/SyncSetting/list-sync";
+export const SAVE_SYNC_SETTINGS = "/api/SyncSetting/save-sync";
