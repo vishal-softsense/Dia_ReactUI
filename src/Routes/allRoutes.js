@@ -339,6 +339,11 @@ import ParcelItemMasterList from "../pages/StockAccount/ParcelItemMaster/ParcelI
 import ParcelItemMasterAdd from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterAdd";
 import ParcelItemMasterEdit from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterEdit";
 
+// Account Group Master
+import AccGrpMasterList from "../pages/StockAccount/AccGrpMaster/AccGrpMasterList";
+import AccGrpMasterAdd from "../pages/StockAccount/AccGrpMaster/AccGrpMasterAdd";
+import AccGrpMasterEdit from "../pages/StockAccount/AccGrpMaster/AccGrpMasterEdit";
+
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
   { path: "/user-add", component: <AddEditUser /> },
@@ -395,6 +400,10 @@ const authProtectedRoutes = [
   { path: "/parcel/list-ParcelItemMaster", component: <ParcelItemMasterList /> },
   { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },
   { path: "/parcel/Edit-ParcelItemMaster", component: <ParcelItemMasterEdit /> },
+
+  { path: "/account/list-accountgroup", component: <AccGrpMasterList /> },
+  { path: "/account/add-accountgroup", component: <AccGrpMasterAdd /> },
+  { path: "/account/Edit-accountgroup", component: <AccGrpMasterEdit /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },

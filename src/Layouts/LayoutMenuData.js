@@ -4,7 +4,17 @@ import { getSidebarMenu } from "../helpers/fakebackend_helper";
 
 const Navdata = () => {
     const history = useNavigate();
-    const [rawData, setRawData] = useState([]);
+    const [rawData, setRawData] = useState(() => {
+        const cached = sessionStorage.getItem("sidebar_menu_data") || localStorage.getItem("sidebar_menu_data");
+        if (cached) {
+            try {
+                return JSON.parse(cached);
+            } catch (e) {
+                console.error("Failed to parse cached sidebar menu", e);
+            }
+        }
+        return [];
+    });
     const [menuStates, setMenuStates] = useState({});
     const [iscurrentState, setIscurrentState] = useState("");
 
@@ -13,7 +23,14 @@ const Navdata = () => {
             try {
                 const response = await getSidebarMenu();
                 if (response && (response.success || response.Success) && (response.data || response.Data)) {
-                    setRawData(response.data || response.Data);
+                    const freshData = response.data || response.Data;
+                    const cached = sessionStorage.getItem("sidebar_menu_data") || localStorage.getItem("sidebar_menu_data");
+                    
+                    if (JSON.stringify(freshData) !== cached) {
+                        setRawData(freshData);
+                        sessionStorage.setItem("sidebar_menu_data", JSON.stringify(freshData));
+                        localStorage.setItem("sidebar_menu_data", JSON.stringify(freshData));
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching sidebar menu", error);

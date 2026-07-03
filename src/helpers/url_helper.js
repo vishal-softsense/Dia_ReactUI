@@ -467,6 +467,18 @@ export const ADD_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/add";
 export const UPDATE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/edit"; // append /{id}
 export const DELETE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/delete"; // append /{id}
 
+// Account Group Master
+export const GET_ACC_GRP_MASTER_LIST = "/api/AccGrpMaster/list";
+export const GET_ACC_GRP_MASTER_DROPDOWNS = "/api/AccGrpMaster/dropdowns";
+export const GET_ACC_GRP_MASTER_DETAIL = "/api/AccGrpMaster/detail"; // append /{id}
+export const CHECK_ACC_GRP_NAME_EXISTS = "/api/AccGrpMaster/check-name";
+export const GET_CURRENCY_RATES = "/api/AccGrpMaster/currency-rates"; // append /{code}
+export const ADD_ACC_GRP_MASTER = "/api/AccGrpMaster/add";
+export const UPDATE_ACC_GRP_MASTER = "/api/AccGrpMaster/edit"; // append /{id}
+export const DELETE_ACC_GRP_MASTER = "/api/AccGrpMaster/delete"; // append /{id}
+export const GET_ACC_EFF_CODE = "/api/AccGrpMaster/eff-code"; // append /{accType}
+export const GET_ACC_EFF_SIDE = "/api/AccGrpMaster/eff-side"; // append /{accType}
+
 // Settings
 export const GET_SETTING_DATA = "/master/get-setting-data";
 export const FILTER_SETTING_DATA = "/master/filter-data";

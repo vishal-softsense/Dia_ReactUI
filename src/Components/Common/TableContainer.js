@@ -260,9 +260,9 @@ const TableContainer = ({
       </Row>}
 
 
-      <div className={divClass}>
+      <div className={divClass} style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto", overflowX: "auto" }}>
         <Table hover className={tableClass}>
-          <thead className={theadClass}>
+          <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 2 }}>
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -321,7 +321,8 @@ const TableContainer = ({
       </div>
 
       {isPagination && (
-        <Row className="align-items-center mt-2 g-3 text-center text-sm-start">
+        <div style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-card-bg, #fff)", zIndex: 1, paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
+        <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
           <div className="col-sm">
             <div className="text-muted">
               {t("Showing")} <span className="fw-semibold">
@@ -349,6 +350,7 @@ const TableContainer = ({
             </ul>
           </div>
         </Row>
+        </div>
       )}
     </Fragment>
   );

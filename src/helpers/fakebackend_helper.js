@@ -604,6 +604,18 @@ export const addParcelItemMaster = data => api.create(url.ADD_PARCEL_ITEM_MASTER
 export const updateParcelItemMaster = (id, data) => api.put(`${url.UPDATE_PARCEL_ITEM_MASTER}/${id}`, data);
 export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM_MASTER}/${id}`);
 
+// Account Group Master
+export const getAccGrpMasters = (filter) => api.get(url.GET_ACC_GRP_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
+export const getAccGrpMasterDropdowns = () => api.get(url.GET_ACC_GRP_MASTER_DROPDOWNS);
+export const getAccGrpMasterDetail = id => api.get(`${url.GET_ACC_GRP_MASTER_DETAIL}/${id}`);
+export const checkAccGrpNameExists = (name, excludeId) => api.get(`${url.CHECK_ACC_GRP_NAME_EXISTS}?name=${encodeURIComponent(name)}${excludeId ? `&excludeId=${excludeId}` : ""}`);
+export const getCurrencyRates = code => api.get(`${url.GET_CURRENCY_RATES}/${code}`);
+export const addAccGrpMaster = data => api.create(url.ADD_ACC_GRP_MASTER, data);
+export const updateAccGrpMaster = (id, data) => api.put(`${url.UPDATE_ACC_GRP_MASTER}/${id}`, data);
+export const deleteAccGrpMaster = id => api.delete(`${url.DELETE_ACC_GRP_MASTER}/${id}`);
+export const getAccEffCode = accType => api.get(`${url.GET_ACC_EFF_CODE}/${accType}`);
+export const getAccEffSide = accType => api.get(`${url.GET_ACC_EFF_SIDE}/${accType}`);
+
 // Settings
 export const getSettingData = () => api.get(url.GET_SETTING_DATA);
 export const filterSettingData = (groupId) => api.get(`${url.FILTER_SETTING_DATA}?groupId=${encodeURIComponent(groupId)}`);

@@ -211,7 +211,7 @@ const ParcelItemMasterAdd = () => {
                                 <div className="d-flex gap-2">
                                     <Button color="light" type="button" onClick={() => navigate("/parcel/list-ParcelItemMaster")}>{t("Cancel")}</Button>
                                     <Button color="primary" type="submit" disabled={submitting}>
-                                        submitting ? t("Submitting...") : t("Submit")
+                                        {submitting ? t("Submitting...") : t("Submit")}
                                     </Button>
                                 </div>
                             </CardHeader>
