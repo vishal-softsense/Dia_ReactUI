@@ -136,17 +136,17 @@ const AccGrpMasterEdit = () => {
             if (dropResponse.success || dropResponse.Success) {
                 const data = dropResponse.data || dropResponse.Data || {};
                 loadedDropdowns = {
-                    underGroup: data.underGroup || [],
-                    accType: data.accType || [],
-                    currency: data.currency || [],
-                    area: data.area || [],
-                    city: data.city || [],
-                    state: data.state || [],
-                    country: data.country || [],
-                    term: data.term || [],
-                    through: data.through || [],
-                    broker: data.broker || [],
-                    agent: data.agent || []
+                    underGroup: data.underGroup || data.UnderGroup || [],
+                    accType: data.accType || data.AccType || [],
+                    currency: data.currency || data.Currency || [],
+                    area: data.area || data.Area || [],
+                    city: data.city || data.City || [],
+                    state: data.state || data.State || [],
+                    country: data.country || data.Country || [],
+                    term: data.term || data.Term || [],
+                    through: data.through || data.Through || [],
+                    broker: data.broker || data.Broker || [],
+                    agent: data.agent || data.Agent || []
                 };
                 setDropdowns(loadedDropdowns);
             }
@@ -178,7 +178,7 @@ const AccGrpMasterEdit = () => {
                     creditLimit: detail.creditLimit || detail.CreditLimit || 0,
                     dueDays: detail.dueDays || detail.DueDays || 0,
                     gracePeriod: detail.gracePeriod || detail.GracePeriod || 0,
-                    term: detail.term || detail.Term || "",
+                    term: detail.term || detail.Term || detail.termName || detail.TermName || "",
                     termPer: detail.termPer || detail.TermPer || 0,
                     markup: detail.markup || detail.Markup || "",
                     localLangName: detail.localLangName || detail.LocalLangName || "",
@@ -187,10 +187,10 @@ const AccGrpMasterEdit = () => {
                     // WebUser: DB returns WebsiteUserID
                     webUser: detail.webUser || detail.WebUser || detail.websiteUserID || detail.WebsiteUserID || "",
                     
-                    // KYC
-                    address1: detail.address1 || detail.Address1 || detail.addressLine1 || detail.AddressLine1 || "",
-                    address2: detail.address2 || detail.Address2 || detail.addressLine2 || detail.AddressLine2 || "",
-                    address3: detail.address3 || detail.Address3 || detail.addressLine3 || detail.AddressLine3 || "",
+                    // KYC - DB columns: AddressLine1, AddressLine2, AddressLine3
+                    address1: detail.AddressLine1 || detail.addressLine1 || detail.address1 || detail.Address1 || "",
+                    address2: detail.AddressLine2 || detail.addressLine2 || detail.address2 || detail.Address2 || "",
+                    address3: detail.AddressLine3 || detail.addressLine3 || detail.address3 || detail.Address3 || "",
                     zipcode: detail.zipcode || detail.Zipcode || detail.zipCode || detail.ZipCode || "",
                     city: detail.city || detail.City || detail.cityCode || detail.CityCode || "",
                     state: detail.state || detail.State || detail.stateCode || detail.StateCode || "",
@@ -220,22 +220,24 @@ const AccGrpMasterEdit = () => {
                     refComments2: detail.refComments2 || detail.RefComments2 || "",
                     
                     // Financial
-                    // BankACNO: DB returns BankAccNo
-                    bankACNO: detail.bankACNO || detail.BankACNO || detail.bankAccNo || detail.BankAccNo || "",
-                    // BankACDetail: DB returns BankAccDetail
-                    bankACDetail: detail.bankACDetail || detail.BankACDetail || detail.bankAccDetail || detail.BankAccDetail || "",
+                    // DB columns: BankAccNo, BankAccDetail, PAN, TINNo, CINNO, GrNo, CSTNo
+                    bankACNO: detail.BankAccNo || detail.bankAccNo || detail.BankACNO || detail.bankACNO || "",
+                    bankACDetail: detail.BankAccDetail || detail.bankAccDetail || detail.BankACDetail || detail.bankACDetail || "",
                     bankRouting: detail.bankRouting || detail.BankRouting || "",
-                    // BankSwift: DB returns BankSwiftCode
-                    bankSwift: detail.bankSwift || detail.BankSwift || detail.bankSwiftCode || detail.BankSwiftCode || "",
-                    // PanNO: DB returns PAN
-                    panNO: detail.panNO || detail.PanNO || detail.pAN || detail.PAN || "",
-                    tinNO: detail.tinNO || detail.TINNO || "",
-                    cinNO: detail.cinNO || detail.CINNO || "",
-                    grno: detail.grno || detail.GRNO || "",
-                    cstno: detail.cstno || detail.CSTNO || "",
+                    bankSwift: detail.BankSwiftCode || detail.bankSwiftCode || detail.BankSwift || detail.bankSwift || "",
+                    // PanNO: DB column is PAN
+                    panNO: detail.PAN || detail.pan || detail.PanNO || detail.panNO || detail.panno || "",
+                    // TINNo: DB column is TINNo
+                    tinNO: detail.TINNo || detail.TINNO || detail.tinNo || detail.tinNO || detail.tinno || "",
+                    // CINNO: DB column is CINNO
+                    cinNO: detail.CINNO || detail.cinNO || detail.cinno || "",
+                    // GrNo: DB column is GrNo
+                    grno: detail.GrNo || detail.GRNO || detail.grNo || detail.grno || "",
+                    // CSTNo: DB column is CSTNo
+                    cstno: detail.CSTNo || detail.CSTNO || detail.cstNo || detail.cstno || "",
                     remarks: detail.remarks || detail.Remarks || "",
-                    compliance: detail.compliance || detail.Compliance || false,
-                    active: detail.active !== undefined ? detail.active : (detail.Active !== undefined ? detail.Active : false),
+                    compliance: detail.compliance || detail.Compliance || detail.compilance || detail.Compilance || false,
+                    active: detail.inactive !== undefined ? !detail.inactive : (detail.Inactive !== undefined ? !detail.Inactive : (detail.active !== undefined ? detail.active : (detail.Active !== undefined ? detail.Active : true))),
                     emailInventory: detail.emailInventory || detail.EmailInventory || false,
                     
                     // Shipping: DB returns ShipName, ShipStreet, ShipCityCode, etc.
@@ -592,7 +594,7 @@ const AccGrpMasterEdit = () => {
                                                             type="number"
                                                             step="any"
                                                             className="text-end"
-                                                            value={form.oBalance === 0 ? "" : form.oBalance}
+                                                            value={form.oBalance}
                                                             onChange={(e) => handleValueChange("oBalance", e.target.value)}
                                                         />
                                                         <select

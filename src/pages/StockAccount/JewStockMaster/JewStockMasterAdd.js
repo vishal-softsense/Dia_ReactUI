@@ -1,21 +1,23 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Link, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 import {
   Card, CardBody, CardHeader,
-  Button, Col, Row, Spinner
+  Button, Col, Row, Spinner, Container
 } from "reactstrap";
+import BreadCrumb from "../../../Components/Common/BreadCrumb";
 
 import {
   getMountingStock,
-  getJewMetalMaster,
-  getJewColorMaster,
   getJewPurity,
   getPureRatio,
-  getJewCategoryDropdown,
-  getJewSubCategory,
   getJewSettingType,
+  saveMountingStock,
+  getMountingStockDropdown,
+  getAllLotNoList,
+  getAddMountingStockData,
+  getJewLotNoData,
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel }    from "../../../helpers/excel_helper";
 import TableContainer       from "../../../Components/Common/TableContainer";
@@ -92,26 +94,92 @@ function unwrapApiResponse(response) {
 }
 
 // Turn a flat array of master rows into { value, label } options.
-// Field-name guesses are checked in order — trim this once you've
-// confirmed each endpoint's real row shape.
+// Checks DTO-specific field names first (matched against actual API DTOs),
+// then falls back to generic patterns. Supports both camelCase and PascalCase.
 function toOptions(arr, { withRatio = false } = {}) {
   return (Array.isArray(arr) ? arr : []).map((item) => {
+    if (typeof item === "string") {
+      return { value: item, label: item };
+    }
+
+    // Value: check DTO-specific ID fields first, then generic fallbacks
     const value =
-      item?.ID ?? item?.Id ?? item?.id ?? item?.Value ?? item?.value ?? item?.Code ?? item?.code ?? "";
+      item?.MetalID        ?? item?.metalID        ?? item?.metalId        ??
+      item?.JewColorID     ?? item?.jewColorID     ?? item?.jewColorId     ??
+      item?.CategoryID     ?? item?.categoryID     ?? item?.categoryId     ??
+      item?.SubCategoryID  ?? item?.subCategoryID  ?? item?.subCategoryId  ??
+      item?.MetalPurityID  ?? item?.metalPurityID  ?? item?.metalPurityId  ??
+      item?.ID ?? item?.Id ?? item?.id ??
+      item?.Value ?? item?.value ??
+      item?.Code ?? item?.code ?? "";
+
+    // Label: check DTO-specific Name fields first, then generic fallbacks
     const label =
-      item?.Name ?? item?.name ?? item?.Label ?? item?.label ?? item?.Text ?? item?.text ?? String(value);
+      item?.MetalName      ?? item?.metalName      ??
+      item?.JewColorName   ?? item?.jewColorName   ??
+      item?.CategoryName   ?? item?.categoryName   ??
+      item?.SubCategoryName?? item?.subCategoryName??
+      item?.MetalPurityID  ?? item?.metalPurityID  ?? item?.metalPurityId  ??
+      item?.Name ?? item?.name ??
+      item?.Label ?? item?.label ??
+      item?.Text ?? item?.text ?? String(value);
+
     const opt = { value, label };
     if (withRatio) {
       opt.ratio =
-        item?.Ratio ?? item?.ratio ?? item?.PurityRatio ?? item?.purityRatio ?? item?.PureRatio ?? null;
+        item?.Ratio ?? item?.ratio ?? item?.PurityRatio ?? item?.purityRatio ?? item?.PureRatio ?? item?.pureRatio ?? null;
     }
     return opt;
   });
 }
 
+// MVC SelectList pattern: same field for value and display (e.g. Shape "RBC", not numeric ID).
+function getItemField(item, ...keys) {
+  if (!item) return "";
+  for (const key of keys) {
+    const val = item[key];
+    if (val !== undefined && val !== null && val !== "") return val;
+  }
+  return "";
+}
+
+function idOnlyOptions(arr, fieldName) {
+  const camel = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+  const lower = fieldName.toLowerCase();
+  return (Array.isArray(arr) ? arr : []).map((item) => {
+    const id = getItemField(item, fieldName, camel, lower);
+    return { value: String(id), label: String(id) };
+  }).filter((o) => o.value !== "");
+}
+
+// BasicData from ItemMasterDropDown — MVC uses SelectList(..., "ID", "ID")
+function basicDataToOptions(arr) {
+  return (Array.isArray(arr) ? arr : []).map((item) => {
+    const id = getItemField(item, "ID", "id", "Id", "Name", "name");
+    return { value: String(id), label: String(id) };
+  }).filter((o) => o.value !== "");
+}
+
+function dedupeLotOptions(arr) {
+  if (!Array.isArray(arr)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const o of arr) {
+    const id = String(o.id ?? o.ID ?? o.name ?? o.Name ?? "").trim();
+    if (!id || seen.has(id.toLowerCase())) continue;
+    seen.add(id.toLowerCase());
+    out.push({
+      id,
+      text: String(o.text ?? o.TextName ?? o.textName ?? id),
+    });
+  }
+  return out;
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AddMountingMaster() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // ── page title ──
   useEffect(() => { document.title = "Add Mounting Stock | DiaJewSoft"; }, []);
@@ -246,106 +314,13 @@ export default function AddMountingMaster() {
   const [colorOptions,       setColorOptions]       = useState([]);
   const [purityOptions,      setPurityOptions]      = useState([]);
   const [settingTypeOptions, setSettingTypeOptions] = useState([]);
+  const [shapeOptions,       setShapeOptions]       = useState([]);
+  const [sizeOptions,        setSizeOptions]        = useState([]);
+  const [sieveOptions,       setSieveOptions]       = useState([]);
+  const [stoneColorOptions,  setStoneColorOptions]  = useState([]);
+  const [clarityOptions,     setClarityOptions]     = useState([]);
+  const [lotNoHint,          setLotNoHint]          = useState("");
   const [purityLoading,      setPurityLoading]      = useState(false);
-
-  // Category / Sub Category / Metal / Color / Setting Type don't depend on
-  // anything else, so load them all once on mount.
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadOne = async (fetcher, setter, label) => {
-      try {
-        const response = await fetcher();
-        const { success, data, message } = unwrapApiResponse(response);
-        if (cancelled) return;
-        if (success) {
-          setter(toOptions(data));
-        } else {
-          toast.error(message || `Failed to load ${label}.`);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          toast.error(`Failed to load ${label}.`);
-        }
-      }
-    };
-
-    setDropdownLoading(true);
-    Promise.all([
-      loadOne(getJewCategoryDropdown,    setCategoryOptions,    "Jewellery Category list"),
-      loadOne(getJewSubCategory, setSubCategoryOptions, "Sub Category list"),
-      loadOne(getJewMetalMaster, setMetalTypeOptions,   "Metal Type list"),
-      loadOne(getJewColorMaster, setColorOptions,       "Color list"),
-      loadOne(getJewSettingType, setSettingTypeOptions, "Making Type list"),
-    ]).finally(() => { if (!cancelled) setDropdownLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
-
-  // Purity list depends on the selected Metal Type: GET list-jew-purity?metalType=...
-  useEffect(() => {
-    if (!metal) {
-      setPurityOptions([]);
-      setMetalPurity("");
-      setPurityRatio("");
-      return;
-    }
-    let cancelled = false;
-    setPurityLoading(true);
-    getJewPurity(metal)
-      .then((response) => {
-        if (cancelled) return;
-        const { success, data, message } = unwrapApiResponse(response);
-        if (success) {
-          setPurityOptions(toOptions(data));
-        } else {
-          toast.error(message || "Failed to load Purity list.");
-          setPurityOptions([]);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.error(err);
-          toast.error("Failed to load Purity list.");
-        }
-      })
-      .finally(() => { if (!cancelled) setPurityLoading(false); });
-
-    // metal type changed → previously selected purity/ratio no longer valid
-    setMetalPurity("");
-    setPurityRatio("");
-    return () => { cancelled = true; };
-  }, [metal]);
-
-  // Purity Ratio depends on Metal Type + Purity: GET get-pure-ratio?metalType=&metalPurity=
-  useEffect(() => {
-    if (!metal || !metalPurity) return;
-    let cancelled = false;
-    getPureRatio(metal, metalPurity)
-      .then((response) => {
-        if (cancelled) return;
-        const { success, data, message } = unwrapApiResponse(response);
-        if (success) {
-          // `data` is expected to be the ratio itself (number/string) per
-          // GetPureRatioAsync's return type — adjust if it comes back as
-          // an object like { Ratio: 91.6 } instead.
-          const ratio = (data && typeof data === "object")
-            ? (data.Ratio ?? data.ratio ?? data.PureRatio ?? data.purityRatio ?? "")
-            : data;
-          setPurityRatio(ratio !== null && ratio !== undefined ? String(ratio) : "");
-        } else {
-          toast.error(message || "Failed to load Purity Ratio.");
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.error(err);
-          toast.error("Failed to load Purity Ratio.");
-        }
-      });
-    return () => { cancelled = true; };
-  }, [metal, metalPurity]);
 
   // ── Stock Details ──
   const today = new Date().toISOString().slice(0, 10);
@@ -417,6 +392,135 @@ export default function AddMountingMaster() {
 
   // ── Form submit loading ──
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  // Category / Sub Category / Metal / Color / Setting Type don't depend on
+  // anything else, so load them all once on mount.
+  useEffect(() => {
+    let cancelled = false;
+
+    // Dedicated loader for Setting Type — fallback if not in add-stock-mounting payload
+    const loadSettingType = async () => {
+      try {
+        const response = await getJewSettingType();
+        const { success, data, message } = unwrapApiResponse(response);
+        if (cancelled) return;
+        if (success && Array.isArray(data)) {
+          // data is string[] e.g. ["Per Gm", "Per Pcs", "Lumsum", "Per%"]
+          setSettingTypeOptions(data.map((v) => ({ value: v, label: v })));
+        } else {
+          toast.error(message || "Failed to load Making Type list.");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          toast.error("Failed to load Making Type list.");
+        }
+      }
+    };
+
+    const loadAddMountingDropdowns = async () => {
+      try {
+        const response = await getAddMountingStockData();
+        const { success, data, message } = unwrapApiResponse(response);
+        if (cancelled) return;
+        if (!success || !data) {
+          toast.error(message || "Failed to load mounting stock dropdowns.");
+          return;
+        }
+        // Same as MVC AddMountingStock ViewBag — ItemMasterDropDown + Jew masters
+        setShapeOptions(basicDataToOptions(data.Shape ?? data.shape));
+        setStoneColorOptions(basicDataToOptions(data.Color ?? data.color));
+        setSizeOptions(basicDataToOptions(data.Size ?? data.size));
+        setClarityOptions(basicDataToOptions(data.Clarity ?? data.clarity));
+        setSieveOptions(basicDataToOptions(data.Sieve ?? data.sieve));
+        setCategoryOptions(idOnlyOptions(data.JewCategories ?? data.jewCategories, "CategoryID"));
+        setSubCategoryOptions(idOnlyOptions(data.JewSubCategories ?? data.jewSubCategories, "SubCategoryID"));
+        setMetalTypeOptions(idOnlyOptions(data.JewMetalType ?? data.jewMetalType, "MetalID"));
+        setColorOptions(idOnlyOptions(data.JewColor ?? data.jewColor, "JewColorID"));
+        const settingValues = data.JewSettingValue ?? data.jewSettingValue;
+        if (Array.isArray(settingValues) && settingValues.length > 0) {
+          setSettingTypeOptions(settingValues.map((v) => ({ value: v, label: v })));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          toast.error("Failed to load mounting stock dropdowns.");
+        }
+      }
+    };
+
+    setDropdownLoading(true);
+    Promise.all([
+      loadAddMountingDropdowns(),
+      loadSettingType(),
+    ]).finally(() => { if (!cancelled) setDropdownLoading(false); });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Purity list depends on the selected Metal Type: GET list-jew-purity?metalType=...
+  useEffect(() => {
+    if (!metal) {
+      setPurityOptions([]);
+      setMetalPurity("");
+      setPurityRatio("");
+      return;
+    }
+    let cancelled = false;
+    setPurityLoading(true);
+    getJewPurity(metal)
+      .then((response) => {
+        if (cancelled) return;
+        const { success, data, message } = unwrapApiResponse(response);
+        if (success) {
+          setPurityOptions(idOnlyOptions(data, "MetalPurityID"));
+        } else {
+          toast.error(message || "Failed to load Purity list.");
+          setPurityOptions([]);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(err);
+          toast.error("Failed to load Purity list.");
+        }
+      })
+      .finally(() => { if (!cancelled) setPurityLoading(false); });
+
+    // metal type changed → previously selected purity/ratio no longer valid
+    setMetalPurity("");
+    setPurityRatio("");
+    return () => { cancelled = true; };
+  }, [metal]);
+
+  // Purity Ratio depends on Metal Type + Purity: GET get-pure-ratio?metalType=&metalPurity=
+  useEffect(() => {
+    if (!metal || !metalPurity) return;
+    let cancelled = false;
+    getPureRatio(metal, metalPurity)
+      .then((response) => {
+        if (cancelled) return;
+        const { success, data, message } = unwrapApiResponse(response);
+        if (success) {
+          // `data` is expected to be the ratio itself (number/string) per
+          // GetPureRatioAsync's return type — adjust if it comes back as
+          // an object like { Ratio: 91.6 } instead.
+          const ratio = (data && typeof data === "object")
+            ? (data.Ratio ?? data.ratio ?? data.PureRatio ?? data.purityRatio ?? "")
+            : data;
+          setPurityRatio(ratio !== null && ratio !== undefined ? String(ratio) : "");
+        } else {
+          toast.error(message || "Failed to load Purity Ratio.");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(err);
+          toast.error("Failed to load Purity Ratio.");
+        }
+      });
+    return () => { cancelled = true; };
+  }, [metal, metalPurity]);
 
   // ── Derived visibility ──
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
@@ -494,9 +598,15 @@ export default function AddMountingMaster() {
       setUseMounting("");
       return;
     }
-    fetch(`/master/GetMountingStockIds?ddl=${encodeURIComponent(jewCategory)}`)
-      .then((r) => r.json())
-      .then((data) => setMountOpts(data.map((d) => ({ value: d.ID, label: d.Name }))))
+    getMountingStockDropdown(jewCategory)
+      .then((response) => {
+        const { success, data, message } = unwrapApiResponse(response);
+        if (success && Array.isArray(data)) {
+          setMountOpts(toOptions(data));
+        } else {
+          toast.error(message || "Error loading mounting stock options.");
+        }
+      })
       .catch(() => toast.error("Error loading mounting stock options."));
   }, [jewCategory]);
 
@@ -521,18 +631,81 @@ export default function AddMountingMaster() {
 
   // ─── Lot No autocomplete ──────────────────────────────────────────────────
   const debounceRef = useRef(null);
-  const searchLots  = useCallback((term) => {
-    if (!term) { setLotOptions([]); return; }
+  const searchLots = useCallback((term) => {
     clearTimeout(debounceRef.current);
+
+    if (!elementType) {
+      setLotOptions([]);
+      setLotNoHint("Select Element Type first");
+      return;
+    }
+
+    if (!term || term.trim().length < 1) {
+      setLotOptions([]);
+      setLotNoHint("Please enter 1 or more characters");
+      return;
+    }
+
+    setLotNoHint("");
     debounceRef.current = setTimeout(() => {
-      fetch(`/common/get-alllotno-listall?searchby=${encodeURIComponent(term)}&stoneType=${encodeURIComponent(elementType)}`)
-        .then((r) => r.json())
-        .then(setLotOptions)
-        .catch(() => {});
+      getAllLotNoList(term.trim(), elementType)
+        .then((response) => {
+          const arr = Array.isArray(response)
+            ? response
+            : (response?.data ?? response?.Data ?? []);
+          if (Array.isArray(arr)) {
+            setLotOptions(dedupeLotOptions(arr));
+          } else {
+            setLotOptions([]);
+          }
+        })
+        .catch((err) => {
+          setLotOptions([]);
+          const msg = typeof err === "string" ? err : (err?.message ?? "Failed to search lot numbers.");
+          toast.error(msg);
+        });
     }, 250);
   }, [elementType]);
 
-  useEffect(() => { setLotNo(""); setLotOptions([]); }, [elementType]);
+  useEffect(() => {
+    setLotNo("");
+    setLotSearch("");
+    setLotOptions([]);
+    setLotNoHint("");
+  }, [elementType]);
+
+  const handleLotSelect = async (selectedLotNo, text) => {
+    setLotNo(selectedLotNo);
+    setLotSearch(text || selectedLotNo);
+    setLotOptions([]);
+    setLotNoHint("");
+    try {
+      const response = await getJewLotNoData(selectedLotNo);
+      const success = response?.success ?? response?.Success;
+      const data = response?.Data ?? response?.data ?? [];
+      if (success && Array.isArray(data) && data.length > 0) {
+        const item = data[0];
+        setShape(item.ShapeId ?? item.shapeId ?? "");
+        setSize(item.SizeId ?? item.sizeId ?? "");
+        setStoneColor(item.ColorId ?? item.colorId ?? "");
+        setClarity(item.ClarityId ?? item.clarityId ?? "");
+        setSieve(item.SieveId ?? item.sieveId ?? "");
+        setPcs(item.Pcs != null ? String(item.Pcs) : (item.pcs != null ? String(item.pcs) : ""));
+        setCarats(
+          item.BalanceCarats3Dec != null
+            ? String(item.BalanceCarats3Dec)
+            : (item.balanceCarats3Dec != null ? String(item.balanceCarats3Dec) : "")
+        );
+        setRate(item.Rate != null ? String(item.Rate) : (item.rate != null ? String(item.rate) : ""));
+        setLab(item.CertId ?? item.certId ?? "");
+      } else {
+        toast.warning(response?.message || response?.Message || "No details found for the selected lot number.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load lot details.");
+    }
+  };
 
   // ─── Add table row ────────────────────────────────────────────────────────
   const addItem = () => {
@@ -581,32 +754,79 @@ export default function AddMountingMaster() {
     }
     setSubmitLoading(true);
     try {
+      const diamond = tableRows
+        .filter(row => row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond")
+        .map(row => ({
+          StockID: row.stockID,
+          Type: row.stoneType,
+          Shape: row.shape,
+          Size: row.size,
+          Sieve: row.sieve,
+          Color: row.color,
+          Clarity: row.clarity,
+          Pcs: parseInt(row.pcs) || 0,
+          Carat: parseFloat(row.carats) || 0,
+          Price: parseFloat(row.rate) || 0,
+          Amount: parseFloat(row.amount) || 0,
+          Lab: row.lab
+        }));
+
+      const setting = tableRows
+        .filter(row => row.stoneType === "Gem Stone")
+        .map(row => ({
+          Type: row.stoneType,
+          Shape: row.shape,
+          Size: row.size,
+          Pcs: parseInt(row.pcs) || 0,
+          SettingType: row.lab || "",
+          Price: parseFloat(row.rate) || 0,
+          Amount: parseFloat(row.amount) || 0
+        }));
+
       const payload = {
-        TrnDate: trnDate, StockID: stockID, JewCategory: jewCategory,
-        UseMounting: useMounting, Category: category, SubCategory: subCategory,
-        JewSize: jewSize, Certificate: jewCert, CertNo: certNo,
-        Description: description, TotalPcs: totalPcs,
-        Metal: metal, Color: color, MetalPurity: metalPurity,
-        PurityRatio: purityRatio, GrossWeight: grossWeight, NetWeight: netWeight,
-        MetalPricePerGm: metalPricePerGm, MetalAmount: metalAmount,
-        DiamondAmount: diamondAmount, DiamondQty: diamondQty,
-        StoneAmount: stoneAmount, StoneQty: stoneQty,
-        MakingType: makingType, MakingRate: makingRate, MakingCharges: makingCharges,
-        SettingCharges: settingCharges, HandlingCarat: handlingCarat,
-        HandlingCharges: handlingCharges, HandlingAmount: handlingAmount,
-        CertificateCharges: certificateCharges, OtherCharges: otherCharges,
-        HallmarkCharges: hallmarkCharges, TotalMakingCharges: totalMakingCharges,
-        FinalAmount: finalAmount, AskingRate: askingRate,
-        Items: tableRows,
+        Model: {
+          JewCode: 0,
+          Stock_ID: stockID,
+          DesignID: "",
+          DesignName: "",
+          DesignPriority: 0,
+          TrnDate: trnDate,
+          CreatedBy: "",
+          ModifyBy: "",
+          Category: category,
+          SubCategory: subCategory,
+          JewSize: jewSize,
+          JewelleryCerNo: certNo,
+          MetalType: metal,
+          Color: color,
+          Purity: metalPurity,
+          PureRatio: parseFloat(purityRatio) || 0,
+          GrossWeight: parseFloat(grossWeight) || 0,
+          NetWeight: parseFloat(netWeight) || 0,
+          MetalPriceGm: parseFloat(metalPricePerGm) || 0,
+          TotalDiamondAmount: parseFloat(diamondAmount) || 0,
+          TotalMetalAmount: parseFloat(metalAmount) || 0,
+          ImagePath: imagePath,
+          ImageBinary: null,
+          UseMounting: useMounting,
+          UseMountingId: useMounting,
+          MountCategory: jewCategory
+        },
+        Diamond: diamond,
+        Setting: setting,
+        ActionType: "insert"
       };
-      console.log("Submit payload:", payload);
-      // TODO: replace with real API call
-      // await addMountingStock(payload);
-      toast.success("Mounting stock submitted successfully!");
-      await getMountingStockList(); // refresh list after save
+
+      const response = await saveMountingStock(payload);
+      if (response.success || response.Success) {
+        toast.success(response.message || response.Message || "Mounting stock saved successfully!");
+        navigate("/master/jewelleryM-stock-list", { state: { successMessage: "Mounting stock saved successfully!" } });
+      } else {
+        toast.error(response.message || response.Message || "Failed to save mounting stock.");
+      }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to submit mounting stock.");
+      toast.error(err.response?.data?.message || err.response?.data?.Message || "Failed to submit mounting stock.");
     } finally {
       setSubmitLoading(false);
     }
@@ -628,11 +848,46 @@ export default function AddMountingMaster() {
   });
 
   return (
-    <div className="page-content">
-      <div className="container-fluid">
+    <React.Fragment>
+      <div className="page-content">
+        <Container fluid>
+          <BreadCrumb title={t("Add Mounting Stock")} pageTitle={t("Stock & Account")} />
+
+          {/* ══════════════════════════════════════════════════════════════════
+              TOP HEADER  –  mirrors MountingStockList CardHeader
+          ══════════════════════════════════════════════════════════════════ */}
+          <Card className="shadow-lg border-0 rounded-3 overflow-hidden mb-3">
+            <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+              <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                <i className="ri-add-circle-line fs-20 text-primary"></i>
+                {t("Add Mounting Stock")}
+              </h5>
+              <div className="d-flex gap-2">
+                <Button
+                  color="light"
+                  onClick={() => navigate("/master/jewelleryM-stock-list")}
+                  className="rounded-3 d-inline-flex align-items-center gap-1"
+                >
+                  <i className="ri-arrow-left-line align-bottom"></i> {t("Back")}
+                </Button>
+                <Button
+                  color="primary"
+                  onClick={handleSubmit}
+                  disabled={submitLoading}
+                  className="rounded-3 d-inline-flex align-items-center gap-1"
+                >
+                  {submitLoading ? (
+                    <><Spinner size="sm" /> {t("Saving...")}</>
+                  ) : (
+                    <><i className="ri-save-line align-bottom"></i> {t("Save")}</>
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
 
         {/* ══════════════════════════════════════════════════════════════════
-            TOP HEADER  –  mirrors MountingStockList CardHeader
+            STOCK LIST TABLE  –  collapsible, exact MountingStockList layout
         ══════════════════════════════════════════════════════════════════ */}
        
 
@@ -1008,26 +1263,34 @@ export default function AddMountingMaster() {
                         </select>
                       </div>
 
-                      {/* Lot No autocomplete */}
+                      {/* Lot No — MVC select2 ajax: /common/get-alllotno-listall */}
                       <div style={{ gridColumn: "span 2", position: "relative" }}>
                         <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
                           Lot No
                         </label>
-                        <input type="text" style={inputStyle} placeholder="Search Lot No…"
+                        <input
+                          type="text"
+                          style={inputStyle}
+                          placeholder="Lot No"
                           value={lotSearch}
-                          onChange={(e) => { setLotSearch(e.target.value); searchLots(e.target.value); }} />
+                          onChange={(e) => {
+                            setLotSearch(e.target.value);
+                            setLotNo(e.target.value);
+                            searchLots(e.target.value);
+                          }}
+                          onFocus={() => searchLots(lotSearch)}
+                        />
+                        {lotNoHint && (
+                          <small className="text-muted" style={{ fontSize: 11 }}>{lotNoHint}</small>
+                        )}
                         {lotOptions.length > 0 && (
                           <div style={{ position: "absolute", zIndex: 200, background: "#fff",
                             border: "1px solid #ced4da", borderRadius: 4, width: "100%",
                             maxHeight: 160, overflowY: "auto", boxShadow: "0 2px 8px rgba(0,0,0,.1)" }}>
-                            {lotOptions.map((o) => (
-                              <div key={o.id}
+                            {lotOptions.map((o, idx) => (
+                              <div key={`${o.id}-${idx}`}
                                 style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13 }}
-                                onMouseDown={() => {
-                                  setLotNo(o.id);
-                                  setLotSearch(o.text);
-                                  setLotOptions([]);
-                                }}>
+                                onMouseDown={() => handleLotSelect(o.id, o.text)}>
                                 {o.text}
                               </div>
                             ))}
@@ -1035,28 +1298,67 @@ export default function AddMountingMaster() {
                         )}
                       </div>
 
-                      {/* Shape / Size / Sieve / Color / Clarity */}
-                      {[
-                        ["Shape",   shape,      setShape],
-                        ["Size",    size,        setSize],
-                        ["Sieve",   sieve,       setSieve],
-                        ["Color",   stoneColor,  setStoneColor],
-                        ["Clarity", clarity,     setClarity],
-                      ].map(([lbl, val, setter]) => (
-                        <div key={lbl}>
-                          <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
-                          <input type="text" style={inputStyle} placeholder={lbl}
-                            value={val} onChange={(e) => setter(e.target.value)} />
-                        </div>
-                      ))}
+                      {/* Shape */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Shape</label>
+                        <select style={selectStyle} value={shape} onChange={(e) => setShape(e.target.value)}>
+                          <option value="">Shape</option>
+                          {shapeOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
 
-                      {/* Pcs / Carat / Price / Amount / Lab */}
+                      {/* Size */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Size</label>
+                        <select style={selectStyle} value={size} onChange={(e) => setSize(e.target.value)}>
+                          <option value="">Size</option>
+                          {sizeOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Sieve */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Sieve</label>
+                        <select style={selectStyle} value={sieve} onChange={(e) => setSieve(e.target.value)}>
+                          <option value="">Sieve</option>
+                          {sieveOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Color */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Color</label>
+                        <select style={selectStyle} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
+                          <option value="">Color</option>
+                          {stoneColorOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Clarity */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Clarity</label>
+                        <select style={selectStyle} value={clarity} onChange={(e) => setClarity(e.target.value)}>
+                          <option value="">Clarity</option>
+                          {clarityOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Pcs / Carat / Price / Amount */}
                       {[
                         ["Pcs",    pcs,    setPcs,    false],
                         ["Carat",  carats, setCarats, false],
                         ["Price",  rate,   setRate,   false],
                         ["Amount", amount, null,      true],
-                        ["Lab",    lab,    setLab,    false],
                       ].map(([lbl, val, setter, ro]) => (
                         <div key={lbl}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
@@ -1065,6 +1367,18 @@ export default function AddMountingMaster() {
                             onChange={ro ? undefined : (e) => setter(e.target.value)} />
                         </div>
                       ))}
+
+                      {/* Lab — MVC: text input #JewLab */}
+                      <div>
+                        <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Lab</label>
+                        <input
+                          type="text"
+                          style={inputStyle}
+                          placeholder="Lab"
+                          value={lab}
+                          onChange={(e) => setLab(e.target.value)}
+                        />
+                      </div>
 
                       {/* Add button */}
                       <div style={{ alignSelf: "end" }}>
@@ -1154,7 +1468,10 @@ export default function AddMountingMaster() {
           </>
         )}
 
-      </div>
+
+      </Container>
     </div>
+    <ToastContainer closeButton={false} limit={1} />
+  </React.Fragment>
   );
 }

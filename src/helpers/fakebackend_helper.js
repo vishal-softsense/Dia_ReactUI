@@ -604,6 +604,26 @@ export const addParcelItemMaster = data => api.create(url.ADD_PARCEL_ITEM_MASTER
 export const updateParcelItemMaster = (id, data) => api.put(`${url.UPDATE_PARCEL_ITEM_MASTER}/${id}`, data);
 export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM_MASTER}/${id}`);
 
+// Jew Stock Master (Mounting)
+export const getMountingStockList = (filter) => api.get(url.GET_MOUNTING_STOCK_LIST + (filter ? `?filter=${filter}` : ""));
+export const getMountingStock = () => api.get(url.GET_MOUNTING_STOCK);
+export const getMountingStockDetail = id => api.get(`${url.GET_MOUNTING_STOCK_DETAIL}/${id}`);
+export const getJewMetalMaster = () => api.get(url.GET_JEW_METAL_MASTER);
+export const getJewColorMaster = () => api.get(url.GET_JEW_COLOR_MASTER);
+export const getJewPurity = (metalType) => api.get(`${url.GET_JEW_PURITY}?metalType=${encodeURIComponent(metalType)}`);
+export const getPureRatio = (metalType, metalPurity) => api.get(`${url.GET_PURE_RATIO}?metalType=${encodeURIComponent(metalType)}&metalPurity=${encodeURIComponent(metalPurity)}`);
+export const getJewCategoryDropdown = () => api.get(url.GET_JEW_CATEGORY);
+export const getJewSubCategory = () => api.get(url.GET_JEW_SUBCATEGORY);
+export const getJewSettingType = () => api.get(url.GET_JEW_SETTING_TYPE);
+export const getAddMountingStockData = () => api.get(url.GET_ADD_MOUNTING_STOCK_DATA);
+export const saveMountingStock = data => api.create(url.SAVE_MOUNTING_STOCK, data);
+export const deleteMountingStock = id => api.delete(`${url.DELETE_MOUNTING_STOCK}/${id}`);
+export const addMountingItemInGrid = data => api.create(url.ADD_MOUNTING_ITEM_IN_GRID, data);
+export const deleteMountingItemFromGrid = index => api.create(url.DELETE_MOUNTING_ITEM_FROM_GRID, index);
+export const getNextMountingStockId = designId => api.get(`${url.GET_NEXT_MOUNTING_STOCK_ID}?designId=${encodeURIComponent(designId)}`);
+export const getMountingStockDropdown = category => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}`);
+export const getAllLotNoList = (searchby, stoneType) => api.get(`${url.GET_ALL_LOTNO_LIST}?searchby=${encodeURIComponent(searchby)}&stoneType=${encodeURIComponent(stoneType)}`);
+
 // Account Group Master
 export const getAccGrpMasters = (filter) => api.get(url.GET_ACC_GRP_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
 export const getAccGrpMasterDropdowns = () => api.get(url.GET_ACC_GRP_MASTER_DROPDOWNS);
@@ -642,3 +662,12 @@ export const updateColumnAbbreviations = (data) => api.create(url.UPDATE_COLUMN_
 // Sync Settings
 export const getSyncSettings = (companyId) => api.get(`${url.GET_SYNC_SETTINGS}?companyId=${companyId}`);
 export const saveSyncSettings = (data, enable) => api.create(`${url.SAVE_SYNC_SETTINGS}?enable=${enable ? 1 : 0}`, data);
+
+// Detail Section dropdowns
+export const getShapes = () => api.get(url.GET_SHAPE_MASTER_LIST);
+export const getColors = () => api.get(url.GET_COLOR_MASTER_LIST);
+export const getSizes = () => api.get(url.GET_SIZE_MASTER_LIST);
+export const getClarities = () => api.get(url.GET_CLARITY_MASTER_LIST);
+export const getSieves = () => api.get(url.GET_SIEVE_MASTER_LIST);
+export const getLabs = () => api.get(url.GET_LAB_MASTER_LIST);
+export const getJewLotNoData = (lotNo) => api.create(url.GET_JEW_LOTNO_DATA, { LotNo: lotNo });

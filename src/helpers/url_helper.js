@@ -467,6 +467,28 @@ export const ADD_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/add";
 export const UPDATE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/edit"; // append /{id}
 export const DELETE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/delete"; // append /{id}
 
+// Jew Stock Master (Mounting)
+export const GET_MOUNTING_STOCK_LIST = "/api/JewelleryStockMaster/mounting-stock";
+export const GET_MOUNTING_STOCK = "/api/JewelleryStockMaster/mounting-stock";
+export const GET_MOUNTING_STOCK_DETAIL = "/api/JewelleryStockMaster/mounting-detail"; // append /{id}
+export const GET_JEW_METAL_MASTER = "/api/JewelleryStockMaster/list-jew-metal";
+export const GET_JEW_COLOR_MASTER = "/api/JewelleryStockMaster/list-jew-color";
+export const GET_JEW_PURITY = "/api/JewelleryStockMaster/list-jew-purity";
+export const GET_PURE_RATIO = "/api/JewelleryStockMaster/get-pure-ratio";
+export const GET_JEW_CATEGORY = "/api/JewelleryStockMaster/list-jew-category";
+export const GET_JEW_SUBCATEGORY = "/api/JewelleryStockMaster/list-jew-subcategory";
+export const GET_JEW_SETTING_TYPE = "/api/JewelleryStockMaster/jew-setting-type";
+export const GET_ADD_MOUNTING_STOCK_DATA = "/api/JewelleryStockMaster/add-stock-mounting";
+export const SAVE_MOUNTING_STOCK = "/api/JewelleryStockMaster/save-mounting-stock";
+export const DELETE_MOUNTING_STOCK = "/api/JewelleryStockMaster/delete-mounting-stock"; // append /{id}
+export const ADD_MOUNTING_ITEM_IN_GRID = "/api/JewelleryStockMaster/add-mounting-item";
+export const DELETE_MOUNTING_ITEM_FROM_GRID = "/api/JewelleryStockMaster/delete-mounting-item";
+export const GET_NEXT_MOUNTING_STOCK_ID = "/api/JewelleryStockMaster/get-next-mountid";
+export const GET_MOUNTING_STOCK_DROPDOWN = "/api/JewelleryStockMaster/mounting-stock-dropdown";
+export const GET_ALL_LOTNO_LIST = "/api/JewelleryStockMaster/get-alllotno-listall";
+export const GET_JEW_LOTNO_DATA = "/api/JewelleryStockMaster/get-jewlotno-data";
+
+
 // Account Group Master
 export const GET_ACC_GRP_MASTER_LIST = "/api/AccGrpMaster/list";
 export const GET_ACC_GRP_MASTER_DROPDOWNS = "/api/AccGrpMaster/dropdowns";

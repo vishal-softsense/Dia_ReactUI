@@ -344,6 +344,12 @@ import AccGrpMasterList from "../pages/StockAccount/AccGrpMaster/AccGrpMasterLis
 import AccGrpMasterAdd from "../pages/StockAccount/AccGrpMaster/AccGrpMasterAdd";
 import AccGrpMasterEdit from "../pages/StockAccount/AccGrpMaster/AccGrpMasterEdit";
 
+// Jewellery Stock Master
+import JewStockMasterList from "../pages/StockAccount/JewStockMaster/JewStockMasterList";
+import JewStockMasterAdd from "../pages/StockAccount/JewStockMaster/JewStockMasterAdd";
+import JewStockMasterEdit from "../pages/StockAccount/JewStockMaster/JewStockMasterEdit";
+
+
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
   { path: "/user-add", component: <AddEditUser /> },
@@ -404,6 +410,14 @@ const authProtectedRoutes = [
   { path: "/account/list-accountgroup", component: <AccGrpMasterList /> },
   { path: "/account/add-accountgroup", component: <AccGrpMasterAdd /> },
   { path: "/account/Edit-accountgroup", component: <AccGrpMasterEdit /> },
+
+  // Jewellery Stock Master
+  { path: "/master/jewelleryM-stock-list", component: <JewStockMasterList /> },
+  { path: "/master/jewellery-stock-list", component: <JewStockMasterList /> },
+  { path: "/master/list-Mounting-stock", component: <JewStockMasterList /> },
+  { path: "/master/add-stock-Mounting", component: <JewStockMasterAdd /> },
+  { path: "/master/edit-Mounting-stock", component: <JewStockMasterEdit /> },
+
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },

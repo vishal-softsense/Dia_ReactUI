@@ -1,89 +1,83 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardBody, CardHeader, Button, Col, Row } from "reactstrap";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, CardBody, CardHeader, Button } from "reactstrap";
+import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
-import { getMountingStock } from "../../../helpers/fakebackend_helper";
+import DeleteModal from "../../../Components/Common/DeleteModal";
+import { getMountingStockList, deleteMountingStock } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import { toast, ToastContainer } from "react-toastify";
 
 const MountingStockList = () => {
     const { t } = useTranslation();
-    useEffect(() => {
-
-        document.title = "Mounting Stock Master | DiaJewSoft";
-
-    }, []);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [mountingStock, setMountingStock] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const handleDelete = (jewCode) => {
+    const [loading, setLoading] = useState(true);
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
-        console.log(jewCode);
-
-    };
     useEffect(() => {
-        getMountingStockList();
-    }, []);
+        if (location.state?.successMessage) {
+            toast.success(location.state.successMessage);
+            window.history.replaceState({}, document.title);
+        }
+        fetchMountingStock();
+    }, [location.state]);
 
-
-
-    const getMountingStockList = async () => {
-
+    const fetchMountingStock = async () => {
         setLoading(true);
-
         try {
-
-            const response = await getMountingStock();
-
-            console.log("Full Response :", response);
-
-            const success =
-                response?.Success ??
-                response?.success ??
-                response?.data?.Success ??
-                response?.data?.success;
-
-            const data =
-                response?.Data ??
-                response?.data?.Data ??
-                response?.data ??
-                [];
-
-            console.log("Success :", success);
-            console.log("Data :", data);
-
-            if (success) {
-
+            const response = await getMountingStockList();
+            if (response.success || response.Success) {
+                const data = response.data || response.Data || [];
                 setMountingStock(Array.isArray(data) ? [...data].reverse() : []);
-
             } else {
-
                 toast.error(
-                    response?.Message ||
-                    response?.message ||
-                    response?.data?.Message ||
-                    response?.data?.message ||
+                    response.message ||
+                    response.Message ||
+                    response.data?.Message ||
                     "Failed to fetch mounting stock."
                 );
-
             }
-
         } catch (error) {
-
-            console.error(error);
-
-            toast.error("Failed to fetch mounting stock.");
-
-        } finally {
-
-            setLoading(false);
-
+            const errMsg =
+                typeof error === "string"
+                    ? error
+                    : error.response?.data?.message ||
+                      error.response?.data?.Message ||
+                      "Failed to fetch mounting stock.";
+            toast.error(errMsg);
         }
-
+        setLoading(false);
     };
-    const handleExportExcel = async () => {
 
+    const handleDeleteClick = (jewCode) => {
+        setItemToDelete(jewCode);
+        setDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (itemToDelete) {
+            try {
+                const response = await deleteMountingStock(itemToDelete);
+                if (response.success || response.Success) {
+                    toast.success(response.message || response.Message || "Mounting stock deleted successfully");
+                    fetchMountingStock();
+                } else {
+                    toast.error(response.message || response.Message || "Failed to delete mounting stock");
+                }
+            } catch (error) {
+                const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Failed to delete mounting stock");
+                toast.error(errMsg);
+            }
+            setDeleteModal(false);
+            setItemToDelete(null);
+        }
+    };
+
+    const handleExportExcel = async () => {
         if (mountingStock.length === 0) {
             toast.warning("No data available to export");
             return;
@@ -122,144 +116,146 @@ const MountingStockList = () => {
             toast.error("Failed to generate Excel file.");
         }
     };
-    const columns = useMemo(() => [
 
-        {
-            header: t("Action"),
-            id: "action",
-            enableColumnFilter: false,
-            cell: ({ row }) => (
-                <div className="d-flex gap-2">
-
-                    <Link
-                        to={`/master/edit-Mounting-stock?id=${row.original.JewCode}`}
-                        className="btn btn-soft-primary btn-sm"
-                    >
-                        <i className="ri-pencil-fill"></i>
-                    </Link>
-
-                    <button
-                        className="btn btn-soft-danger btn-sm"
-                        onClick={() => handleDelete(row.original.JewCode)}
-                    >
-                        <i className="ri-delete-bin-fill"></i>
-                    </button>
-
-                </div>
-            )
-        },
-
-        {
-            header: t("StockID"),
-            accessorKey: "stock_ID",
-            enableColumnFilter: true,
-        },
-
-        {
-            header: t("JewelleryCategory"),
-            accessorKey: "mountCategory",
-            enableColumnFilter: true,
-        },
-
-        {
-            header: t("MetalType"),
-            accessorKey: "metalType",
-            enableColumnFilter: true,
-        },
-
-        {
-            header: t("Purity"),
-            accessorKey: "purity",
-            enableColumnFilter: true,
-        },
-
-        {
-            header: t("DiamondWeight"),
-            accessorKey: "totalDiamondCarat",
-            enableColumnFilter: true,
-        },
-
-        {
-            header: t("GrossWeight"),
-            accessorKey: "grossWeight",
-            enableColumnFilter: true,
-            cell: ({ getValue }) => {
-
-                const value = getValue();
-
-                return value
-                    ? Number(value).toFixed(3)
-                    : "0.000";
+    const columns = useMemo(
+        () => [
+            {
+                header: t("Action"),
+                id: "action",
+                enableColumnFilter: false,
+                cell: (cellProps) => {
+                    const id = cellProps.row.original.jewCode || cellProps.row.original.JewCode;
+                    return (
+                        <div className="d-flex gap-2">
+                            <button
+                                className="btn btn-soft-primary btn-sm border-0 d-inline-flex align-items-center justify-content-center"
+                                style={{ width: "32px", height: "32px", padding: "0" }}
+                                onClick={() => navigate(`/master/edit-Mounting-stock?id=${id}`)}
+                                title={t("Edit")}
+                            >
+                                <i className="ri-pencil-fill" style={{ fontSize: "14px" }}></i>
+                            </button>
+                            <button
+                                className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
+                                style={{ width: "32px", height: "32px", padding: "0" }}
+                                onClick={() => handleDeleteClick(id)}
+                                title={t("Delete")}
+                            >
+                                <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
+                            </button>
+                        </div>
+                    );
+                }
+            },
+            {
+                header: t("StockID"),
+                accessorKey: "stock_ID",
+                accessorFn: (row) => row.stock_ID || row.Stock_ID,
+                enableColumnFilter: true,
+            },
+            {
+                header: t("JewelleryCategory"),
+                accessorKey: "mountCategory",
+                accessorFn: (row) => row.mountCategory || row.MountCategory || row.designName || "",
+                enableColumnFilter: true,
+            },
+            {
+                header: t("MetalType"),
+                accessorKey: "metalType",
+                accessorFn: (row) => row.metalType || row.MetalType,
+                enableColumnFilter: true,
+            },
+            {
+                header: t("Purity"),
+                accessorKey: "purity",
+                accessorFn: (row) => row.purity || row.Purity,
+                enableColumnFilter: true,
+            },
+            {
+                header: t("DiamondWeight"),
+                accessorKey: "totalDiamondCarat",
+                accessorFn: (row) => row.totalDiamondCarat || row.TotalDiamondCarat,
+                enableColumnFilter: true,
+            },
+            {
+                header: t("GrossWeight"),
+                accessorKey: "grossWeight",
+                accessorFn: (row) => row.grossWeight || row.GrossWeight,
+                enableColumnFilter: true,
+                cell: (cellProps) => {
+                    const val = cellProps.getValue();
+                    return typeof val === "number" ? val.toFixed(3) : val || "0.000";
+                }
+            },
+            {
+                header: t("NetWeight"),
+                accessorKey: "netWeight",
+                accessorFn: (row) => row.netWeight || row.NetWeight,
+                enableColumnFilter: true,
+                cell: (cellProps) => {
+                    const val = cellProps.getValue();
+                    return typeof val === "number" ? val.toFixed(3) : val || "0.000";
+                }
+            },
+            {
+                header: t("MetalAmount"),
+                accessorKey: "totalMetalAmount",
+                accessorFn: (row) => row.totalMetalAmount || row.TotalMetalAmount,
+                enableColumnFilter: true,
+                cell: (cellProps) => {
+                    const val = cellProps.getValue();
+                    return typeof val === "number" ? val.toFixed(2) : val || "0.00";
+                }
             }
-        },
+        ],
+        [navigate, t]
+    );
 
-        {
-            header: t("NetWeight"),
-            accessorKey: "netWeight",
-            enableColumnFilter: true,
-            cell: ({ getValue }) => {
+    document.title = `${t("Mounting Stock Master")} | ${t("Admin")}`;
 
-                const value = getValue();
-
-                return value
-                    ? Number(value).toFixed(3)
-                    : "0.000";
-            }
-        },
-
-        {
-            header: t("MetalAmount"),
-            accessorKey: "totalMetalAmount",
-            enableColumnFilter: true,
-            cell: ({ getValue }) => {
-
-                const value = getValue();
-
-                return value
-                    ? Number(value).toFixed(3)
-                    : "0.000";
-            }
-        }
-
-    ], []);
     return (
         <React.Fragment>
             <div className="page-content">
-
-                <div className="container-fluid">
-
+                <Container fluid>
+                    <BreadCrumb title={t("Mounting Stock Master")} pageTitle={t("Stock & Account")} />
                     <Row>
-
                         <Col lg={12}>
-
-                            <Card>
-
-                                <CardHeader className="border-bottom d-flex justify-content-between align-items-center">
-
-                                    <h4 className="card-title mb-0">
-                                        Mounting Stock Master
-                                    </h4>
-
+                            <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
+                                <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-archive-line fs-20 text-primary"></i>
+                                        {t("Mounting Stock Master")}
+                                    </h5>
                                     <div className="d-flex gap-2">
-                                        <Link to="/master/add-stock-Mounting" className="btn btn-primary add-btn rounded-3 d-inline-flex align-items-center gap-1">
+                                        <Link
+                                            to="/master/add-stock-Mounting"
+                                            className="btn btn-primary add-btn rounded-3 d-inline-flex align-items-center gap-1"
+                                        >
                                             <i className="ri-add-line align-bottom"></i> {t("Add Mounting Stock")}
                                         </Link>
-                                        <Button className="btn-soft-success rounded-3" onClick={handleExportExcel} title={t("Export to Excel")} style={{ height: "37.5px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Button
+                                            className="btn-soft-success rounded-3"
+                                            onClick={handleExportExcel}
+                                            title={t("Export to Excel")}
+                                            style={{
+                                                height: "37.5px",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center"
+                                            }}
+                                        >
                                             <i className="ri-file-excel-2-line fs-18"></i>
                                         </Button>
                                     </div>
-
                                 </CardHeader>
-
                                 <CardBody>
                                     {loading ? (
-
-                                        <div className="text-center py-5">
-                                            <div className="spinner-border text-primary"></div>
+                                        <div className="text-center my-3">
+                                            <div className="spinner-border text-primary" role="status">
+                                                <span className="visually-hidden">Loading...</span>
+                                            </div>
                                         </div>
-
                                     ) : (
-
                                         <TableContainer
                                             columns={columns}
                                             data={mountingStock}
@@ -271,22 +267,19 @@ const MountingStockList = () => {
                                             theadClass="table-light"
                                             SearchPlaceholder={t("Filter items...")}
                                         />
-
                                     )}
-
-
                                 </CardBody>
-
                             </Card>
-
                         </Col>
-
                     </Row>
-
-                </div>
-
+                </Container>
             </div>
-
+            <ToastContainer closeButton={false} limit={1} />
+            <DeleteModal
+                show={deleteModal}
+                onDeleteClick={handleDeleteConfirm}
+                onCloseClick={() => setDeleteModal(false)}
+            />
         </React.Fragment>
     );
 };
