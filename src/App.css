@@ -42,3 +42,54 @@
 .navbar-menu .navbar-nav .nav-link.hide-default-before::before { display: none !important; content: none !important; }
 
 .navbar-menu .navbar-nav .nav-sm .nav-link.hide-default-before::before { display: none !important; content: none !important; }
+
+/* --- React Select Selected Options (Pills) text color & background --- */
+
+/* 1. When classNamePrefix="react-select" is used */
+.react-select__multi-value {
+  background-color: #405189 !important;
+  border-radius: 4px !important;
+}
+.react-select__multi-value__label {
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.react-select__multi-value__remove {
+  color: #ffffff !important;
+}
+.react-select__multi-value__remove:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+/* 2. Wildcard selectors for default hashed react-select classes */
+div[class*="-multiValue"] {
+  background-color: #405189 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+div[class*="-multiValue"] div {
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+div[class*="-multiValue"] div[class*="-multiValueRemove"] {
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+div[class*="-multiValue"] div[class*="-multiValueRemove"]:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+/* Custom Purple Color Classes */
+.text-purple {
+  color: #8A2BE2 !important;
+}
+.bg-purple {
+  background-color: #8A2BE2 !important;
+}

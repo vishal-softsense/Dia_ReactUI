@@ -319,7 +319,7 @@ const products = useSelector(selectecomproductData);
 
   return (
     <div className="page-content">
-      <ToastContainer closeButton={false} limit={1} />
+      <ToastContainer autoClose={2000} />
 
       <DeleteModal
         show={deleteModal}

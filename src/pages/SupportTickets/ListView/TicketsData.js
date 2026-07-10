@@ -402,7 +402,7 @@ const TicketsData = () => {
                                 />
                             ) : (<Loader error={error} />)
                             }
-                            <ToastContainer closeButton={false} limit={1} />
+                            <ToastContainer autoClose={2000} />
                         </CardBody>
                     </Card>
                 </Col>

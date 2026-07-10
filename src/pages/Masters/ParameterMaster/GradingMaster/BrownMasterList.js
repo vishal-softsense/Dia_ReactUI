@@ -807,7 +807,7 @@ const handleDownloadTemplate = async () => {
 
 
 </Modal>
-            <ToastContainer />
+            <ToastContainer autoClose={2000} />
 
         </React.Fragment>
 

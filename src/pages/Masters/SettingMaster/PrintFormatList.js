@@ -124,7 +124,7 @@ const PrintFormatList = () => {
             <div className="page-content">
                 <Container fluid>
                     <BreadCrumb title={t("Print Format Settings")} pageTitle="Masters" />
-                    <ToastContainer closeButton={false} limit={1} />
+                    <ToastContainer autoClose={2000} />
                     
                     <Row>
                         <Col lg={12}>

@@ -79,6 +79,7 @@ const AccGrpMasterAdd = () => {
         through: "",
         contactPerson: "",
         agent: "",
+        executive: "",
         refPartyName1: "",
         refPhone1: "",
         refComments1: "",
@@ -391,6 +392,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -405,6 +408,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -468,7 +473,7 @@ const AccGrpMasterAdd = () => {
                                                             type="number"
                                                             step="any"
                                                             className="text-end"
-                                                            value={form.oBalance === 0 ? "" : form.oBalance}
+                                                            value={form.oBalance}
                                                             onChange={(e) => handleValueChange("oBalance", e.target.value)}
                                                         />
                                                         <select
@@ -604,6 +609,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -618,6 +625,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -632,6 +641,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -646,6 +657,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -720,6 +733,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -732,15 +747,7 @@ const AccGrpMasterAdd = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Through")}</Label>
-                                                    <Select
-                                                        value={selectOptions(dropdowns.through).find(opt => opt.value == form.through) || null}
-                                                        onChange={(selected) => handleTextChange("through", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.through)}
-                                                        placeholder={t("Select Through")}
-                                                        isSearchable={true}
-                                                        isClearable={true}
-                                                        classNamePrefix="react-select"
-                                                    />
+                                                    <Input type="text" placeholder={t("Through")} value={form.through || ""} onChange={(e) => handleTextChange("through", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
@@ -752,15 +759,13 @@ const AccGrpMasterAdd = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Agent")}</Label>
-                                                    <Select
-                                                        value={selectOptions(dropdowns.agent).find(opt => opt.value == form.agent) || null}
-                                                        onChange={(selected) => handleTextChange("agent", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.agent)}
-                                                        placeholder={t("Select Agent")}
-                                                        isSearchable={true}
-                                                        isClearable={true}
-                                                        classNamePrefix="react-select"
-                                                    />
+                                                    <Input type="text" placeholder={t("Agent")} value={form.agent || ""} onChange={(e) => handleTextChange("agent", e.target.value)} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>{t("KAM")}</Label>
+                                                    <Input type="text" placeholder={t("KAM")} value={form.executive || ""} onChange={(e) => handleTextChange("executive", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
 
@@ -847,7 +852,13 @@ const AccGrpMasterAdd = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("GST No")}</Label>
-                                                    <Input type="text" placeholder={t("GST / CST No")} value={form.cstno} onChange={(e) => handleTextChange("cstno", e.target.value)} />
+                                                    <Input type="text" placeholder={t("GST No")} value={form.cstno} onChange={(e) => handleTextChange("cstno", e.target.value)} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>{t("CST No")}</Label>
+                                                    <Input type="text" placeholder={t("CST No")} value={form.cstno} onChange={(e) => handleTextChange("cstno", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
@@ -944,6 +955,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -958,6 +971,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -972,6 +987,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -986,6 +1003,8 @@ const AccGrpMasterAdd = () => {
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -1016,7 +1035,7 @@ const AccGrpMasterAdd = () => {
                     </form>
                 </Container>
             </div>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
         </React.Fragment>
     );
 };

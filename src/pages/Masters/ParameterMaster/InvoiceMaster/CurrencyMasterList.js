@@ -184,7 +184,7 @@ const CurrencyMasterList = () => {
                     </Row>
                 </Container>
             </div>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
         </React.Fragment>
     );
 };

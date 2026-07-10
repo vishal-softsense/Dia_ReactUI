@@ -789,7 +789,7 @@ const CrmLeads = () => {
                       </ModalFooter>
                     </Form>
                   </Modal>
-                  <ToastContainer closeButton={false} limit={1} />
+                  <ToastContainer autoClose={2000} />
                 </CardBody>
               </Card>
             </Col>

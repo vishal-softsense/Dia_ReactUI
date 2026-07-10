@@ -227,7 +227,7 @@ const errornotify = () => toast("Error ! An error occurred.", { position: "top-c
 <Button color="light" className="w-xs" onClick={successnotify}>Success</Button>
 <Button color="light" className="w-xs" onClick={warningnotify}>Warning</Button>
 <Button color="light" className="w-xs" onClick={errornotify}>Error</Button>
-<ToastContainer />
+<ToastContainer autoClose={2000} />
 
 <!-- Display Position -->
 const topleftnotify = () => toast("Welcome Back ! This is a Toast Notification", { position: "top-left", hideProgressBar: true, className: 'bg-success text-white' });

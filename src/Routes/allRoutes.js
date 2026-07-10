@@ -355,6 +355,10 @@ import JewStockMasterList from "../pages/StockAccount/JewStockMaster/JewStockMas
 import JewStockMasterAdd from "../pages/StockAccount/JewStockMaster/JewStockMasterAdd";
 import JewStockMasterEdit from "../pages/StockAccount/JewStockMaster/JewStockMasterEdit";
 
+// Solitaire Stock Search Report
+import SolitairesStockSearchReport from "../pages/Solitaires/Solitaires Reports/SolitairesStockSearchReport";
+
+
 
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
@@ -430,6 +434,18 @@ const authProtectedRoutes = [
   { path: "/master/list-Mounting-stock", component: <JewStockMasterList /> },
   { path: "/master/add-stock-Mounting", component: <JewStockMasterAdd /> },
   { path: "/master/edit-Mounting-stock", component: <JewStockMasterEdit /> },
+
+  // Solitaire Stock Search Report
+  { path: "/solitaire/stock-search", component: <SolitairesStockSearchReport /> },
+  { path: "/Stock/stock-search", component: <SolitairesStockSearchReport /> },
+  { path: "/stock/stock-search", component: <SolitairesStockSearchReport /> },
+  { path: "/StockSearch/StockSearch", component: <SolitairesStockSearchReport /> },
+  { path: "/StockSearch", component: <SolitairesStockSearchReport /> },
+  { path: "/stocksearch/stocksearch", component: <SolitairesStockSearchReport /> },
+  { path: "/stocksearch", component: <SolitairesStockSearchReport /> },
+  { path: "/solitaire/stock-search-report", component: <SolitairesStockSearchReport /> },
+  { path: "/stock/stock-search-report", component: <SolitairesStockSearchReport /> },
+
 
 
 

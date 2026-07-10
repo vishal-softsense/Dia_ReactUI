@@ -392,7 +392,7 @@ const InvoiceList = () => {
                       />
                     ) : (<Loader error={error} />)
                     }
-                    <ToastContainer closeButton={false} limit={1} />
+                    <ToastContainer autoClose={2000} />
                   </div>
                 </CardBody>
               </Card>

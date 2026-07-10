@@ -274,7 +274,7 @@ const MountingStockList = () => {
                     </Row>
                 </Container>
             </div>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
             <DeleteModal
                 show={deleteModal}
                 onDeleteClick={handleDeleteConfirm}
