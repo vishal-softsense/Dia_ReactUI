@@ -339,6 +339,12 @@ import ParcelItemMasterList from "../pages/StockAccount/ParcelItemMaster/ParcelI
 import ParcelItemMasterAdd from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterAdd";
 import ParcelItemMasterEdit from "../pages/StockAccount/ParcelItemMaster/ParcelItemMasterEdit";
 
+// Solitaire Item Master
+import SolitaireItemMasterList from "../pages/StockAccount/SolitaireItemMaster/SolitaireItemMasterList";
+import SolitaireItemMasterAdd from "../pages/StockAccount/SolitaireItemMaster/SolitaireItemMasterAdd";
+import SolitaireItemMasterEdit from "../pages/StockAccount/SolitaireItemMaster/SolitaireItemMasterEdit";
+
+
 // Account Group Master
 import AccGrpMasterList from "../pages/StockAccount/AccGrpMaster/AccGrpMasterList";
 import AccGrpMasterAdd from "../pages/StockAccount/AccGrpMaster/AccGrpMasterAdd";
@@ -406,6 +412,13 @@ const authProtectedRoutes = [
   { path: "/parcel/list-ParcelItemMaster", component: <ParcelItemMasterList /> },
   { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },
   { path: "/parcel/Edit-ParcelItemMaster", component: <ParcelItemMasterEdit /> },
+
+   // Solitaire Item Master
+  { path: "/item/list-item", component: <SolitaireItemMasterList /> },
+  { path: "/masters/add-solitaire-item-master", component: <SolitaireItemMasterAdd /> },
+  { path: "/masters/edit-solitaire-item-master", component: <SolitaireItemMasterEdit /> },
+
+  
 
   { path: "/account/list-accountgroup", component: <AccGrpMasterList /> },
   { path: "/account/add-accountgroup", component: <AccGrpMasterAdd /> },

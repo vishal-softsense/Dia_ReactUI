@@ -41,7 +41,14 @@ axios.interceptors.response.use(
         message = "Sorry! the data you are looking for could not be found";
         break;
       default:
-        message = error.response?.data?.message || error.response?.data?.Message || error.message || error;
+        if (error.response?.data?.errors) {
+          const valErrors = error.response.data.errors;
+          message = Object.keys(valErrors)
+            .map(key => `${key}: ${valErrors[key].join(", ")}`)
+            .join(" | ");
+        } else {
+          message = error.response?.data?.message || error.response?.data?.Message || error.message || error;
+        }
     }
     return Promise.reject(message);
   }

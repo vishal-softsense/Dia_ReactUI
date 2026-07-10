@@ -604,6 +604,16 @@ export const addParcelItemMaster = data => api.create(url.ADD_PARCEL_ITEM_MASTER
 export const updateParcelItemMaster = (id, data) => api.put(`${url.UPDATE_PARCEL_ITEM_MASTER}/${id}`, data);
 export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM_MASTER}/${id}`);
 
+// Solitaire Item Master
+export const getSolitaireItemMasters = (filter) => api.get(url.GET_SOLITAIRE_ITEM_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
+export const getSolitaireItemMasterDropdowns = () => api.get(url.GET_SOLITAIRE_ITEM_MASTER_DROPDOWNS);
+export const getSolitaireItemMasterDetail = id => api.get(`${url.GET_SOLITAIRE_ITEM_MASTER_DETAIL}/${id}`);
+export const checkSolitaireLotNoExists = lotNo => api.get(`${url.CHECK_SOLITAIRE_LOT_NO_EXISTS}?lotNo=${lotNo}`);
+export const addSolitaireItemMaster = data => api.create(url.ADD_SOLITAIRE_ITEM_MASTER, data);
+export const updateSolitaireItemMaster = (id, data) => api.put(`${url.UPDATE_SOLITAIRE_ITEM_MASTER}/${id}`, data);
+export const deleteSolitaireItemMaster = id => api.delete(`${url.DELETE_SOLITAIRE_ITEM_MASTER}/${id}`);
+
+
 // Jew Stock Master (Mounting)
 export const getMountingStockList = (filter) => api.get(url.GET_MOUNTING_STOCK_LIST + (filter ? `?filter=${filter}` : ""));
 export const getMountingStock = () => api.get(url.GET_MOUNTING_STOCK);

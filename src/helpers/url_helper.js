@@ -467,6 +467,16 @@ export const ADD_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/add";
 export const UPDATE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/edit"; // append /{id}
 export const DELETE_PARCEL_ITEM_MASTER = "/api/ParcelItemMaster/delete"; // append /{id}
 
+// Solitaire Item Master 
+export const GET_SOLITAIRE_ITEM_MASTER_LIST = "/api/SolitaireItemMaster/list";
+export const GET_SOLITAIRE_ITEM_MASTER_DROPDOWNS = "/api/SolitaireItemMaster/dropdowns";
+export const GET_SOLITAIRE_ITEM_MASTER_DETAIL = "/api/SolitaireItemMaster/detail"; // append /{id}
+export const CHECK_SOLITAIRE_LOT_NO_EXISTS = "/api/SolitaireItemMaster/check-lot";
+export const ADD_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/add";
+export const UPDATE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/edit"; // append /{id}
+export const DELETE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/delete"; // append /{id}
+
+
 // Jew Stock Master (Mounting)
 export const GET_MOUNTING_STOCK_LIST = "/api/JewelleryStockMaster/mounting-stock";
 export const GET_MOUNTING_STOCK = "/api/JewelleryStockMaster/mounting-stock";
