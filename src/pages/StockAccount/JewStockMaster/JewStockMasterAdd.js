@@ -526,6 +526,15 @@ export default function AddMountingMaster() {
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
   const showDetailsSection  = jewCategory !== "Mounting" && jewCategory !== "Metal";
 
+
+  const [calcBasis, setCalcBasis] = useState("NetWeight"); // "GrossWeight" | "NetWeight"
+
+// derived: sum of carats across all added rows (diamond + stone)
+const totalCarat = useMemo(
+  () => tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0),
+  [tableRows]
+);
+
   // ─── Date validation ──────────────────────────────────────────────────────
   const handleDateChange = (val) => {
     if (val > today) {
@@ -538,16 +547,28 @@ export default function AddMountingMaster() {
 
   // ─── Auto-calcs ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const gw = parseFloat(grossWeight) || 0;
-    const ratio = parseFloat(purityRatio) || 0;
-    setNetWeight(ratio ? (gw * ratio / 100).toFixed(3) : "");
-  }, [grossWeight, purityRatio]);
+  const gw = parseFloat(grossWeight) || 0;
+  if (gw !== 0) {
+    const lessWeight = totalCarat / 5;       // 5 carats = 1 gram
+    const nw = gw - lessWeight;
+    setNetWeight(nw.toFixed(3));
+  } else {
+    setNetWeight(gw.toFixed(3));
+  }
+}, [grossWeight, totalCarat]);
 
   useEffect(() => {
-    const nw = parseFloat(netWeight) || 0;
-    const pp = parseFloat(metalPricePerGm) || 0;
-    setMetalAmount((nw * pp).toFixed(2));
-  }, [netWeight, metalPricePerGm]);
+  const pp    = parseFloat(metalPricePerGm) || 0;
+  const gw    = parseFloat(grossWeight) || 0;
+  const nw    = parseFloat(netWeight) || 0;
+  const ratio = parseFloat(purityRatio) || 0;
+
+  const ma = calcBasis === "GrossWeight"
+    ? pp * gw
+    : pp * ratio * nw;
+
+  setMetalAmount(ma.toFixed(2));
+}, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
     const r  = parseFloat(makingRate) || 0;
@@ -747,12 +768,14 @@ export default function AddMountingMaster() {
   };
 
   // ─── Submit ───────────────────────────────────────────────────────────────
-  const handleSubmit = async () => {
-    if (!trnDate || !stockID || !jewCategory) {
-      toast.error("Date, Stock ID and Jewellery Category are required.");
-      return;
-    }
-    setSubmitLoading(true);
+ const handleSubmit = async () => {
+  if (!stockID) {
+    toast.error("Stock ID are required.");
+    return;
+  }
+  
+
+  setSubmitLoading(true);
     try {
       const diamond = tableRows
         .filter(row => row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond")
@@ -824,12 +847,29 @@ export default function AddMountingMaster() {
       } else {
         toast.error(response.message || response.Message || "Failed to save mounting stock.");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || err.response?.data?.Message || "Failed to submit mounting stock.");
-    } finally {
-      setSubmitLoading(false);
-    }
+  } catch (err) {
+  console.error("Submit error:", err);
+  console.error("Response data:", err?.response?.data); // <-- check this in devtools
+
+  const data = err?.response?.data;
+
+  // ASP.NET Core ModelState validation errors come back as { errors: { Field: ["msg"] } }
+  let detail = "";
+  if (data?.errors && typeof data.errors === "object") {
+    detail = Object.entries(data.errors)
+      .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+      .join(" | ");
+  }
+
+  toast.error(
+    detail ||
+    data?.message || data?.Message ||
+    data?.title || // ProblemDetails responses use "title"
+    "Failed to submit mounting stock."
+  );
+} finally {
+  setSubmitLoading(false);
+}
   };
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -1147,12 +1187,7 @@ export default function AddMountingMaster() {
                     background: "#f2f4f7", padding: "6px 14px", borderRadius: 6 }}>
                     Charges Details
                   </span>
-                  <Button color="primary" size="sm" onClick={handleSubmit} disabled={submitLoading}
-                    className="rounded-3 d-inline-flex align-items-center gap-1">
-                    {submitLoading
-                      ? <><Spinner size="sm" /> Saving…</>
-                      : <><i className="ri-save-line"></i> Submit</>}
-                  </Button>
+                  
                 </div>
 
                 <FieldRow label="Making Type">
@@ -1160,22 +1195,16 @@ export default function AddMountingMaster() {
                     <select style={{ ...selectStyle, flex: 1 }} value={makingType}
                       onChange={(e) => setMakingType(e.target.value)}>
                       <option value="">Select Making Type</option>
-                      {settingTypeOptions.length > 0 ? (
-                        settingTypeOptions.map((o) => (
-                          <option key={o.value} value={o.label}>{o.label}</option>
-                        ))
-                      ) : (
-                        <>
+                      
                           <option value="Per Gm">Per Gm</option>
                           <option value="Per Pcs">Per Pcs</option>
                           <option value="Lumsum">Lumsum</option>
                           <option value="Wastage">Wastage</option>
                           <option value="Per%">Per%</option>
-                        </>
-                      )}
+                       
                     </select>
                     <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }}
-                      placeholder="Rate" value={makingRate}
+                      placeholder="Making Rate" value={makingRate}
                       onChange={(e) => setMakingRate(e.target.value)} />
                   </div>
                 </FieldRow>
@@ -1190,10 +1219,10 @@ export default function AddMountingMaster() {
                 <FieldRow label="Handling Carat">
                   <div className="d-flex gap-1">
                     <input type="number" style={{ ...inputStyle, flex: 1, textAlign: "right" }}
-                      placeholder="Carat" value={handlingCarat}
+                      placeholder="Handling Carat" value={handlingCarat}
                       onChange={(e) => setHandlingCarat(e.target.value)} />
                     <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }}
-                      placeholder="Charges" value={handlingCharges}
+                      placeholder="Handling Charges" value={handlingCharges}
                       onChange={(e) => setHandlingCharges(e.target.value)} />
                   </div>
                 </FieldRow>
@@ -1471,7 +1500,7 @@ export default function AddMountingMaster() {
 
       </Container>
     </div>
-    <ToastContainer closeButton={false} limit={1} />
+    <ToastContainer autoClose={2000} />
   </React.Fragment>
   );
 }
