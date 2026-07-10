@@ -487,6 +487,7 @@ export const GET_NEXT_MOUNTING_STOCK_ID = "/api/JewelleryStockMaster/get-next-mo
 export const GET_MOUNTING_STOCK_DROPDOWN = "/api/JewelleryStockMaster/mounting-stock-dropdown";
 export const GET_ALL_LOTNO_LIST = "/api/JewelleryStockMaster/get-alllotno-listall";
 export const GET_JEW_LOTNO_DATA = "/api/JewelleryStockMaster/get-jewlotno-data";
+export const GET_SOLITAIRE_LOTS = "/api/SolitaireStockSearchReport/get-solitaire-lots";
 
 
 // Account Group Master
@@ -523,3 +524,14 @@ export const UPDATE_COLUMN_ABBREVIATIONS = "/master/update-ColumnAbbr";
 // Sync Settings
 export const GET_SYNC_SETTINGS = "/api/SyncSetting/list-sync";
 export const SAVE_SYNC_SETTINGS = "/api/SyncSetting/save-sync";
+
+// Solitaire Stock Search Report
+export const SOLITAIRE_STOCK_SEARCH_REPORT = "/api/SolitaireStockSearchReport/search";
+export const SOLITAIRE_STOCK_SEARCH_PIVOT = "/api/SolitaireStockSearchReport/pivot";
+export const SOLITAIRE_STOCK_SEARCH_DROPDOWNS = "/api/SolitaireStockSearchReport/dropdowns";
+export const SOLITAIRE_STOCK_SEARCH_UPDATE_LOCATION = "/api/SolitaireStockSearchReport/update-location";
+export const SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP = "/api/SolitaireStockSearchReport/update-box-group";
+export const SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS = "/api/SolitaireStockSearchReport/email-settings";
+export const SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST = "/api/SolitaireStockSearchReport/email-stock-list";
+
+

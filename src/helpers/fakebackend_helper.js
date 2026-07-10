@@ -623,6 +623,7 @@ export const deleteMountingItemFromGrid = index => api.create(url.DELETE_MOUNTIN
 export const getNextMountingStockId = designId => api.get(`${url.GET_NEXT_MOUNTING_STOCK_ID}?designId=${encodeURIComponent(designId)}`);
 export const getMountingStockDropdown = category => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}`);
 export const getAllLotNoList = (searchby, stoneType) => api.get(`${url.GET_ALL_LOTNO_LIST}?searchby=${encodeURIComponent(searchby)}&stoneType=${encodeURIComponent(stoneType)}`);
+export const getSolitaireLots = (searchby) => api.get(`${url.GET_SOLITAIRE_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
 
 // Account Group Master
 export const getAccGrpMasters = (filter) => api.get(url.GET_ACC_GRP_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
@@ -671,3 +672,14 @@ export const getClarities = () => api.get(url.GET_CLARITY_MASTER_LIST);
 export const getSieves = () => api.get(url.GET_SIEVE_MASTER_LIST);
 export const getLabs = () => api.get(url.GET_LAB_MASTER_LIST);
 export const getJewLotNoData = (lotNo) => api.create(url.GET_JEW_LOTNO_DATA, { LotNo: lotNo });
+
+// Solitaire Stock Search Report
+export const getSolitaireStockSearchReport = (filter) => api.create(url.SOLITAIRE_STOCK_SEARCH_REPORT, filter);
+export const getSolitaireStockSearchPivot = (filter) => api.create(url.SOLITAIRE_STOCK_SEARCH_PIVOT, filter);
+export const getSolitaireStockSearchDropdowns = () => api.get(url.SOLITAIRE_STOCK_SEARCH_DROPDOWNS);
+export const updateSolitaireStockLocation = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_UPDATE_LOCATION, data);
+export const updateSolitaireStockBoxGroup = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
+export const getSolitaireStockEmailSettings = () => api.get(url.SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS);
+export const sendSolitaireStockEmail = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST, data);
+
+

@@ -665,7 +665,7 @@ const ClarityMaster = () => {
                     <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
         </React.Fragment>
     );
 };

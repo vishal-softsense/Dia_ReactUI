@@ -61,7 +61,7 @@ const List = () => {
 
     return (
         <React.Fragment>
-            <ToastContainer closeButton={false} />
+            <ToastContainer autoClose={2000} />
             <DeleteModal
                 show={deleteModal}
                 onDeleteClick={() => handleDeleteProjectList()}

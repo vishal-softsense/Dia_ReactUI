@@ -598,7 +598,7 @@ const MilkyMasterList = () => {
                     </div>
                 </ModalBody>
             </Modal>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
         </React.Fragment>
     );
 };

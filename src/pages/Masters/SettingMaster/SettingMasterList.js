@@ -208,7 +208,7 @@ const SettingMasterList = () => {
             <div className="page-content">
                 <Container fluid>
                     <BreadCrumb title={t("Settings Master")} pageTitle="Masters" />
-                    <ToastContainer closeButton={false} limit={1} />
+                    <ToastContainer autoClose={2000} />
                     
                     <Row>
                         <Col lg={12}>

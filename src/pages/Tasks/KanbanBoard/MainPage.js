@@ -865,7 +865,7 @@ const TasksKanban = () => {
           </Form>
         </ModalBody>
       </Modal>
-      <ToastContainer />
+      <ToastContainer autoClose={2000} />
     </React.Fragment>
   )
 }

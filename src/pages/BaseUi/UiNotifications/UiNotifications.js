@@ -343,7 +343,7 @@ const UiNotifications = () => {
                                             <Button color="light" className="w-xs" onClick={successnotify}>Success</Button>
                                             <Button color="light" className="w-xs" onClick={warningnotify}>Warning</Button>
                                             <Button color="light" className="w-xs" onClick={errornotify}>Error</Button>
-                                            <ToastContainer />
+                                            <ToastContainer autoClose={2000} />
                                         </div>
                                         <div className="mt-4 pt-2">
                                             <h5 className="fs-14 mb-3">Display Position</h5>

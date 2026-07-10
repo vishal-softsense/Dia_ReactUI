@@ -659,7 +659,7 @@ const ColorMasterList = () => {
                     <Button color="primary" className="rounded-3" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
-            <ToastContainer closeButton={false} limit={1} />
+            <ToastContainer autoClose={2000} />
         </React.Fragment>
     );
 };
