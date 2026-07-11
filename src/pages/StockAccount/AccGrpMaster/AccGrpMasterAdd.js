@@ -79,6 +79,7 @@ const AccGrpMasterAdd = () => {
         through: "",
         contactPerson: "",
         agent: "",
+        kam: "",
         executive: "",
         refPartyName1: "",
         refPhone1: "",
@@ -413,13 +414,13 @@ const AccGrpMasterAdd = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={2}>
+                                            <Col md={2} style={{ display: "none"}}>
                                                 <FormGroup>
                                                     <Label>{t("Eff Code")}</Label>
                                                     <Input type="text" value={form.accEffCode} readOnly className="bg-light" />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={2}>
+                                            <Col md={2} style={{ display: "none"}}>
                                                 <FormGroup>
                                                     <Label>{t("Eff Side")}</Label>
                                                     <Input type="text" value={form.accEffSide} readOnly className="bg-light" />
@@ -765,7 +766,7 @@ const AccGrpMasterAdd = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("KAM")}</Label>
-                                                    <Input type="text" placeholder={t("KAM")} value={form.executive || ""} onChange={(e) => handleTextChange("executive", e.target.value)} />
+                                                    <Input type="text" placeholder={t("KAM")} value={form.kam || ""} onChange={(e) => handleTextChange("kam", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
 

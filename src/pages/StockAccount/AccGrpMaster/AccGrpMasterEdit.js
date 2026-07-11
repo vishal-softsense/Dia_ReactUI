@@ -61,7 +61,7 @@ const AccGrpMasterEdit = () => {
         localLangContactPerson: "",
         localLangAddress: "",
         webUser: "",
-        
+
         // KYC
         address1: "",
         address2: "",
@@ -84,13 +84,14 @@ const AccGrpMasterEdit = () => {
         through: "",
         contactPerson: "",
         agent: "",
+        kam: "",
         refPartyName1: "",
         refPhone1: "",
         refComments1: "",
         refPartyName2: "",
         refPhone2: "",
         refComments2: "",
-        
+
         // Financial
         bankACNO: "",
         bankACDetail: "",
@@ -106,7 +107,7 @@ const AccGrpMasterEdit = () => {
         active: true,
         emailInventory: false,
         executive: "",
-        
+
         // Shipping
         shippingName: "",
         shippingAddress1: "",
@@ -171,7 +172,11 @@ const AccGrpMasterEdit = () => {
                     baseRate: detail.baseRate || detail.BaseRate || detail.masterCurrencyRate || detail.MasterCurrencyRate || 0,
                     sBaseRate: detail.sBaseRate || detail.SBaseRate || detail.stockCurrencyRate || detail.StockCurrencyRate || 0,
                     oBalance: detail.oBalance || detail.OBalance || 0,
-                    oDrCr: detail.oDrCr || detail.ODrCr || "C",
+                    //oDrCr: detail.oDrCr || detail.ODrCr || "C",
+                    oDrCr: (() => {
+                        const raw = String(detail.oDrCr || detail.ODrCr || "C").trim();
+                        return raw.toUpperCase().startsWith("D") ? "D" : "C";
+                    })(),
                     // Interest: DB returns InterestPer
                     interest: detail.interest || detail.Interest || detail.interestPer || detail.InterestPer || 0,
                     // Discount: DB returns DiscountPer
@@ -187,7 +192,7 @@ const AccGrpMasterEdit = () => {
                     localLangAddress: detail.localLangAddress || detail.LocalLangAddress || "",
                     // WebUser: DB returns WebsiteUserID
                     webUser: detail.webUser || detail.WebUser || detail.websiteUserID || detail.WebsiteUserID || "",
-                    
+
                     // KYC - DB columns: AddressLine1, AddressLine2, AddressLine3
                     address1: detail.AddressLine1 || detail.addressLine1 || detail.address1 || detail.Address1 || "",
                     address2: detail.AddressLine2 || detail.addressLine2 || detail.address2 || detail.Address2 || "",
@@ -211,6 +216,7 @@ const AccGrpMasterEdit = () => {
                     through: detail.through || detail.Through || "",
                     contactPerson: detail.contactPerson || detail.ContactPerson || "",
                     agent: detail.agent || detail.Agent || "",
+                    kam: detail.kam || detail.KAM || "",
                     // RefPartyName1: DB returns RefParty1
                     refPartyName1: detail.refPartyName1 || detail.RefPartyName1 || detail.refParty1 || detail.RefParty1 || "",
                     refPhone1: detail.refPhone1 || detail.RefPhone1 || "",
@@ -219,7 +225,7 @@ const AccGrpMasterEdit = () => {
                     refPartyName2: detail.refPartyName2 || detail.RefPartyName2 || detail.refParty2 || detail.RefParty2 || "",
                     refPhone2: detail.refPhone2 || detail.RefPhone2 || "",
                     refComments2: detail.refComments2 || detail.RefComments2 || "",
-                    
+
                     // Financial
                     // DB columns: BankAccNo, BankAccDetail, PAN, TINNo, CINNO, GrNo, CSTNo
                     bankACNO: detail.BankAccNo || detail.bankAccNo || detail.BankACNO || detail.bankACNO || "",
@@ -241,7 +247,7 @@ const AccGrpMasterEdit = () => {
                     compliance: detail.compliance || detail.Compliance || detail.compilance || detail.Compilance || false,
                     active: detail.inactive !== undefined ? !detail.inactive : (detail.Inactive !== undefined ? !detail.Inactive : (detail.active !== undefined ? detail.active : (detail.Active !== undefined ? detail.Active : true))),
                     emailInventory: detail.emailInventory || detail.EmailInventory || false,
-                    
+
                     // Shipping: DB returns ShipName, ShipStreet, ShipCityCode, etc.
                     shippingName: detail.shippingName || detail.ShippingName || detail.shipName || detail.ShipName || "",
                     shippingAddress1: detail.shippingAddress1 || detail.ShippingAddress1 || detail.shipStreet || detail.ShipStreet || "",
@@ -540,13 +546,13 @@ const AccGrpMasterEdit = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={2}>
+                                            <Col md={2} style={{ display: "none" }}>
                                                 <FormGroup>
                                                     <Label>{t("Eff Code")}</Label>
                                                     <Input type="text" value={form.accEffCode} readOnly className="bg-light" />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={2}>
+                                            <Col md={2} style={{ display: "none" }}>
                                                 <FormGroup>
                                                     <Label>{t("Eff Side")}</Label>
                                                     <Input type="text" value={form.accEffSide} readOnly className="bg-light" />
@@ -892,7 +898,7 @@ const AccGrpMasterEdit = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("KAM")}</Label>
-                                                    <Input type="text" placeholder={t("KAM")} value={form.executive || ""} onChange={(e) => handleTextChange("executive", e.target.value)} />
+                                                    <Input type="text" placeholder={t("KAM")} value={form.kam || ""} onChange={(e) => handleTextChange("kam", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
 

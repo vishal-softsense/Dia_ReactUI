@@ -27,19 +27,20 @@ const AccGrpMasterList = () => {
     }, [location.state]);
 
     const fetchAccGroups = async (filter = "") => {
-        setLoading(true);
-        try {
-            const response = await getAccGrpMasters(filter);
-            if (response.success || response.Success) {
-                setAccGroups(response.data || response.Data || []);
-            } else {
-                toast.error(response.message || response.Message || "Failed to fetch account groups");
-            }
-        } catch (error) {
-            toast.error("Failed to fetch account groups");
-        }
-        setLoading(false);
-    };
+    setLoading(true);
+
+    const response = await getAccGrpMasters(filter);
+
+    console.log("API Response", response);
+    console.log("Data Length", response.data?.length || response.Data?.length);
+    console.table(response.data || response.Data);
+
+    if (response.success || response.Success) {
+    setAccGroups(response.data || response.Data || []);
+}
+
+    setLoading(false);
+};
 
     const handleSearch = () => {
         fetchAccGroups(searchText);
@@ -215,6 +216,7 @@ const AccGrpMasterList = () => {
                                         <TableContainer
                                             columns={columns}
                                             data={accGroups}
+                                            getRowId={(row) => row.accGrpCode}
                                             isGlobalFilter={true}
                                             customPageSize={500}
                                             customPageSizes={[500, 1000, 1500]}
