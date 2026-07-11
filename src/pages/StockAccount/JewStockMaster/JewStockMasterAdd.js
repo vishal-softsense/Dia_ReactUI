@@ -389,6 +389,7 @@ export default function AddMountingMaster() {
 
   // ── Table rows ──
   const [tableRows, setTableRows] = useState([]);
+  const [editingRowId, setEditingRowId] = useState(null);
 
   // ── Form submit loading ──
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -619,7 +620,7 @@ const totalCarat = useMemo(
       setUseMounting("");
       return;
     }
-    getMountingStockDropdown(jewCategory)
+    getMountingStockDropdown(jewCategory, "add")
       .then((response) => {
         const { success, data, message } = unwrapApiResponse(response);
         if (success && Array.isArray(data)) {
@@ -728,28 +729,46 @@ const totalCarat = useMemo(
     }
   };
 
-  // ─── Add table row ────────────────────────────────────────────────────────
+  const clearEntryForm = () => {
+    setLotNo(""); setLotSearch(""); setLotOptions([]);
+    setPcs(""); setCarats(""); setRate(""); setAmount(""); setLab("");
+    setEditingRowId(null);
+  };
+
   const addItem = () => {
     if (!elementType || !pcs || !carats) {
       toast.error("Element Type, Pcs and Carat are required.");
       return;
     }
     const row = {
-      id: Date.now(), stockID: lotNo, stoneType: elementType,
+      id: editingRowId ?? Date.now(), stockID: lotNo, stoneType: elementType,
       shape, size, sieve, color: stoneColor, clarity, pcs, carats, rate, amount, lab
     };
-    setTableRows((p) => [...p, row]);
     const rowAmt = parseFloat(amount) || 0;
     const rowPcs = parseFloat(pcs)    || 0;
-    if (elementType === "Natural Diamond" || elementType === "Lab Grown Diamond") {
-      setDiamondAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
-      setDiamondQty((p)    => String((parseFloat(p) || 0) + rowPcs));
+    if (editingRowId !== null) {
+      const oldRow = tableRows.find((r) => r.id === editingRowId);
+      const oldAmt = parseFloat(oldRow?.amount) || 0;
+      const oldPcs = parseFloat(oldRow?.pcs) || 0;
+      if (oldRow?.stoneType === "Natural Diamond" || oldRow?.stoneType === "Lab Grown Diamond") {
+        setDiamondAmount((p) => Math.max(0, (parseFloat(p) || 0) - oldAmt + rowAmt).toFixed(2));
+        setDiamondQty((p)    => String(Math.max(0, (parseFloat(p) || 0) - oldPcs + rowPcs)));
+      } else {
+        setStoneAmount((p) => Math.max(0, (parseFloat(p) || 0) - oldAmt + rowAmt).toFixed(2));
+        setStoneQty((p)    => String(Math.max(0, (parseFloat(p) || 0) - oldPcs + rowPcs)));
+      }
+      setTableRows((p) => p.map((r) => r.id === editingRowId ? row : r));
     } else {
-      setStoneAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
-      setStoneQty((p)    => String((parseFloat(p) || 0) + rowPcs));
+      setTableRows((p) => [...p, row]);
+      if (elementType === "Natural Diamond" || elementType === "Lab Grown Diamond") {
+        setDiamondAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
+        setDiamondQty((p)    => String((parseFloat(p) || 0) + rowPcs));
+      } else {
+        setStoneAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
+        setStoneQty((p)    => String((parseFloat(p) || 0) + rowPcs));
+      }
     }
-    setLotNo(""); setLotSearch(""); setLotOptions([]);
-    setPcs(""); setCarats(""); setRate(""); setAmount(""); setLab("");
+    clearEntryForm();
   };
 
   const removeRow = (id) => {
@@ -765,6 +784,26 @@ const totalCarat = useMemo(
       setStoneQty((p)    => String(Math.max(0, (parseFloat(p) || 0) - pc)));
     }
     setTableRows((p) => p.filter((r) => r.id !== id));
+    if (editingRowId === id) clearEntryForm();
+  };
+
+  const editRow = (row) => {
+    setEditingRowId(row.id);
+    setElementType(row.stoneType || "");
+    setLotNo(row.stockID || "");
+    setLotSearch(row.stockID || "");
+    setLotOptions([]);
+    setShape(row.shape || "");
+    setSize(row.size || "");
+    setSieve(row.sieve || "");
+    setStoneColor(row.color || "");
+    setClarity(row.clarity || "");
+    setPcs(String(row.pcs || ""));
+    setCarats(String(row.carats || ""));
+    setRate(String(row.rate || ""));
+    setAmount(String(row.amount || ""));
+    setLab(row.lab || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // ─── Submit ───────────────────────────────────────────────────────────────
@@ -806,6 +845,17 @@ const totalCarat = useMemo(
           Amount: parseFloat(row.amount) || 0
         }));
 
+      let totalDiaCarat = 0;
+      let totalStnCarat = 0;
+      tableRows.forEach(row => {
+        const c = parseFloat(row.carats) || 0;
+        if (row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond") {
+           totalDiaCarat += c;
+        } else {
+           totalStnCarat += c;
+        }
+      });
+
       const payload = {
         Model: {
           JewCode: 0,
@@ -833,7 +883,28 @@ const totalCarat = useMemo(
           ImageBinary: null,
           UseMounting: useMounting,
           UseMountingId: useMounting,
-          MountCategory: jewCategory
+          MountCategory: jewCategory,
+          MakingType: makingType,
+          MakingRate: parseFloat(makingRate) || 0,
+          MakingCharges: parseFloat(makingCharges) || 0,
+          SettingCharges: parseFloat(settingCharges) || 0,
+          HandlingChargesPerCarat: parseFloat(handlingCharges) || 0,
+          HandlingCarat: parseFloat(handlingCarat) || 0,
+          TotalHandlingCharges: parseFloat(handlingAmount) || 0,
+          JewelleryCertificate: jewCert,
+          TotalCertificateCharges: parseFloat(certificateCharges) || 0,
+          OtherCharges: parseFloat(otherCharges) || 0,
+          HallmarkCharges: parseFloat(hallmarkCharges) || 0,
+          TotalMakingCharges: parseFloat(totalMakingCharges) || 0,
+          TotalStoneAmount: parseFloat(stoneAmount) || 0,
+          FinalAmount: parseFloat(finalAmount) || 0,
+          AskingRate: parseFloat(askingRate) || 0,
+          TotalDiamondQty: parseInt(diamondQty) || 0,
+          TotalStoneQty: parseInt(stoneQty) || 0,
+          Description: description,
+          Pcs: parseFloat(totalPcs) || 0,
+          TotalDiamondCarat: parseFloat(totalDiaCarat) || 0,
+          TotalStoneCarat: parseFloat(totalStnCarat) || 0
         },
         Diamond: diamond,
         Setting: setting,
@@ -1409,14 +1480,21 @@ const totalCarat = useMemo(
                         />
                       </div>
 
-                      {/* Add button */}
-                      <div style={{ alignSelf: "end" }}>
+                      <div style={{ alignSelf: "end", display: "flex", gap: 6 }}>
                         <button onClick={addItem}
-                          style={{ background: "#5A8DEE", color: "#fff", border: "none",
+                          style={{ background: editingRowId ? "#28a745" : "#5A8DEE", color: "#fff", border: "none",
                             borderRadius: 6, padding: "7px 12px", fontWeight: 600,
-                            cursor: "pointer", fontSize: 13, width: "100%" }}>
-                          <i className="ri-add-line"></i> Add Item
+                            cursor: "pointer", fontSize: 13 }}>
+                          <i className={editingRowId ? "ri-save-line" : "ri-add-line"}></i> {editingRowId ? "Update Item" : "Add Item"}
                         </button>
+                        {editingRowId && (
+                          <button onClick={clearEntryForm}
+                            style={{ background: "#6c757d", color: "#fff", border: "none",
+                              borderRadius: 6, padding: "7px 10px", fontWeight: 600,
+                              cursor: "pointer", fontSize: 13 }}>
+                            Cancel
+                          </button>
+                        )}
                       </div>
                     </div>
                   </CardBody>
@@ -1454,18 +1532,22 @@ const totalCarat = useMemo(
                               </td>
                             </tr>
                           ) : tableRows.map((row) => (
-                            <tr key={row.id}>
-                              <td style={{ padding: "6px 10px" }}>
+                            <tr key={row.id} style={editingRowId === row.id ? { background: "#fff8e7" } : {}}>
+                              <td style={{ padding: "6px 10px", whiteSpace: "nowrap" }}>
                                 <button onClick={() => removeRow(row.id)}
-                                  className="btn btn-soft-danger btn-sm py-0 px-1">
+                                  className="btn btn-soft-danger btn-sm py-0 px-1 me-1">
                                   <i className="ri-delete-bin-fill"></i>
+                                </button>
+                                <button onClick={() => editRow(row)}
+                                  className="btn btn-soft-primary btn-sm py-0 px-1">
+                                  <i className="ri-edit-line"></i>
                                 </button>
                               </td>
                               {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
                                 row.color, row.clarity, row.pcs, row.carats, row.rate,
                                 row.amount, row.lab
                               ].map((v, i) => (
-                                <td key={i} style={{ padding: "6px 10px" }}>{v || "—"}</td>
+                                <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
                               ))}
                             </tr>
                           ))}
@@ -1490,7 +1572,12 @@ const totalCarat = useMemo(
                         )}
                       </table>
                     </div>
-                  </CardBody>
+                      {tableRows.length > 0 && (
+                        <div style={{ fontSize: 12, color: "#6c757d", marginTop: 8 }}>
+                          Showing 1 to {tableRows.length} of {tableRows.length} {tableRows.length === 1 ? "entry" : "entries"}
+                        </div>
+                      )}
+                    </CardBody>
                 </Card>
               </Col>
             </Row>

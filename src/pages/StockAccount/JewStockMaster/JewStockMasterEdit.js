@@ -152,6 +152,7 @@ export default function JewStockMasterEdit() {
   const [mountOpts, setMountOpts] = useState([]);
 
   // ── Row entry form ──
+  const [editingRowId, setEditingRowId] = useState(null);
   const [elementType, setElementType] = useState("");
   const [lotNo, setLotNo] = useState("");
   const [lotSearch, setLotSearch] = useState("");
@@ -242,7 +243,7 @@ export default function JewStockMasterEdit() {
       if (initialMountingLoaded) setUseMounting("");
       return;
     }
-    getMountingStockDropdown(jewCategory)
+    getMountingStockDropdown(jewCategory, "edit")
       .then((response) => {
         const arr = response?.data ?? response;
         if (Array.isArray(arr)) {
@@ -276,10 +277,10 @@ export default function JewStockMasterEdit() {
         setCategory(data.category || data.Category || "");
         setSubCategory(data.subCategory || data.SubCategory || "");
         setJewSize(data.jewSize || data.JewSize || "");
-        setJewCert(data.certificate || data.Certificate || "");
+        setJewCert(data.jewelleryCertificate || data.JewelleryCertificate || "");
         setCertNo(data.jewelleryCerNo || data.JewelleryCerNo || "");
-        setDescription(data.designName || data.DesignName || "");
-        setTotalPcs(data.totalPcs || data.TotalPcs || "");
+        setDescription(data.description || data.Description || "");
+        setTotalPcs(data.pcs || data.Pcs || "");
         setMetal(data.metalType || data.MetalType || "");
         setColor(data.color || data.Color || "");
         setMetalPurity(data.purity || data.Purity || "");
@@ -294,9 +295,9 @@ export default function JewStockMasterEdit() {
         setMakingCharges(data.makingCharges || data.MakingCharges || "");
         setSettingCharges(data.settingCharges || data.SettingCharges || "0.00");
         setHandlingCarat(data.handlingCarat || data.HandlingCarat || "");
-        setHandlingCharges(data.handlingCharges || data.HandlingCharges || "");
-        setHandlingAmount(data.handlingAmount || data.HandlingAmount || "");
-        setCertificateCharges(data.certificateCharges || data.CertificateCharges || "");
+        setHandlingCharges(data.handlingChargesPerCarat || data.HandlingChargesPerCarat || "");
+        setHandlingAmount(data.totalHandlingCharges || data.TotalHandlingCharges || "");
+        setCertificateCharges(data.totalCertificateCharges || data.TotalCertificateCharges || "");
         setOtherCharges(data.otherCharges || data.OtherCharges || "");
         setHallmarkCharges(data.hallmarkCharges || data.HallmarkCharges || "");
         setTotalMakingCharges(data.totalMakingCharges || data.TotalMakingCharges || "");
@@ -528,45 +529,60 @@ export default function JewStockMasterEdit() {
     }
   };
 
+  const clearEntryForm = () => {
+    setLotNo(""); setLotSearch(""); setLotOptions([]);
+    setShape(""); setSize(""); setSieve(""); setStoneColor(""); setClarity("");
+    setPcs(""); setCarats(""); setRate(""); setAmount(""); setLab("");
+    setEditingRowId(null);
+  };
+
   const addItem = () => {
     if (!elementType || !pcs || !carats) {
       toast.error("Element Type, Pcs and Carat are required.");
       return;
     }
     const row = {
-      id: Date.now(),
+      id: editingRowId ?? Date.now(),
       stockID: lotNo,
       stoneType: elementType,
-      shape,
-      size,
-      sieve,
-      color: stoneColor,
-      clarity,
+      shape, size, sieve,
+      color: stoneColor, clarity,
       pcs: parseInt(pcs) || 0,
       carats: parseFloat(carats) || 0,
       rate: parseFloat(rate) || 0,
       amount: parseFloat(amount) || 0,
       lab
     };
-    setTableRows((p) => [...p, row]);
-
-    setLotNo("");
-    setLotSearch("");
-    setLotOptions([]);
-    setShape("");
-    setSize("");
-    setSieve("");
-    setStoneColor("");
-    setClarity("");
-    setPcs("");
-    setCarats("");
-    setRate("");
-    setAmount("");
-    setLab("");
+    if (editingRowId !== null) {
+      setTableRows((p) => p.map((r) => r.id === editingRowId ? row : r));
+    } else {
+      setTableRows((p) => [...p, row]);
+    }
+    clearEntryForm();
   };
 
   const removeRow = (id) => {
     setTableRows((p) => p.filter((r) => r.id !== id));
+    if (editingRowId === id) clearEntryForm();
+  };
+
+  const editRow = (row) => {
+    setEditingRowId(row.id);
+    setElementType(row.stoneType || "");
+    setLotNo(row.stockID || "");
+    setLotSearch(row.stockID || "");
+    setLotOptions([]);
+    setShape(row.shape || "");
+    setSize(row.size || "");
+    setSieve(row.sieve || "");
+    setStoneColor(row.color || "");
+    setClarity(row.clarity || "");
+    setPcs(String(row.pcs || ""));
+    setCarats(String(row.carats || ""));
+    setRate(String(row.rate || ""));
+    setAmount(String(row.amount || ""));
+    setLab(row.lab || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async () => {
@@ -605,6 +621,17 @@ export default function JewStockMasterEdit() {
           Amount: parseFloat(row.amount) || 0
         }));
 
+      let totalDiaCarat = 0;
+      let totalStnCarat = 0;
+      tableRows.forEach(row => {
+        const c = parseFloat(row.carats) || 0;
+        if (row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond") {
+           totalDiaCarat += c;
+        } else {
+           totalStnCarat += c;
+        }
+      });
+
       const payload = {
         Model: {
           JewCode: parseInt(id) || 0,
@@ -632,7 +659,28 @@ export default function JewStockMasterEdit() {
           ImageBinary: null,
           UseMounting: useMounting,
           UseMountingId: useMounting,
-          MountCategory: jewCategory
+          MountCategory: jewCategory,
+          MakingType: makingType,
+          MakingRate: parseFloat(makingRate) || 0,
+          MakingCharges: parseFloat(makingCharges) || 0,
+          SettingCharges: parseFloat(settingCharges) || 0,
+          HandlingChargesPerCarat: parseFloat(handlingCharges) || 0,
+          HandlingCarat: parseFloat(handlingCarat) || 0,
+          TotalHandlingCharges: parseFloat(handlingAmount) || 0,
+          JewelleryCertificate: jewCert,
+          TotalCertificateCharges: parseFloat(certificateCharges) || 0,
+          OtherCharges: parseFloat(otherCharges) || 0,
+          HallmarkCharges: parseFloat(hallmarkCharges) || 0,
+          TotalMakingCharges: parseFloat(totalMakingCharges) || 0,
+          TotalStoneAmount: parseFloat(stoneAmount) || 0,
+          FinalAmount: parseFloat(finalAmount) || 0,
+          AskingRate: parseFloat(askingRate) || 0,
+          TotalDiamondQty: parseInt(diamondQty) || 0,
+          TotalStoneQty: parseInt(stoneQty) || 0,
+          Description: description,
+          Pcs: parseFloat(totalPcs) || 0,
+          TotalDiamondCarat: parseFloat(totalDiaCarat) || 0,
+          TotalStoneCarat: parseFloat(totalStnCarat) || 0
         },
         Diamond: diamond,
         Setting: setting,
@@ -831,8 +879,12 @@ export default function JewStockMasterEdit() {
                   <FieldRow label="Certificate No">
                     <input type="text" style={inputStyle} value={certNo} onChange={(e) => setCertNo(e.target.value)} />
                   </FieldRow>
-                  <FieldRow label="Description" wide>
+                  <FieldRow label="Description">
                     <input type="text" style={inputStyle} value={description} onChange={(e) => setDescription(e.target.value)} />
+                  </FieldRow>
+                  <FieldRow label="Pcs">
+                    <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Pcs"
+                      value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
                   </FieldRow>
                 </CardBody>
               </Card>
@@ -883,8 +935,17 @@ export default function JewStockMasterEdit() {
                   <FieldRow label="Metal Amount">
                     <input type="text" style={{ ...roStyle, textAlign: "right" }} value={metalAmount} readOnly />
                   </FieldRow>
-                  <FieldRow label="Diamond Amount">
-                    <input type="text" style={{ ...roStyle, textAlign: "right" }} value={diamondAmount} readOnly />
+                  <FieldRow label="Diamond">
+                    <div className="d-flex gap-1">
+                      <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={diamondAmount} readOnly />
+                      <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={diamondQty} readOnly />
+                    </div>
+                  </FieldRow>
+                  <FieldRow label="Stone">
+                    <div className="d-flex gap-1">
+                      <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={stoneAmount} readOnly />
+                      <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={stoneQty} readOnly />
+                    </div>
                   </FieldRow>
                 </CardBody>
               </Card>
@@ -900,9 +961,11 @@ export default function JewStockMasterEdit() {
                     <div className="d-flex gap-1">
                       <select style={{ ...selectStyle, flex: 1 }} value={makingType} onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
-                        {settingTypeOptions.map((o) => (
-                          <option key={o.value} value={o.label}>{o.label}</option>
-                        ))}
+                        <option value="Per Gm">Per Gm</option>
+                        <option value="Per Pcs">Per Pcs</option>
+                        <option value="Lumsum">Lumsum</option>
+                        <option value="Wastage">Wastage</option>
+                        <option value="Per%">Per%</option>
                       </select>
                       <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }} value={makingRate} onChange={(e) => setMakingRate(e.target.value)} />
                     </div>
@@ -1068,13 +1131,21 @@ export default function JewStockMasterEdit() {
                         </div>
 
                         {/* Add button */}
-                        <div style={{ alignSelf: "end" }}>
+                        <div style={{ alignSelf: "end", display: "flex", gap: 6 }}>
                           <button onClick={addItem}
-                            style={{ background: "#5A8DEE", color: "#fff", border: "none",
+                            style={{ background: editingRowId ? "#28a745" : "#5A8DEE", color: "#fff", border: "none",
                               borderRadius: 6, padding: "7px 12px", fontWeight: 600,
-                              cursor: "pointer", fontSize: 13, width: "100%" }}>
-                            <i className="ri-add-line"></i> Add Item
+                              cursor: "pointer", fontSize: 13 }}>
+                            <i className={editingRowId ? "ri-save-line" : "ri-add-line"}></i> {editingRowId ? "Update Item" : "Add Item"}
                           </button>
+                          {editingRowId && (
+                            <button onClick={clearEntryForm}
+                              style={{ background: "#6c757d", color: "#fff", border: "none",
+                                borderRadius: 6, padding: "7px 10px", fontWeight: 600,
+                                cursor: "pointer", fontSize: 13 }}>
+                              Cancel
+                            </button>
+                          )}
                         </div>
                       </div>
                     </CardBody>
@@ -1112,18 +1183,22 @@ export default function JewStockMasterEdit() {
                                 </td>
                               </tr>
                             ) : tableRows.map((row) => (
-                              <tr key={row.id}>
-                                <td style={{ padding: "6px 10px" }}>
+                              <tr key={row.id} style={editingRowId === row.id ? { background: "#fff8e7" } : {}}>
+                                <td style={{ padding: "6px 10px", whiteSpace: "nowrap" }}>
                                   <button onClick={() => removeRow(row.id)}
-                                    className="btn btn-soft-danger btn-sm py-0 px-1">
+                                    className="btn btn-soft-danger btn-sm py-0 px-1 me-1">
                                     <i className="ri-delete-bin-fill"></i>
+                                  </button>
+                                  <button onClick={() => editRow(row)}
+                                    className="btn btn-soft-primary btn-sm py-0 px-1">
+                                    <i className="ri-edit-line"></i>
                                   </button>
                                 </td>
                                 {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
                                   row.color, row.clarity, row.pcs, row.carats, row.rate,
                                   row.amount, row.lab
                                 ].map((v, i) => (
-                                  <td key={i} style={{ padding: "6px 10px" }}>{v || "—"}</td>
+                                  <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
                                 ))}
                               </tr>
                             ))}
@@ -1148,6 +1223,11 @@ export default function JewStockMasterEdit() {
                           )}
                         </table>
                       </div>
+                      {tableRows.length > 0 && (
+                        <div style={{ fontSize: 12, color: "#6c757d", marginTop: 8 }}>
+                          Showing 1 to {tableRows.length} of {tableRows.length} {tableRows.length === 1 ? "entry" : "entries"}
+                        </div>
+                      )}
                     </CardBody>
                   </Card>
                 </Col>

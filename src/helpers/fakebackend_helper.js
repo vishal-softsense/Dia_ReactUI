@@ -631,7 +631,7 @@ export const deleteMountingStock = id => api.delete(`${url.DELETE_MOUNTING_STOCK
 export const addMountingItemInGrid = data => api.create(url.ADD_MOUNTING_ITEM_IN_GRID, data);
 export const deleteMountingItemFromGrid = index => api.create(url.DELETE_MOUNTING_ITEM_FROM_GRID, index);
 export const getNextMountingStockId = designId => api.get(`${url.GET_NEXT_MOUNTING_STOCK_ID}?designId=${encodeURIComponent(designId)}`);
-export const getMountingStockDropdown = category => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}`);
+export const getMountingStockDropdown = (category, actionType = "") => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}&actionType=${encodeURIComponent(actionType)}`);
 export const getAllLotNoList = (searchby, stoneType) => api.get(`${url.GET_ALL_LOTNO_LIST}?searchby=${encodeURIComponent(searchby)}&stoneType=${encodeURIComponent(stoneType)}`);
 export const getSolitaireLots = (searchby) => api.get(`${url.GET_SOLITAIRE_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
 
