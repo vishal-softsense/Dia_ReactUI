@@ -235,7 +235,7 @@ export default function JewStockMasterEdit() {
 
   const [initialMountingLoaded, setInitialMountingLoaded] = useState(false);
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
-  const showDetailsSection  = jewCategory !== "Mounting" && jewCategory !== "Metal";
+  const showDetailsSection = jewCategory !== "Mounting" && jewCategory !== "Metal";
 
   useEffect(() => {
     if (!showMountingSection || !jewCategory) {
@@ -250,7 +250,7 @@ export default function JewStockMasterEdit() {
           setMountOpts(normalizeDropdown(arr));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [jewCategory, showMountingSection]);
 
   const subCategoryOptionsForCategory = useMemo(() => {
@@ -395,44 +395,44 @@ export default function JewStockMasterEdit() {
   }, [netWeight, metalPricePerGm]);
 
   useEffect(() => {
-    const r  = parseFloat(makingRate) || 0;
+    const r = parseFloat(makingRate) || 0;
     const gw = parseFloat(grossWeight) || 0;
     const pc = parseFloat(totalPcs) || 1;
     const ma = parseFloat(metalAmount) || 0;
     let mc = 0;
-    if      (makingType === "Per Gm")  mc = r * gw;
+    if (makingType === "Per Gm") mc = r * gw;
     else if (makingType === "Per Pcs") mc = r * pc;
-    else if (makingType === "Lumsum")  mc = r;
-    else if (makingType === "Per%")    mc = (ma * r) / 100;
+    else if (makingType === "Lumsum") mc = r;
+    else if (makingType === "Per%") mc = (ma * r) / 100;
     setMakingCharges(mc.toFixed(2));
   }, [makingType, makingRate, grossWeight, totalPcs, metalAmount]);
 
   useEffect(() => {
-    const hc  = parseFloat(handlingCarat)   || 0;
+    const hc = parseFloat(handlingCarat) || 0;
     const hch = parseFloat(handlingCharges) || 0;
     setHandlingAmount((hc * hch).toFixed(2));
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
     const sum =
-      (parseFloat(makingCharges)      || 0) +
-      (parseFloat(settingCharges)     || 0) +
-      (parseFloat(handlingAmount)     || 0) +
+      (parseFloat(makingCharges) || 0) +
+      (parseFloat(settingCharges) || 0) +
+      (parseFloat(handlingAmount) || 0) +
       (parseFloat(certificateCharges) || 0) +
-      (parseFloat(otherCharges)       || 0) +
-      (parseFloat(hallmarkCharges)    || 0);
+      (parseFloat(otherCharges) || 0) +
+      (parseFloat(hallmarkCharges) || 0);
     setTotalMakingCharges(sum.toFixed(2));
     const fa =
-      (parseFloat(metalAmount)   || 0) +
+      (parseFloat(metalAmount) || 0) +
       (parseFloat(diamondAmount) || 0) +
-      (parseFloat(stoneAmount)   || 0) + sum;
+      (parseFloat(stoneAmount) || 0) + sum;
     setFinalAmount(fa.toFixed(2));
   }, [makingCharges, settingCharges, handlingAmount, certificateCharges,
-      otherCharges, hallmarkCharges, metalAmount, diamondAmount, stoneAmount]);
+    otherCharges, hallmarkCharges, metalAmount, diamondAmount, stoneAmount]);
 
   useEffect(() => {
     const c = parseFloat(carats) || 0;
-    const r = parseFloat(rate)   || 0;
+    const r = parseFloat(rate) || 0;
     setAmount((c * r).toFixed(2));
   }, [carats, rate]);
 
@@ -462,7 +462,7 @@ export default function JewStockMasterEdit() {
 
   // ─── Lot No autocomplete ───
   const debounceRef = useRef(null);
-  const searchLots  = useCallback((term) => {
+  const searchLots = useCallback((term) => {
     clearTimeout(debounceRef.current);
 
     if (!elementType) {
@@ -626,9 +626,9 @@ export default function JewStockMasterEdit() {
       tableRows.forEach(row => {
         const c = parseFloat(row.carats) || 0;
         if (row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond") {
-           totalDiaCarat += c;
+          totalDiaCarat += c;
         } else {
-           totalStnCarat += c;
+          totalStnCarat += c;
         }
       });
 
@@ -725,22 +725,22 @@ export default function JewStockMasterEdit() {
       }
 
       const value =
-        item?.MetalID        ?? item?.metalID        ?? item?.metalId        ??
-        item?.JewColorID     ?? item?.jewColorID     ?? item?.jewColorId     ??
-        item?.CategoryID     ?? item?.categoryID     ?? item?.categoryId     ??
-        item?.SubCategoryID  ?? item?.subCategoryID  ?? item?.subCategoryId  ??
-        item?.MetalPurityID  ?? item?.metalPurityID  ?? item?.metalPurityId  ??
+        item?.MetalID ?? item?.metalID ?? item?.metalId ??
+        item?.JewColorID ?? item?.jewColorID ?? item?.jewColorId ??
+        item?.CategoryID ?? item?.categoryID ?? item?.categoryId ??
+        item?.SubCategoryID ?? item?.subCategoryID ?? item?.subCategoryId ??
+        item?.MetalPurityID ?? item?.metalPurityID ?? item?.metalPurityId ??
         item?.id ?? item?.ID ?? item?.Id ??
         item?.value ?? item?.Value ??
         item?.code ?? item?.Code ?? "";
 
       const label =
-        item?.MetalName      ?? item?.metalName      ??
-        item?.JewColorName   ?? item?.jewColorName   ??
-        item?.CategoryName   ?? item?.categoryName   ??
-        item?.SubCategoryName?? item?.subCategoryName??
-        item?.MetalPurityID  ?? item?.metalPurityID  ?? item?.metalPurityId  ??
-        item?.textName       ??
+        item?.MetalName ?? item?.metalName ??
+        item?.JewColorName ?? item?.jewColorName ??
+        item?.CategoryName ?? item?.categoryName ??
+        item?.SubCategoryName ?? item?.subCategoryName ??
+        item?.MetalPurityID ?? item?.metalPurityID ?? item?.metalPurityId ??
+        item?.textName ??
         item?.name ?? item?.Name ??
         item?.label ?? item?.Label ??
         item?.text ?? item?.Text ?? String(value);
@@ -1039,9 +1039,11 @@ export default function JewStockMasterEdit() {
                             value={lotSearch}
                             onChange={(e) => { setLotSearch(e.target.value); searchLots(e.target.value); }} />
                           {lotOptions.length > 0 && (
-                            <div style={{ position: "absolute", zIndex: 200, background: "#fff",
+                            <div style={{
+                              position: "absolute", zIndex: 200, background: "#fff",
                               border: "1px solid #ced4da", borderRadius: 4, width: "100%",
-                              maxHeight: 160, overflowY: "auto", boxShadow: "0 2px 8px rgba(0,0,0,.1)" }}>
+                              maxHeight: 160, overflowY: "auto", boxShadow: "0 2px 8px rgba(0,0,0,.1)"
+                            }}>
                               {lotOptions.map((o, idx) => (
                                 <div key={`${o.id}-${idx}`}
                                   style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13 }}
@@ -1110,10 +1112,10 @@ export default function JewStockMasterEdit() {
 
                         {/* Pcs / Carat / Price / Amount */}
                         {[
-                          ["Pcs",    pcs,    setPcs,    false],
-                          ["Carat",  carats, setCarats, false],
-                          ["Price",  rate,   setRate,   false],
-                          ["Amount", amount, null,      true],
+                          ["Pcs", pcs, setPcs, false],
+                          ["Carat", carats, setCarats, false],
+                          ["Price", rate, setRate, false],
+                          ["Amount", amount, null, true],
                         ].map(([lbl, val, setter, ro]) => (
                           <div key={lbl}>
                             <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
@@ -1132,17 +1134,40 @@ export default function JewStockMasterEdit() {
 
                         {/* Add button */}
                         <div style={{ alignSelf: "end", display: "flex", gap: 6 }}>
-                          <button onClick={addItem}
-                            style={{ background: editingRowId ? "#28a745" : "#5A8DEE", color: "#fff", border: "none",
-                              borderRadius: 6, padding: "7px 12px", fontWeight: 600,
-                              cursor: "pointer", fontSize: 13 }}>
-                            <i className={editingRowId ? "ri-save-line" : "ri-add-line"}></i> {editingRowId ? "Update Item" : "Add Item"}
+                          <button
+                            onClick={addItem}
+                            style={{
+                              background: editingRowId ? "#28a745" : "#5A8DEE",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "7px 12px",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              fontSize: 13,
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            <i className={editingRowId ? "ri-save-line" : "ri-add-line"}></i>{" "}
+                            {editingRowId ? "Update Item" : "Add Item"}
                           </button>
+
                           {editingRowId && (
-                            <button onClick={clearEntryForm}
-                              style={{ background: "#6c757d", color: "#fff", border: "none",
-                                borderRadius: 6, padding: "7px 10px", fontWeight: 600,
-                                cursor: "pointer", fontSize: 13 }}>
+                            <button
+                              onClick={clearEntryForm}
+                              style={{
+                                background: "#6c757d",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 6,
+                                padding: "7px 12px",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                fontSize: 13,
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              <i className="ri-close-line"></i>{" "}
                               Cancel
                             </button>
                           )}
@@ -1158,9 +1183,11 @@ export default function JewStockMasterEdit() {
                 <Col lg={12}>
                   <Card>
                     <CardBody>
-                      <h5 style={{ fontWeight: 600, color: "#5A8DEE", background: "#f2f4f7",
+                      <h5 style={{
+                        fontWeight: 600, color: "#5A8DEE", background: "#f2f4f7",
                         padding: "8px 14px", borderRadius: 6, textAlign: "center",
-                        marginBottom: 12, fontSize: 13 }}>
+                        marginBottom: 12, fontSize: 13
+                      }}>
                         Parcel LotNo / Solitaire LotNo / Mounting LotNo
                       </h5>
                       <div className="table-responsive">
@@ -1195,8 +1222,8 @@ export default function JewStockMasterEdit() {
                                   </button>
                                 </td>
                                 {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
-                                  row.color, row.clarity, row.pcs, row.carats, row.rate,
-                                  row.amount, row.lab
+                                row.color, row.clarity, row.pcs, row.carats, row.rate,
+                                row.amount, row.lab
                                 ].map((v, i) => (
                                   <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
                                 ))}
