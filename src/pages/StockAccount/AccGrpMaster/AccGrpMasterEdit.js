@@ -404,6 +404,11 @@ const AccGrpMasterEdit = () => {
         label: item.name || item.Name || item.textName || item.text || item.id || item.ID
     }));
 
+    const selectOptionsNameValue = (list) => list.map(item => ({
+        value: item.name || item.Name || item.textName || item.text,
+        label: item.name || item.Name || item.textName || item.text || item.id || item.ID
+    }));
+
     document.title = `${t("Edit Account Group Master")} | ${t("Admin")}`;
 
     if (loading) {
@@ -735,9 +740,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("City")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.city).find(opt => opt.value == form.city) || null}
+                                                        value={selectOptionsNameValue(dropdowns.city).find(opt => opt.value == form.city) || null}
                                                         onChange={(selected) => handleTextChange("city", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.city)}
+                                                        options={selectOptionsNameValue(dropdowns.city)}
                                                         placeholder={t("Select City")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -751,9 +756,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("State")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.state).find(opt => opt.value == form.state) || null}
+                                                        value={selectOptionsNameValue(dropdowns.state).find(opt => opt.value == form.state) || null}
                                                         onChange={(selected) => handleTextChange("state", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.state)}
+                                                        options={selectOptionsNameValue(dropdowns.state)}
                                                         placeholder={t("Select State")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -767,9 +772,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("Country")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.country).find(opt => opt.value == form.country) || null}
+                                                        value={selectOptionsNameValue(dropdowns.country).find(opt => opt.value == form.country) || null}
                                                         onChange={(selected) => handleTextChange("country", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.country)}
+                                                        options={selectOptionsNameValue(dropdowns.country)}
                                                         placeholder={t("Select Country")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -783,9 +788,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("Area")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.area).find(opt => opt.value == form.area) || null}
+                                                        value={selectOptionsNameValue(dropdowns.area).find(opt => opt.value == form.area) || null}
                                                         onChange={(selected) => handleTextChange("area", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.area)}
+                                                        options={selectOptionsNameValue(dropdowns.area)}
                                                         placeholder={t("Select Area")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -1081,9 +1086,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("City")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.city).find(opt => opt.value == form.shippingCity) || null}
+                                                        value={selectOptionsNameValue(dropdowns.city).find(opt => opt.value == form.shippingCity) || null}
                                                         onChange={(selected) => handleTextChange("shippingCity", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.city)}
+                                                        options={selectOptionsNameValue(dropdowns.city)}
                                                         placeholder={t("Select Shipping City")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -1097,9 +1102,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("State")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.state).find(opt => opt.value == form.shippingState) || null}
+                                                        value={selectOptionsNameValue(dropdowns.state).find(opt => opt.value == form.shippingState) || null}
                                                         onChange={(selected) => handleTextChange("shippingState", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.state)}
+                                                        options={selectOptionsNameValue(dropdowns.state)}
                                                         placeholder={t("Select Shipping State")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -1113,9 +1118,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("Country")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.country).find(opt => opt.value == form.shippingCountry) || null}
+                                                        value={selectOptionsNameValue(dropdowns.country).find(opt => opt.value == form.shippingCountry) || null}
                                                         onChange={(selected) => handleTextChange("shippingCountry", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.country)}
+                                                        options={selectOptionsNameValue(dropdowns.country)}
                                                         placeholder={t("Select Shipping Country")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -1129,9 +1134,9 @@ const AccGrpMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("Area")}</Label>
                                                     <Select
-                                                        value={selectOptions(dropdowns.area).find(opt => opt.value == form.shippingArea) || null}
+                                                        value={selectOptionsNameValue(dropdowns.area).find(opt => opt.value == form.shippingArea) || null}
                                                         onChange={(selected) => handleTextChange("shippingArea", selected ? selected.value : "")}
-                                                        options={selectOptions(dropdowns.area)}
+                                                        options={selectOptionsNameValue(dropdowns.area)}
                                                         placeholder={t("Select Shipping Area")}
                                                         isSearchable={true}
                                                         isClearable={true}
@@ -1174,3 +1179,4 @@ const AccGrpMasterEdit = () => {
 };
 
 export default AccGrpMasterEdit;
+

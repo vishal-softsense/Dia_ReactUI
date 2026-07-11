@@ -1347,14 +1347,10 @@ export default function AddMountingMaster() {
                 <Col lg={12}>
                   <Card>
                     <CardBody>
-                      <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-                        gap: 12, alignItems: "end"
-                      }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
 
                         {/* Element Type */}
-                        <div>
+                        <div style={{ flex: "1 1 130px", minWidth: 130 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
                             Element Type
                           </label>
@@ -1368,7 +1364,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Lot No — MVC select2 ajax: /common/get-alllotno-listall */}
-                        <div style={{ gridColumn: "span 2", position: "relative" }}>
+                        <div style={{ flex: "2 1 200px", minWidth: 200, position: "relative" }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
                             Lot No
                           </label>
@@ -1405,7 +1401,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Shape */}
-                        <div>
+                        <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Shape</label>
                           <select style={selectStyle} value={shape} onChange={(e) => setShape(e.target.value)}>
                             <option value="">Shape</option>
@@ -1416,7 +1412,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Size */}
-                        <div>
+                        <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Size</label>
                           <select style={selectStyle} value={size} onChange={(e) => setSize(e.target.value)}>
                             <option value="">Size</option>
@@ -1427,7 +1423,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Sieve */}
-                        <div>
+                        <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Sieve</label>
                           <select style={selectStyle} value={sieve} onChange={(e) => setSieve(e.target.value)}>
                             <option value="">Sieve</option>
@@ -1438,7 +1434,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Color */}
-                        <div>
+                        <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Color</label>
                           <select style={selectStyle} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
                             <option value="">Color</option>
@@ -1449,7 +1445,7 @@ export default function AddMountingMaster() {
                         </div>
 
                         {/* Clarity */}
-                        <div>
+                        <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Clarity</label>
                           <select style={selectStyle} value={clarity} onChange={(e) => setClarity(e.target.value)}>
                             <option value="">Clarity</option>
@@ -1466,7 +1462,7 @@ export default function AddMountingMaster() {
                           ["Price", rate, setRate, false],
                           ["Amount", amount, null, true],
                         ].map(([lbl, val, setter, ro]) => (
-                          <div key={lbl}>
+                          <div key={lbl} style={{ flex: "1 1 80px", minWidth: 80 }}>
                             <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
                             <input type="text" style={{ ...(ro ? roStyle : inputStyle), textAlign: "right" }}
                               placeholder={lbl} value={val} readOnly={ro}
@@ -1475,7 +1471,7 @@ export default function AddMountingMaster() {
                         ))}
 
                         {/* Lab — MVC: text input #JewLab */}
-                        <div>
+                        <div style={{ flex: "1 1 80px", minWidth: 80 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Lab</label>
                           <input
                             type="text"
