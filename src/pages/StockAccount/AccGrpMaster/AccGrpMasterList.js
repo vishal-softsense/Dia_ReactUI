@@ -27,20 +27,20 @@ const AccGrpMasterList = () => {
     }, [location.state]);
 
     const fetchAccGroups = async (filter = "") => {
-    setLoading(true);
+        setLoading(true);
 
-    const response = await getAccGrpMasters(filter);
+        const response = await getAccGrpMasters(filter);
 
-    console.log("API Response", response);
-    console.log("Data Length", response.data?.length || response.Data?.length);
-    console.table(response.data || response.Data);
+        console.log("API Response", response);
+        console.log("Data Length", response.data?.length || response.Data?.length);
+        console.table(response.data || response.Data);
 
-    if (response.success || response.Success) {
-    setAccGroups(response.data || response.Data || []);
-}
+        if (response.success || response.Success) {
+            setAccGroups(response.data || response.Data || []);
+        }
 
-    setLoading(false);
-};
+        setLoading(false);
+    };
 
     const handleSearch = () => {
         fetchAccGroups(searchText);
@@ -76,7 +76,7 @@ const AccGrpMasterList = () => {
             return;
         }
 
-        const headers = ["Code", "Account/Group Name", "Under Group Name", "Account Type", "Currency", "Opening Balance", "Dr/Cr", "Country"];
+        const headers = ["Code", "Account/Group Name", "Under Group Name", "Account Type", "Currency", "Credit/Debit", "Opening Balance", "Country"];
         const rows = accGroups.map((item) => [
             item.accGrpCode || item.AccGrpCode || "",
             item.accGrpName || item.AccGrpName || "",
@@ -157,6 +157,12 @@ const AccGrpMasterList = () => {
                 enableColumnFilter: true,
             },
             {
+                header: t("Credit/Debit"),
+                accessorKey: "oDrCr",
+                accessorFn: (row) => row.oDrCr || row.ODrCr,
+                enableColumnFilter: true,
+            },
+            {
                 header: t("Opening Balance"),
                 accessorKey: "oBalance",
                 accessorFn: (row) => row.oBalance || row.OBalance,
@@ -166,12 +172,7 @@ const AccGrpMasterList = () => {
                     return typeof val === 'number' ? val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : val;
                 }
             },
-            {
-                header: t("Dr/Cr"),
-                accessorKey: "oDrCr",
-                accessorFn: (row) => row.oDrCr || row.ODrCr,
-                enableColumnFilter: true,
-            },
+
             {
                 header: t("Country"),
                 accessorKey: "country",
