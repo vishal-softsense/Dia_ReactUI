@@ -5,8 +5,34 @@ import { Container, Row, Col, Card, CardBody, CardHeader, Button, FormGroup, Lab
 import classnames from "classnames";
 import Select from "react-select";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
-import { getSolitaireItemMasterDropdowns, checkSolitaireLotNoExists, getSolitaireItemMasterDetail, updateSolitaireItemMaster } from "../../../helpers/fakebackend_helper";
+import { getSolitaireItemMasterDropdowns, checkSolitaireLotNoExists, getSolitaireItemMasterDetail, updateSolitaireItemMaster, previewSolitaireItem } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from 'react-toastify';
+
+const formatDateForInput = (dateVal) => {
+    if (!dateVal) {
+        return new Date().toISOString().substring(0, 10);
+    }
+    const str = String(dateVal).trim();
+    if (str.startsWith("0001-01-01") || str.startsWith("1900-01-01") || str === "") {
+        return new Date().toISOString().substring(0, 10);
+    }
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+    try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    } catch (e) {
+        // ignore
+    }
+    return new Date().toISOString().substring(0, 10);
+};
 
 const SolitaireItemMasterEdit = () => {
     const { t } = useTranslation();
@@ -181,7 +207,10 @@ const SolitaireItemMasterEdit = () => {
         hold: "",
         city: "",
         state: "",
-        country: ""
+        country: "",
+        labLotNo: "",
+        labCertNo: "",
+        labWeight: ""
     });
 
     useEffect(() => {
@@ -250,7 +279,7 @@ const SolitaireItemMasterEdit = () => {
                     diameter: data.diameter ?? data.Diameter ?? "",
                     measurement: data.measurement ?? data.Measurement ?? "",
                     lwRatio: data.lwRatio ?? data.LWRatio ?? "",
-                    totalDepthPer: data.totalDepthPer ?? data.TotalDepthPer ?? "",
+                    totalDepthPer: data.totDepth ?? data.TotDepth ?? data.totalDepthPer ?? data.TotalDepthPer ?? "",
                     tablePer: data.tablePer ?? data.TablePer ?? "",
                     crownHeight: data.crownHeight ?? data.CrownHeight ?? "",
                     crownAngle: data.crownAngle ?? data.CrownAngle ?? "",
@@ -308,14 +337,14 @@ const SolitaireItemMasterEdit = () => {
                     arrowsImagePath: data.arrowsImagePath ?? data.ArrowsImagePath ?? "",
                     imagePath: data.imagePath ?? data.ImagePath ?? "",
                     videoPath: data.videoPath ?? data.VideoPath ?? "",
-                    b2bDnaPage: data.b2bDnaPage ?? data.B2BDNAPage ?? "",
-                    b2cDnaPage: data.b2cDnaPage ?? data.B2CDNAPage ?? "",
+                    b2bDnaPage: data.b2bDnaPage ?? data.b2BDNAPage ?? data.B2BDNAPage ?? "",
+                    b2cDnaPage: data.b2cDnaPage ?? data.b2CDNAPage ?? data.B2CDNAPage ?? "",
                     certificatePath: data.certificatePath ?? data.CertificatePath ?? "",
                     plottingImagePath: data.plottingImagePath ?? data.PlottingImagePath ?? "",
-                    purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10),
-                    rateReviseDate: data.rateReviseDate ? new Date(data.rateReviseDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10),
-                    newArrivalDate: data.newArrivalDate ? new Date(data.newArrivalDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10),
-                    stoneLastUnholdDate: data.stoneLastUnholdDate ? new Date(data.stoneLastUnholdDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10),
+                    purchaseDate: formatDateForInput(data.purchaseDate ?? data.PurchaseDate),
+                    rateReviseDate: formatDateForInput(data.rateReviseDate ?? data.RateReviseDate),
+                    newArrivalDate: formatDateForInput(data.newArrivalDate ?? data.NewArrivalDate),
+                    stoneLastUnholdDate: formatDateForInput(data.stoneLastUnholdDate ?? data.stoneLastUnHoldDate ?? data.StoneLastUnholdDate ?? data.StoneLastUnHoldDate),
                     publicCommnets: data.publicCommnets ?? data.PublicCommnets ?? "",
                     privateCommnets: data.privateCommnets ?? data.PrivateCommnets ?? "",
                     adminCommnets: data.adminCommnets ?? data.AdminCommnets ?? "",
@@ -327,10 +356,10 @@ const SolitaireItemMasterEdit = () => {
                     sellerAmount: data.actualAmount ?? data.ActualAmount ?? data.sellerAmount ?? data.SellerAmount ?? "",
                     bottomBack: data.bottomBack ?? data.BottomBack ?? "",
                     bottomRate: data.bottomRate ?? data.BottomRate ?? "",
-                    b2bBack: data.b2bBack ?? data.B2BBack ?? "",
-                    b2bRate: data.b2bRate ?? data.B2BRate ?? "",
-                    b2cBack: data.b2cBack ?? data.B2CBack ?? "",
-                    b2cRate: data.b2cRate ?? data.B2CRate ?? "",
+                    b2bBack: data.b2bBack ?? data.b2BBack ?? data.B2BBack ?? "",
+                    b2bRate: data.b2bRate ?? data.b2BRate ?? data.B2BRate ?? "",
+                    b2cBack: data.b2cBack ?? data.b2CBack ?? data.B2CBack ?? "",
+                    b2cRate: data.b2cRate ?? data.b2CRate ?? data.B2CRate ?? "",
                     mfgSeriesID: data.mfgSeriesID ?? data.MfgSeriesID ?? "",
                     mfgPacketID: data.mfgPacketID ?? data.MfgPacketID ?? "",
                     roughID: data.roughID ?? data.RoughID ?? "",
@@ -413,6 +442,87 @@ const SolitaireItemMasterEdit = () => {
 
     const toggleTab = (tab) => {
         if (activeTab !== tab) setActiveTab(tab);
+    };
+
+    const handleFetchIGI = async () => {
+        const lot = (form.labLotNo || form.lotNo || "").trim();
+        const cert = (form.labCertNo || form.certificateNo || "").trim();
+        const carats = parseFloat(String(form.labWeight || form.weight || 0).replace(/[^0-9.\-]/g, "")) || 0;
+
+        if (!lot && !cert && !carats) {
+            toast.error(t("Enter LotNo or CertificateNo or Carats/Weight"));
+            return;
+        }
+
+        try {
+            const payload = {
+                LotNo: lot,
+                CertificateNo: cert,
+                Carats: carats
+            };
+
+            const response = await previewSolitaireItem(payload);
+            if (response.success || response.Success) {
+                const data = response.data || response.Data;
+                if (data && data.length > 0) {
+                    const dto = data[0];
+
+                    let m1 = dto.measurement1 || dto.measurements || dto.measurement || "";
+                    let m2 = dto.measurement2 || "";
+                    let m3 = dto.measurement3 || "";
+
+                    if ((!m2 || !m3) && typeof m1 === 'string' && (m1.indexOf('x') !== -1 || m1.indexOf('×') !== -1)) {
+                        const parts = m1.replace(/×/g, 'x').split('x').map(s => s.trim());
+                        if (parts.length >= 1) m1 = parts[0];
+                        if (parts.length >= 2) m2 = parts[1];
+                        if (parts.length >= 3) m3 = parts[2];
+                    }
+
+                    setForm(prev => ({
+                        ...prev,
+                        lotNo: dto.lotNo || dto.lot || prev.lotNo,
+                        itemName: dto.itemName || dto.description || prev.itemName,
+                        certificateNo: dto.certificateNo || dto.reportNumber || prev.certificateNo,
+                        lab: 'IGI',
+                        weight: dto.weight || prev.weight,
+                        shapeId: dto.shapeId || prev.shapeId,
+                        colorId: dto.colorId || prev.colorId,
+                        clarityId: dto.clarityId || prev.clarityId,
+                        polish: dto.pol || prev.polish,
+                        polishId: dto.pol || prev.polishId,
+                        symmetry: dto.sym || prev.symmetry,
+                        symId: dto.sym || prev.symId,
+                        proportion: dto.propId || prev.proportion,
+                        propId: dto.propId || prev.propId,
+                        fluorescence: dto.fluorescence || prev.fluorescence,
+                        flId: dto.fluorescence || prev.flId,
+                        length: m1 || prev.length,
+                        width: m2 || prev.width,
+                        depth: m3 || prev.depth,
+                        measurement: [m1, m2, m3].filter(Boolean).join(' x ') || prev.measurement,
+                        tablePer: dto.tableDiameter || prev.tablePer,
+                        totalDepthPer: dto.totalDepth || prev.totalDepthPer,
+                        crownHeight: dto.crownHeight || prev.crownHeight,
+                        crownAngle: dto.crownAngle || prev.crownAngle,
+                        pavilionDepth: dto.pavilionDepth || prev.pavilionDepth,
+                        pavilionPer: dto.pavilionAngel || prev.pavilionPer,
+                        girdleCondition: dto.girdleName || prev.girdleCondition,
+                        culet: dto.culetSize || prev.culet,
+                        laserInscriptionText: dto.laserInscriptionText || prev.laserInscriptionText,
+                        labComments: dto.labComments || prev.labComments,
+                        memberComments: dto.memberComments || prev.memberComments
+                    }));
+
+                    toast.success(t("Fill Details Successfully."));
+                } else {
+                    toast.error(t("No preview data returned."));
+                }
+            } else {
+                toast.error(response.message || response.Message || t("Fetch failed"));
+            }
+        } catch (error) {
+            toast.error(error.message || error || t("An error occurred during fetch"));
+        }
     };
 
     const handleTextChange = (field, value) => {
@@ -715,6 +825,14 @@ const SolitaireItemMasterEdit = () => {
                                             <i className="ri-admin-line me-1"></i> {t("Admin Details")}
                                         </NavLink>
                                     </NavItem>
+                                    <NavItem>
+                                        <NavLink
+                                            className={classnames({ active: activeTab === "6" })}
+                                            onClick={() => toggleTab("6")}
+                                            style={{ cursor: "pointer" }}>
+                                            <i className="ri-upload-line me-1"></i> {t("Get Lab Data Details")}
+                                        </NavLink>
+                                    </NavItem>
                                 </Nav>
 
                                 <TabContent activeTab={activeTab}>
@@ -982,9 +1100,9 @@ const SolitaireItemMasterEdit = () => {
                                                     <Input
                                                         type="number"
                                                         step="any"
-                                                        value={form.askingAmount}
-                                                        onChange={(e) => handleValueChange("askingAmount", e.target.value)}
-                                                        className="text-end"
+                                                        value={parseFloat(form.askingAmount || 0).toFixed(2)}
+                                                        className="text-end bg-light"
+                                                        readOnly
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -2186,6 +2304,44 @@ const SolitaireItemMasterEdit = () => {
                                                 </FormGroup>
                                             </Col>
 
+                                            <hr className="my-2 text-muted" />
+
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>{t("InStatus")}</Label>
+                                                    <Input id="InStatus"
+                                                        type="text"
+                                                        placeholder={t("InStatus")}
+                                                        value={form.inStatus}
+                                                        onChange={(e) => handleTextChange("inStatus", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>{t("Currrent Status")}</Label>
+                                                    <Input id="CurrrentStatus"
+                                                        type="text"
+                                                        placeholder={t("Currrent Status")}
+                                                        value={form.currrentStatus}
+                                                        onChange={(e) => handleTextChange("currrentStatus", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>{t("Hold")}</Label>
+                                                    <Input id="Hold"
+                                                        type="text"
+                                                        placeholder={t("Hold")}
+                                                        value={form.hold}
+                                                        onChange={(e) => handleTextChange("hold", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+
                                             <hr className="my-3 text-muted" />
 
                                             <Col md={3}>
@@ -2242,42 +2398,6 @@ const SolitaireItemMasterEdit = () => {
                                                 </FormGroup>
                                             </Col>
 
-                                            <Col md={4}>
-                                                <FormGroup>
-                                                    <Label>{t("InStatus")}</Label>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder={t("InStatus")}
-                                                        value={form.inStatus}
-                                                        onChange={(e) => handleTextChange("inStatus", e.target.value)}
-                                                    />
-                                                </FormGroup>
-                                            </Col>
-
-                                            <Col md={4}>
-                                                <FormGroup>
-                                                    <Label>{t("Current Status")}</Label>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder={t("Current Status")}
-                                                        value={form.currrentStatus}
-                                                        onChange={(e) => handleTextChange("currrentStatus", e.target.value)}
-                                                    />
-                                                </FormGroup>
-                                            </Col>
-
-                                            <Col md={4}>
-                                                <FormGroup>
-                                                    <Label>{t("Hold")}</Label>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder={t("Hold")}
-                                                        value={form.hold}
-                                                        onChange={(e) => handleTextChange("hold", e.target.value)}
-                                                    />
-                                                </FormGroup>
-                                            </Col>
-
                                             <hr className="my-3 text-muted" />
 
                                             <Col md={4}>
@@ -2316,6 +2436,77 @@ const SolitaireItemMasterEdit = () => {
                                                 </FormGroup>
                                             </Col>
                                         </Row>
+                                    </TabPane>
+
+                                    {/* TAB 6: Get Lab Data Details */}
+                                    <TabPane tabId="6">
+                                        <h6 className="py-2">{t("Enter Get Lab Data Details")}</h6>
+                                        <Row className="g-3">
+                                            <Col md={4}>
+                                                <FormGroup>
+                                                    <Label>{t("Enter Lot No")}</Label>
+                                                    <Input
+                                                        type="text"
+                                                        id="LotNo"
+                                                        placeholder={t("Enter Lot No")}
+                                                        value={form.labLotNo}
+                                                        onChange={(e) => handleTextChange("labLotNo", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={4}>
+                                                <FormGroup>
+                                                    <Label>{t("Enter Certificate No")}</Label>
+                                                    <Input
+                                                        type="text"
+                                                        id="CertNo"
+                                                        placeholder={t("Enter Certificate No")}
+                                                        value={form.labCertNo}
+                                                        onChange={(e) => handleTextChange("labCertNo", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={4}>
+                                                <FormGroup>
+                                                    <Label>{t("Enter Weight")}</Label>
+                                                    <Input
+                                                        type="text"
+                                                        id="Weights"
+                                                        placeholder={t("Enter Weight")}
+                                                        value={form.labWeight}
+                                                        onChange={(e) => handleTextChange("labWeight", e.target.value)}
+                                                    />
+                                                </FormGroup>
+                                            </Col>
+                                        </Row>
+                                        <Row>
+                                            <Col md={4}>
+                                                <Button
+                                                    color="primary"
+                                                    id="btnFetchIGI"
+                                                    onClick={handleFetchIGI}
+                                                    type="button"
+                                                >
+                                                    {t("Show Details")}
+                                                </Button>
+                                            </Col>
+                                        </Row>
+                                        {/* Tables remain d-none as per MVC; add state-based toggling if needed */}
+                                        <div className="row d-none">
+                                            <Col sm={4}>
+                                                <div className="table-responsive">
+                                                    <table id="get-certitems" className="table invoice-data-table dt-responsive nowrap" style={{ width: "100%", borderBottom: "groove" }}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>{t("LotNo")}</th>
+                                                                <th>{t("Certificate No")}</th>
+                                                                <th>{t("Carats")}</th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </Col>
+                                        </div>
                                     </TabPane>
                                 </TabContent>
                             </CardBody>

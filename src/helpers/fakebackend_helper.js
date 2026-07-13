@@ -612,6 +612,7 @@ export const checkSolitaireLotNoExists = lotNo => api.get(`${url.CHECK_SOLITAIRE
 export const addSolitaireItemMaster = data => api.create(url.ADD_SOLITAIRE_ITEM_MASTER, data);
 export const updateSolitaireItemMaster = (id, data) => api.put(`${url.UPDATE_SOLITAIRE_ITEM_MASTER}/${id}`, data);
 export const deleteSolitaireItemMaster = id => api.delete(`${url.DELETE_SOLITAIRE_ITEM_MASTER}/${id}`);
+export const previewSolitaireItem = data => api.create(url.PREVIEW_SOLITAIRE_ITEM, data);
 
 
 // Jew Stock Master (Mounting)

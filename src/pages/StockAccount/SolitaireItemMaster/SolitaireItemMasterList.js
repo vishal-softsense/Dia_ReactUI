@@ -28,6 +28,7 @@ const SolitaireItemMasterList = () => {
   const [searchText, setSearchText] = useState("");
   const [deleteModal, setDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [lotNoToDelete, setLotNoToDelete] = useState("");
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -56,8 +57,9 @@ const SolitaireItemMasterList = () => {
     fetchSolitaireItems(searchText);
   };
 
-  const handleDeleteClick = (id) => {
+  const handleDeleteClick = (id, lotNo) => {
     setItemToDelete(id);
+    setLotNoToDelete(lotNo || "");
     setDeleteModal(true);
   };
 
@@ -77,6 +79,7 @@ const SolitaireItemMasterList = () => {
       }
       setDeleteModal(false);
       setItemToDelete(null);
+      setLotNoToDelete("");
     }
   };
 
@@ -114,6 +117,7 @@ const SolitaireItemMasterList = () => {
         enableColumnFilter: false,
         cell: (cellProps) => {
           const id = cellProps.row.original.itemCode || cellProps.row.original.ItemCode;
+          const lotNo = cellProps.row.original.lotNo || cellProps.row.original.LotNo;
           return (
             <div className="d-flex gap-2">
               <button
@@ -135,7 +139,7 @@ const SolitaireItemMasterList = () => {
                   height: "32px",
                   padding: "0"
                 }}
-                onClick={() => handleDeleteClick(id)}
+                onClick={() => handleDeleteClick(id, lotNo)}
                 title={t("Delete")}
               >
                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
@@ -281,18 +285,25 @@ const SolitaireItemMasterList = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
-        <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
-        <ModalBody>
-          <div className="mt-2 text-center">
+        <div className="modal-header justify-content-between align-items-center py-3 px-4" style={{ backgroundColor: "rgb(238, 94, 70)", borderBottom: "none" }}>
+          <h5 className="modal-title m-0 fw-medium" style={{ color: "#212529" }}>{t("Confirm Delete")}</h5>
+          <button type="button" className="btn-close" onClick={() => setDeleteModal(false)} aria-label="Close"></button>
+        </div>
+        <ModalBody className="py-4">
+          <div className="text-center">
             <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style={{ width: "100px", height: "100px" }}></lord-icon>
-            <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-              <h4>{t("Are you sure?")}</h4>
-              <p className="text-muted mx-4 mb-0">{t("Do you really want to delete this solitaire item? This action cannot be undone.")}</p>
+            <div className="mt-4 pt-2 mx-4 mx-sm-5">
+              <h3 className="fw-bold mb-3" style={{ color: "#495057" }}>{t("Are you sure?")}</h3>
+              <p className="text-muted mb-4 fs-16 lh-base">
+                {t("Selected record will be Removed !!")}
+                <br />
+                {t("LotNo")} : {lotNoToDelete}
+              </p>
             </div>
           </div>
-          <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-            <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>{t("Cancel")}</button>
-            <button type="button" className="btn w-sm btn-danger" id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</button>
+          <div className="d-flex gap-3 justify-content-center mt-4 mb-2">
+            <button type="button" className="btn text-white px-4 py-2 fw-medium" style={{ backgroundColor: "rgb(238, 94, 70)", borderColor: "rgb(238, 94, 70)", minWidth: "130px" }} id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, remove it")}</button>
+            <button type="button" className="btn px-4 py-2 fw-medium" style={{ backgroundColor: "rgb(243, 246, 249)", borderColor: "rgb(243, 246, 249)", color: "#212529", minWidth: "130px" }} onClick={() => setDeleteModal(false)}>{t("Cancel")}</button>
           </div>
         </ModalBody>
       </Modal>

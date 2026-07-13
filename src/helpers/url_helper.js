@@ -475,6 +475,7 @@ export const CHECK_SOLITAIRE_LOT_NO_EXISTS = "/api/SolitaireItemMaster/check-lot
 export const ADD_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/add";
 export const UPDATE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/edit"; // append /{id}
 export const DELETE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/delete"; // append /{id}
+export const PREVIEW_SOLITAIRE_ITEM = "/api/SolitaireItemMaster/preview-full-item";
 
 
 // Jew Stock Master (Mounting)
