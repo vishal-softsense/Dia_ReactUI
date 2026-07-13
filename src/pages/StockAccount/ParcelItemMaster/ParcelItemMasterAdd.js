@@ -49,6 +49,7 @@ const ParcelItemMasterAdd = () => {
 
     const [submitting, setSubmitting] = useState(false);
     const [lotNoExists, setLotNoExists] = useState(false);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         loadDropdowns();
@@ -127,7 +128,11 @@ const ParcelItemMasterAdd = () => {
     };
 
     const handleLotNoBlur = async () => {
-        if (!form.lotNo.trim()) return;
+        if (!form.lotNo.trim()) {
+            setErrors(prev => ({ ...prev, lotNo: true }));
+            return;
+        }
+        setErrors(prev => ({ ...prev, lotNo: false }));
         try {
             const response = await checkLotNoExists(form.lotNo.trim());
             if (response.success || response.Success) {
@@ -146,8 +151,13 @@ const ParcelItemMasterAdd = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.lotNo.trim()) {
-            toast.error("Please enter Stock ID/LotNo");
+        let currentErrors = {};
+        if (!form.lotNo.trim()) currentErrors.lotNo = true;
+        
+        setErrors(currentErrors);
+
+        if (Object.keys(currentErrors).length > 0) {
+            toast.error(t("Please fill all required fields"));
             return;
         }
         if (lotNoExists) {
@@ -222,13 +232,16 @@ const ParcelItemMasterAdd = () => {
                                             <Label>{t("Stock ID / LotNo")} <span className="text-danger">*</span></Label>
                                             <Input
                                                 type="text"
-                                                className={`form-control ${lotNoExists ? 'is-invalid' : ''}`}
+                                                className={`form-control ${lotNoExists || errors.lotNo ? 'is-invalid' : ''}`}
                                                 placeholder={t("Stock ID/ LotNo")}
                                                 value={form.lotNo}
-                                                onChange={(e) => handleTextChange("lotNo", e.target.value)}
+                                                onChange={(e) => {
+                                                    handleTextChange("lotNo", e.target.value);
+                                                    if (e.target.value.trim()) setErrors(prev => ({ ...prev, lotNo: false }));
+                                                }}
                                                 onBlur={handleLotNoBlur}
-                                                required
                                             />
+                                            {errors.lotNo && !lotNoExists && <div className="invalid-feedback">{t("Enter Stock ID/LotNo")}</div>}
                                             {lotNoExists && <div className="invalid-feedback">{t("LotNo Already Exists")}</div>}
                                         </FormGroup>
                                     </Col>

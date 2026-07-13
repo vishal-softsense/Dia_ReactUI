@@ -99,6 +99,7 @@ export default function JewStockMasterEdit() {
   // Form state
   const [trnDate, setTrnDate] = useState("");
   const [stockID, setStockID] = useState("");
+  const [errors, setErrors] = useState({});
   const [jewCategory, setJewCategory] = useState("");
   const [category, setCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -586,8 +587,15 @@ export default function JewStockMasterEdit() {
   };
 
   const handleSubmit = async () => {
-    if (!trnDate || !stockID || !jewCategory) {
-      toast.error("Date, Stock ID and Jewellery Category are required.");
+    let currentErrors = {};
+    if (!trnDate) currentErrors.trnDate = true;
+    if (!stockID) currentErrors.stockID = true;
+    if (!jewCategory) currentErrors.jewCategory = true;
+    
+    setErrors(currentErrors);
+
+    if (Object.keys(currentErrors).length > 0) {
+      toast.error(t("Please fill all required fields"));
       return;
     }
     setSubmitLoading(true);
@@ -826,19 +834,55 @@ export default function JewStockMasterEdit() {
                     Stock Details
                   </h6>
                   <FieldRow label="Date">
-                    <input type="date" style={inputStyle} value={trnDate} onChange={(e) => setTrnDate(e.target.value)} />
+                    <>
+                      <input type="date" 
+                        className={`form-control ${errors.trnDate ? 'is-invalid' : ''}`}
+                        style={{ ...inputStyle, padding: "5px 8px" }} 
+                        value={trnDate} 
+                        onChange={(e) => {
+                            setTrnDate(e.target.value);
+                            if (e.target.value) setErrors(prev => ({ ...prev, trnDate: false }));
+                        }} 
+                        onBlur={() => {
+                            if (!trnDate) setErrors(prev => ({ ...prev, trnDate: true }));
+                        }}
+                      />
+                      {errors.trnDate && <div className="invalid-feedback d-block">{t("Date is required")}</div>}
+                    </>
                   </FieldRow>
                   <FieldRow label="Stock ID">
-                    <input type="text" style={{ ...inputStyle, background: "#f8f9fa" }} value={stockID} readOnly />
+                    <>
+                      <input type="text" 
+                        className={`form-control ${errors.stockID ? 'is-invalid' : ''}`}
+                        style={{ ...inputStyle, padding: "5px 8px", background: "#f8f9fa" }} 
+                        value={stockID} 
+                        readOnly 
+                      />
+                      {errors.stockID && <div className="invalid-feedback d-block">{t("Stock ID is required")}</div>}
+                    </>
                   </FieldRow>
                   <FieldRow label="Jewellery Category">
-                    <select style={selectStyle} value={jewCategory} onChange={(e) => setJewCategory(e.target.value)}>
-                      <option value="">Select Jewellery Category</option>
-                      <option value="Finished Jewellery">Finished Jewellery</option>
-                      <option value="Semi Jewellery">Semi Jewellery</option>
-                      <option value="Mounting">Mounting</option>
-                      <option value="Metal">Metal</option>
-                    </select>
+                    <>
+                      <select 
+                        className={`form-select ${errors.jewCategory ? 'is-invalid' : ''}`}
+                        style={{ ...selectStyle, padding: "5px 8px" }} 
+                        value={jewCategory} 
+                        onChange={(e) => {
+                            setJewCategory(e.target.value);
+                            if (e.target.value) setErrors(prev => ({ ...prev, jewCategory: false }));
+                        }}
+                        onBlur={() => {
+                            if (!jewCategory) setErrors(prev => ({ ...prev, jewCategory: true }));
+                        }}
+                      >
+                        <option value="">Select Jewellery Category</option>
+                        <option value="Finished Jewellery">Finished Jewellery</option>
+                        <option value="Semi Jewellery">Semi Jewellery</option>
+                        <option value="Mounting">Mounting</option>
+                        <option value="Metal">Metal</option>
+                      </select>
+                      {errors.jewCategory && <div className="invalid-feedback d-block">{t("Jewellery Category is required")}</div>}
+                    </>
                   </FieldRow>
                   {showMountingSection && (
                     <FieldRow label="Use Mounting">

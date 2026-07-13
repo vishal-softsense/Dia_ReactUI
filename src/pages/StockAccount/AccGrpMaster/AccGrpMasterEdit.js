@@ -17,6 +17,7 @@ const AccGrpMasterEdit = () => {
     const [loading, setLoading] = useState(true);
     const [nameExists, setNameExists] = useState(false);
     const [nameError, setNameError] = useState("");
+    const [errors, setErrors] = useState({});
 
     const queryParams = new URLSearchParams(location.search);
     const id = queryParams.get("id");
@@ -289,6 +290,13 @@ const AccGrpMasterEdit = () => {
     };
 
     const handleValueChange = (field, value) => {
+        setForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleValueBlur = (field, value) => {
         const val = parseFloat(value) || 0;
         setForm(prev => ({
             ...prev,
@@ -362,23 +370,22 @@ const AccGrpMasterEdit = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.accGrpName.trim()) {
-            toast.error("Please enter Account/Group Name");
-            toggleTab("1");
-            return;
-        }
+        
+        let currentErrors = {};
+        if (!form.accGrpName.trim()) currentErrors.accGrpName = true;
+        if (!form.underGroup) currentErrors.underGroup = true;
+        if (!form.accType) currentErrors.accType = true;
+        
+        setErrors(currentErrors);
+
         if (nameExists) {
             toast.error(t("Account/Group Name Already Exists"));
             toggleTab("1");
             return;
         }
-        if (!form.underGroup) {
-            toast.error("Please select Under Group");
-            toggleTab("1");
-            return;
-        }
-        if (!form.accType) {
-            toast.error("Please select Account Type");
+        
+        if (Object.keys(currentErrors).length > 0) {
+            toast.error(t("Please fill all required fields"));
             toggleTab("1");
             return;
         }
@@ -496,14 +503,20 @@ const AccGrpMasterEdit = () => {
                                                     <Label>{t("Account/Group Name")} <span className="text-danger">*</span></Label>
                                                     <Input
                                                         type="text"
-                                                        className={`form-control ${nameExists || nameError ? 'is-invalid' : ''}`}
+                                                        className={`form-control ${nameExists || nameError || errors.accGrpName ? 'is-invalid' : ''}`}
                                                         placeholder={t("Enter Account/Group Name")}
                                                         value={form.accGrpName}
-                                                        onChange={(e) => handleNameChange(e.target.value)}
-                                                        onBlur={handleNameBlur}
-                                                        required
+                                                        onChange={(e) => {
+                                                            handleNameChange(e.target.value);
+                                                            if (e.target.value.trim()) setErrors(prev => ({ ...prev, accGrpName: false }));
+                                                        }}
+                                                        onBlur={() => {
+                                                            handleNameBlur();
+                                                            if (!form.accGrpName.trim()) setErrors(prev => ({ ...prev, accGrpName: true }));
+                                                        }}
                                                     />
-                                                    {nameError && <div className="invalid-feedback">{nameError}</div>}
+                                                    {errors.accGrpName && !nameError && !nameExists && <div className="invalid-feedback d-block">{t("Enter Account/Group Name")}</div>}
+                                                    {nameError && <div className="invalid-feedback d-block">{nameError}</div>}
                                                     {nameExists && <div className="invalid-feedback">{t("Account/Group Name Already Exists")}</div>}
                                                 </FormGroup>
                                             </Col>
@@ -524,15 +537,29 @@ const AccGrpMasterEdit = () => {
                                                     <Label>{t("Under Group")} <span className="text-danger">*</span></Label>
                                                     <Select
                                                         value={selectOptions(dropdowns.underGroup).find(opt => opt.value == form.underGroup) || null}
-                                                        onChange={(selected) => handleTextChange("underGroup", selected ? selected.value : "")}
+                                                        onChange={(selected) => {
+                                                            handleTextChange("underGroup", selected ? selected.value : "");
+                                                            if (selected) setErrors(prev => ({ ...prev, underGroup: false }));
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!form.underGroup) setErrors(prev => ({ ...prev, underGroup: true }));
+                                                        }}
                                                         options={selectOptions(dropdowns.underGroup)}
                                                         placeholder={t("Select Under Group")}
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
                                                         menuPortalTarget={document.body}
-                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                        styles={{ 
+                                                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                                                            control: base => ({
+                                                                ...base,
+                                                                borderColor: errors.underGroup ? '#dc3545' : base.borderColor,
+                                                                '&:hover': { borderColor: errors.underGroup ? '#dc3545' : base.borderColor }
+                                                            })
+                                                        }}
                                                     />
+                                                    {errors.underGroup && <div className="invalid-feedback d-block">{t("Please select Under Group")}</div>}
                                                 </FormGroup>
                                             </Col>
                                             <Col md={4}>
@@ -540,15 +567,29 @@ const AccGrpMasterEdit = () => {
                                                     <Label>{t("Account Type")} <span className="text-danger">*</span></Label>
                                                     <Select
                                                         value={selectOptions(dropdowns.accType).find(opt => opt.value == form.accType) || null}
-                                                        onChange={(selected) => handleAccTypeChange(selected ? selected.value : "")}
+                                                        onChange={(selected) => {
+                                                            handleAccTypeChange(selected ? selected.value : "");
+                                                            if (selected) setErrors(prev => ({ ...prev, accType: false }));
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!form.accType) setErrors(prev => ({ ...prev, accType: true }));
+                                                        }}
                                                         options={selectOptions(dropdowns.accType)}
                                                         placeholder={t("Select Account Type")}
                                                         isSearchable={true}
                                                         isClearable={true}
                                                         classNamePrefix="react-select"
                                                         menuPortalTarget={document.body}
-                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                        styles={{ 
+                                                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                                                            control: base => ({
+                                                                ...base,
+                                                                borderColor: errors.accType ? '#dc3545' : base.borderColor,
+                                                                '&:hover': { borderColor: errors.accType ? '#dc3545' : base.borderColor }
+                                                            })
+                                                        }}
                                                     />
+                                                    {errors.accType && <div className="invalid-feedback d-block">{t("Please select Account Type")}</div>}
                                                 </FormGroup>
                                             </Col>
                                             <Col md={2} style={{ display: "none" }}>
@@ -588,6 +629,7 @@ const AccGrpMasterEdit = () => {
                                                         className="text-end"
                                                         value={form.baseRate === 0 ? "" : form.baseRate}
                                                         onChange={(e) => handleValueChange("baseRate", e.target.value)}
+                                                        onBlur={(e) => handleValueBlur("baseRate", e.target.value)}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -600,6 +642,7 @@ const AccGrpMasterEdit = () => {
                                                         className="text-end"
                                                         value={form.sBaseRate === 0 ? "" : form.sBaseRate}
                                                         onChange={(e) => handleValueChange("sBaseRate", e.target.value)}
+                                                        onBlur={(e) => handleValueBlur("sBaseRate", e.target.value)}
                                                     />
                                                 </FormGroup>
                                             </Col>
@@ -613,6 +656,7 @@ const AccGrpMasterEdit = () => {
                                                             className="text-end"
                                                             value={form.oBalance}
                                                             onChange={(e) => handleValueChange("oBalance", e.target.value)}
+                                                            onBlur={(e) => handleValueBlur("oBalance", e.target.value)}
                                                         />
                                                         <select
                                                             className="form-select"
@@ -632,31 +676,31 @@ const AccGrpMasterEdit = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Interest %")}</Label>
-                                                    <Input type="number" step="any" className="text-end" value={form.interest === 0 ? "" : form.interest} onChange={(e) => handleValueChange("interest", e.target.value)} />
+                                                    <Input type="number" step="any" className="text-end" value={form.interest === 0 ? "" : form.interest} onChange={(e) => handleValueChange("interest", e.target.value)} onBlur={(e) => handleValueBlur("interest", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Discount %")}</Label>
-                                                    <Input type="number" step="any" className="text-end" value={form.discount === 0 ? "" : form.discount} onChange={(e) => handleValueChange("discount", e.target.value)} />
+                                                    <Input type="number" step="any" className="text-end" value={form.discount === 0 ? "" : form.discount} onChange={(e) => handleValueChange("discount", e.target.value)} onBlur={(e) => handleValueBlur("discount", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Credit Limit")}</Label>
-                                                    <Input type="number" step="any" className="text-end" value={form.creditLimit === 0 ? "" : form.creditLimit} onChange={(e) => handleValueChange("creditLimit", e.target.value)} />
+                                                    <Input type="number" step="any" className="text-end" value={form.creditLimit === 0 ? "" : form.creditLimit} onChange={(e) => handleValueChange("creditLimit", e.target.value)} onBlur={(e) => handleValueBlur("creditLimit", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Due Days")}</Label>
-                                                    <Input type="number" className="text-end" value={form.dueDays === 0 ? "" : form.dueDays} onChange={(e) => handleValueChange("dueDays", e.target.value)} />
+                                                    <Input type="number" className="text-end" value={form.dueDays === 0 ? "" : form.dueDays} onChange={(e) => handleValueChange("dueDays", e.target.value)} onBlur={(e) => handleValueBlur("dueDays", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Grace Period")}</Label>
-                                                    <Input type="number" className="text-end" value={form.gracePeriod === 0 ? "" : form.gracePeriod} onChange={(e) => handleValueChange("gracePeriod", e.target.value)} />
+                                                    <Input type="number" className="text-end" value={form.gracePeriod === 0 ? "" : form.gracePeriod} onChange={(e) => handleValueChange("gracePeriod", e.target.value)} onBlur={(e) => handleValueBlur("gracePeriod", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>
@@ -675,7 +719,7 @@ const AccGrpMasterEdit = () => {
                                             <Col md={3}>
                                                 <FormGroup>
                                                     <Label>{t("Term %")}</Label>
-                                                    <Input type="number" step="any" className="text-end" value={form.termPer === 0 ? "" : form.termPer} onChange={(e) => handleValueChange("termPer", e.target.value)} />
+                                                    <Input type="number" step="any" className="text-end" value={form.termPer === 0 ? "" : form.termPer} onChange={(e) => handleValueChange("termPer", e.target.value)} onBlur={(e) => handleValueBlur("termPer", e.target.value)} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={3}>

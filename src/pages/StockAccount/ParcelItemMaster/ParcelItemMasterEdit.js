@@ -56,6 +56,7 @@ const ParcelItemMasterEdit = () => {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (!itemCode) {
@@ -192,8 +193,13 @@ const ParcelItemMasterEdit = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.lotNo.trim()) {
-            toast.error("Please enter Stock ID/LotNo");
+        let currentErrors = {};
+        if (!form.lotNo.trim()) currentErrors.lotNo = true;
+        
+        setErrors(currentErrors);
+
+        if (Object.keys(currentErrors).length > 0) {
+            toast.error(t("Please fill all required fields"));
             return;
         }
 
@@ -270,12 +276,19 @@ const ParcelItemMasterEdit = () => {
                                             <FormGroup>
                                                 <Label>{t("Stock ID / LotNo")} <span className="text-danger">*</span></Label>
                                                 <Input 
-                                                    type="text" 
+                                                    type="text"
+                                                    className={`form-control ${errors.lotNo ? 'is-invalid' : ''}`}
                                                     placeholder={t("Stock ID/ LotNo")} 
                                                     value={form.lotNo}
-                                                    onChange={(e) => handleTextChange("lotNo", e.target.value)}
-                                                    required
+                                                    onChange={(e) => {
+                                                        handleTextChange("lotNo", e.target.value);
+                                                        if (e.target.value.trim()) setErrors(prev => ({ ...prev, lotNo: false }));
+                                                    }}
+                                                    onBlur={() => {
+                                                        if (!form.lotNo.trim()) setErrors(prev => ({ ...prev, lotNo: true }));
+                                                    }}
                                                 />
+                                                {errors.lotNo && <div className="invalid-feedback">{t("Enter Stock ID/LotNo")}</div>}
                                             </FormGroup>
                                         </Col>
                                     </Row>

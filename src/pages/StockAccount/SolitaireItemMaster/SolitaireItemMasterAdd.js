@@ -14,6 +14,7 @@ const SolitaireItemMasterAdd = () => {
     const [activeTab, setActiveTab] = useState("1");
     const [submitting, setSubmitting] = useState(false);
     const [lotNoExists, setLotNoExists] = useState(false);
+    const [errors, setErrors] = useState({});
 
     const [dropdowns, setDropdowns] = useState({
         shape: [],
@@ -444,7 +445,11 @@ const SolitaireItemMasterAdd = () => {
     };
 
     const handleLotNoBlur = async () => {
-        if (!form.lotNo.trim()) return;
+        if (!form.lotNo.trim()) {
+            setErrors(prev => ({ ...prev, lotNo: true }));
+            return;
+        }
+        setErrors(prev => ({ ...prev, lotNo: false }));
         try {
             const response = await checkSolitaireLotNoExists(form.lotNo.trim());
             if (response.success || response.Success) {
@@ -461,23 +466,22 @@ const SolitaireItemMasterAdd = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.lotNo.trim()) {
-            toast.error("Please enter Item ID/LotNo");
+        
+        let currentErrors = {};
+        if (!form.lotNo.trim()) currentErrors.lotNo = true;
+        if (!form.category) currentErrors.category = true;
+        if (!form.productType) currentErrors.productType = true;
+        
+        setErrors(currentErrors);
+
+        if (Object.keys(currentErrors).length > 0) {
+            toast.error(t("Please fill all required fields"));
             toggleTab("1");
             return;
         }
+
         if (lotNoExists) {
             toast.error(t("LotNo Already Exists"));
-            toggleTab("1");
-            return;
-        }
-        if (!form.category) {
-            toast.error("Please select Category");
-            toggleTab("1");
-            return;
-        }
-        if (!form.productType) {
-            toast.error("Please select Product Type");
             toggleTab("1");
             return;
         }
@@ -637,13 +641,16 @@ const SolitaireItemMasterAdd = () => {
                                                     <Label>{t("Item ID/LotNo")} <span className="text-danger">*</span></Label>
                                                     <Input
                                                         type="text"
-                                                        className={`form-control ${lotNoExists ? 'is-invalid' : ''}`}
+                                                        className={`form-control ${lotNoExists || errors.lotNo ? 'is-invalid' : ''}`}
                                                         placeholder={t("Enter Item ID/LotNo")}
                                                         value={form.lotNo}
-                                                        onChange={(e) => handleTextChange("lotNo", e.target.value)}
+                                                        onChange={(e) => {
+                                                            handleTextChange("lotNo", e.target.value);
+                                                            if (e.target.value.trim()) setErrors(prev => ({ ...prev, lotNo: false }));
+                                                        }}
                                                         onBlur={handleLotNoBlur}
-                                                        required
                                                     />
+                                                    {errors.lotNo && !lotNoExists && <div className="invalid-feedback">{t("Enter Item ID/LotNo")}</div>}
                                                     {lotNoExists && <div className="invalid-feedback">{t("LotNo Already Exists")}</div>}
                                                 </FormGroup>
                                             </Col>
@@ -794,10 +801,15 @@ const SolitaireItemMasterAdd = () => {
                                                 <FormGroup>
                                                     <Label>{t("Stone Type")} <span className="text-danger">*</span></Label>
                                                     <select
-                                                        className="form-select"
+                                                        className={`form-select ${errors.category ? 'is-invalid' : ''}`}
                                                         value={form.category}
-                                                        onChange={(e) => handleTextChange("category", e.target.value)}
-                                                        required
+                                                        onChange={(e) => {
+                                                            handleTextChange("category", e.target.value);
+                                                            if (e.target.value) setErrors(prev => ({ ...prev, category: false }));
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!form.category) setErrors(prev => ({ ...prev, category: true }));
+                                                        }}
                                                     >
                                                         <option value="">{t("Select Category")}</option>
                                                         {dropdowns.category.map((item, idx) => (
@@ -806,6 +818,7 @@ const SolitaireItemMasterAdd = () => {
                                                             </option>
                                                         ))}
                                                     </select>
+                                                    {errors.category && <div className="invalid-feedback d-block">{t("Please select Stone Type")}</div>}
                                                 </FormGroup>
                                             </Col>
 
@@ -813,10 +826,15 @@ const SolitaireItemMasterAdd = () => {
                                                 <FormGroup>
                                                     <Label>{t("Grown/Process Type")} <span className="text-danger">*</span></Label>
                                                     <select
-                                                        className="form-select"
+                                                        className={`form-select ${errors.productType ? 'is-invalid' : ''}`}
                                                         value={form.productType}
-                                                        onChange={(e) => handleTextChange("productType", e.target.value)}
-                                                        required
+                                                        onChange={(e) => {
+                                                            handleTextChange("productType", e.target.value);
+                                                            if (e.target.value) setErrors(prev => ({ ...prev, productType: false }));
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!form.productType) setErrors(prev => ({ ...prev, productType: true }));
+                                                        }}
                                                     >
                                                         <option value="">{t("Select Product Type")}</option>
                                                         {dropdowns.productType.map((item, idx) => (
@@ -825,6 +843,7 @@ const SolitaireItemMasterAdd = () => {
                                                             </option>
                                                         ))}
                                                     </select>
+                                                    {errors.productType && <div className="invalid-feedback d-block">{t("Please select Grown/Process Type")}</div>}
                                                 </FormGroup>
                                             </Col>
 

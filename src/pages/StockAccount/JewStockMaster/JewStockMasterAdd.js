@@ -326,6 +326,7 @@ export default function AddMountingMaster() {
   const today = new Date().toISOString().slice(0, 10);
   const [trnDate, setTrnDate] = useState(today);
   const [stockID, setStockID] = useState("");
+  const [errors, setErrors] = useState({});
   const [jewCategory, setJewCategory] = useState("");
   const [useMounting, setUseMounting] = useState("");
   const [mountOpts, setMountOpts] = useState([]);
@@ -808,8 +809,13 @@ export default function AddMountingMaster() {
 
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!stockID) {
-      toast.error("Stock ID are required.");
+    let currentErrors = {};
+    if (!stockID.trim()) currentErrors.stockID = true;
+    
+    setErrors(currentErrors);
+
+    if (Object.keys(currentErrors).length > 0) {
+      toast.error(t("Please fill all required fields"));
       return;
     }
 
@@ -1059,8 +1065,21 @@ export default function AddMountingMaster() {
                           onChange={(e) => handleDateChange(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Stock ID">
-                        <input type="text" style={inputStyle} placeholder="Stock ID"
-                          value={stockID} onChange={(e) => setStockID(e.target.value)} />
+                        <>
+                          <input type="text" 
+                            className={`form-control ${errors.stockID ? 'is-invalid' : ''}`}
+                            style={{...inputStyle, padding: "5px 8px"}} placeholder="Stock ID"
+                            value={stockID} 
+                            onChange={(e) => {
+                                setStockID(e.target.value);
+                                if (e.target.value.trim()) setErrors(prev => ({ ...prev, stockID: false }));
+                            }}
+                            onBlur={() => {
+                                if (!stockID.trim()) setErrors(prev => ({ ...prev, stockID: true }));
+                            }}
+                          />
+                          {errors.stockID && <div className="invalid-feedback d-block">{t("Please enter Stock ID")}</div>}
+                        </>
                       </FieldRow>
                       <FieldRow label="Jewellery Category">
                         <select style={selectStyle} value={jewCategory}

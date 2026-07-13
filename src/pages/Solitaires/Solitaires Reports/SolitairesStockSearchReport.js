@@ -303,8 +303,8 @@ const SolitairesStockSearchReport = () => {
     pair: [],
     boxNm: [],
     status: "All",
-    show: "All",
-    holdUnHold: "All",
+    show: "Unsold",
+    holdUnHold: "Unhold",
     stoneTypes: "Single",
     ctsFrm: "",
     ctsTo: "",
@@ -1537,7 +1537,7 @@ const SolitairesStockSearchReport = () => {
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Prop.")}</Label>
-                        <Select isMulti name="prop" options={getOptions("PROP")} value={getOptions("PROP").filter((o) => filters.prop.includes(o.value))} onChange={(sel) => handleSelectChange("prop", sel)} placeholder={t("Proportion")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="prop" options={getOptions("Proportion")} value={getOptions("Proportion").filter((o) => filters.prop.includes(o.value))} onChange={(sel) => handleSelectChange("prop", sel)} placeholder={t("Proportion")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Polish")}</Label>
@@ -1545,7 +1545,7 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Sym.")}</Label>
-                        <Select isMulti name="sym" options={getOptions("SYM")} value={getOptions("SYM").filter((o) => filters.sym.includes(o.value))} onChange={(sel) => handleSelectChange("sym", sel)} placeholder={t("Symmetry")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="sym" options={getOptions("Symmetry")} value={getOptions("Symmetry").filter((o) => filters.sym.includes(o.value))} onChange={(sel) => handleSelectChange("sym", sel)} placeholder={t("Symmetry")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Lab")}</Label>
@@ -1569,7 +1569,7 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Flou.")}</Label>
-                        <Select isMulti name="fl" options={getOptions("FL")} value={getOptions("FL").filter((o) => filters.fl.includes(o.value))} onChange={(sel) => handleSelectChange("fl", sel)} placeholder={t("Fluorescence")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="fl" options={getOptions("Fluorescence")} value={getOptions("Fluorescence").filter((o) => filters.fl.includes(o.value))} onChange={(sel) => handleSelectChange("fl", sel)} placeholder={t("Fluorescence")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Milky")}</Label>
@@ -1581,7 +1581,7 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Natts")}</Label>
-                        <Select isMulti name="nts" options={getOptions("NTS")} value={getOptions("NTS").filter((o) => filters.nts.includes(o.value))} onChange={(sel) => handleSelectChange("nts", sel)} placeholder={t("Natts")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="nts" options={getOptions("Natts")} value={getOptions("Natts").filter((o) => filters.nts.includes(o.value))} onChange={(sel) => handleSelectChange("nts", sel)} placeholder={t("Natts")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Shade")}</Label>
@@ -1605,7 +1605,7 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("Box Name")}</Label>
-                        <Select isMulti name="boxNm" options={getOptions("BOXNM")} value={getOptions("BOXNM").filter((o) => filters.boxNm.includes(o.value))} onChange={(sel) => handleSelectChange("boxNm", sel)} placeholder={t("BoxName")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="boxNm" options={getOptions("BoxName")} value={getOptions("BoxName").filter((o) => filters.boxNm.includes(o.value))} onChange={(sel) => handleSelectChange("boxNm", sel)} placeholder={t("BoxName")} isLoading={loadingDropdowns} />
                       </Col>
                     </Row>
                   </TabPane>
