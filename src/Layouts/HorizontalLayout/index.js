@@ -114,6 +114,7 @@ const HorizontalLayout = (props) => {
                                         className="nav-link menu-link"
                                         to={item.link ? item.link : "/#"}
                                         data-bs-toggle="collapse"
+                                        aria-expanded={item.stateVariables}
                                     >
                                         <i className={item.icon}></i> <span data-key="t-apps">{props.t(item.label)}</span>
                                     </Link>
@@ -170,6 +171,7 @@ const HorizontalLayout = (props) => {
                                                                     className="nav-link"
                                                                     to="/#"
                                                                     data-bs-toggle="collapse"
+                                                                    aria-expanded={subItem.stateVariables}
                                                                 > {props.t(subItem.label)}
                                                                 </Link>
                                                                 <Collapse className="menu-dropdown" isOpen={subItem.stateVariables} id="sidebarEcommerce">
@@ -194,6 +196,7 @@ const HorizontalLayout = (props) => {
                                                                                                 className="nav-link"
                                                                                                 to="/#"
                                                                                                 data-bs-toggle="collapse"
+                                                                                                aria-expanded={subChildItem.stateVariables}
                                                                                             > {props.t(subChildItem.label)}
                                                                                             </Link>
                                                                                             <Collapse className="menu-dropdown" isOpen={subChildItem.stateVariables} id="sidebarEcommerce">

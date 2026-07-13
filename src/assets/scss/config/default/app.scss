@@ -121,3 +121,38 @@ File: Main Css File
 @import "../../pages/to-do";
 @import "../../pages/jobs";
 @import "../../pages/job-landing";
+
+// Custom dark mode overrides for solitaire stock search header bar
+[data-bs-theme="dark"] {
+  .stock-search-header-bar {
+    .text-primary {
+      color: #fff !important;
+    }
+    .btn-soft-primary {
+      --vz-btn-color: #fff !important;
+      --vz-btn-bg: rgba(255, 255, 255, 0.08) !important;
+      --vz-btn-hover-bg: rgba(255, 255, 255, 0.15) !important;
+      --vz-btn-hover-color: #fff !important;
+    }
+    .btn-soft-secondary {
+      --vz-btn-color: #fff !important;
+      --vz-btn-bg: rgba(255, 255, 255, 0.08) !important;
+      --vz-btn-hover-bg: rgba(255, 255, 255, 0.15) !important;
+      --vz-btn-hover-color: #fff !important;
+    }
+    .btn-soft-info {
+      --vz-btn-color: #fff !important;
+      --vz-btn-bg: rgba(255, 255, 255, 0.08) !important;
+      --vz-btn-hover-bg: rgba(255, 255, 255, 0.15) !important;
+      --vz-btn-hover-color: #fff !important;
+    }
+  }
+}
+
+// Table row selection highlight (light & dark theme compliant)
+.table-selected-row {
+  background-color: rgba(var(--vz-primary-rgb), 0.15) !important;
+  td {
+    background-color: rgba(var(--vz-primary-rgb), 0.15) !important;
+  }
+}

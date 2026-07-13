@@ -113,6 +113,7 @@ const TableContainer = ({
   SearchPlaceholder,
   isPagination = true,
   isShowEntries = true,
+  getRowClass,
 }) => {
   const { t } = useTranslation();
   const [columnFilters, setColumnFilters] = useState([]);
@@ -301,8 +302,9 @@ const TableContainer = ({
 
           <tbody>
             {getRowModel().rows.map((row) => {
+              const customRowClass = getRowClass ? getRowClass(row) : "";
               return (
-                <tr key={row.id}>
+                <tr key={row.id} className={`${trClass || ""} ${customRowClass}`.trim()}>
                   {row.getVisibleCells().map((cell) => {
                     return (
                       <td key={cell.id}>

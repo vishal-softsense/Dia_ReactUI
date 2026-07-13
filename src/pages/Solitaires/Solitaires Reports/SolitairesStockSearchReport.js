@@ -1231,7 +1231,7 @@ const SolitairesStockSearchReport = () => {
           <BreadCrumb title={t("Solitaire Stock Search")} pageTitle={t("Reports")} />
 
           {/* Top Control Bar */}
-          <div className="d-flex align-items-center justify-content-between mb-3 bg-white p-3 rounded-3 shadow-sm border">
+          <div className="card stock-search-header-bar d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
               {hasSearched ? t("Stock Search Results") : t("Stock Search Filters")}
@@ -2113,6 +2113,7 @@ const SolitairesStockSearchReport = () => {
                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                         theadClass="table-light"
                         SearchPlaceholder={t("Filter results...")}
+                        getRowClass={(row) => selectedRows[row.index] ? "table-selected-row" : ""}
                       />
                     )}
 

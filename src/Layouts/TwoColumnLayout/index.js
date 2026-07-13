@@ -208,6 +208,7 @@ const TwoColumnLayout = (props) => {
                                                                         className="nav-link"
                                                                         to="/#"
                                                                         data-bs-toggle="collapse"
+                                                                        aria-expanded={subItem.stateVariables}
                                                                     > {props.t(subItem.label)}
                                                                         {subItem.badgeName ?
                                                                             <span className={"badge badge-pill bg-" + subItem.badgeColor} data-key="t-new">{subItem.badgeName}</span>
