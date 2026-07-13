@@ -17,6 +17,7 @@ const AccGrpMasterList = () => {
     const [searchText, setSearchText] = useState("");
     const [deleteModal, setDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [accGrpName, setAccGrpName] = useState("");
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -46,8 +47,9 @@ const AccGrpMasterList = () => {
         fetchAccGroups(searchText);
     };
 
-    const handleDeleteClick = (id) => {
+    const handleDeleteClick = (id,name) => {
         setItemToDelete(id);
+        setAccGrpName(name);
         setDeleteModal(true);
     };
 
@@ -123,7 +125,12 @@ const AccGrpMasterList = () => {
                                     height: "32px",
                                     padding: "0"
                                 }}
-                                onClick={() => handleDeleteClick(id)}
+                                onClick={() =>
+    handleDeleteClick(
+        id,
+        cellProps.row.original.accGrpName || cellProps.row.original.AccGrpName
+    )
+}
                                 title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
@@ -238,18 +245,46 @@ const AccGrpMasterList = () => {
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
                 <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
-                    <div className="mt-2 text-center">
-                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style={{ width: "100px", height: "100px" }}></lord-icon>
-                        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>{t("Are you sure?")}</h4>
-                            <p className="text-muted mx-4 mb-0">{t("Do you really want to delete this account group? This action cannot be undone.")}</p>
-                        </div>
-                    </div>
-                    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>{t("Cancel")}</button>
-                        <button type="button" className="btn w-sm btn-danger" id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</button>
-                    </div>
-                </ModalBody>
+    <div className="mt-2 text-center">
+        <lord-icon
+            src="https://cdn.lordicon.com/gsqxdxog.json"
+            trigger="loop"
+            colors="primary:#f7b84b,secondary:#f06548"
+            style={{ width: "100px", height: "100px" }}
+        ></lord-icon>
+
+        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h4>{t("Are you sure?")}</h4>
+
+            <p className="text-muted mx-4 mb-1">
+                {t("Selected record will be removed !!")}
+            </p>
+
+            <p className="fw-semibold mb-0">
+                <span>{t("AccGrpName")} :</span> {accGrpName}
+            </p>
+        </div>
+    </div>
+
+    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
+        <button
+            type="button"
+            className="btn w-sm btn-light"
+            onClick={() => setDeleteModal(false)}
+        >
+            {t("Cancel")}
+        </button>
+
+        <button
+            type="button"
+            className="btn w-sm btn-danger"
+            id="delete-record"
+            onClick={handleDeleteConfirm}
+        >
+            {t("Yes, Delete It!")}
+        </button>
+    </div>
+</ModalBody>
             </Modal>
             <ToastContainer autoClose={2000} />
         </React.Fragment>

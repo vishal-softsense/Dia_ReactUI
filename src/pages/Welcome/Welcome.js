@@ -108,10 +108,10 @@ body[data-bs-theme="dark"] .welcome-page{
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.35);
-    padding: 50px 70px;
+    padding: 50px 50px;
     border-radius: 24px;
     box-shadow: 0 10px 40px 0 rgba(64, 81, 137, 0.08);
-    max-width: 800px;
+    max-width: 1100px;
 }
 
 [data-bs-theme="dark"] .hero,

@@ -19,6 +19,7 @@ const ParcelItemMasterList = () => {
     const [searchText, setSearchText] = useState("");
     const [deleteModal, setDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [lotNo, setLotNo] = useState("");
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -47,8 +48,9 @@ const ParcelItemMasterList = () => {
         fetchParcelItems(searchText);
     };
 
-    const handleDeleteClick = (id) => {
+    const handleDeleteClick = (id,lotNo) => {
         setItemToDelete(id);
+        setLotNo(lotNo);
         setDeleteModal(true);
     };
 
@@ -125,7 +127,8 @@ const ParcelItemMasterList = () => {
                                     height: "32px",
                                     padding: "0"
                                 }}
-                                onClick={() => handleDeleteClick(id)}
+                                onClick={() => handleDeleteClick(id,
+                                    cellProps.row.original.lotNo || cellProps.row.original.LotNo)}
                                 title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
@@ -255,18 +258,45 @@ const ParcelItemMasterList = () => {
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
                 <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
-                    <div className="mt-2 text-center">
-                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style={{ width: "100px", height: "100px" }}></lord-icon>
-                        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>{t("Are you sure?")}</h4>
-                            <p className="text-muted mx-4 mb-0">{t("Do you really want to delete this parcel item? This action cannot be undone.")}</p>
-                        </div>
-                    </div>
-                    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" className="btn w-sm btn-light" onClick={() => setDeleteModal(false)}>{t("Cancel")}</button>
-                        <button type="button" className="btn w-sm btn-danger" id="delete-record" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</button>
-                    </div>
-                </ModalBody>
+    <div className="mt-2 text-center">
+        <lord-icon
+            src="https://cdn.lordicon.com/gsqxdxog.json"
+            trigger="loop"
+            colors="primary:#f7b84b,secondary:#f06548"
+            style={{ width: "100px", height: "100px" }}
+        ></lord-icon>
+
+        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h2 className="fw-bold">{t("Are You Sure ??")}</h2>
+
+            <p className="text-muted mb-1">
+                {t("Selected record will be Removed !!")}
+            </p>
+
+            <p className="mb-0">
+                <strong>{t("LotNo")} :</strong> {lotNo}
+            </p>
+        </div>
+    </div>
+
+    <div className="d-flex gap-3 justify-content-center mt-4 mb-2">
+        <button
+            type="button"
+            className="btn btn-primary px-4"
+            onClick={handleDeleteConfirm}
+        >
+            {t("Yes, remove it")}
+        </button>
+
+        <button
+            type="button"
+            className="btn btn-danger px-4"
+            onClick={() => setDeleteModal(false)}
+        >
+            {t("Cancel")}
+        </button>
+    </div>
+</ModalBody>
             </Modal>
             <ToastContainer autoClose={2000} />
         </React.Fragment>

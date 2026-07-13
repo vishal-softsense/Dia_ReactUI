@@ -17,6 +17,7 @@ const MountingStockList = () => {
     const [loading, setLoading] = useState(true);
     const [deleteModal, setDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [stockId, setStockId] = useState("");
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -53,8 +54,9 @@ const MountingStockList = () => {
         setLoading(false);
     };
 
-    const handleDeleteClick = (jewCode) => {
+    const handleDeleteClick = (jewCode, stockId) => {
         setItemToDelete(jewCode);
+        setStockId(stockId);
         setDeleteModal(true);
     };
 
@@ -138,7 +140,9 @@ const MountingStockList = () => {
                             <button
                                 className="btn btn-soft-danger btn-sm border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{ width: "32px", height: "32px", padding: "0" }}
-                                onClick={() => handleDeleteClick(id)}
+                                onClick={() => handleDeleteClick(id,
+                                    cellProps.row.original.stock_ID || cellProps.row.original.Stock_ID
+                                )}
                                 title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
@@ -279,6 +283,7 @@ const MountingStockList = () => {
                 show={deleteModal}
                 onDeleteClick={handleDeleteConfirm}
                 onCloseClick={() => setDeleteModal(false)}
+                stockId={stockId}
             />
         </React.Fragment>
     );
