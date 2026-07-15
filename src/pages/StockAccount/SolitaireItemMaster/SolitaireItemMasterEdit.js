@@ -216,7 +216,7 @@ const SolitaireItemMasterEdit = () => {
 
     useEffect(() => {
         if (!itemCode) {
-            toast.error("Invalid Solitaire Item ID");
+            toast.error(t("Invalid Solitaire Item ID"));
             navigate("/item/list-item");
             return;
         }
@@ -262,8 +262,8 @@ const SolitaireItemMasterEdit = () => {
                     boxRate: data.boxRate ?? data.BoxRate ?? "",
                     lab: data.certId ?? data.CertId ?? data.lab ?? data.LAB ?? "",
                     certificateNo: data.certificateNo ?? data.CertificateNo ?? "",
-                    ha: data.haId ?? data.HAID ?? data.ha ?? data.HA ?? "",
-                    haId: data.haId ?? data.HAID ?? "",
+                    ha: data.haId ?? data.haid ?? data.HAID ?? data.ha ?? data.HA ?? "",
+                    haId: data.haId ?? data.haid ?? data.HAID ?? "",
                     proportion: data.propId ?? data.PropId ?? data.proportion ?? data.Proportion ?? "",
                     propId: data.propId ?? data.PropId ?? "",
                     polish: data.polishId ?? data.PolishId ?? data.polish ?? data.Polish ?? "",
@@ -373,11 +373,11 @@ const SolitaireItemMasterEdit = () => {
                     country: data.country ?? data.Country ?? ""
                 });
             } else {
-                toast.error("Failed to load solitaire item details");
+                toast.error(t("Failed to load solitaire item details"));
                 navigate("/item/list-item");
             }
         } catch (error) {
-            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Error loading details");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || t("Error loading details"));
             toast.error(errMsg);
             navigate("/item/list-item");
         }
@@ -416,7 +416,7 @@ const SolitaireItemMasterEdit = () => {
             }
         } catch (e) {
             console.error(e);
-            toast.error("Failed to load dropdowns");
+            toast.error(t("Failed to load dropdowns"));
         }
     };
 
@@ -660,12 +660,12 @@ const SolitaireItemMasterEdit = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         let currentErrors = {};
         if (!form.lotNo.trim()) currentErrors.lotNo = true;
         if (!form.category) currentErrors.category = true;
         if (!form.productType) currentErrors.productType = true;
-        
+
         setErrors(currentErrors);
 
         if (Object.keys(currentErrors).length > 0) {
@@ -728,12 +728,12 @@ const SolitaireItemMasterEdit = () => {
             };
             const response = await updateSolitaireItemMaster(itemCode, payload);
             if (response.success || response.Success) {
-                navigate("/item/list-item", { state: { successMessage: response.message || response.Message || "Solitaire Item updated successfully." } });
+                navigate("/item/list-item", { state: { successMessage: response.message || response.Message || t("Solitaire Item updated successfully.") } });
             } else {
-                toast.error(response.message || response.Message || "Failed to update Solitaire Item");
+                toast.error(response.message || response.Message || t("Failed to update Solitaire Item"));
             }
         } catch (error) {
-            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "An error occurred while updating");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || t("An error occurred while updating"));
             toast.error(errMsg);
         }
         setSubmitting(false);
@@ -752,7 +752,7 @@ const SolitaireItemMasterEdit = () => {
                 <Container fluid>
                     <div className="text-center my-5">
                         <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
+                            <span className="visually-hidden">{t("Loading...")}</span>
                         </div>
                     </div>
                 </Container>

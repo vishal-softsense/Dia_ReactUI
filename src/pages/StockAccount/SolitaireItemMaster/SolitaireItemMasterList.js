@@ -45,10 +45,10 @@ const SolitaireItemMasterList = () => {
       if (response.success || response.Success) {
         setSolitaireItems(response.data || response.Data || []);
       } else {
-        toast.error(response.message || response.Message || "Failed to fetch solitaire items");
+        toast.error(response.message || response.Message || t("Failed to fetch solitaire items"));
       }
     } catch (error) {
-      toast.error("Failed to fetch solitaire items");
+      toast.error(t("Failed to fetch solitaire items"));
     }
     setLoading(false);
   };
@@ -68,13 +68,13 @@ const SolitaireItemMasterList = () => {
       try {
         const response = await deleteSolitaireItemMaster(itemToDelete);
         if (response.success || response.Success) {
-          toast.success(response.message || response.Message || "Solitaire Item deleted successfully");
+          toast.success(response.message || response.Message || t("Solitaire Item deleted successfully"));
           fetchSolitaireItems(searchText);
         } else {
-          toast.error(response.message || response.Message || "Problem in deleting item");
+          toast.error(response.message || response.Message || t("Problem in deleting item"));
         }
       } catch (error) {
-        const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Failed to delete solitaire item");
+        const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || t("Failed to delete solitaire item"));
         toast.error(errMsg);
       }
       setDeleteModal(false);
@@ -85,7 +85,7 @@ const SolitaireItemMasterList = () => {
 
   const handleExportExcel = async () => {
     if (solitaireItems.length === 0) {
-      toast.warning("No data available to export");
+      toast.warning(t("No data available to export"));
       return;
     }
 
@@ -105,7 +105,7 @@ const SolitaireItemMasterList = () => {
 
     const result = await exportToExcel(headers, rows, "SolitaireItems", "SolitaireItemMasterList");
     if (!result.success) {
-      toast.error("Failed to generate Excel file.");
+      toast.error(t("Failed to generate Excel file."));
     }
   };
 
@@ -260,7 +260,7 @@ const SolitaireItemMasterList = () => {
                   {loading ? (
                     <div className="text-center my-3">
                       <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">{t("Loading...")}</span>
                       </div>
                     </div>
                   ) : (

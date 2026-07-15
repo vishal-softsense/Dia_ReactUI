@@ -217,7 +217,7 @@ const SolitaireItemMasterAdd = () => {
             }
         } catch (e) {
             console.error(e);
-            toast.error("Failed to load dropdowns");
+            toast.error(t("Failed to load dropdowns"));
         }
     };
 
@@ -541,12 +541,12 @@ const SolitaireItemMasterAdd = () => {
             };
             const response = await addSolitaireItemMaster(payload);
             if (response.success || response.Success) {
-                navigate("/item/list-item", { state: { successMessage: response.message || response.Message || "Solitaire Item saved successfully." } });
+                navigate("/item/list-item", { state: { successMessage: response.message || response.Message || t("Solitaire Item saved successfully.") } });
             } else {
-                toast.error(response.message || response.Message || "Failed to add Solitaire Item");
+                toast.error(response.message || response.Message || t("Failed to add Solitaire Item"));
             }
         } catch (error) {
-            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "An error occurred while saving");
+            const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || t("An error occurred while saving"));
             toast.error(errMsg);
         }
         setSubmitting(false);
