@@ -52,6 +52,16 @@ const TwoColumnLayout = (props) => {
         let matchingMenuItem = itemsArray.find((x) => {
             return x.pathname === pathName;
         });
+        
+        if (!matchingMenuItem) {
+            const lastActivePath = sessionStorage.getItem("lastActiveMenuPath");
+            if (lastActivePath) {
+                matchingMenuItem = itemsArray.find((x) => x.pathname === lastActivePath);
+            }
+        } else {
+            sessionStorage.setItem("lastActiveMenuPath", pathName);
+        }
+
         if (matchingMenuItem) {
             activateParentDropdown(matchingMenuItem);
         } else {
@@ -59,7 +69,7 @@ const TwoColumnLayout = (props) => {
                 var id = pathName.replace(process.env.PUBLIC_URL, '');
                 id = id.replace("/", "");
             } else {
-                id = pathName.replace("/", "");
+                var id = pathName.replace("/", "");
             }
             if (id) document.body.classList.add('twocolumn-panel');
             activateIconSidebarActive(id);

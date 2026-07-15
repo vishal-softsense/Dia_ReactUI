@@ -40,11 +40,21 @@ const HorizontalLayout = (props) => {
             const ul = document.getElementById("navbar-nav");
             const items = ul.getElementsByTagName("a");
             let itemsArray = [...items]; // converts NodeList to Array
-            removeActivation(itemsArray);
             let matchingMenuItem = itemsArray.find((x) => {
                 return x.pathname === pathName;
             });
+
+            if (!matchingMenuItem) {
+                const lastActivePath = sessionStorage.getItem("lastActiveMenuPath");
+                if (lastActivePath) {
+                    matchingMenuItem = itemsArray.find((x) => x.pathname === lastActivePath);
+                }
+            } else {
+                sessionStorage.setItem("lastActiveMenuPath", pathName);
+            }
+
             if (matchingMenuItem) {
+                removeActivation(itemsArray);
                 activateParentDropdown(matchingMenuItem);
             }
         };

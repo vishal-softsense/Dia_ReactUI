@@ -91,12 +91,41 @@ const VerticalLayout = (props) => {
             const ul = document.getElementById("navbar-nav");
             const items = ul.getElementsByTagName("a");
             let itemsArray = [...items]; // converts NodeList to Array
-            removeActivation(itemsArray);
-            let matchingMenuItem = itemsArray.find((x) => {
-                return x.pathname === pathName;
-            });
+            
+            // 1. Exact Match
+            let matchingMenuItem = itemsArray.find((x) => x.pathname === pathName);
+
+            // 2. Smart Route Matching (for Add/Edit pages)
+            if (!matchingMenuItem) {
+                const potentialMatches = itemsArray.filter(x => 
+                    x.pathname && 
+                    x.pathname !== "/" && 
+                    x.pathname !== "/#" &&
+                    pathName.toLowerCase().startsWith(x.pathname.toLowerCase())
+                );
+                
+                if (potentialMatches.length > 0) {
+                    // Sort by length descending to get the most specific match
+                    potentialMatches.sort((a, b) => b.pathname.length - a.pathname.length);
+                    matchingMenuItem = potentialMatches[0];
+                }
+            }
+
+            // 3. Apply State
             if (matchingMenuItem) {
+                // We found a match (either exact or parent base route). 
+                // Clear everything and open the correct menu perfectly.
+                removeActivation(itemsArray);
                 activateParentDropdown(matchingMenuItem);
+            } else {
+                // NO match found (e.g., they went to User Role List from the top menu).
+                // OPTION 1: Leave it as is. 
+                // We only remove the .active highlight so no sidebar link looks clicked, 
+                // but we DO NOT remove .show (so the menu stays open).
+                if (ul) {
+                    const allActive = ul.querySelectorAll("a.active");
+                    allActive.forEach(item => item.classList.remove("active"));
+                }
             }
         };
         if (props.layoutType === "vertical") {
@@ -147,6 +176,19 @@ const VerticalLayout = (props) => {
             }
             item.classList.remove("active");
         });
+
+        // Hard clear for all dropdowns to prevent multiple opens
+        const ul = document.getElementById("navbar-nav");
+        if (ul) {
+            const allActive = ul.querySelectorAll(".active");
+            allActive.forEach(item => item.classList.remove("active"));
+            
+            const allShows = ul.querySelectorAll(".collapse.show");
+            allShows.forEach(item => item.classList.remove("show"));
+            
+            const allExpanded = ul.querySelectorAll("[aria-expanded='true']");
+            allExpanded.forEach(item => item.setAttribute("aria-expanded", "false"));
+        }
     };
 
     return (

@@ -77,6 +77,26 @@ const Navdata = () => {
 
     const toggleMenu = (id, e, isRoot = false, parentId = null) => {
         e.preventDefault();
+
+        // Fix for multiple open menus: Clear manual DOM manipulation before updating React State
+        if (isRoot) {
+            const ul = document.getElementById("navbar-nav");
+            if (ul) {
+                // Remove active classes
+                const activeItems = ul.querySelectorAll("a.active");
+                activeItems.forEach((item) => {
+                    item.setAttribute("aria-expanded", false);
+                    item.classList.remove("active");
+                });
+
+                // Remove show classes from dropdowns
+                const openDropdowns = ul.querySelectorAll(".collapse.menu-dropdown.show");
+                openDropdowns.forEach((dropdown) => {
+                    dropdown.classList.remove("show");
+                });
+            }
+        }
+
         setMenuStates(prevState => {
             if (isRoot) {
                 return { [id]: !prevState[id] };
