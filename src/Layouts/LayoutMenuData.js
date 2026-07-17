@@ -121,6 +121,7 @@ const Navdata = () => {
 
         const cleanLink = (link) => {
             if (!link || link === "#" || link === "") return "/#";
+            if (link.toLowerCase().includes("parceldashboard")) return "/data/parceldashboard";
             if (link.toLowerCase().includes("dashboard")) return "/dashboard";
             let cleaned = link.replace(/\.\.\//g, ""); // Remove ../
             if (!cleaned.startsWith("/")) cleaned = "/" + cleaned;
