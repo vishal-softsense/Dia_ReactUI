@@ -17,6 +17,8 @@
     "@reduxjs/toolkit": "^2.3.0",
     "@simonwep/pickr": "^1.9.1",
     "@south-paw/react-vector-maps": "^3.2.0",
+    "@syncfusion/ej2-react-grids": "^34.1.31",
+    "@syncfusion/ej2-react-pivotview": "^34.1.31",
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-table": "^8.20.5",
     "@testing-library/jest-dom": "^6.5.0",

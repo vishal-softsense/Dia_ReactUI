@@ -5,6 +5,7 @@ import CountUp from 'react-countup';
 import { Link } from 'react-router-dom';
 import { useParcelDashboardData } from './useParcelDashboardData';
 import { exportToExcel } from '../../helpers/excel_helper';
+import { toast, ToastContainer } from 'react-toastify';
 import { 
     getAllBrokers, getAllCustomers, getAllOpenMemos, 
     getAllOutstandings, getAllPayables, getAllOverdueSales 
@@ -220,76 +221,88 @@ const ParcelDashboard = () => {
 
     // Export to Excel Function
     const handleExportExcel = async () => {
-        const dataToExport = getFilteredModalData();
-        if (dataToExport.length === 0) return;
+        try {
+            const dataToExport = getFilteredModalData();
+            if (dataToExport.length === 0) {
+                toast.warning("No data available to export");
+                return;
+            }
 
-        let headers = [];
-        let rows = [];
+            let headers = [];
+            let rows = [];
 
-        if (reportType === 'overdues') {
-            headers = ["Invoice No", "Invoice Date", "Customer", "Invoice Amount", "Remaining Amount", "Overdue Days"];
-            dataToExport.forEach(item => {
+            if (reportType === 'overdues') {
+                headers = ["Invoice No", "Invoice Date", "Customer", "Invoice Amount", "Remaining Amount", "Overdue Days"];
+                dataToExport.forEach(item => {
+                    rows.push([
+                        item.invNo || '',
+                        item.invDate || '',
+                        item.customer || '',
+                        Number(item.invoiceAmount || 0),
+                        Number(item.remainingAmount || 0),
+                        Number(item.overdueDays || 0)
+                    ]);
+                });
+                // Totals
                 rows.push([
-                    item.invNo || '',
-                    item.invDate || '',
-                    item.customer || '',
-                    Number(item.invoiceAmount || 0),
-                    Number(item.remainingAmount || 0),
-                    Number(item.overdueDays || 0)
+                    "TOTAL",
+                    "",
+                    "",
+                    Number(currentTotals.invoiceAmount || 0),
+                    Number(currentTotals.remainingAmount || 0),
+                    ""
                 ]);
-            });
-            // Totals
-            rows.push([
-                "TOTAL",
-                "",
-                "",
-                Number(currentTotals.invoiceAmount || 0),
-                Number(currentTotals.remainingAmount || 0),
-                ""
-            ]);
-        } else if (reportType === 'brokers') {
-            headers = ["Broker", "Carats", "Receivable USD", "Receivable INR", "Sales", "PL"];
-            dataToExport.forEach(item => {
+            } else if (reportType === 'brokers') {
+                headers = ["Broker", "Carats", "Receivable USD", "Receivable INR", "Sales", "PL"];
+                dataToExport.forEach(item => {
+                    rows.push([
+                        item.broker || '',
+                        Number(item.cts || 0),
+                        Number(item.receivableUsd || item.receivableUSD || 0),
+                        Number(item.receivableInr || item.receivableINR || 0),
+                        Number(item.sales || 0),
+                        Number(item.pl || 0)
+                    ]);
+                });
+                // Totals
                 rows.push([
-                    item.broker || '',
-                    Number(item.cts || 0),
-                    Number(item.receivableUsd || item.receivableUSD || 0),
-                    Number(item.receivableInr || item.receivableINR || 0),
-                    Number(item.sales || 0),
-                    Number(item.pl || 0)
+                    "TOTAL",
+                    Number(currentTotals.cts || 0),
+                    Number(currentTotals.receivableUsd || 0),
+                    Number(currentTotals.receivableInr || 0),
+                    Number(currentTotals.sales || 0),
+                    Number(currentTotals.pl || 0)
                 ]);
-            });
-            // Totals
-            rows.push([
-                "TOTAL",
-                Number(currentTotals.cts || 0),
-                Number(currentTotals.receivableUsd || 0),
-                Number(currentTotals.receivableInr || 0),
-                Number(currentTotals.sales || 0),
-                Number(currentTotals.pl || 0)
-            ]);
-        } else {
-            headers = ["Name", "Carats", "Receivable USD", "Receivable INR"];
-            dataToExport.forEach(item => {
+            } else {
+                headers = ["Name", "Carats", "Receivable USD", "Receivable INR"];
+                dataToExport.forEach(item => {
+                    rows.push([
+                        item.customer || item.broker || '',
+                        Number(item.cts || 0),
+                        Number(item.receivableUSD || item.receivableUsd || 0),
+                        Number(item.receivableINR || item.receivableInr || 0)
+                    ]);
+                });
+                // Totals
                 rows.push([
-                    item.customer || item.broker || '',
-                    Number(item.cts || 0),
-                    Number(item.receivableUSD || item.receivableUsd || 0),
-                    Number(item.receivableINR || item.receivableInr || 0)
+                    "TOTAL",
+                    Number(currentTotals.cts || 0),
+                    Number(currentTotals.receivableUsd || 0),
+                    Number(currentTotals.receivableInr || 0)
                 ]);
-            });
-            // Totals
-            rows.push([
-                "TOTAL",
-                Number(currentTotals.cts || 0),
-                Number(currentTotals.receivableUsd || 0),
-                Number(currentTotals.receivableInr || 0)
-            ]);
+            }
+
+            const sheetName = reportType.charAt(0).toUpperCase() + reportType.slice(1);
+            const fileName = `${modalTitle.replace(/\s+/g, '_')}_Report`;
+            const result = await exportToExcel(headers, rows, sheetName, fileName);
+            if (result && result.success) {
+                toast.success("Report exported to Excel successfully");
+            } else {
+                toast.error(result.error ? String(result.error) : "Export failed");
+            }
+        } catch (err) {
+            toast.error("Error exporting report: " + err.message);
         }
-
-        const sheetName = reportType.charAt(0).toUpperCase() + reportType.slice(1);
-        const fileName = `${modalTitle.replace(/\s+/g, '_')}_Report`;
-        await exportToExcel(headers, rows, sheetName, fileName);
     };
 
     return (
@@ -1051,7 +1064,7 @@ const ParcelDashboard = () => {
                             )}
                         </ModalBody>
                     </Modal>
-
+                    <ToastContainer />
                 </Container>
             </div>
         </React.Fragment>

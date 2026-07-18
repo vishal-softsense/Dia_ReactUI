@@ -545,4 +545,8 @@ export const SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP = "/api/SolitaireStockSearc
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS = "/api/SolitaireStockSearchReport/email-settings";
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST = "/api/SolitaireStockSearchReport/email-stock-list";
 
+// Month Analysis Report
+export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";
+export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdowns";
+
 

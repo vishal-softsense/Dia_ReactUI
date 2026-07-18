@@ -6,6 +6,7 @@ import ReactApexChart from "react-apexcharts";
 import { Link } from 'react-router-dom';
 import { useDashboardData } from './useDashboardData';
 import { exportToExcel } from '../../helpers/excel_helper';
+import { toast, ToastContainer } from 'react-toastify';
 
 const Dashboard = () => {
     document.title = "Dashboard | Premium Jewellery ERP";
@@ -31,15 +32,30 @@ const Dashboard = () => {
     const toggleModal = () => setModal(!modal);
 
     const exportCustomersToExcel = async () => {
-        if (!topCustomers || topCustomers.length === 0) return;
-        const headers = ["Rank", "Customer Name", "Total Sales", "P/L %"];
-        const rows = topCustomers.map((customer, idx) => [
-            `#${idx + 1}`,
-            customer.customer && customer.customer.trim() ? customer.customer : '—',
-            Number(customer.sales || 0),
-            `${customer.plPerOnPurAmount > 0 ? '+' : ''}${customer.plPerOnPurAmount.toFixed(2)}%`
-        ]);
-        await exportToExcel(headers, rows, "Top Customers", "Top_10_Customers_Report");
+        try {
+            if (!topCustomers || topCustomers.length === 0) {
+                toast.warning("No customer data available to export");
+                return;
+            }
+            const headers = ["Rank", "Customer Name", "Total Sales", "P/L %"];
+            const rows = topCustomers.map((customer, idx) => {
+                const plVal = Number(customer.plPerOnPurAmount || 0);
+                return [
+                    `#${idx + 1}`,
+                    customer.customer && customer.customer.trim() ? customer.customer : '—',
+                    Number(customer.sales || 0),
+                    `${plVal > 0 ? '+' : ''}${plVal.toFixed(2)}%`
+                ];
+            });
+            const result = await exportToExcel(headers, rows, "Top Customers", "Top_10_Customers_Report");
+            if (result && result.success) {
+                toast.success("Customers report exported successfully");
+            } else {
+                toast.error(result.error ? String(result.error) : "Export failed");
+            }
+        } catch (err) {
+            toast.error("Error exporting report: " + err.message);
+        }
     };
 
     const dateOptions = [
@@ -189,6 +205,46 @@ const Dashboard = () => {
 
     return (
         <React.Fragment>
+            <style>{`
+                [data-layout-mode="dark"] .card-animate {
+                    background-image: none !important;
+                    background-color: #1b1c21 !important;
+                    border-color: #2b2c32 !important;
+                }
+                [data-layout-mode="dark"] .text-muted {
+                    color: #adb5bd !important;
+                }
+                [data-layout-mode="dark"] .ff-secondary, 
+                [data-layout-mode="dark"] .text-body, 
+                [data-layout-mode="dark"] .text-dark,
+                [data-layout-mode="dark"] .fs-22.fw-semibold,
+                [data-layout-mode="dark"] h4,
+                [data-layout-mode="dark"] h5 {
+                    color: #f3f6f9 !important;
+                }
+                [data-layout-mode="dark"] .bg-light {
+                    background-color: #222329 !important;
+                }
+                [data-layout-mode="dark"] .border-light-subtle {
+                    border-color: #32353e !important;
+                }
+                [data-layout-mode="dark"] .table-light th {
+                    background-color: #222329 !important;
+                    color: #adb5bd !important;
+                }
+                [data-layout-mode="dark"] .border-top, 
+                [data-layout-mode="dark"] .border-bottom,
+                [data-layout-mode="dark"] .border-light {
+                    border-color: #2b2c32 !important;
+                }
+                [data-layout-mode="dark"] hr {
+                    border-color: #32353e !important;
+                    opacity: 0.2;
+                }
+                [data-layout-mode="dark"] .card-header {
+                    border-bottom-color: #2b2c32 !important;
+                }
+            `}</style>
             <div className="page-content">
                 <Container fluid>
                     
@@ -269,9 +325,9 @@ const Dashboard = () => {
                                                     <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-shopping-bag-3-line me-1"></i> Purchase Analysis
                                                     </button>
-                                                    <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
+                                                    <Link to="/dashboard/month-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-calendar-todo-line me-1"></i> Month Analysis
-                                                    </button>
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </Row>
@@ -600,7 +656,7 @@ const Dashboard = () => {
                             </div>
                         </ModalBody>
                     </Modal>
-
+                    <ToastContainer />
                 </Container>
             </div>
         </React.Fragment>

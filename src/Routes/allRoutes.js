@@ -7,6 +7,7 @@ import DashboardCrm from "../pages/DashboardCrm";
 import DashboardEcommerce from "../pages/DashboardEcommerce";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import ParcelDashboard from "../pages/ParcelDashboard/ParcelDashboard";
+import MonthAnalysisReport from "../pages/Dashboard/MonthAnalysisReport";
 
 import DashboardCrypto from "../pages/DashboardCrypto";
 import DashboardProject from "../pages/DashboardProject";
@@ -455,6 +456,7 @@ const authProtectedRoutes = [
   { path: "/dashboard-crm", component: <DashboardCrm /> },
   { path: "/dashboard", component: <Dashboard /> },
   { path: "/data/parceldashboard", component: <ParcelDashboard /> },
+  { path: "/dashboard/month-analysis", component: <MonthAnalysisReport /> },
   { path: "/index", component: <Dashboard /> },
   { path: "/dashboard-crypto", component: <DashboardCrypto /> },
   { path: "/dashboard-projects", component: <DashboardProject /> },

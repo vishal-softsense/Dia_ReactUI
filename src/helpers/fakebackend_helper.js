@@ -693,4 +693,8 @@ export const updateSolitaireStockBoxGroup = (data) => api.create(url.SOLITAIRE_S
 export const getSolitaireStockEmailSettings = () => api.get(url.SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS);
 export const sendSolitaireStockEmail = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST, data);
 
+// Month Analysis Report
+export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);
+export const getMonthAnalysisDropdowns = () => api.get(url.MONTH_ANALYSIS_REPORT_DROPDOWNS);
+
 
