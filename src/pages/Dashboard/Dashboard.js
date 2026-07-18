@@ -74,11 +74,11 @@ const Dashboard = () => {
         name: 'Sales ($)',
         data: topBrokers.map(b => b.sales)
     }];
-    
+
     const brokerChartOptions = {
-        chart: { 
-            type: 'bar', 
-            height: 480, 
+        chart: {
+            type: 'bar',
+            height: 480,
             toolbar: { show: false },
             events: {
                 dataPointSelection: (event, chartContext, config) => {
@@ -86,13 +86,13 @@ const Dashboard = () => {
                     if (dataIndex !== undefined && dataIndex !== -1) {
                         const selectedPoints = (config.selectedDataPoints && config.selectedDataPoints[config.seriesIndex]) || [];
                         const isSelected = selectedPoints.includes(dataIndex);
-                        
+
                         if (isSelected) {
                             // Defer the deselection to avoid recursive event loops
                             setTimeout(() => {
                                 chartContext.toggleDataPointSelection(config.seriesIndex, dataIndex);
                             }, 50);
-                            
+
                             const broker = topBrokers[dataIndex];
                             if (broker) {
                                 setModalContent({
@@ -108,12 +108,12 @@ const Dashboard = () => {
                 }
             }
         },
-        plotOptions: { 
-            bar: { 
-                horizontal: true, 
+        plotOptions: {
+            bar: {
+                horizontal: true,
                 borderRadius: 6,
                 barHeight: '45%'
-            } 
+            }
         },
         fill: {
             type: 'solid'
@@ -134,8 +134,8 @@ const Dashboard = () => {
     // Country Donut Chart Configuration
     const countryChartSeries = countrySales.map(c => c.sales);
     const countryChartOptions = {
-        chart: { 
-            type: 'donut', 
+        chart: {
+            type: 'donut',
             height: 333,
             events: {
                 dataPointSelection: (event, chartContext, config) => {
@@ -143,13 +143,13 @@ const Dashboard = () => {
                     if (dataIndex !== undefined && dataIndex !== -1) {
                         const selectedPoints = (config.selectedDataPoints && config.selectedDataPoints[config.seriesIndex]) || [];
                         const isSelected = selectedPoints.includes(dataIndex);
-                        
+
                         if (isSelected) {
                             // Defer the deselection to avoid recursive event loops
                             setTimeout(() => {
                                 chartContext.toggleDataPointSelection(config.seriesIndex, dataIndex);
                             }, 50);
-                            
+
                             const country = countrySales[dataIndex];
                             if (country) {
                                 setModalContent({
@@ -196,7 +196,7 @@ const Dashboard = () => {
                 }
             }
         }
-    };    const getRankBadge = (idx) => {
+    }; const getRankBadge = (idx) => {
         if (idx === 0) return { bg: 'bg-warning-subtle text-warning border-0 fs-13', label: '🥇' };
         if (idx === 1) return { bg: 'bg-secondary-subtle text-secondary border-0 fs-13', label: '🥈' };
         if (idx === 2) return { bg: 'border-0 fs-13', label: '🥉', style: { backgroundColor: 'rgba(160, 82, 45, 0.15)', color: '#a0522d' } };
@@ -247,7 +247,7 @@ const Dashboard = () => {
             `}</style>
             <div className="page-content">
                 <Container fluid>
-                    
+
                     {/* Header */}
                     <Row className="mb-3 pb-1">
                         <Col xs={12}>
@@ -291,15 +291,15 @@ const Dashboard = () => {
                                                             }),
                                                             option: (baseStyles, state) => ({
                                                                 ...baseStyles,
-                                                                backgroundColor: state.isSelected 
-                                                                    ? 'var(--vz-primary, #405189)' 
-                                                                    : state.isFocused 
-                                                                        ? 'var(--vz-dropdown-link-hover-bg, rgba(64, 81, 137, 0.1))' 
+                                                                backgroundColor: state.isSelected
+                                                                    ? 'var(--vz-primary, #405189)'
+                                                                    : state.isFocused
+                                                                        ? 'var(--vz-dropdown-link-hover-bg, rgba(64, 81, 137, 0.1))'
                                                                         : 'transparent',
-                                                                color: state.isSelected 
-                                                                    ? '#fff' 
-                                                                    : state.isFocused 
-                                                                        ? 'var(--vz-dropdown-link-hover-color, #1e2125)' 
+                                                                color: state.isSelected
+                                                                    ? '#fff'
+                                                                    : state.isFocused
+                                                                        ? 'var(--vz-dropdown-link-hover-color, #1e2125)'
                                                                         : 'var(--vz-dropdown-link-color, #212529)',
                                                                 fontSize: '13px',
                                                                 cursor: 'pointer'
@@ -322,9 +322,9 @@ const Dashboard = () => {
                                                     <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-bubble-chart-line me-1"></i> Sale Analysis
                                                     </button>
-                                                    <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
+                                                    <Link to="/dashboard/purchase-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-shopping-bag-3-line me-1"></i> Purchase Analysis
-                                                    </button>
+                                                    </Link>
                                                     <Link to="/dashboard/month-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-calendar-todo-line me-1"></i> Month Analysis
                                                     </Link>
@@ -442,12 +442,12 @@ const Dashboard = () => {
                                 </CardHeader>
                                 <CardBody>
                                     {loading ? <div className="text-center p-4"><Spinner color="primary" /></div> : (
-                                        <ReactApexChart 
-                                            options={brokerChartOptions} 
-                                            series={brokerChartSeries} 
-                                            type="bar" 
-                                            height={480} 
-                                            className="apex-charts" 
+                                        <ReactApexChart
+                                            options={brokerChartOptions}
+                                            series={brokerChartSeries}
+                                            type="bar"
+                                            height={480}
+                                            className="apex-charts"
                                         />
                                     )}
                                 </CardBody>
@@ -480,7 +480,7 @@ const Dashboard = () => {
                                                         return (
                                                             <tr key={idx}>
                                                                 <td>
-                                                                    <span 
+                                                                    <span
                                                                         className={`badge ${badgeInfo.bg || ''} rounded-pill px-2 py-1 fs-12`}
                                                                         style={badgeInfo.style || {}}
                                                                     >
@@ -527,12 +527,12 @@ const Dashboard = () => {
                                 </CardHeader>
                                 <CardBody>
                                     {loading ? <div className="text-center p-4"><Spinner color="primary" /></div> : (
-                                        <ReactApexChart 
-                                            options={countryChartOptions} 
-                                            series={countryChartSeries} 
-                                            type="donut" 
-                                            height={333} 
-                                            className="apex-charts" 
+                                        <ReactApexChart
+                                            options={countryChartOptions}
+                                            series={countryChartSeries}
+                                            type="donut"
+                                            height={333}
+                                            className="apex-charts"
                                         />
                                     )}
                                 </CardBody>
@@ -637,7 +637,7 @@ const Dashboard = () => {
                                 <h5 className="fs-18 mb-1 text-body fw-semibold">{modalContent.name}</h5>
                                 <p className="text-muted mb-0">{modalContent.subtitle}</p>
                             </div>
-                            
+
                             <div className="p-3 bg-light rounded-3 border border-light-subtle d-flex align-items-center justify-content-between">
                                 <div>
                                     <span className="text-muted fs-12 text-uppercase d-block mb-1">Total Sales Amount</span>
@@ -649,7 +649,7 @@ const Dashboard = () => {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <div className="mt-4 d-flex gap-2 justify-content-end">
                                 <button type="button" className="btn btn-light btn-sm px-3" onClick={toggleModal}>Close</button>
                                 <button type="button" className="btn btn-primary btn-sm px-3" onClick={toggleModal}>Okay</button>

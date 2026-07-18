@@ -549,4 +549,8 @@ export const SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST = "/api/SolitaireStockSearc
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";
 export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdowns";
 
+// Purchase Analysis Report
+export const PURCHASE_ANALYSIS_REPORT_DATA = "/api/PurchaseAnalysisReport/report";
+export const PURCHASE_ANALYSIS_REPORT_DROPDOWNS = "/api/PurchaseAnalysisReport/dropdowns";
+
 

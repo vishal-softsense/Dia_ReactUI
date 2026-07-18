@@ -28,9 +28,9 @@ const MonthAnalysisReport = () => {
   const { t } = useTranslation();
 
   const [fromDate, setFromDate] = useState("2025-01-01");
-  const [toDate, setToDate] = useState("2025-12-31");
+  const [toDate, setToDate] = useState(new Date().toISOString().substring(0, 10));
   const [fromDateDue, setFromDateDue] = useState("2025-01-01");
-  const [toDateDue, setToDateDue] = useState("2025-12-31");
+  const [toDateDue, setToDateDue] = useState(new Date().toISOString().substring(0, 10));
   const [dueChkBox, setDueChkBox] = useState(false);
 
   const [currency, setCurrency] = useState("");

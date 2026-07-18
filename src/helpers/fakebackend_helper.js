@@ -697,4 +697,8 @@ export const sendSolitaireStockEmail = (data) => api.create(url.SOLITAIRE_STOCK_
 export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);
 export const getMonthAnalysisDropdowns = () => api.get(url.MONTH_ANALYSIS_REPORT_DROPDOWNS);
 
+// Purchase Analysis Report
+export const getPurchaseAnalysisReport = (filter) => api.create(url.PURCHASE_ANALYSIS_REPORT_DATA, filter);
+export const getPurchaseAnalysisDropdowns = () => api.get(url.PURCHASE_ANALYSIS_REPORT_DROPDOWNS);
+
 
