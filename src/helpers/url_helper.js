@@ -558,4 +558,10 @@ export const SALE_ANALYSIS_REPORT_DATA = "/api/SaleAnalysisReport/report";
 export const SALE_ANALYSIS_REPORT_PIVOT_DATA = "/api/SaleAnalysisReport/pivotdata";
 export const SALE_ANALYSIS_REPORT_DROPDOWNS = "/api/SaleAnalysisReport/dropdowns";
 
+// Stock Analysis Report
+export const STOCK_ANALYSIS_REPORT_DATA = "/api/StockAnalysisReport/report";
+export const STOCK_ANALYSIS_PIVOT_BY_FILTER = "/api/StockAnalysisReport/pivotbyfilter";
+export const STOCK_ANALYSIS_PIVOT_FIXED = "/api/StockAnalysisReport/pivotfixed";
+export const STOCK_ANALYSIS_REPORT_DROPDOWNS = "/api/StockAnalysisReport/dropdowns";
+
 

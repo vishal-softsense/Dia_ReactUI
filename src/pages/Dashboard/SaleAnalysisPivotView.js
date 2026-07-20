@@ -89,7 +89,6 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
       try { pivotRef.current.destroy(); } catch (e) { /* ignore */ }
       pivotRef.current = null;
     }
-    if (containerRef.current) containerRef.current.innerHTML = "";
   };
 
   // API returns camelCase JSON; Syncfusion needs exact field name matches.
@@ -285,7 +284,6 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
     if (!ej || !data || data.length === 0) return;
     initPivot(data, ej);
     return () => { destroyPivot(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   return (

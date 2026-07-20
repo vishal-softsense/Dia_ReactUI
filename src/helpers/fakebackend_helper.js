@@ -706,4 +706,10 @@ export const getSaleAnalysisReport = (filter) => api.create(url.SALE_ANALYSIS_RE
 export const getSaleAnalysisPivotData = (filter) => api.create(url.SALE_ANALYSIS_REPORT_PIVOT_DATA, filter);
 export const getSaleAnalysisDropdowns = () => api.get(url.SALE_ANALYSIS_REPORT_DROPDOWNS);
 
+// Stock Analysis Report
+export const getStockAnalysisReport = (filter) => api.create(url.STOCK_ANALYSIS_REPORT_DATA, filter);
+export const getStockAnalysisPivotByFilter = (filter) => api.create(url.STOCK_ANALYSIS_PIVOT_BY_FILTER, filter);
+export const getStockAnalysisPivotFixed = (filter) => api.create(url.STOCK_ANALYSIS_PIVOT_FIXED, filter);
+export const getStockAnalysisDropdowns = () => api.get(url.STOCK_ANALYSIS_REPORT_DROPDOWNS);
+
 

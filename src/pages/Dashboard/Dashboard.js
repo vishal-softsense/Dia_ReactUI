@@ -316,9 +316,9 @@ const Dashboard = () => {
                                             </div>
                                             <div className="col-auto">
                                                 <div className="d-flex gap-2">
-                                                    <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
+                                                    <Link to="/dashboard/stock-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-database-2-line me-1"></i> Stock Analysis
-                                                    </button>
+                                                    </Link>
                                                     <Link to="/dashboard/sale-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-bubble-chart-line me-1"></i> Sale Analysis
                                                     </Link>
