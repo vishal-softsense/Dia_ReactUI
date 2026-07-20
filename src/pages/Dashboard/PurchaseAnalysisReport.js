@@ -1007,31 +1007,7 @@ const PurchaseAnalysisReport = () => {
                 <span className="text-body fw-semibold">{t("Purchase Analysis Report")}</span>
               </h5>
 
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="par-chevron-btn"
-                  title={t("Toggle Filters")}
-                  onClick={() => setShowFilterPanel(!showFilterPanel)}
-                  aria-label={t("Toggle Filters")}
-                >
-                  <i className={showFilterPanel ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"} />
-                </button>
-
-                {/* MVC header order: Excel (when data), Clear, Report, Grouping */}
-                <Button className="par-header-btn" size="sm" type="button" onClick={handleClear}>
-                  {t("Clear")}
-                </Button>
-                <Button
-                  color="primary"
-                  size="sm"
-                  type="submit"
-                  form="purchase-analysis-form"
-                  disabled={loading}
-                >
-                  {loading ? <Spinner size="sm" /> : t("Report")}
-                </Button>
-
+              <div className="d-flex align-items-center flex-nowrap gap-2">
                 <FormGroup className="mb-0 d-flex align-items-center gap-2">
                   <Label className="mb-0"><b>{t("Grouping")}</b></Label>
                   <select
@@ -1059,6 +1035,30 @@ const PurchaseAnalysisReport = () => {
                     <option value="StockID">{t("StockID")}</option>
                   </select>
                 </FormGroup>
+
+                <Button
+                  color="primary"
+                  size="sm"
+                  type="submit"
+                  form="purchase-analysis-form"
+                  disabled={loading}
+                >
+                  {loading ? <Spinner size="sm" /> : t("Report")}
+                </Button>
+
+                <Button color="outline-secondary" size="sm" type="button" onClick={handleClear}>
+                  {t("Clear")}
+                </Button>
+
+                <button
+                  type="button"
+                  className="par-chevron-btn"
+                  title={t("Toggle Filters")}
+                  onClick={() => setShowFilterPanel(!showFilterPanel)}
+                  aria-label={t("Toggle Filters")}
+                >
+                  <i className={showFilterPanel ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"} />
+                </button>
               </div>
             </CardHeader>
 
@@ -1175,10 +1175,13 @@ const PurchaseAnalysisReport = () => {
                             <Select isClearable isLoading={loadingBrokers} options={brokerOptions} value={selectedBroker} onInputChange={(val) => setBrokerInput(val)} onChange={setSelectedBroker} placeholder={t("Search Broker")} />
                           </FormGroup>
                         </Col>
-                        <Col sm={2} className="d-flex align-items-end">
-                          <FormGroup check className="mb-3">
-                            <Input type="checkbox" id="saleRtn" checked={saleRtn} onChange={(e) => setSaleRtn(e.target.checked)} />
-                            <Label check htmlFor="saleRtn" className="ms-2">{t("Sale Rtn")}</Label>
+                        <Col sm={2}>
+                          <FormGroup className="mb-0">
+                            <Label className="invisible">.</Label>
+                            <div className="form-check mt-2">
+                              <Input type="checkbox" id="saleRtn" checked={saleRtn} onChange={(e) => setSaleRtn(e.target.checked)} />
+                              <Label check htmlFor="saleRtn" className="form-check-label">{t("Sale Rtn")}</Label>
+                            </div>
                           </FormGroup>
                         </Col>
                       </Row>

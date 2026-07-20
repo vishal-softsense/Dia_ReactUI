@@ -319,9 +319,9 @@ const Dashboard = () => {
                                                     <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-database-2-line me-1"></i> Stock Analysis
                                                     </button>
-                                                    <button type="button" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
+                                                    <Link to="/dashboard/sale-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-bubble-chart-line me-1"></i> Sale Analysis
-                                                    </button>
+                                                    </Link>
                                                     <Link to="/dashboard/purchase-analysis" className="btn btn-light border waves-effect waves-light shadow-none d-flex align-items-center">
                                                         <i className="ri-shopping-bag-3-line me-1"></i> Purchase Analysis
                                                     </Link>

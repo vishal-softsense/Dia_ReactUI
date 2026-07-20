@@ -355,16 +355,17 @@ const MonthAnalysisReport = () => {
               <div className="d-flex align-items-center gap-2" style={{ minWidth: 160, justifyContent: "flex-end" }}>
                 {showFilterPanel && (
                   <>
-                    <Button color="light" outline type="button" onClick={handleClear}>
-                      {t("Clear")}
-                    </Button>
                     <Button
                       color="primary"
+                      size="sm"
                       type="submit"
                       form="month-analysis-form"
                       disabled={loading}
                     >
                       {loading ? <Spinner size="sm" /> : t("Report")}
+                    </Button>
+                    <Button color="outline-secondary" size="sm" type="button" onClick={handleClear}>
+                      {t("Clear")}
                     </Button>
                   </>
                 )}

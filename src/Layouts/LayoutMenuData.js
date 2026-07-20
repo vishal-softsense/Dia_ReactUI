@@ -124,6 +124,7 @@ const Navdata = () => {
             if (link.toLowerCase().includes("parceldashboard")) return "/data/parceldashboard";
             if (link.toLowerCase().includes("dashboard")) return "/dashboard";
             if (link.toLowerCase().includes("purchartreports")) return "/dashboard/purchase-analysis";
+            if (link.toLowerCase().includes("salechartreports") || link.toLowerCase().includes("salechart-report")) return "/dashboard/sale-analysis";
             let cleaned = link.replace(/\.\.\//g, ""); // Remove ../
             if (!cleaned.startsWith("/")) cleaned = "/" + cleaned;
             return cleaned;

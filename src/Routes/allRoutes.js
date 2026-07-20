@@ -9,6 +9,7 @@ import Dashboard from "../pages/Dashboard/Dashboard";
 import ParcelDashboard from "../pages/ParcelDashboard/ParcelDashboard";
 import MonthAnalysisReport from "../pages/Dashboard/MonthAnalysisReport";
 import PurchaseAnalysisReport from "../pages/Dashboard/PurchaseAnalysisReport";
+import SaleAnalysisReport from "../pages/Dashboard/SaleAnalysisReport";
 
 import DashboardCrypto from "../pages/DashboardCrypto";
 import DashboardProject from "../pages/DashboardProject";
@@ -459,6 +460,7 @@ const authProtectedRoutes = [
   { path: "/data/parceldashboard", component: <ParcelDashboard /> },
   { path: "/dashboard/month-analysis", component: <MonthAnalysisReport /> },
   { path: "/dashboard/purchase-analysis", component: <PurchaseAnalysisReport /> },
+  { path: "/dashboard/sale-analysis", component: <SaleAnalysisReport /> },
   { path: "/index", component: <Dashboard /> },
   { path: "/dashboard-crypto", component: <DashboardCrypto /> },
   { path: "/dashboard-projects", component: <DashboardProject /> },

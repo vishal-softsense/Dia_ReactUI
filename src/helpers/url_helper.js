@@ -553,4 +553,9 @@ export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdow
 export const PURCHASE_ANALYSIS_REPORT_DATA = "/api/PurchaseAnalysisReport/report";
 export const PURCHASE_ANALYSIS_REPORT_DROPDOWNS = "/api/PurchaseAnalysisReport/dropdowns";
 
+// Sale Analysis Report
+export const SALE_ANALYSIS_REPORT_DATA = "/api/SaleAnalysisReport/report";
+export const SALE_ANALYSIS_REPORT_PIVOT_DATA = "/api/SaleAnalysisReport/pivotdata";
+export const SALE_ANALYSIS_REPORT_DROPDOWNS = "/api/SaleAnalysisReport/dropdowns";
+
 

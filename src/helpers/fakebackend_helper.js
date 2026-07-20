@@ -701,4 +701,9 @@ export const getMonthAnalysisDropdowns = () => api.get(url.MONTH_ANALYSIS_REPORT
 export const getPurchaseAnalysisReport = (filter) => api.create(url.PURCHASE_ANALYSIS_REPORT_DATA, filter);
 export const getPurchaseAnalysisDropdowns = () => api.get(url.PURCHASE_ANALYSIS_REPORT_DROPDOWNS);
 
+// Sale Analysis Report
+export const getSaleAnalysisReport = (filter) => api.create(url.SALE_ANALYSIS_REPORT_DATA, filter);
+export const getSaleAnalysisPivotData = (filter) => api.create(url.SALE_ANALYSIS_REPORT_PIVOT_DATA, filter);
+export const getSaleAnalysisDropdowns = () => api.get(url.SALE_ANALYSIS_REPORT_DROPDOWNS);
+
 
