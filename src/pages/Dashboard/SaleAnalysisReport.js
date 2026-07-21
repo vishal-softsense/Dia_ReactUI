@@ -622,89 +622,109 @@ const SaleAnalysisReport = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <React.Fragment>
+      <style>{`
+        .par-chevron-btn {
+          border: 1px solid var(--vz-border-color, #e9ebec);
+          background: transparent;
+          color: var(--vz-body-color, #212529);
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          line-height: 1;
+        }
+        .par-chevron-btn:hover {
+          color: var(--vz-primary, #405189);
+          border-color: var(--vz-primary, #405189);
+        }
+        .par-chevron-btn i {
+          font-size: 20px;
+        }
+      `}</style>
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={t("Sale Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* ── Filter Card ── */}
-          <Card className="glass-card mb-3">
-            <CardHeader className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 border-0">
+          {/* Top Control Bar */}
+          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+              <i className="ri-line-chart-line fs-20 text-primary"></i>
+              {t("Sale Analysis Report")}
+            </h5>
+
+            <div className="d-flex align-items-center flex-nowrap gap-2">
               <div className="d-flex align-items-center gap-2">
-                <span className="text-body fw-semibold">{t("Sale Analysis Report")}</span>
+                <Label className="mb-0 fw-medium align-self-center">{t("Grouping")}</Label>
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: 140, height: "31px" }}
+                  value={saleAna}
+                  onChange={(e) => setSaleAna(e.target.value)}
+                >
+                  {SALE_ANA_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{t(o.label)}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="d-flex align-items-center gap-2 flex-nowrap">
-                {/* Grouping selector */}
-                <FormGroup className="mb-0 d-flex align-items-center gap-2">
-                  <Label className="mb-0 fw-semibold">{t("Grouping")}</Label>
-                  <Input
-                    type="select"
-                    bsSize="sm"
-                    style={{ width: 140 }}
-                    value={saleAna}
-                    onChange={(e) => setSaleAna(e.target.value)}
-                  >
-                    {SALE_ANA_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{t(o.label)}</option>
-                    ))}
-                  </Input>
-                </FormGroup>
+              <Button
+                color="primary"
+                className="btn-sm rounded-2 px-3 py-1"
+                onClick={handleSearch}
+                disabled={loading}
+                form="sale-analysis-form"
+                type="submit"
+              >
+                {loading ? <Spinner size="sm" /> : t("Report")}
+              </Button>
+              <Button
+                color="primary"
+                className="btn-sm rounded-2 px-3 py-1"
+                onClick={handlePivot}
+                disabled={pivotLoading}
+              >
+                {pivotLoading ? <Spinner size="sm" /> : t("Pivot")}
+              </Button>
+              <Button
+                color="soft-secondary"
+                className="btn-sm rounded-2 px-3 py-1"
+                onClick={handleClear}
+              >
+                {t("Clear")}
+              </Button>
+              <button
+                type="button"
+                className="par-chevron-btn"
+                onClick={() => setShowFilterPanel((v) => !v)}
+                title={showFilterPanel ? t("Collapse filters") : t("Expand filters")}
+              >
+                <i className={showFilterPanel ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"} />
+              </button>
+            </div>
+          </div>
 
-                <Button
-                  color="primary"
-                  size="sm"
-                  onClick={handleSearch}
-                  disabled={loading}
-                  form="sale-analysis-form"
-                  type="submit"
-                >
-                  {loading ? <Spinner size="sm" /> : t("Report")}
-                </Button>
-                <Button
-                  color="primary"
-                  size="sm"
-                  onClick={handlePivot}
-                  disabled={pivotLoading}
-                >
-                  {pivotLoading ? <Spinner size="sm" /> : t("Pivot")}
-                </Button>
-                <Button color="outline-secondary" size="sm" onClick={handleClear}>
-                  {t("Clear")}
-                </Button>
-                <Button
-                  color="link"
-                  size="sm"
-                  className="p-0"
-                  onClick={() => setShowFilterPanel((v) => !v)}
-                  title={showFilterPanel ? t("Collapse filters") : t("Expand filters")}
-                >
-                  <i className={`ri-arrow-${showFilterPanel ? "up" : "down"}-s-line fs-5`} />
-                </Button>
-              </div>
-            </CardHeader>
-
-            {showFilterPanel && (
-              <CardBody className="py-2">
+          {showFilterPanel && (
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardBody className="bg-light-subtle">
                 <form id="sale-analysis-form" onSubmit={handleSearch}>
                   {/* Row 1: dates, currency, inv no, bill no, type */}
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Date")}</Label>
+                        <Label className="fw-medium">{t("Date")}</Label>
                         <Input type="date" className="form-control" value={fromDate}
                           onChange={(e) => setFromDate(e.target.value)} />
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("To Date")}</Label>
+                        <Label className="fw-medium">{t("To Date")}</Label>
                         <Input type="date" className="form-control" value={toDate}
                           onChange={(e) => setToDate(e.target.value)} />
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Currency")}</Label>
+                        <Label className="fw-medium">{t("Currency")}</Label>
                         <select className="form-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
                           <option value="">{t("Select Currency")}</option>
                           {dropdownOptions.currency.map((c) => (
@@ -715,21 +735,21 @@ const SaleAnalysisReport = () => {
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Invoice Number")}</Label>
-                        <Input type="text" placeholder={t("InvNo")} value={invNo}
+                        <Label className="fw-medium">{t("Invoice Number")}</Label>
+                        <Input type="text" placeholder={t("Invoice Number")} value={invNo}
                           onChange={(e) => setInvNo(e.target.value)} />
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Bill No")}</Label>
+                        <Label className="fw-medium">{t("Bill No")}</Label>
                         <Input type="text" placeholder={t("Bill No")} value={billNo}
                           onChange={(e) => setBillNo(e.target.value)} />
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Type")}</Label>
+                        <Label className="fw-medium">{t("Type")}</Label>
                         <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
                           <option value="">{t("Select Type")}</option>
                           {dropdownOptions.type.map((c) => (
@@ -744,7 +764,7 @@ const SaleAnalysisReport = () => {
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Sub Type")}</Label>
+                        <Label className="fw-medium">{t("Sub Type")}</Label>
                         <select className="form-select" value={subType} onChange={(e) => setSubType(e.target.value)}>
                           <option value="">{t("Select SubType")}</option>
                           {dropdownOptions.subType.map((c) => (
@@ -755,7 +775,7 @@ const SaleAnalysisReport = () => {
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Category")}</Label>
+                        <Label className="fw-medium">{t("Category")}</Label>
                         <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                           <option value="">{t("Select Category")}</option>
                           {dropdownOptions.category.map((c) => (
@@ -766,7 +786,7 @@ const SaleAnalysisReport = () => {
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Party")}</Label>
+                        <Label className="fw-medium">{t("Party")}</Label>
                         <Select isClearable isLoading={loadingParties} options={partyOptions}
                           value={selectedParty} onInputChange={setPartyInput}
                           onChange={setSelectedParty} placeholder={t("Search Party")} />
@@ -774,7 +794,7 @@ const SaleAnalysisReport = () => {
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Broker")}</Label>
+                        <Label className="fw-medium">{t("Broker")}</Label>
                         <Select isClearable isLoading={loadingBrokers} options={brokerOptions}
                           value={selectedBroker} onInputChange={setBrokerInput}
                           onChange={setSelectedBroker} placeholder={t("Search Broker")} />
@@ -783,23 +803,25 @@ const SaleAnalysisReport = () => {
                     <Col sm={2}>
                       <FormGroup className="mb-0">
                         <Label className="invisible">.</Label>
-                        <div className="form-check mt-2">
-                          <Input
-                            type="checkbox"
-                            id="purRtn"
-                            className="form-check-input"
-                            checked={purRtn}
-                            onChange={(e) => setPurRtn(e.target.checked)}
-                          />
-                          <Label check htmlFor="purRtn" className="form-check-label">
-                            {t("PurRtn")}
-                          </Label>
+                        <div className="d-flex align-items-center" style={{ height: "38px" }}>
+                          <div className="form-check">
+                            <Input
+                              type="checkbox"
+                              id="purRtn"
+                              className="form-check-input"
+                              checked={purRtn}
+                              onChange={(e) => setPurRtn(e.target.checked)}
+                            />
+                            <Label check htmlFor="purRtn" className="form-check-label mb-0">
+                              {t("Purchase Return")}
+                            </Label>
+                          </div>
                         </div>
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Enter Lot No")}</Label>
+                        <Label className="fw-medium">{t("Enter Lot No")}</Label>
                         <Input type="textarea" rows={3} placeholder={t("Search by lot no")}
                           value={lotNo} onChange={(e) => setLotNo(e.target.value)} />
                       </FormGroup>
@@ -846,7 +868,7 @@ const SaleAnalysisReport = () => {
                       <Select isMulti options={makeSelectOptions(dropdownOptions.sieve)} value={selectedSieves} onChange={setSelectedSieves} placeholder={t("Sieve")} /></FormGroup></Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
-                        <Label>{t("Exp Party")}</Label>
+                        <Label className="fw-medium">{t("Exp Party")}</Label>
                         <Select isClearable isLoading={loadingExpParties} options={expPartyOptions}
                           value={selectedExpParty} onInputChange={setExpPartyInput}
                           onChange={setSelectedExpParty} placeholder={t("Search Export Party")} />
@@ -855,16 +877,16 @@ const SaleAnalysisReport = () => {
                   </Row>
                 </form>
               </CardBody>
-            )}
-          </Card>
+            </Card>
+          )}
 
           {/* ── Pivot view ── */}
           {showPivot && (
-            <Card className="glass-card mb-3">
-              <CardHeader className="pb-2 border-0">
-                <span className="fw-semibold">{t("Sale Analysis Pivot")}</span>
-                <Button size="sm" color="link" className="float-end" onClick={() => { setShowPivot(false); }}>
-                  <i className="ri-close-line" />
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center bg-transparent">
+                <span className="fw-semibold text-primary">{t("Sale Analysis Pivot")}</span>
+                <Button size="sm" color="link" className="p-0 text-muted" onClick={() => { setShowPivot(false); }}>
+                  <i className="ri-close-line fs-18" />
                 </Button>
               </CardHeader>
               <CardBody className="p-2">
@@ -886,24 +908,24 @@ const SaleAnalysisReport = () => {
 
           {/* ── Report data card ── */}
           {searched && !showPivot && (
-            <Card className="glass-card">
-              <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0">
-                <Nav tabs className="card-header-tabs border-0">
-                  <NavItem>
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
+                <Nav pills className="nav-pills-custom nav-success bg-light p-1 rounded-3" style={{ border: "none" }}>
+                  <NavItem style={{ flex: 1, textAlign: "center" }}>
                     <NavLink
                       className={classnames({ active: activeTab === "table" })}
                       onClick={() => setActiveTab("table")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", borderRadius: "6px", whiteSpace: "nowrap" }}
                     >
                       <i className="ri-table-line align-middle me-1" />
                       {t("Data Table")}
                     </NavLink>
                   </NavItem>
-                  <NavItem>
+                  <NavItem style={{ flex: 1, textAlign: "center" }}>
                     <NavLink
                       className={classnames({ active: activeTab === "charts" })}
                       onClick={() => setActiveTab("charts")}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", borderRadius: "6px", whiteSpace: "nowrap" }}
                     >
                       <i className="ri-bar-chart-2-line align-middle me-1" />
                       {t("Analytical Charts")}

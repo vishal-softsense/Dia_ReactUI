@@ -643,178 +643,548 @@ const StockAnalysisReport = () => {
     }
   };
 
-  const multiSelect = (label, options, value, onChange) => (
-    <Col md={2} key={label}>
-      <FormGroup>
-        <Label className="fw-semibold text-uppercase small">{t(label)}</Label>
-        <Select isMulti options={toOptions(options)} value={value} onChange={onChange} placeholder={t(label)} />
-      </FormGroup>
-    </Col>
-  );
+  const multiSelect = (label, options, value, onChange, colClass = "col-lg-2 col-md-4") => {
+    const isCustomCol = colClass.includes("col-");
+    if (isCustomCol) {
+      return (
+        <div className={colClass} key={label}>
+          <FormGroup>
+            <Label className="fw-medium mb-1">{t(label)}</Label>
+            <Select
+              isMulti
+              options={toOptions(options)}
+              value={value}
+              onChange={onChange}
+              placeholder={t(label)}
+              classNamePrefix="react-select"
+            />
+          </FormGroup>
+        </div>
+      );
+    }
+    return (
+      <Col className={colClass} key={label}>
+        <FormGroup>
+          <Label className="fw-medium mb-1">{t(label)}</Label>
+          <Select
+            isMulti
+            options={toOptions(options)}
+            value={value}
+            onChange={onChange}
+            placeholder={t(label)}
+            classNamePrefix="react-select"
+          />
+        </FormGroup>
+      </Col>
+    );
+  };
 
   return (
     <React.Fragment>
+      <style>{`
+        .par-chevron-btn {
+          border: 1px solid var(--vz-border-color, #e9ebec);
+          background: transparent;
+          color: var(--vz-body-color, #212529);
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          line-height: 1;
+        }
+        .par-chevron-btn:hover {
+          color: var(--vz-primary, #405189);
+          border-color: var(--vz-primary, #405189);
+        }
+        .par-chevron-btn i {
+          font-size: 20px;
+        }
+      `}</style>
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={t("Stock Analysis Report")} pageTitle={t("Dashboard")} />
 
-          <Card className="glass-card mb-3">
-            <CardHeader className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 border-0">
-              <div className="d-flex align-items-center gap-2">
-                <span className="text-body fw-semibold">{t("Stock Analysis Report")}</span>
-              </div>
-              <div className="d-flex align-items-center gap-2 flex-nowrap">
-                <FormGroup className="mb-0 d-flex align-items-center gap-2">
-                  <Label className="mb-0 fw-semibold">{t("Grouping")}</Label>
-                  <Input type="select" bsSize="sm" style={{ width: 160 }} value={stockAna} onChange={(e) => setStockAna(e.target.value)}>
-                    {GROUPING_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{t(o.label)}</option>
-                    ))}
-                  </Input>
-                </FormGroup>
-                <Button color="primary" size="sm" onClick={handlePivotByFilter} disabled={pivotByFilterLoading}>
-                  {pivotByFilterLoading ? <Spinner size="sm" /> : t("Pivot (By Filter)")}
-                </Button>
-                <Button color="primary" size="sm" onClick={handlePivotFixed} disabled={pivotFixedLoading}>
-                  {pivotFixedLoading ? <Spinner size="sm" /> : t("Pivot (Fixed)")}
-                </Button>
-                <Button color="primary" size="sm" onClick={handleReport} disabled={loading} form="stock-analysis-form" type="submit">
-                  {loading ? <Spinner size="sm" /> : t("Report")}
-                </Button>
-                <Button color="outline-secondary" size="sm" onClick={handleClear}>{t("Clear")}</Button>
-                <Button color="link" size="sm" className="p-0" onClick={() => setShowFilterPanel((v) => !v)}
-                  title={showFilterPanel ? t("Collapse filters") : t("Expand filters")}>
-                  <i className={`ri-arrow-${showFilterPanel ? "up" : "down"}-s-line fs-5`} />
-                </Button>
-              </div>
-            </CardHeader>
+          {/* Top Control Bar */}
+          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+              <i className="ri-database-line fs-20 text-primary"></i>
+              {t("Stock Analysis Report")}
+            </h5>
 
-            {showFilterPanel && (
-              <CardBody className="border-bottom pb-0 py-2">
+            <div className="d-flex align-items-center gap-2 flex-nowrap">
+              <div className="d-flex align-items-center gap-2">
+                <Label className="mb-0 fw-medium align-self-center">{t("Grouping")}</Label>
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: 160, height: "31px" }}
+                  value={stockAna}
+                  onChange={(e) => setStockAna(e.target.value)}
+                >
+                  {GROUPING_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{t(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading} form="stock-analysis-form" type="submit">
+                {loading ? <Spinner size="sm" /> : t("Report")}
+              </Button>
+              <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handlePivotByFilter} disabled={pivotByFilterLoading}>
+                {pivotByFilterLoading ? <Spinner size="sm" /> : t("Pivot (By Filter)")}
+              </Button>
+              <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handlePivotFixed} disabled={pivotFixedLoading}>
+                {pivotFixedLoading ? <Spinner size="sm" /> : t("Pivot (Fixed)")}
+              </Button>
+              <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={handleClear}>{t("Clear")}</Button>
+              <button
+                type="button"
+                className="par-chevron-btn"
+                onClick={() => setShowFilterPanel((v) => !v)}
+                title={showFilterPanel ? t("Collapse filters") : t("Expand filters")}
+              >
+                <i className={showFilterPanel ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"} />
+              </button>
+            </div>
+          </div>
+
+          {showFilterPanel && (
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardBody className="bg-light-subtle py-2">
                 <form id="stock-analysis-form" onSubmit={handleReport}>
-                  <Nav tabs className="nav-tabs-custom">
-                    <NavItem>
-                      <NavLink className={classnames({ active: filterTab === "basic" })} onClick={() => setFilterTab("basic")} style={{ cursor: "pointer" }}>
+                  {/* Outer priority filters layout: Left (All other filters in 2 rows), Right (Enter Lot No stacked) */}
+                  <Row className="g-3 mb-3">
+                    {/* Other priority filters on the left */}
+                    <Col lg={10} md={9}>
+                      {/* Row 1: Stock Till Date | Show | Hold/UnHold | Single/Parcel | Sorting */}
+                      <Row className="g-3 mb-3">
+                        <Col lg={2} md={4}>
+                          <Label className="fw-medium">{t("Stock Till Date")}</Label>
+                          <Flatpickr
+                            className="form-control"
+                            value={date}
+                            onChange={([d]) => setDate(d ? d.toISOString().substring(0, 10) : today)}
+                            options={{ dateFormat: "Y-m-d" }}
+                          />
+                        </Col>
+                        <Col lg={2} md={4}>
+                          <Label className="fw-medium">{t("Show")}</Label>
+                          <Input type="select" value={show} onChange={(e) => setShow(e.target.value)}>
+                            <option value="All">{t("All")}</option>
+                            <option value="Sold">{t("Sold")}</option>
+                            <option value="Unsold">{t("Unsold")}</option>
+                          </Input>
+                        </Col>
+                        <Col lg={2} md={4}>
+                          <Label className="fw-medium">{t("Hold/UnHold")}</Label>
+                          <Input type="select" value={holdUnHold} onChange={(e) => setHoldUnHold(e.target.value)}>
+                            <option value="All">{t("All")}</option>
+                            <option value="Hold">{t("Hold")}</option>
+                            <option value="Unhold">{t("Unhold")}</option>
+                          </Input>
+                        </Col>
+                        <Col lg={2} md={4}>
+                          <Label className="fw-medium">{t("Single/Parcel")}</Label>
+                          <Input type="select" value={stoneTypes} onChange={(e) => setStoneTypes(e.target.value)}>
+                            <option value="Single">{t("Single")}</option>
+                            <option value="Parcel">{t("Parcel")}</option>
+                            <option value="All">{t("All")}</option>
+                          </Input>
+                        </Col>
+                        <Col lg={4} md={8}>
+                          <Label className="fw-medium">{t("Sorting")}</Label>
+                          <Input type="select" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>
+                            {SORT_OPTIONS.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </Input>
+                        </Col>
+                      </Row>
+
+                      {/* Row 2: Status */}
+                      <Row className="g-3">
+                        <Col lg={4} md={8}>
+                          <Label className="fw-medium">{t("Status")}</Label>
+                          <Input type="select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                            <option value="All">{t("All")}</option>
+                            <option value="OnHand">{t("OnHand")}</option>
+                            <option value="OnMemo">{t("OnMemo")}</option>
+                            <option value="OnHand&Int.Memo">{t("OnHand & Int.Memo")}</option>
+                            <option value="OnHand + Memo In">{t("OnHand + Memo In")}</option>
+                            <option value="OnHand + Party Hold">{t("OnHand + Party Hold")}</option>
+                            <option value="Memo In">{t("Memo In")}</option>
+                            <option value="Party Hold">{t("Party Hold")}</option>
+                            <option value="All - Party Hold">{t("All - Party Hold")}</option>
+                          </Input>
+                        </Col>
+                      </Row>
+                    </Col>
+
+                    {/* Enter Lot No (Dropdown + Textarea) Stacked on the Right */}
+                    <Col lg={2} md={3} className="d-flex flex-column">
+                      <FormGroup className="mb-0 h-100 d-flex flex-column">
+                        <Label className="fw-medium mb-1">{t("Enter Lot No")}</Label>
+                        <Input
+                          type="select"
+                          value={lotFilterType}
+                          onChange={(e) => setLotFilterType(e.target.value)}
+                          className="mb-2"
+                        >
+                          {LOT_FILTER_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </Input>
+                        <Input
+                          type="textarea"
+                          rows="4"
+                          value={lotNo}
+                          onChange={(e) => setLotNo(e.target.value)}
+                          placeholder={t("Search by lot no")}
+                          className="mb-2"
+                          style={{ minHeight: "108px", resize: "none" }}
+                        />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+
+                  <Nav pills className="nav-pills-custom nav-success mb-3 bg-light p-1 rounded-3" style={{ border: "none" }}>
+                    <NavItem style={{ flex: 1, textAlign: "center" }}>
+                      <NavLink
+                        className={classnames({ active: filterTab === "basic" })}
+                        onClick={() => setFilterTab("basic")}
+                        style={{ cursor: "pointer", borderRadius: "6px" }}
+                      >
+                        <i className="ri-settings-4-line align-middle me-1" />
                         {t("Basic & Grading Search")}
                       </NavLink>
                     </NavItem>
-                    <NavItem>
-                      <NavLink className={classnames({ active: filterTab === "numeric" })} onClick={() => setFilterTab("numeric")} style={{ cursor: "pointer" }}>
+                    <NavItem style={{ flex: 1, textAlign: "center" }}>
+                      <NavLink
+                        className={classnames({ active: filterTab === "numeric" })}
+                        onClick={() => setFilterTab("numeric")}
+                        style={{ cursor: "pointer", borderRadius: "6px" }}
+                      >
+                        <i className="ri-numbers-line align-middle me-1" />
                         {t("Numeric Search")}
                       </NavLink>
                     </NavItem>
-                    <NavItem>
-                      <NavLink className={classnames({ active: filterTab === "date" })} onClick={() => setFilterTab("date")} style={{ cursor: "pointer" }}>
+                    <NavItem style={{ flex: 1, textAlign: "center" }}>
+                      <NavLink
+                        className={classnames({ active: filterTab === "date" })}
+                        onClick={() => setFilterTab("date")}
+                        style={{ cursor: "pointer", borderRadius: "6px" }}
+                      >
+                        <i className="ri-calendar-line align-middle me-1" />
                         {t("Date Search")}
                       </NavLink>
                     </NavItem>
                   </Nav>
 
                   <TabContent activeTab={filterTab} className="pt-3">
-                <TabPane tabId="basic">
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("Stock Till Date")}</Label><Flatpickr className="form-control" value={date} onChange={([d]) => setDate(d ? d.toISOString().substring(0, 10) : today)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Show")}</Label><Input type="select" value={show} onChange={(e) => setShow(e.target.value)}><option value="All">All</option><option value="Sold">Sold</option><option value="Unsold">Unsold</option></Input></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Hold/UnHold")}</Label><Input type="select" value={holdUnHold} onChange={(e) => setHoldUnHold(e.target.value)}><option value="All">All</option><option value="Hold">Hold</option><option value="Unhold">Unhold</option></Input></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Single/Parcel")}</Label><Input type="select" value={stoneTypes} onChange={(e) => setStoneTypes(e.target.value)}><option value="Single">Single</option><option value="Parcel">Parcel</option><option value="All">All</option></Input></FormGroup></Col>
-                    <Col md={4}><FormGroup><Label>{t("Sorting")}</Label><Input type="select" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>{SORT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}</Input></FormGroup></Col>
-                  </Row>
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("Status")}</Label><Input type="select" value={status} onChange={(e) => setStatus(e.target.value)}><option value="All">All</option><option value="OnHand">OnHand</option><option value="OnMemo">OnMemo</option><option value="OnHand&Int.Memo">OnHand&Int.Memo</option><option value="OnHand + Memo In">OnHand + Memo In</option><option value="OnHand + Party Hold">OnHand + Party Hold</option><option value="Memo In">Memo In</option><option value="Party Hold">Party Hold</option><option value="All - Party Hold">All - Party Hold</option></Input></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Lot Filter")}</Label><Input type="select" value={lotFilterType} onChange={(e) => setLotFilterType(e.target.value)}>{LOT_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Input></FormGroup></Col>
-                    <Col md={8}><FormGroup><Label>{t("Enter Lot No")}</Label><Input type="textarea" rows={2} value={lotNo} onChange={(e) => setLotNo(e.target.value)} placeholder={t("Search by lot no")} /></FormGroup></Col>
-                  </Row>
-                  <Row>
-                    {multiSelect("Shape Group", dropdownOptions.shapeGroup, selectedShapeGroup, setSelectedShapeGroup)}
-                    {multiSelect("Shape", dropdownOptions.shape, selectedShapes, setSelectedShapes)}
-                    {multiSelect("Color Group", dropdownOptions.colorGroup, selectedColorGroup, setSelectedColorGroup)}
-                    {multiSelect("Color", dropdownOptions.color, selectedColors, setSelectedColors)}
-                    {multiSelect("Size", dropdownOptions.size, selectedSizes, setSelectedSizes)}
-                    {multiSelect("Clarity", dropdownOptions.clarity, selectedClarities, setSelectedClarities)}
-                  </Row>
-                  <Row>
-                    {multiSelect("Property", dropdownOptions.proportion, selectedProportions, setSelectedProportions)}
-                    {multiSelect("Polish", dropdownOptions.polish, selectedPolishes, setSelectedPolishes)}
-                    {multiSelect("Sym.", dropdownOptions.symmetry, selectedSymmetries, setSelectedSymmetries)}
-                    {multiSelect("LAB", dropdownOptions.lab, selectedLabs, setSelectedLabs)}
-                    {multiSelect("Rough", dropdownOptions.rough, selectedRough, setSelectedRough)}
-                    {multiSelect("HA", dropdownOptions.ha, selectedHA, setSelectedHA)}
-                  </Row>
-                  <Row>
-                    {multiSelect("Location", dropdownOptions.location, selectedLocations, setSelectedLocations)}
-                    {multiSelect("Fluorescence", dropdownOptions.fluorescence, selectedFluorescences, setSelectedFluorescences)}
-                    {multiSelect("Milky", dropdownOptions.milky, selectedMilkies, setSelectedMilkies)}
-                    {multiSelect("Luster", dropdownOptions.luster, selectedLusters, setSelectedLusters)}
-                    {multiSelect("Natts", dropdownOptions.natts, selectedNatts, setSelectedNatts)}
-                    {multiSelect("Shade", dropdownOptions.shade, selectedShades, setSelectedShades)}
-                  </Row>
-                  <Row>
-                    {multiSelect("FL Color", dropdownOptions.flColor, selectedFlColors, setSelectedFlColors)}
-                    {multiSelect("Group", dropdownOptions.itemGroup, selectedItemGroups, setSelectedItemGroups)}
-                    {multiSelect("Pair", dropdownOptions.pair, selectedPairs, setSelectedPairs)}
-                    {multiSelect("Box Name", dropdownOptions.boxName, selectedBoxNames, setSelectedBoxNames)}
-                  </Row>
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("Carats From")}</Label><Input value={ctsFrm} onChange={(e) => setCtsFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Carats To")}</Label><Input value={ctsTo} onChange={(e) => setCtsTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Back From")}</Label><Input value={backFrm} onChange={(e) => setBackFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Back To")}</Label><Input value={backTo} onChange={(e) => setBackTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Price From")}</Label><Input value={priceFrm} onChange={(e) => setPriceFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Price To")}</Label><Input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} /></FormGroup></Col>
-                  </Row>
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("LotNo From")}</Label><Input value={lotFrm} onChange={(e) => setLotFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("LotNo To")}</Label><Input value={lotTo} onChange={(e) => setLotTo(e.target.value)} /></FormGroup></Col>
-                  </Row>
-                </TabPane>
+                    <TabPane tabId="basic">
+                      <Row className="g-2 mb-2">
+                        {multiSelect("Shape Group", dropdownOptions.shapeGroup, selectedShapeGroup, setSelectedShapeGroup, "col-lg col-md-4 col-sm-6")}
+                        {multiSelect("Shape", dropdownOptions.shape, selectedShapes, setSelectedShapes, "col-lg col-md-4 col-sm-6")}
+                        {multiSelect("Color Group", dropdownOptions.colorGroup, selectedColorGroup, setSelectedColorGroup, "col-lg col-md-4 col-sm-6")}
+                        {multiSelect("Color", dropdownOptions.color, selectedColors, setSelectedColors, "col-lg col-md-4 col-sm-6")}
+                        {multiSelect("Size", dropdownOptions.size, selectedSizes, setSelectedSizes, "col-lg col-md-4 col-sm-6")}
+                        {multiSelect("Clarity", dropdownOptions.clarity, selectedClarities, setSelectedClarities, "col-lg col-md-4 col-sm-6")}
+                      </Row>
+                      <Row className="g-2 mb-2">
+                        {multiSelect("Property", dropdownOptions.proportion, selectedProportions, setSelectedProportions, "col-lg-2 col-md-4")}
+                        {multiSelect("Polish", dropdownOptions.polish, selectedPolishes, setSelectedPolishes, "col-lg-2 col-md-4")}
+                        {multiSelect("Sym.", dropdownOptions.symmetry, selectedSymmetries, setSelectedSymmetries, "col-lg-2 col-md-4")}
+                        {multiSelect("LAB", dropdownOptions.lab, selectedLabs, setSelectedLabs, "col-lg-2 col-md-4")}
+                        {multiSelect("Rough", dropdownOptions.rough, selectedRough, setSelectedRough, "col-lg-2 col-md-4")}
+                        {multiSelect("HA", dropdownOptions.ha, selectedHA, setSelectedHA, "col-lg-2 col-md-4")}
+                      </Row>
+                      <Row className="g-2 mb-2">
+                        {multiSelect("Location", dropdownOptions.location, selectedLocations, setSelectedLocations, "col-lg-2 col-md-4")}
+                        {multiSelect("Fluorescence", dropdownOptions.fluorescence, selectedFluorescences, setSelectedFluorescences, "col-lg-2 col-md-4")}
+                        {multiSelect("Milky", dropdownOptions.milky, selectedMilkies, setSelectedMilkies, "col-lg-2 col-md-4")}
+                        {multiSelect("Luster", dropdownOptions.luster, selectedLusters, setSelectedLusters, "col-lg-2 col-md-4")}
+                        {multiSelect("Natts", dropdownOptions.natts, selectedNatts, setSelectedNatts, "col-lg-2 col-md-4")}
+                        {multiSelect("Shade", dropdownOptions.shade, selectedShades, setSelectedShades, "col-lg-2 col-md-4")}
+                      </Row>
+                      <Row className="g-2">
+                        {multiSelect("FL Color", dropdownOptions.flColor, selectedFlColors, setSelectedFlColors, "col-lg-3 col-md-6")}
+                        {multiSelect("Group", dropdownOptions.itemGroup, selectedItemGroups, setSelectedItemGroups, "col-lg-3 col-md-6")}
+                        {multiSelect("Pair", dropdownOptions.pair, selectedPairs, setSelectedPairs, "col-lg-3 col-md-6")}
+                        {multiSelect("Box Name", dropdownOptions.boxName, selectedBoxNames, setSelectedBoxNames, "col-lg-3 col-md-6")}
+                      </Row>
+                    </TabPane>
 
-                <TabPane tabId="numeric">
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("Table Depth % From")}</Label><Input value={tDepthFrm} onChange={(e) => setTDepthFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Table Depth % To")}</Label><Input value={tDepthTo} onChange={(e) => setTDepthTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Table % From")}</Label><Input value={tablePerFrm} onChange={(e) => setTablePerFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("Table % To")}</Label><Input value={tablePerTo} onChange={(e) => setTablePerTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("CA From")}</Label><Input value={caFrm} onChange={(e) => setCaFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("CA To")}</Label><Input value={caTo} onChange={(e) => setCaTo(e.target.value)} /></FormGroup></Col>
-                  </Row>
-                  <Row>
-                    <Col md={2}><FormGroup><Label>{t("CH From")}</Label><Input value={chFrm} onChange={(e) => setChFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("CH To")}</Label><Input value={chTo} onChange={(e) => setChTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("PH From")}</Label><Input value={phFrm} onChange={(e) => setPhFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("PH To")}</Label><Input value={phTo} onChange={(e) => setPhTo(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("PA From")}</Label><Input value={paFrm} onChange={(e) => setPaFrm(e.target.value)} /></FormGroup></Col>
-                    <Col md={2}><FormGroup><Label>{t("PA To")}</Label><Input value={paTo} onChange={(e) => setPaTo(e.target.value)} /></FormGroup></Col>
-                  </Row>
-                </TabPane>
+                    <TabPane tabId="numeric">
+                      <Row className="g-3 mb-3">
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Carats From")}</Label><Input className="form-control" value={ctsFrm} onChange={(e) => setCtsFrm(e.target.value)} placeholder={t("Carats From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Carats To")}</Label><Input className="form-control" value={ctsTo} onChange={(e) => setCtsTo(e.target.value)} placeholder={t("Carats To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Back From")}</Label><Input className="form-control" value={backFrm} onChange={(e) => setBackFrm(e.target.value)} placeholder={t("Back From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Back To")}</Label><Input className="form-control" value={backTo} onChange={(e) => setBackTo(e.target.value)} placeholder={t("Back To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Price From")}</Label><Input className="form-control" value={priceFrm} onChange={(e) => setPriceFrm(e.target.value)} placeholder={t("Price From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Price To")}</Label><Input className="form-control" value={priceTo} onChange={(e) => setPriceTo(e.target.value)} placeholder={t("Price To")} /></FormGroup></Col>
+                      </Row>
+                      <Row className="g-3 mb-3">
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("LotNo From")}</Label><Input className="form-control" value={lotFrm} onChange={(e) => setLotFrm(e.target.value)} placeholder={t("LotNo From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("LotNo To")}</Label><Input className="form-control" value={lotTo} onChange={(e) => setLotTo(e.target.value)} placeholder={t("LotNo To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Table Depth % From")}</Label><Input className="form-control" value={tDepthFrm} onChange={(e) => setTDepthFrm(e.target.value)} placeholder={t("Table Depth % From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Table Depth % To")}</Label><Input className="form-control" value={tDepthTo} onChange={(e) => setTDepthTo(e.target.value)} placeholder={t("Table Depth % To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Table % From")}</Label><Input className="form-control" value={tablePerFrm} onChange={(e) => setTablePerFrm(e.target.value)} placeholder={t("Table % From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("Table % To")}</Label><Input className="form-control" value={tablePerTo} onChange={(e) => setTablePerTo(e.target.value)} placeholder={t("Table % To")} /></FormGroup></Col>
+                      </Row>
+                      <Row className="g-3 mb-3">
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("CA From")}</Label><Input className="form-control" value={caFrm} onChange={(e) => setCaFrm(e.target.value)} placeholder={t("CA From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("CA To")}</Label><Input className="form-control" value={caTo} onChange={(e) => setCaTo(e.target.value)} placeholder={t("CA To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("CH From")}</Label><Input className="form-control" value={chFrm} onChange={(e) => setChFrm(e.target.value)} placeholder={t("CH From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("CH To")}</Label><Input className="form-control" value={chTo} onChange={(e) => setChTo(e.target.value)} placeholder={t("CH To")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("PH From")}</Label><Input className="form-control" value={phFrm} onChange={(e) => setPhFrm(e.target.value)} placeholder={t("PH From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("PH To")}</Label><Input className="form-control" value={phTo} onChange={(e) => setPhTo(e.target.value)} placeholder={t("PH To")} /></FormGroup></Col>
+                      </Row>
+                      <Row className="g-3">
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("PA From")}</Label><Input className="form-control" value={paFrm} onChange={(e) => setPaFrm(e.target.value)} placeholder={t("PA From")} /></FormGroup></Col>
+                        <Col lg={2} md={4}><FormGroup className="mb-0"><Label className="fw-medium">{t("PA To")}</Label><Input className="form-control" value={paTo} onChange={(e) => setPaTo(e.target.value)} placeholder={t("PA To")} /></FormGroup></Col>
+                      </Row>
+                    </TabPane>
 
-                <TabPane tabId="date">
-                  {[
-                    { chk: purchaseChk, setChk: setPurchaseChk, label: "Purchase Date", from: frmPurchaseDate, setFrom: setFrmPurchaseDate, to: toPurchaseDate, setTo: setToPurchaseDate },
-                    { chk: reviseChk, setChk: setReviseChk, label: "Revision Date", from: frmReviseDate, setFrom: setFrmReviseDate, to: toReviseDate, setTo: setToReviseDate },
-                    { chk: newArrivalChk, setChk: setNewArrivalChk, label: "New Arrival", from: frmNewArrivalDate, setFrom: setFrmNewArrivalDate, to: toNewArrivalDate, setTo: setToNewArrivalDate },
-                    { chk: webRevisedChk, setChk: setWebRevisedChk, label: "Web Revised", from: frmWebRevisedDate, setFrom: setFrmWebRevisedDate, to: toWebRevisedDate, setTo: setToWebRevisedDate },
-                    { chk: unholdChk, setChk: setUnholdChk, label: "Unhold Date", from: frmUnholdDate, setFrom: setFrmUnholdDate, to: toUnholdDate, setTo: setToUnholdDate },
-                    { chk: labDateChk, setChk: setLabDateChk, label: "Lab Date", from: frmLabDate, setFrom: setFrmLabDate, to: toLabDate, setTo: setToLabDate }
-                  ].map((row) => (
-                    <Row key={row.label} className="align-items-center mb-2">
-                      <Col md={1}><Input type="checkbox" checked={row.chk} onChange={(e) => row.setChk(e.target.checked)} /></Col>
-                      <Col md={2}><Label className="mb-0">{t(row.label)} {t("From")}</Label><Flatpickr className="form-control" value={row.from} onChange={([d]) => row.setFrom(d ? d.toISOString().substring(0, 10) : today)} /></Col>
-                      <Col md={2}><Label className="mb-0">{t(row.label)} {t("To")}</Label><Flatpickr className="form-control" value={row.to} onChange={([d]) => row.setTo(d ? d.toISOString().substring(0, 10) : today)} /></Col>
-                    </Row>
-                  ))}
-                </TabPane>
+                    <TabPane tabId="date">
+                      <Row className="g-3">
+                        {/* Purchase Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="purchaseChk"
+                              checked={purchaseChk}
+                              onChange={(e) => setPurchaseChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="purchaseChk">
+                              {t("Filter Purchase Date")}
+                            </Label>
+                          </div>
+                          {purchaseChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Purchase Date From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmPurchaseDate}
+                                  onChange={([d]) => setFrmPurchaseDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Purchase Date To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toPurchaseDate}
+                                  onChange={([d]) => setToPurchaseDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+
+                        {/* Revise Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="reviseChk"
+                              checked={reviseChk}
+                              onChange={(e) => setReviseChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="reviseChk">
+                              {t("Filter Revise Date")}
+                            </Label>
+                          </div>
+                          {reviseChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Revise Date From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmReviseDate}
+                                  onChange={([d]) => setFrmReviseDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Revise Date To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toReviseDate}
+                                  onChange={([d]) => setToReviseDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+
+                        {/* New Arrival Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="newArrivalChk"
+                              checked={newArrivalChk}
+                              onChange={(e) => setNewArrivalChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="newArrivalChk">
+                              {t("Filter New Arrival Date")}
+                            </Label>
+                          </div>
+                          {newArrivalChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("New Arrival From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmNewArrivalDate}
+                                  onChange={([d]) => setFrmNewArrivalDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("New Arrival To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toNewArrivalDate}
+                                  onChange={([d]) => setToNewArrivalDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+
+                        {/* Web Revised Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="webRevisedChk"
+                              checked={webRevisedChk}
+                              onChange={(e) => setWebRevisedChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="webRevisedChk">
+                              {t("Filter Web Revised Date")}
+                            </Label>
+                          </div>
+                          {webRevisedChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Web Revised From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmWebRevisedDate}
+                                  onChange={([d]) => setFrmWebRevisedDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Web Revised To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toWebRevisedDate}
+                                  onChange={([d]) => setToWebRevisedDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+
+                        {/* Unhold Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="unholdChk"
+                              checked={unholdChk}
+                              onChange={(e) => setUnholdChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="unholdChk">
+                              {t("Filter Unhold Date")}
+                            </Label>
+                          </div>
+                          {unholdChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Unhold From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmUnholdDate}
+                                  onChange={([d]) => setFrmUnholdDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Unhold To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toUnholdDate}
+                                  onChange={([d]) => setToUnholdDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+
+                        {/* Lab Date */}
+                        <Col lg={4} md={6}>
+                          <div className="form-check mb-2">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="labDateChk"
+                              checked={labDateChk}
+                              onChange={(e) => setLabDateChk(e.target.checked)}
+                            />
+                            <Label className="form-check-label fw-bold" htmlFor="labDateChk">
+                              {t("Filter Lab Date")}
+                            </Label>
+                          </div>
+                          {labDateChk && (
+                            <Row className="g-2">
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Lab From")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={frmLabDate}
+                                  onChange={([d]) => setFrmLabDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                              <Col sm={6}>
+                                <Label className="fw-medium fs-12">{t("Lab To")}</Label>
+                                <Flatpickr
+                                  className="form-control"
+                                  value={toLabDate}
+                                  onChange={([d]) => setToLabDate(d ? d.toISOString().substring(0, 10) : today)}
+                                  options={{ dateFormat: "Y-m-d" }}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Col>
+                      </Row>
+                    </TabPane>
               </TabContent>
                 </form>
               </CardBody>
-            )}
-          </Card>
+            </Card>
+          )}
 
           {viewMode === "pivotByFilter" && (
-            <Card className="glass-card mb-3">
-              <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center">
-                <span className="fw-semibold">{t("Stock Analysis Pivot (By Filter)")}</span>
-                <Button size="sm" color="link" className="p-0" onClick={() => setViewMode(null)}>
-                  <i className="ri-close-line" />
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center bg-transparent">
+                <span className="fw-semibold text-primary">{t("Stock Analysis Pivot (By Filter)")}</span>
+                <Button size="sm" color="link" className="p-0 text-muted" onClick={() => setViewMode(null)}>
+                  <i className="ri-close-line fs-18" />
                 </Button>
               </CardHeader>
               <CardBody className="p-2">
@@ -835,11 +1205,11 @@ const StockAnalysisReport = () => {
           )}
 
           {viewMode === "pivotFixed" && (
-            <Card className="glass-card mb-3">
-              <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center">
-                <span className="fw-semibold">{t("Stock Analysis Pivot (Fixed)")}</span>
-                <Button size="sm" color="link" className="p-0" onClick={() => setViewMode(null)}>
-                  <i className="ri-close-line" />
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center bg-transparent">
+                <span className="fw-semibold text-primary">{t("Stock Analysis Pivot (Fixed)")}</span>
+                <Button size="sm" color="link" className="p-0 text-muted" onClick={() => setViewMode(null)}>
+                  <i className="ri-close-line fs-18" />
                 </Button>
               </CardHeader>
               <CardBody className="p-2">
@@ -860,17 +1230,25 @@ const StockAnalysisReport = () => {
           )}
 
           {searched && viewMode === "report" && (
-            <Card className="glass-card">
-              <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0">
-                <Nav tabs className="card-header-tabs border-0">
-                  <NavItem>
-                    <NavLink className={classnames({ active: activeTab === "table" })} onClick={() => setActiveTab("table")} style={{ cursor: "pointer" }}>
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
+                <Nav pills className="nav-pills-custom nav-success bg-light p-1 rounded-3" style={{ border: "none" }}>
+                  <NavItem style={{ flex: 1, textAlign: "center" }}>
+                    <NavLink
+                      className={classnames({ active: activeTab === "table" })}
+                      onClick={() => setActiveTab("table")}
+                      style={{ cursor: "pointer", borderRadius: "6px", whiteSpace: "nowrap" }}
+                    >
                       <i className="ri-table-line align-middle me-1" />
                       {t("Data Table")}
                     </NavLink>
                   </NavItem>
-                  <NavItem>
-                    <NavLink className={classnames({ active: activeTab === "charts" })} onClick={() => setActiveTab("charts")} style={{ cursor: "pointer" }}>
+                  <NavItem style={{ flex: 1, textAlign: "center" }}>
+                    <NavLink
+                      className={classnames({ active: activeTab === "charts" })}
+                      onClick={() => setActiveTab("charts")}
+                      style={{ cursor: "pointer", borderRadius: "6px", whiteSpace: "nowrap" }}
+                    >
                       <i className="ri-bar-chart-2-line align-middle me-1" />
                       {t("Analytical Charts")}
                     </NavLink>

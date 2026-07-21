@@ -327,53 +327,71 @@ const MonthAnalysisReport = () => {
         .mar-page-header .mar-chevron-btn:hover {
           color: #405189;
         }
-        .mar-page-header .mar-chevron-btn i {
-          font-size: 22px;
+        .par-chevron-btn {
+          border: 1px solid var(--vz-border-color, #e9ebec);
+          background: transparent;
+          color: var(--vz-body-color, #212529);
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          line-height: 1;
+        }
+        .par-chevron-btn:hover {
+          color: var(--vz-primary, #405189);
+          border-color: var(--vz-primary, #405189);
+        }
+        .par-chevron-btn i {
+          font-size: 20px;
         }
       `}</style>
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={t("Month Analysis Report")} pageTitle={t("Dashboard")} />
 
-          <Card className="glass-card mb-3">
-            <CardHeader className="mar-page-header border-0 pb-2">
-              <h5 className="mb-0 text-muted fw-normal">
-                <span className="text-muted">{t("Reports")} / </span>
-                <span className="text-body fw-semibold">{t("Month Analysis Report")}</span>
-              </h5>
+          {/* Top Control Bar */}
+          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+              <i className="ri-calendar-todo-line fs-20 text-primary"></i>
+              {t("Month Analysis Report")}
+            </h5>
 
+            <div className="d-flex align-items-center flex-nowrap gap-2">
+              {showFilterPanel && (
+                <>
+                  <Button
+                    color="primary"
+                    className="btn-sm rounded-2 px-3 py-1"
+                    type="submit"
+                    form="month-analysis-form"
+                    disabled={loading}
+                  >
+                    {loading ? <Spinner size="sm" /> : t("Report")}
+                  </Button>
+                  <Button
+                    color="soft-secondary"
+                    className="btn-sm rounded-2 px-3 py-1"
+                    type="button"
+                    onClick={handleClear}
+                  >
+                    {t("Clear")}
+                  </Button>
+                </>
+              )}
               <button
                 type="button"
-                className="mar-chevron-btn"
-                title={t("Show filters")}
-                onClick={openFilterPanel}
-                aria-label={t("Show filters")}
+                className="par-chevron-btn"
+                title={showFilterPanel ? t("Collapse filters") : t("Expand filters")}
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+                aria-label={showFilterPanel ? t("Collapse filters") : t("Expand filters")}
               >
-                <i className="ri-arrow-down-s-line" />
+                <i className={showFilterPanel ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"} />
               </button>
+            </div>
+          </div>
 
-              <div className="d-flex align-items-center gap-2" style={{ minWidth: 160, justifyContent: "flex-end" }}>
-                {showFilterPanel && (
-                  <>
-                    <Button
-                      color="primary"
-                      size="sm"
-                      type="submit"
-                      form="month-analysis-form"
-                      disabled={loading}
-                    >
-                      {loading ? <Spinner size="sm" /> : t("Report")}
-                    </Button>
-                    <Button color="outline-secondary" size="sm" type="button" onClick={handleClear}>
-                      {t("Clear")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardHeader>
-
-            {showFilterPanel && (
-              <CardBody>
+          {showFilterPanel && (
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardBody className="bg-light-subtle">
                 <form id="month-analysis-form" onSubmit={handleSearch}>
                   <Row className="g-3 mb-3">
                     <Col md={12}>
@@ -433,7 +451,7 @@ const MonthAnalysisReport = () => {
                   <Row className="g-3">
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("From Date")}</Label>
+                        <Label className="fw-medium">{t("From Date")}</Label>
                         <Flatpickr
                           className="form-control"
                           value={fromDate}
@@ -451,7 +469,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("To Date")}</Label>
+                        <Label className="fw-medium">{t("To Date")}</Label>
                         <Flatpickr
                           className="form-control"
                           value={toDate}
@@ -476,7 +494,7 @@ const MonthAnalysisReport = () => {
                             checked={dueChkBox}
                             onChange={(e) => setDueChkBox(e.target.checked)}
                           />
-                          <Label htmlFor="dueChkBox" className="mb-0">
+                          <Label htmlFor="dueChkBox" className="mb-0 fw-medium">
                             {t("Due Date Range")}
                           </Label>
                         </div>
@@ -514,7 +532,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Group By")}</Label>
+                        <Label className="fw-medium">{t("Group By")}</Label>
                         <select
                           className="form-select"
                           value={groupBy}
@@ -532,7 +550,7 @@ const MonthAnalysisReport = () => {
                   <Row className="g-3">
                     <Col md={4}>
                       <FormGroup>
-                        <Label>{t("Party")}</Label>
+                        <Label className="fw-medium">{t("Party")}</Label>
                         <Select
                           isClearable
                           isLoading={loadingParties}
@@ -546,7 +564,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={4}>
                       <FormGroup>
-                        <Label>{t("Broker")}</Label>
+                        <Label className="fw-medium">{t("Broker")}</Label>
                         <Select
                           isClearable
                           isLoading={loadingBrokers}
@@ -560,7 +578,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={4}>
                       <FormGroup>
-                        <Label>{t("Commission Party")}</Label>
+                        <Label className="fw-medium">{t("Commission Party")}</Label>
                         <Select
                           isClearable
                           isLoading={loadingCommissions}
@@ -577,7 +595,7 @@ const MonthAnalysisReport = () => {
                   <Row className="g-3">
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Category")}</Label>
+                        <Label className="fw-medium">{t("Category")}</Label>
                         <select
                           className="form-select"
                           value={category}
@@ -594,7 +612,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Type")}</Label>
+                        <Label className="fw-medium">{t("Type")}</Label>
                         <select
                           className="form-select"
                           value={type}
@@ -611,7 +629,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Sub Type")}</Label>
+                        <Label className="fw-medium">{t("Sub Type")}</Label>
                         <select
                           className="form-select"
                           value={subType}
@@ -628,7 +646,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Base Currency")}</Label>
+                        <Label className="fw-medium">{t("Base Currency")}</Label>
                         <select
                           className="form-select"
                           value={currency}
@@ -645,7 +663,7 @@ const MonthAnalysisReport = () => {
                     </Col>
                     <Col md={2}>
                       <FormGroup>
-                        <Label>{t("Display Currency")}</Label>
+                        <Label className="fw-medium">{t("Display Currency")}</Label>
                         <select
                           className="form-select"
                           value={dispCurrency}
@@ -663,10 +681,12 @@ const MonthAnalysisReport = () => {
                   </Row>
                 </form>
               </CardBody>
-            )}
+            </Card>
+          )}
 
-            {showReport && (
-              <CardBody className="p-2 pt-0">
+          {showReport && (
+            <Card className="shadow-lg border-0 rounded-3 mb-3">
+              <CardBody className="p-3">
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner color="success" className="mb-2" />
@@ -686,8 +706,8 @@ const MonthAnalysisReport = () => {
                   />
                 )}
               </CardBody>
-            )}
-          </Card>
+            </Card>
+          )}
         </Container>
       </div>
       <ToastContainer />
