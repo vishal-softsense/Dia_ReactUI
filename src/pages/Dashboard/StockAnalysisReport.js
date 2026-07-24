@@ -152,6 +152,7 @@ const StockAnalysisReport = () => {
   const [chartType, setChartType] = useState("doughnut");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showChartTypeMenu, setShowChartTypeMenu] = useState(false);
+  const [colFilters, setColFilters] = useState({});
   const chartMenusRef = useRef(null);
 
   const [date, setDate] = useState(today);
@@ -375,6 +376,27 @@ const StockAnalysisReport = () => {
     return v === undefined || v === null || v === "" ? "Unknown" : String(v);
   };
 
+  const getColValue = (row, colKey) => {
+    switch (colKey) {
+      case "grouping":
+        return getGroupingValue(row, activeReportType);
+      case "pcs":
+        return pick(row, "Pcs", "pcs");
+      case "pcsPer":
+        return pick(row, "PcsPer", "pcsPer");
+      case "carats":
+        return pick(row, "Carats", "carats");
+      case "caratsPer":
+        return pick(row, "CaratsPer", "caratsPer");
+      case "amount":
+        return pick(row, "Amount", "amount");
+      case "amountPer":
+        return pick(row, "AmountPer", "amountPer");
+      default:
+        return "";
+    }
+  };
+
   const rowNum = (row, ...names) => Number(pick(row, ...names) ?? 0);
 
   const fmtInt = (n) => Math.round(Number(n || 0));
@@ -489,21 +511,37 @@ const StockAnalysisReport = () => {
     setActiveTab("table");
     setShowFilterPanel(true);
     setSearchTerm("");
+    setColFilters({});
     setCurrentPage(1);
   };
 
   const filteredData = useMemo(() => {
-    if (!searchTerm) return reportData;
-    const term = searchTerm.toLowerCase();
-    return reportData.filter((row) => {
-      const gv = getGroupingValue(row, activeReportType).toLowerCase();
-      return (
-        gv.includes(term) ||
-        String(pick(row, "Pcs", "pcs") ?? "").includes(term) ||
-        String(pick(row, "Amount", "amount") ?? "").includes(term)
-      );
+    let data = reportData;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      data = data.filter((row) => {
+        const gv = getGroupingValue(row, activeReportType).toLowerCase();
+        return (
+          gv.includes(term) ||
+          String(pick(row, "Pcs", "pcs") ?? "").includes(term) ||
+          String(pick(row, "Amount", "amount") ?? "").includes(term)
+        );
+      });
+    }
+
+    Object.keys(colFilters).forEach((key) => {
+      const val = colFilters[key];
+      if (val) {
+        const term = val.toLowerCase();
+        data = data.filter((row) => {
+          const colVal = getColValue(row, key);
+          return String(colVal ?? "").toLowerCase().includes(term);
+        });
+      }
     });
-  }, [reportData, searchTerm, activeReportType]);
+
+    return data;
+  }, [reportData, searchTerm, colFilters, activeReportType]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -698,19 +736,77 @@ const StockAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
+        /* MVC chart toolbar: download + hamburger */
+        .par-chart-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 8px;
+          position: relative;
+        }
+        .par-chart-icon-btn {
+          background: transparent;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          color: var(--vz-body-color, #333);
+          font-size: 22px;
+          line-height: 1;
+        }
+        .par-chart-icon-btn:hover {
+          color: var(--vz-primary, #405189);
+        }
+        .par-chart-menu {
+          display: none;
+          position: absolute;
+          top: 100%;
+          right: 0;
+          min-width: 120px;
+          background: var(--vz-secondary-bg, #fff);
+          border: 1px solid var(--vz-border-color, #ccc);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          padding: 8px 0;
+          z-index: 20;
+          border-radius: 4px;
+        }
+        .par-chart-menu.show {
+          display: block;
+        }
+        .par-chart-menu a {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          text-decoration: none;
+          color: var(--vz-body-color, #333);
+          font-size: 14px;
+          cursor: pointer;
+        }
+        .par-chart-menu a:hover {
+          background: var(--vz-light, #f0f0f0);
+          color: var(--vz-body-color, #000);
+        }
+        [data-layout-mode="dark"] .par-chart-menu a:hover,
+        [data-bs-theme="dark"] .par-chart-menu a:hover {
+          background: #2a2d36;
+        }
+        .par-chart-menu-wrap {
+          position: relative;
+        }
       `}</style>
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={t("Stock Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-database-line fs-20 text-primary"></i>
               {t("Stock Analysis Report")}
             </h5>
 
-            <div className="d-flex align-items-center gap-2 flex-nowrap">
+            <div className="d-flex align-items-center gap-2 flex-wrap">
               <div className="d-flex align-items-center gap-2">
                 <Label className="mb-0 fw-medium align-self-center">{t("Grouping")}</Label>
                 <select
@@ -747,7 +843,7 @@ const StockAnalysisReport = () => {
 
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
-              <CardBody className="bg-light-subtle py-2">
+              <CardBody className="bg-light-subtle py-2 pb-3">
                 <form id="stock-analysis-form" onSubmit={handleReport}>
                   {/* Outer priority filters layout: Left (All other filters in 2 rows), Right (Enter Lot No stacked) */}
                   <Row className="g-3 mb-3">
@@ -819,7 +915,7 @@ const StockAnalysisReport = () => {
 
                     {/* Enter Lot No (Dropdown + Textarea) Stacked on the Right */}
                     <Col lg={2} md={3} className="d-flex flex-column">
-                      <FormGroup className="mb-0 h-100 d-flex flex-column">
+                      <FormGroup className="mb-0 d-flex flex-column">
                         <Label className="fw-medium mb-1">{t("Enter Lot No")}</Label>
                         <Input
                           type="select"
@@ -833,12 +929,11 @@ const StockAnalysisReport = () => {
                         </Input>
                         <Input
                           type="textarea"
-                          rows="4"
+                          rows="3"
                           value={lotNo}
                           onChange={(e) => setLotNo(e.target.value)}
                           placeholder={t("Search by lot no")}
-                          className="mb-2"
-                          style={{ minHeight: "108px", resize: "none" }}
+                          style={{ resize: "none" }}
                         />
                       </FormGroup>
                     </Col>
@@ -877,7 +972,7 @@ const StockAnalysisReport = () => {
                     </NavItem>
                   </Nav>
 
-                  <TabContent activeTab={filterTab} className="pt-3">
+                  <TabContent activeTab={filterTab} className="pt-2">
                     <TabPane tabId="basic">
                       <Row className="g-2 mb-2">
                         {multiSelect("Shape Group", dropdownOptions.shapeGroup, selectedShapeGroup, setSelectedShapeGroup, "col-lg col-md-4 col-sm-6")}
@@ -1272,7 +1367,7 @@ const StockAnalysisReport = () => {
                   </div>
                 )}
               </CardHeader>
-              <CardBody className="p-3">
+              <CardBody className="p-3" style={{ minHeight: "calc(100vh - 310px)" }}>
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner color="success" className="mb-2" />
@@ -1287,7 +1382,7 @@ const StockAnalysisReport = () => {
                         </div>
                       ) : (
                         <>
-                          <div className="table-responsive report-table-scroll" style={{ maxHeight: 600 }}>
+                          <div className="table-responsive report-table-scroll" style={{ maxHeight: "calc(100vh - 380px)", overflowY: "auto" }}>
                             <table className="table table-bordered table-hover align-middle mb-0 text-end">
                               <thead className="table-light sticky-top">
                                 <tr>
@@ -1298,6 +1393,99 @@ const StockAnalysisReport = () => {
                                   <th>{t("Carats%")}</th>
                                   <th>{t("Amount")}</th>
                                   <th>{t("Amount%")}</th>
+                                </tr>
+                                <tr>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "120px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.grouping || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, grouping: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.pcs || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, pcs: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.pcsPer || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, pcsPer: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.carats || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, carats: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.caratsPer || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, caratsPer: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.amount || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, amount: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "80px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.amountPer || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, amountPer: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1355,40 +1543,56 @@ const StockAnalysisReport = () => {
                         </div>
                       ) : (
                         <>
-                          <div className="d-flex justify-content-end mb-2" ref={chartMenusRef}>
-                            <div className="position-relative me-2">
-                              <Button size="sm" color="outline-secondary"
-                                onClick={() => { setShowExportMenu((v) => !v); setShowChartTypeMenu(false); }}>
+                          <div className="par-chart-toolbar" ref={chartMenusRef}>
+                            <div className="par-chart-menu-wrap">
+                              <button
+                                type="button"
+                                className="par-chart-icon-btn"
+                                title={t("Download")}
+                                aria-label={t("Download")}
+                                onClick={() => { setShowExportMenu((v) => !v); setShowChartTypeMenu(false); }}
+                              >
                                 <i className="ri-download-2-line" />
-                              </Button>
-                              {showExportMenu && (
-                                <div className="position-absolute bg-white border rounded shadow-sm p-2"
-                                  style={{ right: 0, top: "110%", zIndex: 999, minWidth: 120 }}>
-                                  {[["image/png", "PNG"], ["image/jpeg", "JPG"], ["pdf", "PDF"]].map(([fmt, lbl]) => (
-                                    <div key={fmt} className="py-1 px-2" style={{ cursor: "pointer" }}
-                                      onClick={() => { setShowExportMenu(false); handleChartExport(fmt); }}>
-                                      {lbl}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              </button>
+                              <div className={classnames("par-chart-menu", { show: showExportMenu })}>
+                                <a href="#png" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("image/png"); }}>
+                                  <i className="ri-image-line" />
+                                  <span>PNG</span>
+                                </a>
+                                <a href="#jpg" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("image/jpeg"); }}>
+                                  <i className="ri-file-image-line" />
+                                  <span>JPG</span>
+                                </a>
+                                <a href="#pdf" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("pdf"); }}>
+                                  <i className="ri-file-pdf-line" />
+                                  <span>PDF</span>
+                                </a>
+                              </div>
                             </div>
-                            <div className="position-relative">
-                              <Button size="sm" color="outline-secondary"
-                                onClick={() => { setShowChartTypeMenu((v) => !v); setShowExportMenu(false); }}>
+                            <div className="par-chart-menu-wrap">
+                              <button
+                                type="button"
+                                className="par-chart-icon-btn"
+                                title={t("Chart Type")}
+                                aria-label={t("Chart Type")}
+                                onClick={() => { setShowChartTypeMenu((v) => !v); setShowExportMenu(false); }}
+                              >
                                 <i className="ri-menu-line" />
-                              </Button>
-                              {showChartTypeMenu && (
-                                <div className="position-absolute bg-white border rounded shadow-sm p-2"
-                                  style={{ right: 0, top: "110%", zIndex: 999, minWidth: 120 }}>
-                                  {[["doughnut", "Donut"], ["pie", "Pie"], ["bar", "Bar"]].map(([ct, lbl]) => (
-                                    <div key={ct} className="py-1 px-2" style={{ cursor: "pointer" }}
-                                      onClick={() => { setChartType(ct); setShowChartTypeMenu(false); }}>
-                                      {lbl}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              </button>
+                              <div className={classnames("par-chart-menu", { show: showChartTypeMenu })}>
+                                <a href="#donut" onClick={(e) => { e.preventDefault(); setChartType("doughnut"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-pie-chart-2-fill" />
+                                  <span>{t("Donut")}</span>
+                                </a>
+                                <a href="#pie" onClick={(e) => { e.preventDefault(); setChartType("pie"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-pie-chart-line" />
+                                  <span>{t("Pie")}</span>
+                                </a>
+                                <a href="#bar" onClick={(e) => { e.preventDefault(); setChartType("bar"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-bar-chart-2-line" />
+                                  <span>{t("Bar")}</span>
+                                </a>
+                              </div>
                             </div>
                           </div>
                           <h2 className="text-center mb-3">{t("Stock Analysis Report")}</h2>

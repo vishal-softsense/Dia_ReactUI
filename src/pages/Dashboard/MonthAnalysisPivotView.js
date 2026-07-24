@@ -901,7 +901,7 @@ const MonthAnalysisPivotView = ({
       <div
         id="PivotViewHost"
         ref={containerRef}
-        style={{ width: "100%", overflowX: "auto", minHeight: 400 }}
+        style={{ width: "100%", overflowX: "auto", minHeight: "calc(100vh - 380px)" }}
       />
     </div>
   );

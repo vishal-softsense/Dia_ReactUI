@@ -2077,25 +2077,155 @@ const SolitairesStockSearchReport = () => {
                   <React.Fragment>
                     {/* Status Color Guide */}
                     {searchResults.length > 0 && (
-                      <div className="d-flex flex-wrap gap-4 align-items-center mb-3 justify-content-start py-2 px-3 bg-light rounded-3 border">
-                        <span className="text-muted fw-bold">{t("Status Guide")}:</span>
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{ width: "20px", height: "20px", backgroundColor: "#FFB347", borderRadius: "5px" }}></div>
-                          <span className="fw-semibold text-secondary">{t("Hold")}</span>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", borderRadius: "5px" }}></div>
-                          <span className="fw-semibold text-secondary">{t("Memo")}</span>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{ width: "20px", height: "20px", backgroundColor: "#8A2BE2", borderRadius: "5px" }}></div>
-                          <span className="fw-semibold text-secondary">{t("Sold")}</span>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{ width: "20px", height: "20px", backgroundColor: "#008000", borderRadius: "5px" }}></div>
-                          <span className="fw-semibold text-secondary">{t("Memo In")}</span>
-                        </div>
+                      <div className="d-flex flex-wrap gap-4 align-items-center mb-3 py-2 px-3 bg-light rounded border border-light-subtle">
+                        <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
+                          <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
+                          {t("Status Guide")}:
+                        </span>
+                        {[
+                          { color: "#FFB347", label: t("Hold") },
+                          { color: "#FF4444", label: t("Memo") },
+                          { color: "#8A2BE2", label: t("Sold") },
+                          { color: "#22c55e", label: t("Memo In") }
+                        ].map(({ color, label }) => (
+                          <div key={label} className="d-flex align-items-center gap-2">
+                            <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
+                            <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
+                          </div>
+                        ))}
                       </div>
+                    )}
+
+                    {/* Selected Summary + Action Buttons — clean, professional card design */}
+                    {searchResults.length > 0 && (
+                      <Card className="border shadow-sm mb-3">
+                        <CardBody className="p-3 bg-light-subtle">
+                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            
+                            {/* Left: Stats with vertical dividers */}
+                            <div className="d-flex flex-wrap align-items-center gap-4">
+                              <div className="pe-3 border-end">
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("SELECTED")}
+                                </span>
+                                <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1">
+                                  {totals.pcs} {t("Pcs")}
+                                </span>
+                              </div>
+                              
+                              <div className="pe-3 border-end">
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("TOTAL CARATS")}
+                                </span>
+                                <span className="text-dark fw-bold fs-14">{totals.carats}</span>
+                              </div>
+                              
+                              <div className="pe-3 border-end">
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("TOTAL AMOUNT")}
+                                </span>
+                                <span className="text-dark fw-bold fs-14">${parseFloat(totals.amount).toLocaleString()}</span>
+                              </div>
+                              
+                              <div className="pe-3 border-end">
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("AVG RATE")}
+                                </span>
+                                <span className="text-dark fw-bold fs-14">${parseFloat(totals.avgRate).toLocaleString()}</span>
+                              </div>
+                              
+                              <div className="pe-3 border-end">
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("AVG DISC %")}
+                                </span>
+                                <span className="text-danger fw-bold fs-14">{totals.avgDis}%</span>
+                              </div>
+                              
+                              <div>
+                                <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                  {t("AVG MRP")}
+                                </span>
+                                <span className="text-dark fw-bold fs-14">${parseFloat(totals.avgMRP).toLocaleString()}</span>
+                              </div>
+                            </div>
+
+                            {/* Right: Actions */}
+                            <div className="d-flex flex-wrap align-items-center gap-2">
+                              {selectedLotNos.length > 0 && (
+                                <div className="d-flex align-items-center gap-1 me-2 bg-light p-1 rounded border border-light-subtle">
+                                  <span className="text-muted fs-11 fw-bold ps-1 me-1 text-nowrap">{t("LotNo")}:</span>
+                                  <textarea
+                                    className="form-control form-control-sm p-1 bg-white border"
+                                    style={{
+                                      width: "130px",
+                                      height: "28px",
+                                      fontSize: "11px",
+                                      fontWeight: "600",
+                                      resize: "none",
+                                      lineHeight: "1.2",
+                                      fontFamily: "monospace"
+                                    }}
+                                    readOnly
+                                    value={selectedLotNos.join("\n")}
+                                    title={t("Click to select all")}
+                                    onClick={(e) => e.target.select()}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-icon btn-ghost-primary p-0 d-flex align-items-center justify-content-center"
+                                    style={{ width: "24px", height: "24px", borderRadius: "4px" }}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(selectedLotNos.join("\n"));
+                                      toast.success(t("Stock IDs copied to clipboard"));
+                                    }}
+                                    title={t("Copy all Stock IDs")}
+                                  >
+                                    <i className="ri-file-copy-2-line fs-14" />
+                                  </button>
+                                </div>
+                              )}
+                              <a
+                                href="../memo/add-memo"
+                                className={classnames("btn btn-primary btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
+                                role="button"
+                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                              >
+                                <i className="ri-file-text-line me-1 align-bottom" />
+                                {t("Memo")}
+                              </a>
+                              <a
+                                href="../sale/add-sale"
+                                className={classnames("btn btn-success btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
+                                role="button"
+                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                              >
+                                <i className="ri-shopping-cart-2-line me-1 align-bottom" />
+                                {t("Sale")}
+                              </a>
+                              <a
+                                href="../report/Hold-Unhold-report"
+                                className={classnames("btn btn-warning btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
+                                role="button"
+                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                              >
+                                <i className="ri-lock-2-line me-1 align-bottom" />
+                                {t("Hold/UnHold")}
+                              </a>
+                              <Button
+                                color="info"
+                                size="sm"
+                                className="px-3 fw-medium"
+                                disabled={selectedLotNos.length === 0}
+                                onClick={() => setMoreModal(true)}
+                              >
+                                <i className="ri-more-fill me-1 align-bottom" />
+                                {t("More")}
+                              </Button>
+                            </div>
+                            
+                          </div>
+                        </CardBody>
+                      </Card>
                     )}
 
                     {searchResults.length === 0 ? (
@@ -2115,89 +2245,6 @@ const SolitairesStockSearchReport = () => {
                         SearchPlaceholder={t("Filter results...")}
                         getRowClass={(row) => selectedRows[row.index] ? "table-selected-row" : ""}
                       />
-                    )}
-
-                    {/* Summary Bar of SELECTED items */}
-                    {searchResults.length > 0 && (
-                      <Card className="bg-primary-subtle border-primary-subtle border border-1 mt-3">
-                        <CardBody className="py-2">
-                          <Row className="align-items-center text-center text-md-start">
-                            <Col md={2}>
-                              <h6 className="mb-0 text-primary fw-bold">{t("Selected Summary")}</h6>
-                            </Col>
-                            <Col md={10}>
-                              <div className="d-flex flex-wrap gap-4 justify-content-md-end justify-content-center fw-medium">
-                                <div>
-                                  {t("Selected Pcs")}: <span className="badge bg-primary text-white fs-13 ms-1">{totals.pcs}</span>
-                                </div>
-                                <div>
-                                  {t("Total Carats")}: <span className="text-primary fw-bold ms-1">{totals.carats}</span>
-                                </div>
-                                <div>
-                                  {t("Total Amount")}: <span className="text-primary fw-bold ms-1">${parseFloat(totals.amount).toLocaleString()}</span>
-                                </div>
-                                <div>
-                                  {t("Avg Rate")}: <span className="text-success fw-bold ms-1">${parseFloat(totals.avgRate).toLocaleString()}</span>
-                                </div>
-                                <div>
-                                  {t("Avg Disc %")}: <span className="text-danger fw-bold ms-1">{totals.avgDis}%</span>
-                                </div>
-                                <div>
-                                  {t("Avg MRP")}: <span className="text-dark fw-bold ms-1">${parseFloat(totals.avgMRP).toLocaleString()}</span>
-                                </div>
-                              </div>
-                            </Col>
-                          </Row>
-                        </CardBody>
-                      </Card>
-                    )}
-
-                    {/* Action/Routing Buttons and Popups Trigger */}
-                    {searchResults.length > 0 && (
-                      <div className="d-flex flex-wrap gap-2 mt-3 justify-content-end align-items-center">
-                        <div className="me-auto text-muted fs-13 fw-semibold">
-                          {selectedLotNos.length > 0
-                            ? `${t("Selected Lots")}: ${selectedLotNos.slice(0, 5).join(", ")}${selectedLotNos.length > 5 ? "..." : ""}`
-                            : t("No lots selected")}
-                        </div>
-                        <a
-                          href="../memo/add-memo"
-                          className={classnames("btn btn-primary", { disabled: selectedLotNos.length === 0 })}
-                          role="button"
-                          onClick={(e) => {
-                            if (selectedLotNos.length === 0) e.preventDefault();
-                          }}
-                        >
-                          {t("Memo")}
-                        </a>
-                        <a
-                          href="../sale/add-sale"
-                          className={classnames("btn btn-primary", { disabled: selectedLotNos.length === 0 })}
-                          role="button"
-                          onClick={(e) => {
-                            if (selectedLotNos.length === 0) e.preventDefault();
-                          }}
-                        >
-                          {t("Sale")}
-                        </a>
-                        <a
-                          href="../report/Hold-Unhold-report"
-                          className={classnames("btn btn-primary", { disabled: selectedLotNos.length === 0 })}
-                          role="button"
-                          onClick={(e) => {
-                            if (selectedLotNos.length === 0) e.preventDefault();
-                          }}
-                        >
-                          {t("Hold/UnHold")}
-                        </a>
-                        <Button
-                          color="info"
-                          disabled={selectedLotNos.length === 0}
-                          onClick={() => setMoreModal(true)}
-                        >
-                          {t("More...")}
-                        </Button>
-                      </div>
                     )}
                   </React.Fragment>
                 )}

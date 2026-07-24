@@ -349,13 +349,13 @@ const MonthAnalysisReport = () => {
           <BreadCrumb title={t("Month Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-calendar-todo-line fs-20 text-primary"></i>
               {t("Month Analysis Report")}
             </h5>
 
-            <div className="d-flex align-items-center flex-nowrap gap-2">
+            <div className="d-flex align-items-center flex-wrap gap-2">
               {showFilterPanel && (
                 <>
                   <Button
@@ -391,7 +391,7 @@ const MonthAnalysisReport = () => {
 
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
-              <CardBody className="bg-light-subtle">
+              <CardBody className="bg-light-subtle py-2">
                 <form id="month-analysis-form" onSubmit={handleSearch}>
                   <Row className="g-3 mb-3">
                     <Col md={12}>
@@ -686,7 +686,7 @@ const MonthAnalysisReport = () => {
 
           {showReport && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
-              <CardBody className="p-3">
+              <CardBody className="p-3" style={{ minHeight: "calc(100vh - 310px)" }}>
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner color="success" className="mb-2" />

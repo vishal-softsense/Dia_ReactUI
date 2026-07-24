@@ -204,6 +204,7 @@ const PurchaseAnalysisReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
   const [searchTerm, setSearchTerm] = useState("");
+  const [colFilters, setColFilters] = useState({});
 
   // Chart Settings
   const [activeTab, setActiveTab] = useState("table");
@@ -416,6 +417,7 @@ const PurchaseAnalysisReport = () => {
     setShowFilterPanel(true);
     setCurrentPage(1);
     setSearchTerm("");
+    setColFilters({});
   };
 
   // Case-insensitive field read — ASP.NET camelCase turns INRPLper→iNRPLper, CPS→cPS, etc.
@@ -442,6 +444,75 @@ const PurchaseAnalysisReport = () => {
     return String(v);
   };
 
+  const getColValue = (row, colKey) => {
+    switch (colKey) {
+      case "grouping":
+        return getGroupingValue(row, activeReportType);
+      case "purPcs":
+        return pick(row, "PurPcs", "purPcs");
+      case "purPcsper":
+        return pick(row, "PurPcsper", "purPcsper");
+      case "purCarats":
+        return pick(row, "PurCarats", "purCarats");
+      case "purCaratsper":
+        return pick(row, "PurCaratsper", "purCaratsper");
+      case "purCostdollar":
+        return pick(row, "PurCostdollar", "purCostdollar");
+      case "soldPcs":
+        return pick(row, "SoldPcs", "soldPcs");
+      case "soldPcsper":
+        return pick(row, "SoldPcsper", "soldPcsper");
+      case "soldCarats":
+        return pick(row, "SoldCarats", "soldCarats");
+      case "soldCaratsper":
+        return pick(row, "SoldCaratsper", "soldCaratsper");
+      case "saleAmtdollar":
+        return pick(row, "SaleAmtdollar", "saleAmtdollar");
+      case "saleamtdollerper":
+        return pick(row, "Saleamtdollerper", "saleamtdollerper");
+      case "costAmtdollar":
+        return pick(row, "CostAmtdollar", "costAmtdollar");
+      case "salecostamtper":
+        return pick(row, "Salecostamtper", "salecostamtper");
+      case "soldPLdollar":
+        return pick(row, "SoldPLdollar", "soldPLdollar");
+      case "soldPLdollarper":
+        return pick(row, "SoldPLdollarper", "soldPLdollarper");
+      case "pLperOnPurAmtdollar":
+        return pick(row, "PLperOnPurAmtdollar", "pLperOnPurAmtdollar");
+      case "saleAmtINR":
+        return pick(row, "SaleAmtINR", "saleAmtINR");
+      case "saleper":
+        return pick(row, "Saleper", "saleper");
+      case "soldPLINR":
+        return pick(row, "SoldPLINR", "soldPLINR");
+      case "inrPLper":
+        return pick(row, "INRPLper", "inrPLper", "iNRPLper");
+      case "purCostINR":
+        return pick(row, "PurCostINR", "purCostINR");
+      case "pLperOnPurAmtINR":
+        return pick(row, "PLperOnPurAmtINR", "pLperOnPurAmtINR");
+      case "stockPcs":
+        return pick(row, "StockPcs", "stockPcs");
+      case "stockPcsper":
+        return pick(row, "StockPcsper", "stockPcsper");
+      case "stockCarats":
+        return pick(row, "StockCarats", "stockCarats");
+      case "stockCaratsper":
+        return pick(row, "StockCaratsper", "stockCaratsper");
+      case "stockAmtdollar":
+        return pick(row, "StockAmtdollar", "stockAmtdollar");
+      case "stockAmtdollarper":
+        return pick(row, "StockAmtdollarper", "stockAmtdollarper");
+      case "totPLAmtdollar":
+        return pick(row, "TotPLAmtdollar", "totPLAmtdollar");
+      case "totalPLdollarper":
+        return pick(row, "TotalPLdollarper", "totalPLdollarper");
+      default:
+        return "";
+    }
+  };
+
   // MVC ListBox uses ID for both value and display
   const makeSelectOptions = (arr) =>
     (arr || []).map((x) => ({
@@ -461,18 +532,33 @@ const PurchaseAnalysisReport = () => {
 
   // Filter and Paginate Table Data
   const filteredData = useMemo(() => {
-    if (!searchTerm) return reportData;
-    const term = searchTerm.toLowerCase();
-    return reportData.filter((row) => {
-      const gVal = getGroupingValue(row, activeReportType).toLowerCase();
-      return (
-        gVal.includes(term) ||
-        String(pick(row, "PurPcs", "purPcs") ?? "").includes(term) ||
-        String(pick(row, "PurCostdollar", "purCostdollar") ?? "").includes(term) ||
-        String(pick(row, "SaleAmtdollar", "saleAmtdollar") ?? "").includes(term)
-      );
+    let data = reportData;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      data = data.filter((row) => {
+        const gVal = getGroupingValue(row, activeReportType).toLowerCase();
+        return (
+          gVal.includes(term) ||
+          String(pick(row, "PurPcs", "purPcs") ?? "").includes(term) ||
+          String(pick(row, "PurCostdollar", "purCostdollar") ?? "").includes(term) ||
+          String(pick(row, "SaleAmtdollar", "saleAmtdollar") ?? "").includes(term)
+        );
+      });
+    }
+
+    Object.keys(colFilters).forEach((key) => {
+      const val = colFilters[key];
+      if (val) {
+        const term = val.toLowerCase();
+        data = data.filter((row) => {
+          const colVal = getColValue(row, key);
+          return String(colVal ?? "").toLowerCase().includes(term);
+        });
+      }
     });
-  }, [reportData, searchTerm, activeReportType]);
+
+    return data;
+  }, [reportData, searchTerm, colFilters, activeReportType]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -1001,13 +1087,13 @@ const PurchaseAnalysisReport = () => {
           <BreadCrumb title={t("Purchase Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-shopping-bag-3-line fs-20 text-primary"></i>
               {t("Purchase Analysis Report")}
             </h5>
 
-            <div className="d-flex align-items-center flex-nowrap gap-2">
+            <div className="d-flex align-items-center flex-wrap gap-2">
               <div className="d-flex align-items-center gap-2">
                 <Label className="mb-0 fw-medium align-self-center">{t("Grouping")}</Label>
                 <select
@@ -1069,7 +1155,7 @@ const PurchaseAnalysisReport = () => {
 
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
-              <CardBody className="bg-light-subtle">
+              <CardBody className="bg-light-subtle py-2">
                 <form id="purchase-analysis-form" onSubmit={handleSearch}>
                   {/* MVC layout: left filters + right Lot No textarea */}
                   <Row className="g-2">
@@ -1283,7 +1369,7 @@ const PurchaseAnalysisReport = () => {
                 )}
               </CardHeader>
 
-              <CardBody className="p-3">
+              <CardBody className="p-3" style={{ minHeight: "calc(100vh - 310px)" }}>
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner color="success" className="mb-2" />
@@ -1298,7 +1384,7 @@ const PurchaseAnalysisReport = () => {
                         </div>
                       ) : (
                         <div>
-                          <div className="table-responsive report-table-scroll" style={{ maxHeight: 600 }}>
+                          <div className="table-responsive report-table-scroll" style={{ maxHeight: "calc(100vh - 380px)", overflowY: "auto" }}>
                             <table className="table table-bordered table-hover align-middle mb-0 text-end">
                               <thead className="table-light sticky-top">
                                 <tr>
@@ -1333,6 +1419,67 @@ const PurchaseAnalysisReport = () => {
                                   <th>{t("Stock Amt $ %")}</th>
                                   <th>{t("Total PL Amt $")}</th>
                                   <th>{t("Total PL $ %")}</th>
+                                </tr>
+                                <tr>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "120px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.grouping || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, grouping: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  {[
+                                    ["purPcs", "80px"],
+                                    ["purPcsper", "80px"],
+                                    ["purCarats", "80px"],
+                                    ["purCaratsper", "80px"],
+                                    ["purCostdollar", "100px"],
+                                    ["soldPcs", "80px"],
+                                    ["soldPcsper", "80px"],
+                                    ["soldCarats", "80px"],
+                                    ["soldCaratsper", "80px"],
+                                    ["saleAmtdollar", "100px"],
+                                    ["saleamtdollerper", "80px"],
+                                    ["costAmtdollar", "100px"],
+                                    ["salecostamtper", "80px"],
+                                    ["soldPLdollar", "100px"],
+                                    ["soldPLdollarper", "80px"],
+                                    ["pLperOnPurAmtdollar", "80px"],
+                                    ["saleAmtINR", "110px"],
+                                    ["saleper", "80px"],
+                                    ["soldPLINR", "110px"],
+                                    ["inrPLper", "80px"],
+                                    ["purCostINR", "110px"],
+                                    ["pLperOnPurAmtINR", "80px"],
+                                    ["stockPcs", "80px"],
+                                    ["stockPcsper", "80px"],
+                                    ["stockCarats", "80px"],
+                                    ["stockCaratsper", "80px"],
+                                    ["stockAmtdollar", "100px"],
+                                    ["stockAmtdollarper", "80px"],
+                                    ["totPLAmtdollar", "100px"],
+                                    ["totalPLdollarper", "80px"]
+                                  ].map(([key, width]) => (
+                                    <th className="p-1" key={key}>
+                                      <Input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        placeholder={t("Filter...")}
+                                        style={{ minWidth: width, padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                        value={colFilters[key] || ""}
+                                        onChange={(e) => {
+                                          setColFilters(prev => ({ ...prev, [key]: e.target.value }));
+                                          setCurrentPage(1);
+                                        }}
+                                      />
+                                    </th>
+                                  ))}
                                 </tr>
                               </thead>
                               <tbody>

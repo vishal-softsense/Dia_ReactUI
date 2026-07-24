@@ -205,6 +205,7 @@ const SaleAnalysisReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize,    setPageSize]    = useState(500);
   const [searchTerm,  setSearchTerm]  = useState("");
+  const [colFilters,  setColFilters]  = useState({});
 
   // Close menus on outside click
   useEffect(() => {
@@ -392,6 +393,7 @@ const SaleAnalysisReport = () => {
     setReportData([]); setPivotData([]);
     setSearched(false); setShowPivot(false); setShowFilterPanel(true);
     setCurrentPage(1); setSearchTerm("");
+    setColFilters({});
   };
 
   // Case-insensitive field picker (API may camelCase some keys)
@@ -414,6 +416,47 @@ const SaleAnalysisReport = () => {
     return v === undefined || v === null || v === "" ? "" : String(v);
   };
 
+  const getColValue = (row, colKey) => {
+    switch (colKey) {
+      case "grouping":
+        return getGroupingValue(row, activeReportType);
+      case "pcs":
+        return pick(row, "Pcs");
+      case "pcsPer":
+        return pick(row, "PcsPer", "pcsPer");
+      case "carats":
+        return pick(row, "Carats");
+      case "caratsPer":
+        return pick(row, "Caratsper", "caratsper");
+      case "saleAmtdollar":
+        return pick(row, "SaleAmtdollar");
+      case "saleperdollar":
+        return pick(row, "Saleperdollar");
+      case "plDollar":
+        return pick(row, "PLdollar");
+      case "dollarPLper":
+        return pick(row, "DollarPLper");
+      case "purCostdollar":
+        return pick(row, "PurCostdollar");
+      case "plperOnCOGSAmtdollar":
+        return pick(row, "PLperOnCOGSAmtdollar");
+      case "saleAmtINR":
+        return pick(row, "SaleAmtINR");
+      case "saleper":
+        return pick(row, "Saleper");
+      case "plINR":
+        return pick(row, "PLINR");
+      case "inrPLper":
+        return pick(row, "INRPLper", "inrPLper");
+      case "purCostINR":
+        return pick(row, "PurCostINR");
+      case "plperOnCOGSAmtINR":
+        return pick(row, "PLperOnCOGSAmtINR");
+      default:
+        return "";
+    }
+  };
+
   const makeSelectOptions = (arr) =>
     (arr || []).map((x) => ({
       value: x.id ?? x.ID ?? x.name ?? x.Name,
@@ -429,17 +472,32 @@ const SaleAnalysisReport = () => {
 
   // ── Filtered / paginated data ───────────────────────────────────────────────
   const filteredData = useMemo(() => {
-    if (!searchTerm) return reportData;
-    const term = searchTerm.toLowerCase();
-    return reportData.filter((row) => {
-      const gv = getGroupingValue(row, activeReportType).toLowerCase();
-      return (
-        gv.includes(term) ||
-        String(pick(row, "Pcs") ?? "").includes(term) ||
-        String(pick(row, "SaleAmtdollar") ?? "").includes(term)
-      );
+    let data = reportData;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      data = data.filter((row) => {
+        const gv = getGroupingValue(row, activeReportType).toLowerCase();
+        return (
+          gv.includes(term) ||
+          String(pick(row, "Pcs") ?? "").includes(term) ||
+          String(pick(row, "SaleAmtdollar") ?? "").includes(term)
+        );
+      });
+    }
+
+    Object.keys(colFilters).forEach((key) => {
+      const val = colFilters[key];
+      if (val) {
+        const term = val.toLowerCase();
+        data = data.filter((row) => {
+          const colVal = getColValue(row, key);
+          return String(colVal ?? "").toLowerCase().includes(term);
+        });
+      }
     });
-  }, [reportData, searchTerm, activeReportType]);
+
+    return data;
+  }, [reportData, searchTerm, colFilters, activeReportType]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -639,19 +697,77 @@ const SaleAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
+        /* MVC chart toolbar: download + hamburger */
+        .par-chart-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 8px;
+          position: relative;
+        }
+        .par-chart-icon-btn {
+          background: transparent;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          color: var(--vz-body-color, #333);
+          font-size: 22px;
+          line-height: 1;
+        }
+        .par-chart-icon-btn:hover {
+          color: var(--vz-primary, #405189);
+        }
+        .par-chart-menu {
+          display: none;
+          position: absolute;
+          top: 100%;
+          right: 0;
+          min-width: 120px;
+          background: var(--vz-secondary-bg, #fff);
+          border: 1px solid var(--vz-border-color, #ccc);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          padding: 8px 0;
+          z-index: 20;
+          border-radius: 4px;
+        }
+        .par-chart-menu.show {
+          display: block;
+        }
+        .par-chart-menu a {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          text-decoration: none;
+          color: var(--vz-body-color, #333);
+          font-size: 14px;
+          cursor: pointer;
+        }
+        .par-chart-menu a:hover {
+          background: var(--vz-light, #f0f0f0);
+          color: var(--vz-body-color, #000);
+        }
+        [data-layout-mode="dark"] .par-chart-menu a:hover,
+        [data-bs-theme="dark"] .par-chart-menu a:hover {
+          background: #2a2d36;
+        }
+        .par-chart-menu-wrap {
+          position: relative;
+        }
       `}</style>
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={t("Sale Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-line-chart-line fs-20 text-primary"></i>
               {t("Sale Analysis Report")}
             </h5>
 
-            <div className="d-flex align-items-center flex-nowrap gap-2">
+            <div className="d-flex align-items-center flex-wrap gap-2">
               <div className="d-flex align-items-center gap-2">
                 <Label className="mb-0 fw-medium align-self-center">{t("Grouping")}</Label>
                 <select
@@ -704,7 +820,7 @@ const SaleAnalysisReport = () => {
 
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
-              <CardBody className="bg-light-subtle">
+              <CardBody className="bg-light-subtle py-2">
                 <form id="sale-analysis-form" onSubmit={handleSearch}>
                   {/* Row 1: dates, currency, inv no, bill no, type */}
                   <Row className="g-2 mb-2">
@@ -952,7 +1068,7 @@ const SaleAnalysisReport = () => {
                 )}
               </CardHeader>
 
-              <CardBody className="p-3">
+              <CardBody className="p-3" style={{ minHeight: "calc(100vh - 310px)" }}>
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner color="success" className="mb-2" />
@@ -969,7 +1085,7 @@ const SaleAnalysisReport = () => {
                         </div>
                       ) : (
                         <>
-                          <div className="table-responsive report-table-scroll" style={{ maxHeight: 600 }}>
+                          <div className="table-responsive report-table-scroll" style={{ maxHeight: "calc(100vh - 380px)", overflowY: "auto" }}>
                             <table className="table table-bordered table-hover align-middle mb-0 text-end">
                               <thead className="table-light sticky-top">
                                 <tr>
@@ -990,6 +1106,53 @@ const SaleAnalysisReport = () => {
                                   <th>{t("INR PL%")}</th>
                                   <th>{t("COGS INR")}</th>
                                   <th>{t("PL % On COGS INR")}</th>
+                                </tr>
+                                <tr>
+                                  <th className="p-1">
+                                    <Input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder={t("Filter...")}
+                                      style={{ minWidth: "120px", padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                      value={colFilters.grouping || ""}
+                                      onChange={(e) => {
+                                        setColFilters(prev => ({ ...prev, grouping: e.target.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                    />
+                                  </th>
+                                  {[
+                                    ["pcs", "80px"],
+                                    ["pcsPer", "80px"],
+                                    ["carats", "80px"],
+                                    ["caratsPer", "80px"],
+                                    ["saleAmtdollar", "100px"],
+                                    ["saleperdollar", "80px"],
+                                    ["plDollar", "100px"],
+                                    ["dollarPLper", "80px"],
+                                    ["purCostdollar", "100px"],
+                                    ["plperOnCOGSAmtdollar", "80px"],
+                                    ["saleAmtINR", "110px"],
+                                    ["saleper", "80px"],
+                                    ["plINR", "110px"],
+                                    ["inrPLper", "80px"],
+                                    ["purCostINR", "110px"],
+                                    ["plperOnCOGSAmtINR", "80px"]
+                                  ].map(([key, width]) => (
+                                    <th className="p-1" key={key}>
+                                      <Input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        placeholder={t("Filter...")}
+                                        style={{ minWidth: width, padding: "2px 5px", fontSize: "11px", height: "24px" }}
+                                        value={colFilters[key] || ""}
+                                        onChange={(e) => {
+                                          setColFilters(prev => ({ ...prev, [key]: e.target.value }));
+                                          setCurrentPage(1);
+                                        }}
+                                      />
+                                    </th>
+                                  ))}
                                 </tr>
                               </thead>
                               <tbody>
@@ -1071,41 +1234,56 @@ const SaleAnalysisReport = () => {
                         </div>
                       ) : (
                         <>
-                          {/* Export / chart-type menus */}
-                          <div className="d-flex justify-content-end mb-2" ref={chartMenusRef}>
-                            <div className="position-relative me-2">
-                              <Button size="sm" color="outline-secondary"
-                                onClick={() => { setShowExportMenu((v) => !v); setShowChartTypeMenu(false); }}>
+                          <div className="par-chart-toolbar" ref={chartMenusRef}>
+                            <div className="par-chart-menu-wrap">
+                              <button
+                                type="button"
+                                className="par-chart-icon-btn"
+                                title={t("Download")}
+                                aria-label={t("Download")}
+                                onClick={() => { setShowExportMenu((v) => !v); setShowChartTypeMenu(false); }}
+                              >
                                 <i className="ri-download-2-line" />
-                              </Button>
-                              {showExportMenu && (
-                                <div className="position-absolute bg-white border rounded shadow-sm p-2"
-                                  style={{ right: 0, top: "110%", zIndex: 999, minWidth: 120 }}>
-                                  {[["image/png","PNG"],["image/jpeg","JPG"],["pdf","PDF"]].map(([fmt,lbl]) => (
-                                    <div key={fmt} className="py-1 px-2" style={{ cursor: "pointer" }}
-                                      onClick={() => { setShowExportMenu(false); handleChartExport(fmt); }}>
-                                      {lbl}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              </button>
+                              <div className={classnames("par-chart-menu", { show: showExportMenu })}>
+                                <a href="#png" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("image/png"); }}>
+                                  <i className="ri-image-line" />
+                                  <span>PNG</span>
+                                </a>
+                                <a href="#jpg" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("image/jpeg"); }}>
+                                  <i className="ri-file-image-line" />
+                                  <span>JPG</span>
+                                </a>
+                                <a href="#pdf" onClick={(e) => { e.preventDefault(); setShowExportMenu(false); handleChartExport("pdf"); }}>
+                                  <i className="ri-file-pdf-line" />
+                                  <span>PDF</span>
+                                </a>
+                              </div>
                             </div>
-                            <div className="position-relative">
-                              <Button size="sm" color="outline-secondary"
-                                onClick={() => { setShowChartTypeMenu((v) => !v); setShowExportMenu(false); }}>
+                            <div className="par-chart-menu-wrap">
+                              <button
+                                type="button"
+                                className="par-chart-icon-btn"
+                                title={t("Chart Type")}
+                                aria-label={t("Chart Type")}
+                                onClick={() => { setShowChartTypeMenu((v) => !v); setShowExportMenu(false); }}
+                              >
                                 <i className="ri-menu-line" />
-                              </Button>
-                              {showChartTypeMenu && (
-                                <div className="position-absolute bg-white border rounded shadow-sm p-2"
-                                  style={{ right: 0, top: "110%", zIndex: 999, minWidth: 120 }}>
-                                  {[["doughnut","Donut"],["pie","Pie"],["bar","Bar"]].map(([ct,lbl]) => (
-                                    <div key={ct} className="py-1 px-2" style={{ cursor: "pointer" }}
-                                      onClick={() => { setChartType(ct); setShowChartTypeMenu(false); }}>
-                                      {lbl}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              </button>
+                              <div className={classnames("par-chart-menu", { show: showChartTypeMenu })}>
+                                <a href="#donut" onClick={(e) => { e.preventDefault(); setChartType("doughnut"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-pie-chart-2-fill" />
+                                  <span>{t("Donut")}</span>
+                                </a>
+                                <a href="#pie" onClick={(e) => { e.preventDefault(); setChartType("pie"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-pie-chart-line" />
+                                  <span>{t("Pie")}</span>
+                                </a>
+                                <a href="#bar" onClick={(e) => { e.preventDefault(); setChartType("bar"); setShowChartTypeMenu(false); }}>
+                                  <i className="ri-bar-chart-2-line" />
+                                  <span>{t("Bar")}</span>
+                                </a>
+                              </div>
                             </div>
                           </div>
 
