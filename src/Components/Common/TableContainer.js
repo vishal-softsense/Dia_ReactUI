@@ -35,6 +35,8 @@ const Filter = ({
   // table
 }) => {
   const columnFilterValue = column.getFilterValue();
+  const placeholder =
+    typeof column.columnDef.header === "string" ? column.columnDef.header : "";
 
   return (
     <>
@@ -42,7 +44,7 @@ const Filter = ({
         type="text"
         value={(columnFilterValue ?? '')}
         onChange={(value) => column.setFilterValue(value)}
-        placeholder=""
+        placeholder={placeholder}
         className="form-control form-control-sm mt-1"
         style={{ height: "26px", fontSize: "11px", padding: "2px 8px" }}
         debounce={100}

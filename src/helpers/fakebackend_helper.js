@@ -693,6 +693,13 @@ export const updateSolitaireStockBoxGroup = (data) => api.create(url.SOLITAIRE_S
 export const getSolitaireStockEmailSettings = () => api.get(url.SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS);
 export const sendSolitaireStockEmail = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST, data);
 
+// Solitaire Admin Stock Report
+export const getSolitaireAdminStockReport = (filter) => api.create(url.SOLITAIRE_ADMIN_STOCK_REPORT, filter);
+export const getSolitaireAdminStockDropdowns = () => api.get(url.SOLITAIRE_ADMIN_STOCK_DROPDOWNS);
+export const getSolitaireAdminLots = (search) => api.get(`${url.SOLITAIRE_ADMIN_STOCK_LOTS}?searchby=${search}`);
+export const updateSolitaireAdminStockLocation = (data) => api.create(url.SOLITAIRE_ADMIN_STOCK_UPDATE_LOCATION, data);
+export const updateSolitaireAdminStockBoxGroup = (data) => api.create(url.SOLITAIRE_ADMIN_STOCK_UPDATE_BOX_GROUP, data);
+
 // Month Analysis Report
 export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);
 export const getMonthAnalysisDropdowns = () => api.get(url.MONTH_ANALYSIS_REPORT_DROPDOWNS);

@@ -545,6 +545,13 @@ export const SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP = "/api/SolitaireStockSearc
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS = "/api/SolitaireStockSearchReport/email-settings";
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST = "/api/SolitaireStockSearchReport/email-stock-list";
 
+// Solitaire Admin Stock Report
+export const SOLITAIRE_ADMIN_STOCK_REPORT = "/api/SolitaireAdminStockReport/search";
+export const SOLITAIRE_ADMIN_STOCK_DROPDOWNS = "/api/SolitaireAdminStockReport/dropdowns";
+export const SOLITAIRE_ADMIN_STOCK_LOTS = "/api/SolitaireAdminStockReport/get-solitaire-lots";
+export const SOLITAIRE_ADMIN_STOCK_UPDATE_LOCATION = "/api/SolitaireAdminStockReport/update-location";
+export const SOLITAIRE_ADMIN_STOCK_UPDATE_BOX_GROUP = "/api/SolitaireAdminStockReport/update-box-group";
+
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";
 export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdowns";

@@ -181,7 +181,11 @@ const CustomMenuList = (props) => {
       {/* Select All Checkbox */}
       <div
         className="px-3 py-2 border-bottom d-flex align-items-center gap-2 select-all-row"
-        style={{ cursor: "pointer", background: "#f8f9fa" }}
+        style={{
+          cursor: "pointer",
+          background: "var(--vz-tertiary-bg, #f8f9fa)",
+          borderColor: "var(--vz-border-color, #dee2e6)",
+        }}
         onClick={onSelectAll}
       >
         <input
@@ -191,7 +195,10 @@ const CustomMenuList = (props) => {
           onChange={() => null}
           style={{ cursor: "pointer" }}
         />
-        <span className="fw-semibold text-uppercase" style={{ fontSize: "12px", color: "#495057" }}>
+        <span
+          className="fw-semibold text-uppercase"
+          style={{ fontSize: "12px", color: "var(--vz-body-color, #495057)" }}
+        >
           {t("SELECT ALL")}
         </span>
       </div>
@@ -210,7 +217,15 @@ const CustomValueContainer = ({ children, ...props }) => {
   return (
     <components.ValueContainer {...props}>
       {showSelectedText && (
-        <div className="position-absolute" style={{ color: "#495057", fontSize: "13px", left: "10px", pointerEvents: "none" }}>
+        <div
+          className="position-absolute"
+          style={{
+            color: "var(--vz-body-color, #495057)",
+            fontSize: "13px",
+            left: "10px",
+            pointerEvents: "none",
+          }}
+        >
           {numSelected} Selected
         </div>
       )}
@@ -239,6 +254,11 @@ const SolitairesStockSearchReport = () => {
 
   // Selected Rows state
   const [selectedRows, setSelectedRows] = useState({});
+
+  // Stock ID Detail Modal
+  const [detailModal, setDetailModal] = useState(false);
+  const [selectedRowDetail, setSelectedRowDetail] = useState(null);
+  const [detailMediaTab, setDetailMediaTab] = useState("image");
 
   // More Modal & Location Modal states
   const [moreModal, setMoreModal] = useState(false);
@@ -415,18 +435,67 @@ const SolitairesStockSearchReport = () => {
   };
 
   const customStyles = useMemo(() => ({
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: "var(--vz-secondary-bg, #fff)",
+      borderColor: "var(--vz-border-color, #ced4da)",
+      color: "var(--vz-body-color, #495057)",
+      minHeight: "31px",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: "var(--vz-secondary-bg, #fff)",
+      color: "var(--vz-body-color, #495057)",
+      border: "1px solid var(--vz-border-color, #dee2e6)",
+      zIndex: 20,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      backgroundColor: "var(--vz-secondary-bg, #fff)",
+      color: "var(--vz-body-color, #495057)",
+    }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isFocused
-        ? "#3b5de7"
-        : "transparent",
-      color: state.isFocused
-        ? "#ffffff"
-        : "#495057",
+      backgroundColor: state.isFocused ? "#3b5de7" : "transparent",
+      color: state.isFocused ? "#ffffff" : "var(--vz-body-color, #495057)",
       cursor: "pointer",
       ":active": {
         backgroundColor: "#3b5de7",
-      }
+      },
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: "var(--vz-body-color, #495057)",
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "var(--vz-secondary-color, #878a99)",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "var(--vz-body-color, #495057)",
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "transparent",
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      color: "var(--vz-body-color, #495057)",
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      color: "var(--vz-secondary-color, #878a99)",
+      ":hover": {
+        color: "var(--vz-body-color, #495057)",
+      },
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: "var(--vz-secondary-color, #878a99)",
+      ":hover": {
+        color: "var(--vz-body-color, #495057)",
+      },
     }),
   }), []);
 
@@ -690,7 +759,8 @@ const SolitairesStockSearchReport = () => {
         header: t(col.label),
         accessorKey: col.key,
         accessorFn: (row) => row[col.key] !== undefined ? row[col.key] : row[col.key.charAt(0).toUpperCase() + col.key.slice(1)],
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: "includesString",
         cell: (cellProps) => {
           const row = cellProps.row.original;
           const val = cellProps.getValue();
@@ -717,6 +787,38 @@ const SolitairesStockSearchReport = () => {
           else if (status === "Sold") statusColor = "text-purple fw-bold";
           else if (status === "PH") statusColor = "text-warning fw-semibold";
           else if (status === "MI") statusColor = "text-success fw-semibold";
+
+          if (col.key === "lotNo") {
+            return (
+              <span
+                className="text-primary text-decoration-underline fw-semibold"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setSelectedRowDetail(row);
+                  setDetailMediaTab("image");
+                  setDetailModal(true);
+                }}
+              >
+                {val}
+              </span>
+            );
+          }
+
+          if (col.key === "cNo") {
+            const certUrl = row.certPath || row.CertPath;
+            if (certUrl) {
+              return (
+                <a
+                  href={certUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary text-decoration-underline"
+                >
+                  {displayVal !== null && displayVal !== undefined ? String(displayVal) : ""}
+                </a>
+              );
+            }
+          }
 
           return (
             <span
@@ -1481,7 +1583,7 @@ const SolitairesStockSearchReport = () => {
                       style={{ cursor: "pointer", borderRadius: "6px" }}
                     >
                       <i className="ri-settings-4-line align-middle me-1"></i>
-                      {t("Basic & Grading")}
+                      {t("Basic & Grading Search")}
                     </NavLink>
                   </NavItem>
                   <NavItem style={{ flex: 1, textAlign: "center" }}>
@@ -1491,7 +1593,7 @@ const SolitairesStockSearchReport = () => {
                       style={{ cursor: "pointer", borderRadius: "6px" }}
                     >
                       <i className="ri-numbers-line align-middle me-1"></i>
-                      {t("Numeric Ranges")}
+                      {t("Numeric Search")}
                     </NavLink>
                   </NavItem>
                   <NavItem style={{ flex: 1, textAlign: "center" }}>
@@ -1501,7 +1603,7 @@ const SolitairesStockSearchReport = () => {
                       style={{ cursor: "pointer", borderRadius: "6px" }}
                     >
                       <i className="ri-calendar-line align-middle me-1"></i>
-                      {t("Date Filters")}
+                      {t("Date Search")}
                     </NavLink>
                   </NavItem>
                 </Nav>
@@ -1590,7 +1692,7 @@ const SolitairesStockSearchReport = () => {
                     </Row>
 
                     {/* Row 4: FL COLOR | GROUP | PAIR | BOX NAME */}
-                    <Row className="g-3">
+                    <Row className="g-3 mb-3">
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("FL Color")}</Label>
                         <Select isMulti name="flColor" options={getOptions("FLCOLOR")} value={getOptions("FLCOLOR").filter((o) => filters.flColor.includes(o.value))} onChange={(sel) => handleSelectChange("flColor", sel)} placeholder={t("FlColor")} isLoading={loadingDropdowns} />
@@ -1608,242 +1710,101 @@ const SolitairesStockSearchReport = () => {
                         <Select isMulti name="boxNm" options={getOptions("BoxName")} value={getOptions("BoxName").filter((o) => filters.boxNm.includes(o.value))} onChange={(sel) => handleSelectChange("boxNm", sel)} placeholder={t("BoxName")} isLoading={loadingDropdowns} />
                       </Col>
                     </Row>
-                  </TabPane>
 
-                  {/* Numeric Ranges Tab */}
-                  <TabPane tabId="2">
-                    <Row className="g-3">
+                    {/* Row 5–6: Carats / Back / Price / LotNo ranges */}
+                    <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Carats From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.001"
-                          name="ctsFrm"
-                          value={filters.ctsFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("Carats From")}
-                        />
+                        <Input type="number" step="0.001" name="ctsFrm" value={filters.ctsFrm} onChange={handleInputChange} placeholder={t("Carats From")} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Carats To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.001"
-                          name="ctsTo"
-                          value={filters.ctsTo}
-                          onChange={handleInputChange}
-                          placeholder={t("Carats To")}
-                        />
+                        <Input type="number" step="0.001" name="ctsTo" value={filters.ctsTo} onChange={handleInputChange} placeholder={t("Carats To")} />
                       </Col>
-
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Back From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="backFrm"
-                          value={filters.backFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("Back From")}
-                        />
+                        <Input type="number" step="0.01" name="backFrm" value={filters.backFrm} onChange={handleInputChange} placeholder={t("Back From")} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Back To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="backTo"
-                          value={filters.backTo}
-                          onChange={handleInputChange}
-                          placeholder={t("Back To")}
-                        />
+                        <Input type="number" step="0.01" name="backTo" value={filters.backTo} onChange={handleInputChange} placeholder={t("Back To")} />
                       </Col>
-
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Price From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="priceFrm"
-                          value={filters.priceFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("Price From")}
-                        />
+                        <Input type="number" step="0.01" name="priceFrm" value={filters.priceFrm} onChange={handleInputChange} placeholder={t("Price From")} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Price To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="priceTo"
-                          value={filters.priceTo}
-                          onChange={handleInputChange}
-                          placeholder={t("Price To")}
-                        />
+                        <Input type="number" step="0.01" name="priceTo" value={filters.priceTo} onChange={handleInputChange} placeholder={t("Price To")} />
                       </Col>
-
+                    </Row>
+                    <Row className="g-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Lotno From")}</Label>
-                        <Input
-                          type="number"
-                          name="lotFrm"
-                          value={filters.lotFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("Lotno From")}
-                        />
+                        <Input type="number" name="lotFrm" value={filters.lotFrm} onChange={handleInputChange} placeholder={t("Lotno From")} />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Lotno To")}</Label>
-                        <Input
-                          type="number"
-                          name="lotTo"
-                          value={filters.lotTo}
-                          onChange={handleInputChange}
-                          placeholder={t("Lotno To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("T.Depth% From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="tDepthFrm"
-                          value={filters.tDepthFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("T.Depth% From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("T.Depth% To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="tDepthTo"
-                          value={filters.tDepthTo}
-                          onChange={handleInputChange}
-                          placeholder={t("T.Depth% To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("Table% From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="tablePerFrm"
-                          value={filters.tablePerFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("Table% From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("Table% To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="tablePerTo"
-                          value={filters.tablePerTo}
-                          onChange={handleInputChange}
-                          placeholder={t("Table% To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("CA From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="caFrm"
-                          value={filters.caFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("CA From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("CA To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="caTo"
-                          value={filters.caTo}
-                          onChange={handleInputChange}
-                          placeholder={t("CA To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("CH From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="chFrm"
-                          value={filters.chFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("CH From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("CH To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="chTo"
-                          value={filters.chTo}
-                          onChange={handleInputChange}
-                          placeholder={t("CH To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("PH From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="phFrm"
-                          value={filters.phFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("PH From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("PH To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="phTo"
-                          value={filters.phTo}
-                          onChange={handleInputChange}
-                          placeholder={t("PH To")}
-                        />
-                      </Col>
-
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("PA From")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="paFrm"
-                          value={filters.paFrm}
-                          onChange={handleInputChange}
-                          placeholder={t("PA From")}
-                        />
-                      </Col>
-                      <Col lg={2} md={4}>
-                        <Label className="fw-medium">{t("PA To")}</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          name="paTo"
-                          value={filters.paTo}
-                          onChange={handleInputChange}
-                          placeholder={t("PA To")}
-                        />
+                        <Input type="number" name="lotTo" value={filters.lotTo} onChange={handleInputChange} placeholder={t("Lotno To")} />
                       </Col>
                     </Row>
                   </TabPane>
 
-                  {/* Date Filters Tab */}
+                  {/* Numeric Search Tab */}
+                  <TabPane tabId="2">
+                    <Row className="g-3">
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("T.Depth% From")}</Label>
+                        <Input type="number" step="0.01" name="tDepthFrm" value={filters.tDepthFrm} onChange={handleInputChange} placeholder={t("T.Depth% From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("T.Depth% To")}</Label>
+                        <Input type="number" step="0.01" name="tDepthTo" value={filters.tDepthTo} onChange={handleInputChange} placeholder={t("T.Depth% To")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("Table% From")}</Label>
+                        <Input type="number" step="0.01" name="tablePerFrm" value={filters.tablePerFrm} onChange={handleInputChange} placeholder={t("Table% From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("Table% To")}</Label>
+                        <Input type="number" step="0.01" name="tablePerTo" value={filters.tablePerTo} onChange={handleInputChange} placeholder={t("Table% To")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("CA From")}</Label>
+                        <Input type="number" step="0.01" name="caFrm" value={filters.caFrm} onChange={handleInputChange} placeholder={t("CA From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("CA To")}</Label>
+                        <Input type="number" step="0.01" name="caTo" value={filters.caTo} onChange={handleInputChange} placeholder={t("CA To")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("CH From")}</Label>
+                        <Input type="number" step="0.01" name="chFrm" value={filters.chFrm} onChange={handleInputChange} placeholder={t("CH From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("CH To")}</Label>
+                        <Input type="number" step="0.01" name="chTo" value={filters.chTo} onChange={handleInputChange} placeholder={t("CH To")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("PH From")}</Label>
+                        <Input type="number" step="0.01" name="phFrm" value={filters.phFrm} onChange={handleInputChange} placeholder={t("PH From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("PH To")}</Label>
+                        <Input type="number" step="0.01" name="phTo" value={filters.phTo} onChange={handleInputChange} placeholder={t("PH To")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("PA From")}</Label>
+                        <Input type="number" step="0.01" name="paFrm" value={filters.paFrm} onChange={handleInputChange} placeholder={t("PA From")} />
+                      </Col>
+                      <Col lg={2} md={4}>
+                        <Label className="fw-medium">{t("PA To")}</Label>
+                        <Input type="number" step="0.01" name="paTo" value={filters.paTo} onChange={handleInputChange} placeholder={t("PA To")} />
+                      </Col>
+                    </Row>
+                  </TabPane>
+
+                  {/* Date Search Tab */}
                   <TabPane tabId="3">
                     <Row className="g-3">
                       <Col lg={4} md={6}>
@@ -2101,7 +2062,7 @@ const SolitairesStockSearchReport = () => {
                       <Card className="border shadow-sm mb-3">
                         <CardBody className="p-3 bg-light-subtle">
                           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                            
+
                             {/* Left: Stats with vertical dividers */}
                             <div className="d-flex flex-wrap align-items-center gap-4">
                               <div className="pe-3 border-end">
@@ -2112,35 +2073,35 @@ const SolitairesStockSearchReport = () => {
                                   {totals.pcs} {t("Pcs")}
                                 </span>
                               </div>
-                              
+
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL CARATS")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">{totals.carats}</span>
                               </div>
-                              
+
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL AMOUNT")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.amount).toLocaleString()}</span>
                               </div>
-                              
+
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG RATE")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.avgRate).toLocaleString()}</span>
                               </div>
-                              
+
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG DISC %")}
                                 </span>
                                 <span className="text-danger fw-bold fs-14">{totals.avgDis}%</span>
                               </div>
-                              
+
                               <div>
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG MRP")}
@@ -2222,7 +2183,7 @@ const SolitairesStockSearchReport = () => {
                                 {t("More")}
                               </Button>
                             </div>
-                            
+
                           </div>
                         </CardBody>
                       </Card>
@@ -2253,6 +2214,301 @@ const SolitairesStockSearchReport = () => {
           )}
         </Container>
       </div>
+      {/* Stock ID Detail View Modal */}
+      <Modal
+        isOpen={detailModal}
+        toggle={() => setDetailModal(!detailModal)}
+        centered
+        size="xl"
+      >
+        <ModalHeader toggle={() => setDetailModal(!detailModal)}>
+          {t("Stock ID Detail View")}:{" "}
+          <span className="text-primary">
+            {selectedRowDetail?.lotNo || selectedRowDetail?.LotNo}
+          </span>
+        </ModalHeader>
+        <ModalBody className="p-4">
+          {selectedRowDetail && (() => {
+            const d = selectedRowDetail;
+            const get = (...keys) => {
+              for (const k of keys) {
+                if (d[k] !== undefined && d[k] !== null && d[k] !== "") return d[k];
+              }
+              return "";
+            };
+            const num = (...keys) => parseFloat(get(...keys) || 0);
+            const imagePath = get("imagePath", "ImagePath");
+            const videoPath = get("videoPath", "VideoPath");
+            const heartsPath = get("heartsImagePath", "HeartsImagePath");
+            const arrowsPath = get("arrowsImagePath", "ArrowsImagePath");
+            const assetPath = get("assetImagePath", "AssetImagePath");
+            const certPath = get("certPath", "CertPath");
+            const mediaTabs = [
+              imagePath && { id: "image", label: t("Image"), src: imagePath, type: "image" },
+              videoPath && { id: "video", label: t("Video"), src: videoPath, type: "video" },
+              heartsPath && { id: "hearts", label: t("Hearts"), src: heartsPath, type: "image" },
+              arrowsPath && { id: "arrows", label: t("Arrows"), src: arrowsPath, type: "image" },
+              assetPath && { id: "asset", label: t("Asset"), src: assetPath, type: "image" },
+            ].filter(Boolean);
+            const activeTab = mediaTabs.find((tab) => tab.id === detailMediaTab) || mediaTabs[0];
+
+            return (
+              <Row className="g-4">
+                <Col lg={7}>
+                  <h6 className="fw-semibold text-primary border-bottom pb-2 mb-3">
+                    {t("Diamond Specifications")}
+                  </h6>
+                  <Table bordered responsive size="sm" className="align-middle mb-4">
+                    <tbody>
+                      <tr>
+                        <td className="fw-bold bg-light" style={{ width: "20%" }}>{t("Shape")}</td>
+                        <td style={{ width: "30%" }}>{get("shape", "Shape")}</td>
+                        <td className="fw-bold bg-light" style={{ width: "20%" }}>{t("Color")}</td>
+                        <td style={{ width: "30%" }}>{get("color", "Color")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Clarity")}</td>
+                        <td>{get("clarity", "Clarity")}</td>
+                        <td className="fw-bold bg-light">{t("Carats")}</td>
+                        <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("LAB")}</td>
+                        <td>{get("lab", "LAB")}</td>
+                        <td className="fw-bold bg-light">{t("Certificate No")}</td>
+                        <td>
+                          {certPath ? (
+                            <a href={certPath} target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">
+                              {get("cNo", "CNo")}
+                            </a>
+                          ) : (
+                            get("cNo", "CNo")
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Cut Proportion")}</td>
+                        <td>{get("prop", "Prop")}</td>
+                        <td className="fw-bold bg-light">{t("Polish")}</td>
+                        <td>{get("pol", "Pol")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Symmetry")}</td>
+                        <td>{get("sym", "Sym")}</td>
+                        <td className="fw-bold bg-light">{t("Fluorescence")}</td>
+                        <td>{get("fl", "FL")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Measurement")}</td>
+                        <td>{get("diam", "Diam")}</td>
+                        <td className="fw-bold bg-light">{t("L:W Ratio")}</td>
+                        <td>{num("lw", "LW").toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Depth %")}</td>
+                        <td>{get("tDep", "TDep")}</td>
+                        <td className="fw-bold bg-light">{t("Table %")}</td>
+                        <td>{get("tabPer", "TabPer")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Crown Angle")}</td>
+                        <td>{get("ca", "CA")}</td>
+                        <td className="fw-bold bg-light">{t("Crown Height")}</td>
+                        <td>{get("ch", "CH")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Pavilion Angle")}</td>
+                        <td>{get("pa", "PA")}</td>
+                        <td className="fw-bold bg-light">{t("Pavilion Height")}</td>
+                        <td>{get("ph", "PH")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Brown Shade")}</td>
+                        <td>{get("brown", "Brown")}</td>
+                        <td className="fw-bold bg-light">{t("Milky")}</td>
+                        <td>{get("milky", "Milky")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Luster")}</td>
+                        <td>{get("luster", "Luster")}</td>
+                        <td className="fw-bold bg-light">{t("Shade")}</td>
+                        <td>{get("shade", "Shade")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Natts")}</td>
+                        <td>{get("nts", "Nts")}</td>
+                        <td className="fw-bold bg-light">{t("Key to Symbols")}</td>
+                        <td>{get("keyToSymbols", "KeyToSymbols")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Girdle %")}</td>
+                        <td>{get("girdlePer", "GirdlePer")}</td>
+                        <td className="fw-bold bg-light">{t("Girdle Condition")}</td>
+                        <td>{get("girdleCondition", "GirdleCondition")}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+
+                  <h6 className="fw-semibold text-primary border-bottom pb-2 mb-3 mt-4">
+                    {t("Cost & Pricing Information")}
+                  </h6>
+                  <Table bordered responsive size="sm" className="align-middle">
+                    <tbody>
+                      <tr>
+                        <td className="fw-bold bg-light" style={{ width: "20%" }}>{t("Rapa MRP")}</td>
+                        <td style={{ width: "30%" }}>${num("rapa", "Rapa").toLocaleString()}</td>
+                        <td className="fw-bold bg-light" style={{ width: "20%" }}>{t("MRP Amount")}</td>
+                        <td style={{ width: "30%" }}>${num("mrpAmount", "MRPAmount").toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Asking Back %")}</td>
+                        <td className="text-danger fw-semibold">
+                          {num("askingBack", "AskingBack", "back", "Back").toFixed(2)}%
+                        </td>
+                        <td className="fw-bold bg-light">{t("Asking Rate")}</td>
+                        <td>${num("askingRate", "AskingRate", "rate", "Rate").toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Asking Amount")}</td>
+                        <td className="fw-bold text-primary">
+                          ${num("askingAmount", "AskingAmount", "amount", "Amount").toLocaleString()}
+                        </td>
+                        <td className="fw-bold bg-light">{t("Cost Back %")}</td>
+                        <td className="text-danger fw-semibold">
+                          {num("purchaseBack", "PurchaseBack").toFixed(2)}%
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Cost Rate")}</td>
+                        <td>${num("purchaseRate", "PurchaseRate").toLocaleString()}</td>
+                        <td className="fw-bold bg-light">{t("Cost Amount")}</td>
+                        <td className="fw-bold">
+                          ${num("purChaseAmount", "PurChaseAmount", "purchaseAmount", "PurchaseAmount").toLocaleString()}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Actual Back %")}</td>
+                        <td>{num("actualBack", "ActualBack").toFixed(2)}%</td>
+                        <td className="fw-bold bg-light">{t("Actual Rate")}</td>
+                        <td>${num("actualRate", "ActualRate").toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Actual Amount")}</td>
+                        <td className="fw-bold">${num("actualAmount", "ActualAmount").toLocaleString()}</td>
+                        <td className="fw-bold bg-light">{t("CP AVG Rate")}</td>
+                        <td>${num("cpavg", "CPAVG", "cPAVG").toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+
+                <Col lg={5}>
+                  <h6 className="fw-semibold text-primary border-bottom pb-2 mb-3">
+                    {t("Assets & Visual Media")}
+                  </h6>
+
+                  {mediaTabs.length > 1 && (
+                    <Nav tabs className="mb-3 nav-tabs-custom">
+                      {mediaTabs.map((tab) => (
+                        <NavItem key={tab.id}>
+                          <NavLink
+                            className={classnames({ active: (activeTab?.id || detailMediaTab) === tab.id })}
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setDetailMediaTab(tab.id)}
+                          >
+                            {tab.label}
+                          </NavLink>
+                        </NavItem>
+                      ))}
+                    </Nav>
+                  )}
+
+                  {activeTab?.type === "video" && activeTab?.src ? (
+                    <div className="border rounded p-1 bg-light text-center mb-3">
+                      <iframe
+                        src={activeTab.src}
+                        title="Stone video viewer"
+                        className="w-100 rounded"
+                        style={{ height: "260px", border: "0" }}
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : activeTab?.src ? (
+                    <div className="mb-3 border rounded p-1 text-center bg-light">
+                      <img
+                        src={activeTab.src}
+                        alt="Stone visual"
+                        className="img-fluid rounded"
+                        style={{ maxHeight: "280px", objectFit: "contain" }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-3 border rounded py-4 text-center text-muted bg-light">
+                      <i className="ri-image-line fs-24 mb-1 d-block" />
+                      {t("No visual media available")}
+                    </div>
+                  )}
+
+                  <h6 className="fw-semibold text-primary border-bottom pb-2 mb-3 mt-4">
+                    {t("Administrative Details")}
+                  </h6>
+                  <Table bordered size="sm" className="align-middle">
+                    <tbody>
+                      <tr>
+                        <td className="fw-bold bg-light" style={{ width: "35%" }}>{t("Current Status")}</td>
+                        <td>
+                          <span className="badge bg-info-subtle text-info fw-semibold">
+                            {get("curStatus", "CurStatus")}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Mfg Kapan ID")}</td>
+                        <td>{get("kapan", "Kapan")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Mfg Packet ID")}</td>
+                        <td>{get("packet", "Packet")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Box Name")}</td>
+                        <td>{get("boxName", "BoxName")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Location")}</td>
+                        <td>
+                          {[get("city", "City"), get("country", "Country")].filter(Boolean).join(" - ")}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Remarks")}</td>
+                        <td>{get("remarks", "Remarks")}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold bg-light">{t("Comments")}</td>
+                        <td>{get("comments", "Comments")}</td>
+                      </tr>
+                      {get("holdPartyName", "HoldPartyName") && (
+                        <tr>
+                          <td className="fw-bold bg-light text-warning">{t("Hold Party Name")}</td>
+                          <td className="fw-semibold">{get("holdPartyName", "HoldPartyName")}</td>
+                        </tr>
+                      )}
+                      {get("memoPartyName", "MemoPartyName") && (
+                        <tr>
+                          <td className="fw-bold bg-light">{t("Memo Party Name")}</td>
+                          <td className="fw-semibold">{get("memoPartyName", "MemoPartyName")}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+            );
+          })()}
+        </ModalBody>
+      </Modal>
+
       {/* More Actions Modal */}
       <Modal isOpen={moreModal} toggle={() => setMoreModal(!moreModal)} centered>
         <ModalHeader toggle={() => setMoreModal(!moreModal)}>
