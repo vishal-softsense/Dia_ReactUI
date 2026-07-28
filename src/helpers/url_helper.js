@@ -552,6 +552,13 @@ export const SOLITAIRE_ADMIN_STOCK_LOTS = "/api/SolitaireAdminStockReport/get-so
 export const SOLITAIRE_ADMIN_STOCK_UPDATE_LOCATION = "/api/SolitaireAdminStockReport/update-location";
 export const SOLITAIRE_ADMIN_STOCK_UPDATE_BOX_GROUP = "/api/SolitaireAdminStockReport/update-box-group";
 
+// Solitaire Stock History Report
+export const SOLITAIRE_STOCK_HISTORY_REPORT = "/api/SolitaireStockHistoryReport/search";
+
+// Solitaire Grading Comparison Report
+export const SOLITAIRE_GRADING_COMPARISON_REPORT = "/api/SolitaireGradingComparisonReport/search";
+export const SOLITAIRE_GRADING_COMPARISON_DROPDOWNS = "/api/SolitaireGradingComparisonReport/dropdowns";
+
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";
 export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdowns";

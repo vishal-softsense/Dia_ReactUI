@@ -364,6 +364,8 @@ import JewStockMasterEdit from "../pages/StockAccount/JewStockMaster/JewStockMas
 // Solitaire Stock Search Report
 import SolitairesStockSearchReport from "../pages/Solitaires/Solitaires Reports/SolitairesStockSearchReport";
 import SolitaireAdminStockReport from "../pages/Solitaires/Solitaires Reports/SolitaireAdminStockReport";
+import SolitaireStockHistoryReport from "../pages/Solitaires/Solitaires Reports/SolitaireStockHistoryReport";
+import SolitaireGradingComparisonReport from "../pages/Solitaires/Solitaires Reports/SolitaireGradingComparisonReport";
 
 
 
@@ -456,6 +458,11 @@ const authProtectedRoutes = [
   // Solitaire Admin Stock Report
   { path: "/admin/admin-stock", component: <SolitaireAdminStockReport /> },
   { path: "/admin/admin-stock-report", component: <SolitaireAdminStockReport /> },
+
+  // Solitaire Stock History Report (MVC: /report/Stock-register-report)
+  { path: "/report/Stock-register-report", component: <SolitaireStockHistoryReport /> },
+  { path: "/report/stock-register-report", component: <SolitaireStockHistoryReport /> },
+  { path: "/report/grading-comparision-report", component: <SolitaireGradingComparisonReport /> },
 
 
 
