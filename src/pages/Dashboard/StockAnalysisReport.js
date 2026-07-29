@@ -5,7 +5,7 @@ import {
   FormGroup, Label, Input, Spinner, Nav, NavItem, NavLink, TabContent, TabPane
 } from "reactstrap";
 import ReactSelect from "react-select";
-import Flatpickr from "react-flatpickr";
+
 import { toast, ToastContainer } from "react-toastify";
 import { Doughnut, Bar, Pie } from "react-chartjs-2";
 import classnames from "classnames";
@@ -800,7 +800,7 @@ const StockAnalysisReport = () => {
           <BreadCrumb title={t("Stock Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+          <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-database-line fs-20 text-primary"></i>
               {t("Stock Analysis Report")}
@@ -853,11 +853,12 @@ const StockAnalysisReport = () => {
                       <Row className="g-3 mb-3">
                         <Col lg={2} md={4}>
                           <Label className="fw-medium">{t("Stock Till Date")}</Label>
-                          <Flatpickr
-                            className="form-control"
+                          <input
+                            type="date"
+                            className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={date}
-                            onChange={([d]) => setDate(d ? d.toISOString().substring(0, 10) : today)}
-                            options={{ dateFormat: "Y-m-d" }}
+                            onChange={(e) => setDate(e.target.value)}
                           />
                         </Col>
                         <Col lg={2} md={4}>
@@ -878,7 +879,7 @@ const StockAnalysisReport = () => {
                         </Col>
                         <Col lg={2} md={4}>
                           <Label className="fw-medium">{t("Single/Parcel")}</Label>
-                          <Input type="select" value={stoneTypes} onChange={(e) => setStoneTypes(e.target.value)}>
+                          <Input type="select" value={stoneTypes} onChange={(e) => setStoneTypes(e.target.value)} disabled>
                             <option value="Single">{t("Single")}</option>
                             <option value="Parcel">{t("Parcel")}</option>
                             <option value="All">{t("All")}</option>
@@ -1057,21 +1058,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Purchase Date From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmPurchaseDate}
-                                  onChange={([d]) => setFrmPurchaseDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmPurchaseDate} onChange={(e) => setFrmPurchaseDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Purchase Date To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toPurchaseDate}
-                                  onChange={([d]) => setToPurchaseDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toPurchaseDate} onChange={(e) => setToPurchaseDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}
@@ -1095,21 +1086,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Revise Date From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmReviseDate}
-                                  onChange={([d]) => setFrmReviseDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmReviseDate} onChange={(e) => setFrmReviseDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Revise Date To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toReviseDate}
-                                  onChange={([d]) => setToReviseDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toReviseDate} onChange={(e) => setToReviseDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}
@@ -1133,21 +1114,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("New Arrival From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmNewArrivalDate}
-                                  onChange={([d]) => setFrmNewArrivalDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmNewArrivalDate} onChange={(e) => setFrmNewArrivalDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("New Arrival To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toNewArrivalDate}
-                                  onChange={([d]) => setToNewArrivalDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toNewArrivalDate} onChange={(e) => setToNewArrivalDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}
@@ -1171,21 +1142,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Web Revised From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmWebRevisedDate}
-                                  onChange={([d]) => setFrmWebRevisedDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmWebRevisedDate} onChange={(e) => setFrmWebRevisedDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Web Revised To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toWebRevisedDate}
-                                  onChange={([d]) => setToWebRevisedDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toWebRevisedDate} onChange={(e) => setToWebRevisedDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}
@@ -1209,21 +1170,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Unhold From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmUnholdDate}
-                                  onChange={([d]) => setFrmUnholdDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmUnholdDate} onChange={(e) => setFrmUnholdDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Unhold To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toUnholdDate}
-                                  onChange={([d]) => setToUnholdDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toUnholdDate} onChange={(e) => setToUnholdDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}
@@ -1247,21 +1198,11 @@ const StockAnalysisReport = () => {
                             <Row className="g-2">
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Lab From")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={frmLabDate}
-                                  onChange={([d]) => setFrmLabDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={frmLabDate} onChange={(e) => setFrmLabDate(e.target.value)} />
                               </Col>
                               <Col sm={6}>
                                 <Label className="fw-medium fs-12">{t("Lab To")}</Label>
-                                <Flatpickr
-                                  className="form-control"
-                                  value={toLabDate}
-                                  onChange={([d]) => setToLabDate(d ? d.toISOString().substring(0, 10) : today)}
-                                  options={{ dateFormat: "Y-m-d" }}
-                                />
+                                <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toLabDate} onChange={(e) => setToLabDate(e.target.value)} />
                               </Col>
                             </Row>
                           )}

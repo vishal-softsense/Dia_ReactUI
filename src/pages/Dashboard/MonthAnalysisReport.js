@@ -14,7 +14,7 @@ import {
   Spinner
 } from "reactstrap";
 import Select from "react-select";
-import Flatpickr from "react-flatpickr";
+
 import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import {
@@ -349,7 +349,7 @@ const MonthAnalysisReport = () => {
           <BreadCrumb title={t("Month Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+          <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-calendar-todo-line fs-20 text-primary"></i>
               {t("Month Analysis Report")}
@@ -452,36 +452,24 @@ const MonthAnalysisReport = () => {
                     <Col md={2}>
                       <FormGroup>
                         <Label className="fw-medium">{t("From Date")}</Label>
-                        <Flatpickr
-                          className="form-control"
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          style={{ height: "35px" }}
                           value={fromDate}
-                          options={{ dateFormat: "Y-m-d" }}
-                          onChange={(dates) => {
-                            if (dates[0]) {
-                              const d = dates[0];
-                              setFromDate(
-                                `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                              );
-                            }
-                          }}
+                          onChange={(e) => setFromDate(e.target.value)}
                         />
                       </FormGroup>
                     </Col>
                     <Col md={2}>
                       <FormGroup>
                         <Label className="fw-medium">{t("To Date")}</Label>
-                        <Flatpickr
-                          className="form-control"
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          style={{ height: "35px" }}
                           value={toDate}
-                          options={{ dateFormat: "Y-m-d" }}
-                          onChange={(dates) => {
-                            if (dates[0]) {
-                              const d = dates[0];
-                              setToDate(
-                                `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                              );
-                            }
-                          }}
+                          onChange={(e) => setToDate(e.target.value)}
                         />
                       </FormGroup>
                     </Col>
@@ -499,33 +487,21 @@ const MonthAnalysisReport = () => {
                           </Label>
                         </div>
                         <div className="d-flex gap-2">
-                          <Flatpickr
-                            className="form-control"
+                          <input
+                            type="date"
+                            className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={fromDateDue}
-                            options={{ dateFormat: "Y-m-d" }}
                             disabled={!dueChkBox}
-                            onChange={(dates) => {
-                              if (dates[0]) {
-                                const d = dates[0];
-                                setFromDateDue(
-                                  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                                );
-                              }
-                            }}
+                            onChange={(e) => setFromDateDue(e.target.value)}
                           />
-                          <Flatpickr
-                            className="form-control"
+                          <input
+                            type="date"
+                            className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={toDateDue}
-                            options={{ dateFormat: "Y-m-d" }}
                             disabled={!dueChkBox}
-                            onChange={(dates) => {
-                              if (dates[0]) {
-                                const d = dates[0];
-                                setToDateDue(
-                                  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                                );
-                              }
-                            }}
+                            onChange={(e) => setToDateDue(e.target.value)}
                           />
                         </div>
                       </FormGroup>

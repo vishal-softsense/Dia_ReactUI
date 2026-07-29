@@ -28,7 +28,7 @@ const Select = (props) => (
   />
 );
 
-import Flatpickr from "react-flatpickr";
+
 import { toast, ToastContainer } from "react-toastify";
 import { Bar, Pie, Doughnut } from "react-chartjs-2";
 import classnames from "classnames";
@@ -761,7 +761,7 @@ const SaleAnalysisReport = () => {
           <BreadCrumb title={t("Sale Analysis Report")} pageTitle={t("Dashboard")} />
 
           {/* Top Control Bar */}
-          <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+          <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-line-chart-line fs-20 text-primary"></i>
               {t("Sale Analysis Report")}
@@ -827,14 +827,14 @@ const SaleAnalysisReport = () => {
                     <Col sm={2}>
                       <FormGroup className="mb-0">
                         <Label className="fw-medium">{t("Date")}</Label>
-                        <Input type="date" className="form-control" value={fromDate}
+                        <Input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={fromDate}
                           onChange={(e) => setFromDate(e.target.value)} />
                       </FormGroup>
                     </Col>
                     <Col sm={2}>
                       <FormGroup className="mb-0">
                         <Label className="fw-medium">{t("To Date")}</Label>
-                        <Input type="date" className="form-control" value={toDate}
+                        <Input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={toDate}
                           onChange={(e) => setToDate(e.target.value)} />
                       </FormGroup>
                     </Col>

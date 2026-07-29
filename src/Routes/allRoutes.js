@@ -366,6 +366,8 @@ import SolitairesStockSearchReport from "../pages/Solitaires/Solitaires Reports/
 import SolitaireAdminStockReport from "../pages/Solitaires/Solitaires Reports/SolitaireAdminStockReport";
 import SolitaireStockHistoryReport from "../pages/Solitaires/Solitaires Reports/SolitaireStockHistoryReport";
 import SolitaireGradingComparisonReport from "../pages/Solitaires/Solitaires Reports/SolitaireGradingComparisonReport";
+import SolitaireRateReviseReport from "../pages/Solitaires/Solitaires Reports/SolitaireRateReviseReport";
+import SolitairePurchaseReport from "../pages/Solitaires/Solitaires Reports/SolitairePurchaseReport";
 
 
 
@@ -463,6 +465,8 @@ const authProtectedRoutes = [
   { path: "/report/Stock-register-report", component: <SolitaireStockHistoryReport /> },
   { path: "/report/stock-register-report", component: <SolitaireStockHistoryReport /> },
   { path: "/report/grading-comparision-report", component: <SolitaireGradingComparisonReport /> },
+  { path: "/report/purchase-report", component: <SolitairePurchaseReport /> },
+  { path: "/report/rate-revise-report", component: <SolitaireRateReviseReport /> },
 
 
 

@@ -544,6 +544,7 @@ export const SOLITAIRE_STOCK_SEARCH_UPDATE_LOCATION = "/api/SolitaireStockSearch
 export const SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP = "/api/SolitaireStockSearchReport/update-box-group";
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS = "/api/SolitaireStockSearchReport/email-settings";
 export const SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST = "/api/SolitaireStockSearchReport/email-stock-list";
+export const SOLITAIRE_STOCK_SEARCH_HISTORY = "/api/SolitaireStockSearchReport/stock-history";
 
 // Solitaire Admin Stock Report
 export const SOLITAIRE_ADMIN_STOCK_REPORT = "/api/SolitaireAdminStockReport/search";
@@ -558,6 +559,14 @@ export const SOLITAIRE_STOCK_HISTORY_REPORT = "/api/SolitaireStockHistoryReport/
 // Solitaire Grading Comparison Report
 export const SOLITAIRE_GRADING_COMPARISON_REPORT = "/api/SolitaireGradingComparisonReport/search";
 export const SOLITAIRE_GRADING_COMPARISON_DROPDOWNS = "/api/SolitaireGradingComparisonReport/dropdowns";
+
+// Solitaire Rate Revise Report
+export const SOLITAIRE_RATE_REVISE_REPORT = "/api/SolitaireRateReviseReport/search";
+export const SOLITAIRE_RATE_REVISE_DROPDOWNS = "/api/SolitaireRateReviseReport/dropdowns";
+
+// Solitaire Purchase Report
+export const SOLITAIRE_PURCHASE_REPORT = "/api/SolitairePurchaseReport/search";
+export const SOLITAIRE_PURCHASE_DROPDOWNS = "/api/SolitairePurchaseReport/dropdowns";
 
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";

@@ -12,7 +12,7 @@ import {
   Row
 } from "reactstrap";
 import Select, { components } from "react-select";
-import Flatpickr from "react-flatpickr";
+
 import classnames from "classnames";
 import { toast, ToastContainer } from "react-toastify";
 
@@ -61,6 +61,16 @@ const fmtFixed = (value, decimals) => {
   if (Number.isNaN(num)) return "";
   return num.toFixed(decimals);
 };
+
+const formatLocalDate = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+
 
 // Custom Components for react-select Lot No Checkbox Dropdown
 const CustomOption = (props) => {
@@ -160,7 +170,7 @@ const SolitaireStockHistoryReport = () => {
   // Price mode (MVC: default SalpurAvg=true)
   const [priceMode, setPriceMode] = useState("SalpurAvg"); // SalpurAvg | PurAvg | MarketAvg
 
-  const todayYMD = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todayYMD = useMemo(() => formatLocalDate(new Date()), []);
   const defaultFromDate = "2025-01-01";
 
   const [filters, setFilters] = useState({
@@ -660,7 +670,7 @@ const SolitaireStockHistoryReport = () => {
           <thead>
             <tr>
               {columns.map((c) => (
-                <th key={c.key} style={{ borderBottom: "1px solid #999", color: "#000", fontWeight: 600, padding: "8px 10px" }}>
+                <th key={c.key} style={{ borderBottom: "1px solid #999", color: "var(--vz-body-color, #000)", fontWeight: 600, padding: "8px 10px" }}>
                   {c.header}
                 </th>
               ))}
@@ -690,7 +700,7 @@ const SolitaireStockHistoryReport = () => {
               return (
                 <React.Fragment key={stockId}>
                   <tr className="group-header">
-                    <td colSpan={columns.length} style={{ fontWeight: 700, fontSize: 15, padding: 10, borderTop: "2px solid #b3b3b3", borderBottom: "2px solid #b3b3b3", color: "#000", textAlign: "left" }}>
+                    <td colSpan={columns.length} style={{ fontWeight: 700, fontSize: 15, padding: 10, borderTop: "2px solid #b3b3b3", borderBottom: "2px solid #b3b3b3", color: "var(--vz-body-color, #000)", textAlign: "left" }}>
                       <strong>StockID:</strong> {stockId}
                     </td>
                   </tr>
@@ -726,7 +736,7 @@ const SolitaireStockHistoryReport = () => {
                                   textAlign: "right",
                                   cursor: clickable ? "pointer" : "default",
                                   textDecoration: clickable ? "underline" : "none",
-                                  color: clickable ? "#007bff" : "#000"
+                                  color: clickable ? "#007bff" : "var(--vz-body-color, inherit)"
                                 }}
                                 onClick={() => {
                                   if (!clickable) return;
@@ -761,7 +771,7 @@ const SolitaireStockHistoryReport = () => {
                           }
 
                           return (
-                            <td key={col.key} style={{ textAlign: col.numeric ? "right" : "center" }}>
+                            <td key={col.key} style={{ textAlign: col.numeric ? "right" : "center", color: "var(--vz-body-color, inherit)" }}>
                               {val ?? ""}
                             </td>
                           );
@@ -826,7 +836,7 @@ const SolitaireStockHistoryReport = () => {
           <BreadCrumb title={t("Reports / Stock Register Report")} pageTitle={t("Stock History Report")} />
 
           {/* Top Control Bar */}
-          <div className="card stock-search-header-bar d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
               {hasSearched ? t("Stock History Report Results") : t("Stock History Report Filters")}
@@ -871,22 +881,24 @@ const SolitaireStockHistoryReport = () => {
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1">{t("Date")}</Label>
-                          <Flatpickr
+                          <input
+                            type="date"
                             className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={filters.fromDate}
-                            onChange={([date]) => setFilters((prev) => ({ ...prev, fromDate: date ? date.toISOString().split("T")[0] : "" }))}
-                            options={{ dateFormat: "Y-m-d" }}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, fromDate: e.target.value }))}
                           />
                         </FormGroup>
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1">{t("To Date")}</Label>
-                          <Flatpickr
+                          <input
+                            type="date"
                             className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={filters.toDate}
-                            onChange={([date]) => setFilters((prev) => ({ ...prev, toDate: date ? date.toISOString().split("T")[0] : "" }))}
-                            options={{ dateFormat: "Y-m-d" }}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
                           />
                         </FormGroup>
                       </Col>

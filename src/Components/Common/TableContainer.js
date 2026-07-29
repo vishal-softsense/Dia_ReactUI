@@ -116,6 +116,7 @@ const TableContainer = ({
   isPagination = true,
   isShowEntries = true,
   getRowClass,
+  renderSubRows,
 }) => {
   const { t } = useTranslation();
   const [columnFilters, setColumnFilters] = useState([]);
@@ -306,21 +307,42 @@ const TableContainer = ({
             {getRowModel().rows.map((row) => {
               const customRowClass = getRowClass ? getRowClass(row) : "";
               return (
-                <tr key={row.id} className={`${trClass || ""} ${customRowClass}`.trim()}>
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
+                <Fragment key={row.id}>
+                  <tr className={`${trClass || ""} ${customRowClass}`.trim()}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {renderSubRows && renderSubRows(row)}
+                </Fragment>
               );
             })}
           </tbody>
+          {table.getFooterGroups() && table.getFooterGroups().some(group => group.headers.some(h => h.column.columnDef.footer)) && (
+            <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
+              {table.getFooterGroups().map(footerGroup => (
+                <tr key={footerGroup.id}>
+                  {footerGroup.headers.map(header => (
+                    <th key={header.id} style={{ padding: "8px 10px" }}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.footer,
+                            header.getContext()
+                          )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </tfoot>
+          )}
         </Table>
       </div>
 
@@ -334,6 +356,13 @@ const TableContainer = ({
               </span> {t("to")} <span className="fw-semibold">
                 {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
               </span> {t("of")} <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> {t("entries")}
+              {(() => {
+                const childCount = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                  const children = row.original?.childRecords || [];
+                  return acc + children.length;
+                }, 0);
+                return childCount > 0 ? ` (${childCount})` : "";
+              })()}
             </div>
           </div>
           <div className="col-sm-auto">

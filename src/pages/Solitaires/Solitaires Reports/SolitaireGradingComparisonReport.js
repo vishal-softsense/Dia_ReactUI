@@ -12,7 +12,7 @@ import {
   Row
 } from "reactstrap";
 import Select from "react-select";
-import Flatpickr from "react-flatpickr";
+
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -53,6 +53,16 @@ const formatGDate = (value) => {
   return String(value).split(" ")[0];
 };
 
+const formatLocalDate = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+
+
 
 const CompareCell = ({ value, colorFlag, boldFlag, decimals, align = "center" }) => {
   const colorInfo = compareBg(colorFlag);
@@ -80,7 +90,7 @@ const CompareCell = ({ value, colorFlag, boldFlag, decimals, align = "center" })
 const SolitaireGradingComparisonReport = () => {
   const { t } = useTranslation();
 
-  const todayYMD = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todayYMD = useMemo(() => formatLocalDate(new Date()), []);
 
   const [dropdownData, setDropdownData] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -555,7 +565,7 @@ const SolitaireGradingComparisonReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Grading Comparison Report")} pageTitle={t("Reports")} />
 
-          <div className="card stock-search-header-bar d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
               {hasSearched ? t("Grading Comparison Report Results") : t("Grading Comparison Report Filters")}
@@ -595,22 +605,24 @@ const SolitaireGradingComparisonReport = () => {
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1">{t("Date")}</Label>
-                          <Flatpickr
+                          <input
+                            type="date"
                             className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={filters.fromDate}
-                            onChange={([date]) => setFilters((prev) => ({ ...prev, fromDate: date ? date.toISOString().split("T")[0] : "" }))}
-                            options={{ dateFormat: "Y-m-d" }}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, fromDate: e.target.value }))}
                           />
                         </FormGroup>
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1">{t("To Date")}</Label>
-                          <Flatpickr
+                          <input
+                            type="date"
                             className="form-control form-control-sm"
+                            style={{ height: "35px" }}
                             value={filters.toDate}
-                            onChange={([date]) => setFilters((prev) => ({ ...prev, toDate: date ? date.toISOString().split("T")[0] : "" }))}
-                            options={{ dateFormat: "Y-m-d" }}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
                           />
                         </FormGroup>
                       </Col>

@@ -692,6 +692,7 @@ export const updateSolitaireStockLocation = (data) => api.create(url.SOLITAIRE_S
 export const updateSolitaireStockBoxGroup = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
 export const getSolitaireStockEmailSettings = () => api.get(url.SOLITAIRE_STOCK_SEARCH_EMAIL_SETTINGS);
 export const sendSolitaireStockEmail = (data) => api.create(url.SOLITAIRE_STOCK_SEARCH_EMAIL_STOCK_LIST, data);
+export const getSolitaireStockSearchHistory = (filter) => api.create(url.SOLITAIRE_STOCK_SEARCH_HISTORY, filter);
 
 // Solitaire Admin Stock Report
 export const getSolitaireAdminStockReport = (filter) => api.create(url.SOLITAIRE_ADMIN_STOCK_REPORT, filter);
@@ -706,6 +707,14 @@ export const getSolitaireStockHistoryReport = (filter) => api.create(url.SOLITAI
 // Solitaire Grading Comparison Report
 export const getSolitaireGradingComparisonReport = (filter) => api.create(url.SOLITAIRE_GRADING_COMPARISON_REPORT, filter);
 export const getSolitaireGradingComparisonDropdowns = () => api.get(url.SOLITAIRE_GRADING_COMPARISON_DROPDOWNS);
+
+// Solitaire Rate Revise Report
+export const getSolitaireRateReviseReport = (filter) => api.create(url.SOLITAIRE_RATE_REVISE_REPORT, filter);
+export const getSolitaireRateReviseDropdowns = () => api.get(url.SOLITAIRE_RATE_REVISE_DROPDOWNS);
+
+// Solitaire Purchase Report
+export const getSolitairePurchaseReport = (filter) => api.create(url.SOLITAIRE_PURCHASE_REPORT, filter);
+export const getSolitairePurchaseDropdowns = () => api.get(url.SOLITAIRE_PURCHASE_DROPDOWNS);
 
 // Month Analysis Report
 export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);

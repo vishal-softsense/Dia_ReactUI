@@ -21,7 +21,6 @@ import {
   ModalHeader
 } from "reactstrap";
 import Select, { components } from "react-select";
-import Flatpickr from "react-flatpickr";
 import classnames from "classnames";
 import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -34,6 +33,7 @@ import {
   updateSolitaireAdminStockBoxGroup
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import StockHistoryPopupModal from "./StockHistoryPopupModal";
 
 const debounce = (func, delay) => {
   let timer;
@@ -44,6 +44,15 @@ const debounce = (func, delay) => {
     }, delay);
   };
 };
+
+const formatLocalDate = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 
 const SelectionCell = React.memo(({ index, isSelected, onChange }) => {
   const handleChange = () => {
@@ -246,6 +255,7 @@ const SolitaireAdminStockReport = () => {
   // Detail Modal popup
   const [detailModal, setDetailModal] = useState(false);
   const [selectedRowDetail, setSelectedRowDetail] = useState(null);
+  const [historyModal, setHistoryModal] = useState(false);
   const [detailMediaTab, setDetailMediaTab] = useState("image");
 
   // Modals for actions
@@ -262,7 +272,7 @@ const SolitaireAdminStockReport = () => {
 
   // Filters state
   const initialFilters = {
-    date: new Date().toISOString().split("T")[0],
+    date: formatLocalDate(new Date()),
     shapeGroup: [],
     shape: [],
     colorGroup: [],
@@ -531,7 +541,7 @@ const SolitaireAdminStockReport = () => {
   const buildPayload = () => {
     const payload = { ...filters };
     if (Array.isArray(payload.date)) {
-      payload.date = payload.date[0] ? new Date(payload.date[0]).toISOString().split("T")[0] : "";
+      payload.date = payload.date[0] ? formatLocalDate(new Date(payload.date[0])) : "";
     }
     const numericFields = [
       "ctsFrm", "ctsTo", "backFrm", "backTo", "priceFrm", "priceTo",
@@ -984,7 +994,7 @@ const SolitaireAdminStockReport = () => {
           <BreadCrumb title={t("Admin Stock Search")} pageTitle={t("Reports")} />
 
           {/* Top Control Bar */}
-          <div className="card stock-search-header-bar d-flex flex-row align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border">
+          <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
               {hasSearched ? t("Admin Stock Search Results") : t("Admin Stock Search Filters")}
@@ -1074,9 +1084,13 @@ const SolitaireAdminStockReport = () => {
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Stock Till Date")}</Label>
-                        <Flatpickr className="form-control" value={filters.date}
-                          onChange={([date]) => setFilters((prev) => ({ ...prev, date: date ? date.toISOString().split("T")[0] : "" }))}
-                          options={{ dateFormat: "Y-m-d" }} placeholder={t("Select Date")} />
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          style={{ height: "35px" }}
+                          value={filters.date}
+                          onChange={(e) => setFilters((prev) => ({ ...prev, date: e.target.value }))}
+                        />
                       </Col>
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Show")}</Label>
@@ -1455,11 +1469,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Purchase Date From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmPurchaseDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmPurchaseDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmPurchaseDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmPurchaseDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Purchase Date To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toPurchaseDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toPurchaseDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toPurchaseDate} onChange={(e) => setFilters((prev) => ({ ...prev, toPurchaseDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1473,11 +1487,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Revise Date From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmReviseDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmReviseDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmReviseDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmReviseDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Revise Date To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toReviseDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toReviseDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toReviseDate} onChange={(e) => setFilters((prev) => ({ ...prev, toReviseDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1491,11 +1505,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("New Arrival From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmNewArrivalDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmNewArrivalDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmNewArrivalDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmNewArrivalDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("New Arrival To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toNewArrivalDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toNewArrivalDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toNewArrivalDate} onChange={(e) => setFilters((prev) => ({ ...prev, toNewArrivalDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1509,11 +1523,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Web Revised From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmWebRevisedDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmWebRevisedDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmWebRevisedDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmWebRevisedDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Web Revised To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toWebRevisedDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toWebRevisedDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toWebRevisedDate} onChange={(e) => setFilters((prev) => ({ ...prev, toWebRevisedDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1527,11 +1541,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Unhold Date From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmUnholdDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmUnholdDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmUnholdDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmUnholdDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Unhold Date To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toUnholdDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toUnholdDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toUnholdDate} onChange={(e) => setFilters((prev) => ({ ...prev, toUnholdDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1545,11 +1559,11 @@ const SolitaireAdminStockReport = () => {
                           <Row className="g-2">
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Lab Date From")}</Label>
-                              <Flatpickr className="form-control" value={filters.frmLabDate} onChange={([date]) => setFilters((prev) => ({ ...prev, frmLabDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.frmLabDate} onChange={(e) => setFilters((prev) => ({ ...prev, frmLabDate: e.target.value }))} />
                             </Col>
                             <Col sm={6}>
                               <Label className="fw-medium fs-12">{t("Lab Date To")}</Label>
-                              <Flatpickr className="form-control" value={filters.toLabDate} onChange={([date]) => setFilters((prev) => ({ ...prev, toLabDate: date ? date.toISOString().split("T")[0] : "" }))} options={{ dateFormat: "Y-m-d" }} placeholder="Date" />
+                              <input type="date" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.toLabDate} onChange={(e) => setFilters((prev) => ({ ...prev, toLabDate: e.target.value }))} />
                             </Col>
                           </Row>
                         )}
@@ -1992,8 +2006,21 @@ const SolitaireAdminStockReport = () => {
             </Row>
             );
           })()}
+          {selectedRowDetail && (
+            <div className="d-flex justify-content-end mt-3 pt-2 border-top">
+              <Button color="primary" onClick={() => setHistoryModal(true)}>
+                {t("Show History")}
+              </Button>
+            </div>
+          )}
         </ModalBody>
       </Modal>
+
+      <StockHistoryPopupModal
+        isOpen={historyModal}
+        toggle={() => setHistoryModal(false)}
+        stockId={selectedRowDetail?.lotNo || selectedRowDetail?.LotNo || ""}
+      />
 
       {/* More Actions Modal */}
       <Modal isOpen={moreModal} toggle={() => setMoreModal(!moreModal)} centered>

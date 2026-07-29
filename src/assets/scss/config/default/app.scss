@@ -156,3 +156,17 @@ File: Main Css File
     background-color: rgba(var(--vz-primary-rgb), 0.15) !important;
   }
 }
+
+// Purchase Report grouping layout classes (theme compliant)
+.parent-row {
+  background-color: var(--vz-light, #f2f2f2) !important;
+  td {
+    background-color: var(--vz-light, #f2f2f2) !important;
+  }
+}
+.child-row {
+  background-color: var(--vz-card-bg, #ffffff) !important;
+  td {
+    background-color: var(--vz-card-bg, #ffffff) !important;
+  }
+}
