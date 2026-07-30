@@ -600,4 +600,16 @@ export const STOCK_ANALYSIS_PIVOT_BY_FILTER = "/api/StockAnalysisReport/pivotbyf
 export const STOCK_ANALYSIS_PIVOT_FIXED = "/api/StockAnalysisReport/pivotfixed";
 export const STOCK_ANALYSIS_REPORT_DROPDOWNS = "/api/StockAnalysisReport/dropdowns";
 
+// Parcel Stock Analysis Report
+export const PARCEL_STOCK_ANALYSIS_REPORT_DATA = "/api/ParcelStockAnalysis/parcelstockchart-data";
+export const PARCEL_STOCK_ANALYSIS_PIVOT_DATA = "/api/ParcelStockAnalysis/parcelstock-pivotdata";
+export const PARCEL_STOCK_ANALYSIS_REPORT_DROPDOWNS = "/api/ParcelStockAnalysis/dropdowns";
 
+// Parcel Sale Analysis Report
+export const PARCEL_SALE_ANALYSIS_REPORT_DATA = "/api/ParcelSaleAnalysis/parcelsale-data";
+export const PARCEL_SALE_ANALYSIS_PIVOT_DATA = "/api/ParcelSaleAnalysis/parcelsale-pivotdata";
+export const PARCEL_SALE_ANALYSIS_REPORT_DROPDOWNS = "/api/ParcelSaleAnalysis/dropdowns";
+
+// Parcel Purchase Analysis Report
+export const PARCEL_PURCHASE_ANALYSIS_REPORT_DATA = "/api/ParcelPurchaseAnalysis/parcelpur-data";
+export const PARCEL_PURCHASE_ANALYSIS_REPORT_DROPDOWNS = "/api/ParcelPurchaseAnalysis/dropdowns";

@@ -122,6 +122,9 @@ const Navdata = () => {
         const cleanLink = (link) => {
             if (!link || link === "#" || link === "") return "/#";
             if (link.toLowerCase().includes("parceldashboard")) return "/data/parceldashboard";
+            if (link.toLowerCase().includes("parcelsalechartreports") || link.toLowerCase().includes("parcelsalechart-report")) return "/dashboard/parcel-sale-analysis";
+            if (link.toLowerCase().includes("parcelpurchasechartreports") || link.toLowerCase().includes("parcelpurchasechart-report")) return "/dashboard/parcel-purchase-analysis";
+            if (link.toLowerCase().includes("parcelchartreports") || link.toLowerCase().includes("parcelchart-report")) return "/dashboard/parcel-stock-analysis";
             if (link.toLowerCase().includes("dashboard")) return "/dashboard";
             if (link.toLowerCase().includes("purchartreports")) return "/dashboard/purchase-analysis";
             if (link.toLowerCase().includes("salechartreports") || link.toLowerCase().includes("salechart-report")) return "/dashboard/sale-analysis";

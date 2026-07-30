@@ -12,6 +12,10 @@ import PurchaseAnalysisReport from "../pages/Dashboard/PurchaseAnalysisReport";
 import SaleAnalysisReport from "../pages/Dashboard/SaleAnalysisReport";
 import StockAnalysisReport from "../pages/Dashboard/StockAnalysisReport";
 
+import ParcelStockAnalysis from "../pages/ParcelDashboard/ParcelStockAnalysisReport";
+import ParcelSaleAnalysisReport from "../pages/ParcelDashboard/ParcelSaleAnalysisReport";
+import ParcelPurchaseAnalysis from "../pages/ParcelDashboard/ParcelPurchaseAnalysisReport";
+
 import DashboardCrypto from "../pages/DashboardCrypto";
 import DashboardProject from "../pages/DashboardProject";
 import DashboardNFT from "../pages/DashboardNFT";
@@ -474,7 +478,10 @@ const authProtectedRoutes = [
   { path: "/report/sale-report", component: <SolitaireSaleReport /> },
   { path: "/report/rate-revise-report", component: <SolitaireRateReviseReport /> },
 
-
+  { path: "/dashboard/parcel-stock-analysis", component: <ParcelStockAnalysis /> },
+  { path: "/dashboard/parcel-sale-analysis", component: <ParcelSaleAnalysisReport /> },
+  { path: "/dashboard/parcel-purchase-analysis", component: <ParcelPurchaseAnalysis /> },
+  { path: "/ParcelChartsReport/ParcelPurchaseChartReports", component: <ParcelPurchaseAnalysis /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },

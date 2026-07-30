@@ -434,15 +434,15 @@ const ParcelDashboard = () => {
                                     </div>
                                     {/* Action Links */}
                                     <div className="d-flex gap-2">
-                                        <a href="../ParcelCharts/parcelchart-report" className="btn btn-outline-primary border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
+                                        <Link to="/dashboard/parcel-stock-analysis" className="btn btn-outline-primary border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
                                             <i className="ri-pie-chart-2-line me-1"></i> Parcel Stock Analysis
-                                        </a>
-                                        <a href="../ParcelCharts/parcelsalechart-report" className="btn btn-outline-success border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
+                                        </Link>
+                                        <Link to="/dashboard/parcel-sale-analysis" className="btn btn-outline-success border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
                                             <i className="ri-line-chart-line me-1"></i> Parcel Sale Analysis
-                                        </a>
-                                        <a href="../ParcelCharts/parcelpurchart-report" className="btn btn-outline-warning border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
+                                        </Link>
+                                        <Link to="/dashboard/parcel-purchase-analysis" className="btn btn-outline-warning border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
                                             <i className="ri-shopping-basket-line me-1"></i> Parcel Purchase Analysis
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
