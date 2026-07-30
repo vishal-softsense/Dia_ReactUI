@@ -748,4 +748,20 @@ export const getStockAnalysisPivotByFilter = (filter) => api.create(url.STOCK_AN
 export const getStockAnalysisPivotFixed = (filter) => api.create(url.STOCK_ANALYSIS_PIVOT_FIXED, filter);
 export const getStockAnalysisDropdowns = () => api.get(url.STOCK_ANALYSIS_REPORT_DROPDOWNS);
 
+// Parcel Stock Analysis Report
+export const getParcelStockAnalysisReport = (filter) => api.create(url.PARCEL_STOCK_ANALYSIS_REPORT_DATA, filter);
+export const getParcelStockAnalysisPivotData = (filter) =>
+  api.create(url.PARCEL_STOCK_ANALYSIS_PIVOT_DATA, filter, { timeout: 180000 });
+export const getParcelStockAnalysisDropdowns = () => api.get(url.PARCEL_STOCK_ANALYSIS_REPORT_DROPDOWNS);
+
+// Parcel Sale Analysis Report
+export const getParcelSaleAnalysisReport = (filter) => api.create(url.PARCEL_SALE_ANALYSIS_REPORT_DATA, filter);
+export const getParcelSaleAnalysisPivotData = (filter) =>
+  api.create(url.PARCEL_SALE_ANALYSIS_PIVOT_DATA, filter, { timeout: 180000 });
+export const getParcelSaleAnalysisDropdowns = () => api.get(url.PARCEL_SALE_ANALYSIS_REPORT_DROPDOWNS);
+
+// Parcel Purchase Analysis Report
+export const getParcelPurchaseAnalysisReport = (filter) => api.create(url.PARCEL_PURCHASE_ANALYSIS_REPORT_DATA, filter);
+export const getParcelPurchaseAnalysisDropdowns = () => api.get(url.PARCEL_PURCHASE_ANALYSIS_REPORT_DROPDOWNS);
+
 
