@@ -18,7 +18,11 @@ import {
   Table,
   Modal,
   ModalBody,
-  ModalHeader
+  ModalHeader,
+  UncontrolledDropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem
 } from "reactstrap";
 import Select, { components } from "react-select";
 import classnames from "classnames";
@@ -919,11 +923,12 @@ const SolitaireAdminStockReport = () => {
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = async (format) => {
+    const activeFormat = format || printFormat || "Print";
     let exportCols = [...allColumns];
 
-    // Filter columns based on selected printFormat
-    if (printFormat === "CustomerPrint") {
+    // Filter columns based on selected activeFormat
+    if (activeFormat === "CustomerPrint") {
       const excludeKeys = [
         "purchaseBack", "purchaseRate", "purChaseAmount",
         "actualBack", "actualRate", "actualAmount",
@@ -931,7 +936,7 @@ const SolitaireAdminStockReport = () => {
         "memoPartyName", "holdPartyName"
       ];
       exportCols = exportCols.filter(c => !excludeKeys.includes(c.key));
-    } else if (["Rapnet", "Nivoda", "VDB", "DiaSense"].includes(printFormat)) {
+    } else if (["Rapnet", "Nivoda", "VDB", "DiaSense"].includes(activeFormat)) {
       const rapnetKeys = [
         "lotNo", "shape", "carats", "color", "clarity", "prop", "pol", "sym", "fl", "lab", "cNo",
         "askingRate", "askingBack", "askingAmount", "imagePath", "videoPath"
@@ -959,7 +964,7 @@ const SolitaireAdminStockReport = () => {
       });
     });
 
-    await exportToExcel(headers, rows, printFormat, `Admin_Stock_${printFormat}`);
+    await exportToExcel(headers, rows, activeFormat, `Admin_Stock_${activeFormat}`);
     toast.success("Excel exported successfully.");
   };
 
@@ -1019,53 +1024,34 @@ const SolitaireAdminStockReport = () => {
                   </Button>
                   {searchResults.length > 0 && (
                     <div className="d-flex align-items-center gap-1">
-                      <div className="dropdown" style={{ position: "relative" }}>
-                        <button
-                          type="button"
-                          className="btn btn-soft-info btn-sm rounded-2 px-3 py-1 dropdown-toggle"
-                          onClick={() => setPrintDropdownOpen((o) => !o)}
+                      <UncontrolledDropdown>
+                        <DropdownToggle
+                          color="success"
+                          className="btn-sm rounded-2 px-3 py-1"
+                          caret
                         >
-                          {printFormat === "Print"
-                            ? t("Direct Print")
-                            : printFormat === "StockPrint"
-                              ? t("Admin Print")
-                              : printFormat === "CustomerPrint"
-                                ? t("Customer Print")
-                                : printFormat}
-                        </button>
-                        {printDropdownOpen && (
-                          <div
-                            className="dropdown-menu show"
-                            style={{ minWidth: "160px", zIndex: 1050 }}
-                          >
-                            {[
-                              { key: "Print", label: t("Direct Print") },
-                              { key: "StockPrint", label: t("Admin Print") },
-                              { key: "CustomerPrint", label: t("Customer Print") },
-                              { key: "DiaSense", label: t("DiaSense") },
-                              { key: "Rapnet", label: t("Rapnet") },
-                              { key: "Nivoda", label: t("Nivoda") },
-                              { key: "VDB", label: t("VDB") },
-                            ].map((fmt) => (
-                              <button
-                                key={fmt.key}
-                                type="button"
-                                className={`dropdown-item${printFormat === fmt.key ? " active" : ""}`}
-                                onClick={() => {
-                                  setPrintFormat(fmt.key);
-                                  setPrintDropdownOpen(false);
-                                }}
-                              >
-                                {fmt.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <Button color="success" className="btn-sm rounded-2 px-3 py-1" onClick={handleExport}>
-                        <i className="ri-file-excel-2-line align-middle me-1"></i>
-                        {t("Excel")}
-                      </Button>
+                          <i className="ri-file-excel-2-line align-middle me-1"></i>
+                          {t("Excel")} / {t("Print")}
+                        </DropdownToggle>
+                        <DropdownMenu style={{ minWidth: "160px", zIndex: 1050 }}>
+                          {[
+                            { key: "Print", label: t("Direct Print") },
+                            { key: "StockPrint", label: t("Admin Print") },
+                            { key: "CustomerPrint", label: t("Customer Print") },
+                            { key: "DiaSense", label: t("DiaSense") },
+                            { key: "Rapnet", label: t("Rapnet") },
+                            { key: "Nivoda", label: t("Nivoda") },
+                            { key: "VDB", label: t("VDB") },
+                          ].map((fmt) => (
+                            <DropdownItem
+                              key={fmt.key}
+                              onClick={() => handleExport(fmt.key)}
+                            >
+                              {fmt.label}
+                            </DropdownItem>
+                          ))}
+                        </DropdownMenu>
+                      </UncontrolledDropdown>
                     </div>
                   )}
                 </>

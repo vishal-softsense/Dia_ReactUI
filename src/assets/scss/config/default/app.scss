@@ -170,3 +170,40 @@ File: Main Css File
     background-color: var(--vz-card-bg, #ffffff) !important;
   }
 }
+
+// Consignment Report column background colors (matching MVC)
+.carat-col {
+  background-color: rgb(204, 204, 255) !important;
+  color: #000000 !important;
+}
+.parent-row td.carat-col,
+.child-row td.carat-col {
+  background-color: rgb(204, 204, 255) !important;
+}
+
+.rtn-col {
+  background-color: rgb(153, 204, 255) !important;
+  color: #000000 !important;
+}
+.parent-row td.rtn-col,
+.child-row td.rtn-col {
+  background-color: rgb(153, 204, 255) !important;
+}
+
+.pur-col {
+  background-color: rgb(204, 255, 201) !important;
+  color: #000000 !important;
+}
+.parent-row td.pur-col,
+.child-row td.pur-col {
+  background-color: rgb(204, 255, 201) !important;
+}
+
+.bal-col {
+  background-color: rgb(255, 204, 153) !important;
+  color: #000000 !important;
+}
+.parent-row td.bal-col,
+.child-row td.bal-col {
+  background-color: rgb(255, 204, 153) !important;
+}

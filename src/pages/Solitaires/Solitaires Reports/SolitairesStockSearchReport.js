@@ -19,7 +19,11 @@ import {
   Table,
   Modal,
   ModalBody,
-  ModalHeader
+  ModalHeader,
+  UncontrolledDropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem
 } from "reactstrap";
 import Select, { components } from "react-select";
 import classnames from "classnames";
@@ -1185,12 +1189,13 @@ const SolitairesStockSearchReport = () => {
   };
 
   // Export to Excel — format-aware, fully client-side (no API call)
-  const handleExport = async () => {
+  const handleExport = async (format) => {
     if (searchResults.length === 0) {
       toast.warning("No data available to export.");
       return;
     }
-    const fmt = PRINT_FORMATS[printFormat] || PRINT_FORMATS.DirectPrint;
+    const activeFormat = format || printFormat || "DirectPrint";
+    const fmt = PRINT_FORMATS[activeFormat] || PRINT_FORMATS.DirectPrint;
     const rows = searchResults.map(fmt.mapper);
     const res = await exportToExcel(fmt.headers, rows, fmt.label, `SolitaireStock_${fmt.label.replace(/ /g, "_")}`);
     if (res.success) {
@@ -1374,35 +1379,26 @@ const SolitairesStockSearchReport = () => {
                   </Button>
                   {searchResults.length > 0 && (
                     <div className="d-flex align-items-center gap-1">
-                      <div className="dropdown" style={{ position: "relative" }}>
-                        <button
-                          type="button"
-                          className="btn btn-soft-info btn-sm rounded-2 px-3 py-1 dropdown-toggle"
-                          onClick={() => setPrintDropdownOpen((o) => !o)}
+                      <UncontrolledDropdown>
+                        <DropdownToggle
+                          color="success"
+                          className="btn-sm rounded-2 px-3 py-1"
+                          caret
                         >
-                          {PRINT_FORMATS[printFormat]?.label || "Direct Print"}
-                        </button>
-                        {printDropdownOpen && (
-                          <div
-                            className="dropdown-menu show"
-                            style={{ minWidth: "160px", zIndex: 1050 }}
-                          >
-                            {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
-                              <button
-                                key={key}
-                                className={`dropdown-item${printFormat === key ? " active" : ""}`}
-                                onClick={() => { setPrintFormat(key); setPrintDropdownOpen(false); }}
-                              >
-                                {fmt.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <Button color="success" className="btn-sm rounded-2 px-3 py-1" onClick={handleExport}>
-                        <i className="ri-file-excel-2-line align-middle me-1"></i>
-                        {t("Excel")}
-                      </Button>
+                          <i className="ri-file-excel-2-line align-middle me-1"></i>
+                          {t("Excel")} / {t("Print")}
+                        </DropdownToggle>
+                        <DropdownMenu style={{ minWidth: "160px", zIndex: 1050 }}>
+                          {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
+                            <DropdownItem
+                              key={key}
+                              onClick={() => handleExport(key)}
+                            >
+                              {fmt.label}
+                            </DropdownItem>
+                          ))}
+                        </DropdownMenu>
+                      </UncontrolledDropdown>
                     </div>
                   )}
                 </>

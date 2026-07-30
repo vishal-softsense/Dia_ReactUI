@@ -568,6 +568,19 @@ export const SOLITAIRE_RATE_REVISE_DROPDOWNS = "/api/SolitaireRateReviseReport/d
 export const SOLITAIRE_PURCHASE_REPORT = "/api/SolitairePurchaseReport/search";
 export const SOLITAIRE_PURCHASE_DROPDOWNS = "/api/SolitairePurchaseReport/dropdowns";
 
+// Solitaire Consignment In Report
+export const SOLITAIRE_CONSIGNMENT_IN_REPORT = "/api/SolitaireConsignmentInReport/search";
+export const SOLITAIRE_CONSIGNMENT_IN_SUMMARY = "/api/SolitaireConsignmentInReport/summary";
+export const SOLITAIRE_CONSIGNMENT_IN_DROPDOWNS = "/api/SolitaireConsignmentInReport/dropdowns";
+
+// Solitaire Memo Out Report
+export const SOLITAIRE_MEMO_OUT_REPORT = "/api/SolitaireMemoOutReport/search";
+export const SOLITAIRE_MEMO_OUT_DROPDOWNS = "/api/SolitaireMemoOutReport/dropdowns";
+
+// Solitaire Sale Report
+export const SOLITAIRE_SALE_REPORT = "/api/SolitaireSaleReport/search";
+export const SOLITAIRE_SALE_DROPDOWNS = "/api/SolitaireSaleReport/dropdowns";
+
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";
 export const MONTH_ANALYSIS_REPORT_DROPDOWNS = "/api/MonthAnalysisReport/dropdowns";

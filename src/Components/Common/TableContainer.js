@@ -311,7 +311,7 @@ const TableContainer = ({
                   <tr className={`${trClass || ""} ${customRowClass}`.trim()}>
                     {row.getVisibleCells().map((cell) => {
                       return (
-                        <td key={cell.id}>
+                        <td key={cell.id} className={cell.column.columnDef.className || ""}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()

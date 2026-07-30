@@ -368,6 +368,9 @@ import SolitaireStockHistoryReport from "../pages/Solitaires/Solitaires Reports/
 import SolitaireGradingComparisonReport from "../pages/Solitaires/Solitaires Reports/SolitaireGradingComparisonReport";
 import SolitaireRateReviseReport from "../pages/Solitaires/Solitaires Reports/SolitaireRateReviseReport";
 import SolitairePurchaseReport from "../pages/Solitaires/Solitaires Reports/SolitairePurchaseReport";
+import SolitaireConsignmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsignmentReport";
+import SolitaireMemoOutReport from "../pages/Solitaires/Solitaires Reports/SolitaireMemoOutReport";
+import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReport";
 
 
 
@@ -466,6 +469,9 @@ const authProtectedRoutes = [
   { path: "/report/stock-register-report", component: <SolitaireStockHistoryReport /> },
   { path: "/report/grading-comparision-report", component: <SolitaireGradingComparisonReport /> },
   { path: "/report/purchase-report", component: <SolitairePurchaseReport /> },
+  { path: "/report/consignment-report", component: <SolitaireConsignmentReport /> },
+  { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
+  { path: "/report/sale-report", component: <SolitaireSaleReport /> },
   { path: "/report/rate-revise-report", component: <SolitaireRateReviseReport /> },
 
 
