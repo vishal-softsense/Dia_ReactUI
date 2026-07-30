@@ -42,6 +42,23 @@ const formatLocalDate = (date) => {
 
 
 
+const getRateReviseTableTotals = (table) => {
+  const rows = table.getFilteredRowModel().rows.map((r) => r.original);
+  let count = 0;
+  let totalCarats = 0;
+  let totalPL = 0;
+
+  rows.forEach((r) => {
+    if (!isTotalRow(r)) {
+      count++;
+      totalCarats += Number(getRowVal(r, "carats", "Carats") || 0);
+      totalPL += Number(getRowVal(r, "PLAmount", "plAmount") || 0);
+    }
+  });
+
+  return { count, totalCarats, totalPL };
+};
+
 const SolitaireRateReviseReport = () => {
   const { t } = useTranslation();
 
@@ -224,7 +241,8 @@ const SolitaireRateReviseReport = () => {
         cell: ({ row }) => {
           const value = getRowVal(row.original, "Date", "date");
           return dashText(value);
-        }
+        },
+        footer: () => <span className="fw-bold">{t("Total")}</span>
       },
       {
         header: t("LotNo"),
@@ -235,12 +253,14 @@ const SolitaireRateReviseReport = () => {
             return v === "" ? 0 : v;
           }
           return dashText(getRowVal(row.original, "LotNo", "lotNo"));
-        }
+        },
+        footer: ({ table }) => <span className="fw-bold">{getRateReviseTableTotals(table).count}</span>
       },
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "Carats", "carats"), 3)
+        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "Carats", "carats"), 3),
+        footer: ({ table }) => <span className="fw-bold text-end d-block">{fmtFixedOrZero(getRateReviseTableTotals(table).totalCarats, 3)}</span>
       },
       {
         header: t("OldRate"),
@@ -269,7 +289,8 @@ const SolitaireRateReviseReport = () => {
       {
         header: t("PLAmount"),
         accessorKey: "PLAmount",
-        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "PLAmount", "plAmount"), 3)
+        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "PLAmount", "plAmount"), 3),
+        footer: ({ table }) => <span className="fw-bold text-end d-block">{fmtFixedOrZero(getRateReviseTableTotals(table).totalPL, 2)}</span>
       },
       {
         header: t("UserName"),

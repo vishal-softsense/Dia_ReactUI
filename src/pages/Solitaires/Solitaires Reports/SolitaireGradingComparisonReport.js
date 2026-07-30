@@ -87,6 +87,20 @@ const CompareCell = ({ value, colorFlag, boldFlag, decimals, align = "center" })
   return <span style={style}>{rawDisplay}</span>;
 };
 
+const getGradingCompTableTotals = (table) => {
+  const rows = table.getFilteredRowModel().rows.map((r) => r.original);
+  let totalCarats = 0;
+  let totalAmount = 0;
+
+  rows.forEach((r) => {
+    totalCarats += Number(getRowVal(r, "carats", "Carats") || 0);
+    totalAmount += Number(getRowVal(r, "amount", "Amount") || 0);
+  });
+
+  const avgRate = totalCarats > 0 ? totalAmount / totalCarats : 0;
+  return { totalCarats, totalAmount, avgRate };
+};
+
 const SolitaireGradingComparisonReport = () => {
   const { t } = useTranslation();
 
@@ -293,7 +307,8 @@ const SolitaireGradingComparisonReport = () => {
       {
         header: t("LotNo"),
         accessorKey: "lotNo",
-        cell: ({ row }) => dash(getRowVal(row.original, "lotNo", "LotNo"))
+        cell: ({ row }) => dash(getRowVal(row.original, "lotNo", "LotNo")),
+        footer: () => <span className="fw-bold text-start d-block">{t("Total")}:</span>
       },
       {
         header: t("Kapan"),
@@ -325,17 +340,41 @@ const SolitaireGradingComparisonReport = () => {
             decimals={3}
             align="right"
           />
+        ),
+        footer: ({ table }) => (
+          <CompareCell
+            value={getGradingCompTableTotals(table).totalCarats}
+            decimals={3}
+            align="right"
+            boldFlag={true}
+          />
         )
       },
       {
         header: t("Rate"),
         accessorKey: "rate",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "rate", "Rate")} decimals={2} align="right" />
+        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "rate", "Rate")} decimals={2} align="right" />,
+        footer: ({ table }) => (
+          <CompareCell
+            value={getGradingCompTableTotals(table).avgRate}
+            decimals={2}
+            align="right"
+            boldFlag={true}
+          />
+        )
       },
       {
         header: t("Amount"),
         accessorKey: "amount",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "amount", "Amount")} decimals={2} align="right" />
+        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "amount", "Amount")} decimals={2} align="right" />,
+        footer: ({ table }) => (
+          <CompareCell
+            value={getGradingCompTableTotals(table).totalAmount}
+            decimals={2}
+            align="right"
+            boldFlag={true}
+          />
+        )
       },
       {
         header: t("MRP"),

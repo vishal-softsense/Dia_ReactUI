@@ -85,6 +85,43 @@ const SelectionCell = React.memo(({ index, selectedRows, onChange }) => {
   );
 });
 
+const getRowVal = (row, ...keys) => {
+  for (const key of keys) {
+    if (row?.[key] !== undefined && row?.[key] !== null && row?.[key] !== "") return row[key];
+  }
+  return "";
+};
+
+const fmtFixed = (value, decimals) => {
+  if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) return (0).toFixed(decimals);
+  return Number(value).toFixed(decimals);
+};
+
+const getStockTableTotals = (table) => {
+  const rows = table.getFilteredRowModel().rows.map((r) => r.original);
+  let totalCarats = 0;
+  let totalAmount = 0;
+  let totalCostAmount = 0;
+  let totalMRPAmt = 0; // rapa * carats
+  let totalMrpAmountColumn = 0; // sum of mrpAmount
+
+  rows.forEach((r) => {
+    const carats = Number(getRowVal(r, "carats", "Carats") || 0);
+    const rapa = Number(getRowVal(r, "rapa", "Rapa") || 0);
+    const amount = Number(getRowVal(r, "amount", "Amount") || 0);
+    const costAmt = Number(getRowVal(r, "purChaseAmount", "purchaseAmount", "PurChaseAmount", "PurchaseAmount") || 0);
+    const mrpAmtCol = Number(getRowVal(r, "mrpAmount", "MrpAmount", "MRPAmount") || 0);
+
+    totalCarats += carats;
+    totalAmount += amount;
+    totalCostAmount += costAmt;
+    totalMRPAmt += (rapa * carats);
+    totalMrpAmountColumn += mrpAmtCol;
+  });
+
+  return { totalCarats, totalAmount, totalCostAmount, totalMRPAmt, totalMrpAmountColumn };
+};
+
 const allColumns = [
   { label: "Status", key: "curStatus" },
   { label: "Age", key: "pDays" },
@@ -767,87 +804,145 @@ const SolitairesStockSearchReport = () => {
               </span>
             </div>
           );
-        }
+        },
+        footer: () => <span className="fw-bold text-center d-block">{t("Total")}:</span>
       },
-      ...allColumns.map((col) => ({
-        header: t(col.label),
-        accessorKey: col.key,
-        accessorFn: (row) => row[col.key] !== undefined ? row[col.key] : row[col.key.charAt(0).toUpperCase() + col.key.slice(1)],
-        enableColumnFilter: true,
-        filterFn: "includesString",
-        cell: (cellProps) => {
-          const row = cellProps.row.original;
-          const val = cellProps.getValue();
-          const status = row.curStatus || row.CurStatus || "";
+      ...allColumns.map((col) => {
+        let footerCallback = undefined;
+        if (col.key === "carats") {
+          footerCallback = ({ table }) => {
+            const { totalCarats } = getStockTableTotals(table);
+            return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+          };
+        } else if (col.key === "rapa") {
+          footerCallback = ({ table }) => {
+            const { totalCarats, totalMRPAmt } = getStockTableTotals(table);
+            const avgMrp = totalCarats > 0 ? totalMRPAmt / totalCarats : 0;
+            return <span className="fw-bold text-end d-block">{fmtFixed(avgMrp, 2)}</span>;
+          };
+        } else if (col.key === "back") {
+          footerCallback = ({ table }) => {
+            const { totalAmount, totalMRPAmt } = getStockTableTotals(table);
+            const avgBack = totalMRPAmt > 0 ? (totalAmount / totalMRPAmt) * 100 - 100 : 0;
+            return <span className="fw-bold text-end d-block">{fmtFixed(avgBack, 2)}</span>;
+          };
+        } else if (col.key === "rate") {
+          footerCallback = ({ table }) => {
+            const { totalCarats, totalAmount } = getStockTableTotals(table);
+            const avgRate = totalCarats > 0 ? totalAmount / totalCarats : 0;
+            return <span className="fw-bold text-end d-block">{fmtFixed(avgRate, 2)}</span>;
+          };
+        } else if (col.key === "amount") {
+          footerCallback = ({ table }) => {
+            const { totalAmount } = getStockTableTotals(table);
+            return <span className="fw-bold text-end d-block">{fmtFixed(totalAmount, 2)}</span>;
+          };
+        } else if (col.key === "purchaseBack") {
+          footerCallback = ({ table }) => {
+            const { totalCostAmount, totalMRPAmt } = getStockTableTotals(table);
+            const avgCostBack = totalMRPAmt > 0 ? (totalCostAmount / totalMRPAmt) * 100 - 100 : 0;
+            return <span className="fw-bold text-end d-block">{fmtFixed(avgCostBack, 2)}</span>;
+          };
+        } else if (col.key === "purchaseRate") {
+          footerCallback = ({ table }) => {
+            const { totalCarats, totalCostAmount } = getStockTableTotals(table);
+            const avgCostRate = totalCarats > 0 ? totalCostAmount / totalCarats : 0;
+            return <span className="fw-bold text-end d-block">{fmtFixed(avgCostRate, 2)}</span>;
+          };
+        } else if (col.key === "purChaseAmount") {
+          footerCallback = ({ table }) => {
+            const { totalCostAmount } = getStockTableTotals(table);
+            return <span className="fw-bold text-end d-block">{fmtFixed(totalCostAmount, 2)}</span>;
+          };
+        } else if (col.key === "mrpAmount") {
+          footerCallback = ({ table }) => {
+            const { totalMrpAmountColumn } = getStockTableTotals(table);
+            return <span className="fw-bold text-end d-block">{fmtFixed(totalMrpAmountColumn, 2)}</span>;
+          };
+        }
 
-          let displayVal = val;
-          if (col.type === "carats") {
-            displayVal = parseFloat(val || 0).toFixed(3);
-          } else if (col.type === "discount") {
-            displayVal = parseFloat(val || 0).toFixed(2);
-          } else if (col.type === "number") {
-            displayVal = parseFloat(val || 0).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            });
-          }
+        return {
+          header: t(col.label),
+          accessorKey: col.key,
+          accessorFn: (row) => row[col.key] !== undefined ? row[col.key] : row[col.key.charAt(0).toUpperCase() + col.key.slice(1)],
+          enableColumnFilter: true,
+          filterFn: "includesString",
+          className: col.align || "",
+          cell: (cellProps) => {
+            const row = cellProps.row.original;
+            const val = cellProps.getValue();
+            const status = row.curStatus || row.CurStatus || "";
 
-          let statusColor = "";
-          if (status === "M") statusColor = "text-danger fw-semibold";
-          else if (status === "LAB") statusColor = "text-info fw-semibold";
-          else if (status === "I") statusColor = "text-primary fw-semibold";
-          else if (status === "L") statusColor = "text-success fw-semibold";
-          else if (status === "PS") statusColor = "text-success fw-bold";
-          else if (status === "Sold") statusColor = "text-purple fw-bold";
-          else if (status === "PH") statusColor = "text-warning fw-semibold";
-          else if (status === "MI") statusColor = "text-success fw-semibold";
+            let displayVal = val;
+            if (col.type === "carats") {
+              displayVal = parseFloat(val || 0).toFixed(3);
+            } else if (col.type === "discount") {
+              displayVal = parseFloat(val || 0).toFixed(2);
+            } else if (col.type === "number") {
+              displayVal = parseFloat(val || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              });
+            }
 
-          if (col.key === "lotNo") {
-            return (
-              <span
-                className="text-primary text-decoration-underline fw-semibold"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  setSelectedRowDetail(row);
-                  setDetailMediaTab("image");
-                  setDetailModal(true);
-                }}
-              >
-                {val}
-              </span>
-            );
-          }
+            let statusColor = "";
+            if (status === "M") statusColor = "text-danger fw-semibold";
+            else if (status === "LAB") statusColor = "text-info fw-semibold";
+            else if (status === "I") statusColor = "text-primary fw-semibold";
+            else if (status === "L") statusColor = "text-success fw-semibold";
+            else if (status === "PS") statusColor = "text-success fw-bold";
+            else if (status === "Sold") statusColor = "text-purple fw-bold";
+            else if (status === "PH") statusColor = "text-warning fw-semibold";
+            else if (status === "MI") statusColor = "text-success fw-semibold";
 
-          if (col.key === "cNo") {
-            const certUrl = row.certPath || row.CertPath;
-            if (certUrl) {
+            if (col.key === "lotNo") {
               return (
-                <a
-                  href={certUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-decoration-underline"
+                <span
+                  className="text-primary text-decoration-underline fw-semibold"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setSelectedRowDetail(row);
+                    setDetailMediaTab("image");
+                    setDetailModal(true);
+                  }}
                 >
-                  {displayVal !== null && displayVal !== undefined ? String(displayVal) : ""}
-                </a>
+                  {val}
+                </span>
               );
             }
-          }
 
-          return (
-            <span
-              className={classnames(
-                col.align || "",
-                col.fw ? `fw-${col.fw}` : "",
-                col.color || "",
-                col.key === "curStatus" ? statusColor : ""
-              )}
-            >
-              {displayVal !== null && displayVal !== undefined ? String(displayVal) : ""}
-            </span>
-          );
-        }
-      }))
+            if (col.key === "cNo") {
+              const certUrl = row.certPath || row.CertPath;
+              if (certUrl) {
+                return (
+                  <a
+                    href={certUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-decoration-underline"
+                  >
+                    {displayVal !== null && displayVal !== undefined ? String(displayVal) : ""}
+                  </a>
+                );
+              }
+            }
+
+            return (
+              <span
+                className={classnames(
+                  col.align || "",
+                  col.fw ? `fw-${col.fw}` : "",
+                  col.color || "",
+                  col.key === "curStatus" ? statusColor : ""
+                )}
+              >
+                {displayVal !== null && displayVal !== undefined ? String(displayVal) : ""}
+              </span>
+            );
+          },
+          footer: footerCallback
+        };
+      })
     ];
     return cols;
   }, [searchResults, selectedRows, t]);
@@ -2525,8 +2620,8 @@ const SolitairesStockSearchReport = () => {
               >
                 <option value="">{t("Select City")}</option>
                 {getOptions("City").map((opt) => (
-                  <option key={opt.id || opt.Name} value={opt.name || opt.Name}>
-                    {opt.name || opt.Name}
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </Input>
@@ -2540,8 +2635,8 @@ const SolitairesStockSearchReport = () => {
               >
                 <option value="">{t("Select State")}</option>
                 {getOptions("State").map((opt) => (
-                  <option key={opt.id || opt.Name} value={opt.name || opt.Name}>
-                    {opt.name || opt.Name}
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </Input>
@@ -2555,8 +2650,8 @@ const SolitairesStockSearchReport = () => {
               >
                 <option value="">{t("Select Country")}</option>
                 {getOptions("Country").map((opt) => (
-                  <option key={opt.id || opt.Name} value={opt.name || opt.Name}>
-                    {opt.name || opt.Name}
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </Input>
