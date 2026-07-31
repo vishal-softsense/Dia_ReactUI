@@ -375,6 +375,8 @@ import SolitairePurchaseReport from "../pages/Solitaires/Solitaires Reports/Soli
 import SolitaireConsignmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsignmentReport";
 import SolitaireMemoOutReport from "../pages/Solitaires/Solitaires Reports/SolitaireMemoOutReport";
 import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReport";
+import SolitaireSalePerformanceReport from "../pages/Solitaires/Solitaires Reports/SolitaireSalePerformanceReport";
+import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/SolitairePartyHoldReport";
 
 
 
@@ -475,7 +477,11 @@ const authProtectedRoutes = [
   { path: "/report/purchase-report", component: <SolitairePurchaseReport /> },
   { path: "/report/consignment-report", component: <SolitaireConsignmentReport /> },
   { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
+  { path: "/report/PartyHold-report", component: <SolitairePartyHoldReport /> },
+  { path: "/report/partyhold-report", component: <SolitairePartyHoldReport /> },
   { path: "/report/sale-report", component: <SolitaireSaleReport /> },
+  { path: "/report/sale-Performance-report", component: <SolitaireSalePerformanceReport /> },
+  { path: "/report/sale-performance-report", component: <SolitaireSalePerformanceReport /> },
   { path: "/report/rate-revise-report", component: <SolitaireRateReviseReport /> },
 
   { path: "/dashboard/parcel-stock-analysis", component: <ParcelStockAnalysis /> },

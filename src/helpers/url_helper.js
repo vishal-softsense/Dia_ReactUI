@@ -577,9 +577,17 @@ export const SOLITAIRE_CONSIGNMENT_IN_DROPDOWNS = "/api/SolitaireConsignmentInRe
 export const SOLITAIRE_MEMO_OUT_REPORT = "/api/SolitaireMemoOutReport/search";
 export const SOLITAIRE_MEMO_OUT_DROPDOWNS = "/api/SolitaireMemoOutReport/dropdowns";
 
+// Solitaire Party Hold Report
+export const SOLITAIRE_PARTY_HOLD_REPORT = "/api/SolitairePartyHoldReport/search";
+export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dropdowns";
+
 // Solitaire Sale Report
 export const SOLITAIRE_SALE_REPORT = "/api/SolitaireSaleReport/search";
 export const SOLITAIRE_SALE_DROPDOWNS = "/api/SolitaireSaleReport/dropdowns";
+
+// Solitaire Sale Performance Report
+export const SOLITAIRE_SALE_PERFORMANCE_REPORT = "/api/SolitaireSalePerformanceReport/search";
+export const SOLITAIRE_SALE_PERFORMANCE_DROPDOWNS = "/api/SolitaireSalePerformanceReport/dropdowns";
 
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";

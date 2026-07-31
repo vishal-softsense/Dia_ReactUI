@@ -30,6 +30,7 @@ import {
   getAccGrpMasterDropdowns,
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../helpers/excel_helper";
 import ParcelSalePivotReport from "./ParcelSalePivotReport";
 import "chart.js/auto";
@@ -119,9 +120,11 @@ const SALE_ANA_OPTIONS = [
 const ParcelSaleAnalysisReport = () => {
   const { t } = useTranslation();
 
+  const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
+
   // ── Filters ────────────────────────────────────────────────────────────────
-  const [fromDate,   setFromDate]   = useState("2024-01-21");
-  const [toDate,     setToDate]     = useState(new Date().toISOString().substring(0, 10));
+  const [fromDate,   setFromDate]   = useState(settingFrom);
+  const [toDate,     setToDate]     = useState(settingTo);
   const [currency,   setCurrency]   = useState("");
   const [invNo,      setInvNo]      = useState("");
 
@@ -197,6 +200,11 @@ const ParcelSaleAnalysisReport = () => {
   useEffect(() => {
     fetchDropdowns();
   }, []);
+
+  useEffect(() => {
+    setFromDate(settingFrom);
+    setToDate(settingTo);
+  }, [settingFrom, settingTo]);
 
   const fetchDropdowns = async () => {
     try {
@@ -409,9 +417,10 @@ const ParcelSaleAnalysisReport = () => {
     }
   };
 
-  const handleClear = () => {
-    setFromDate("2024-01-21");
-    setToDate(new Date().toISOString().substring(0, 10));
+  const handleClear = async () => {
+    const d = await getDates();
+    setFromDate(d.fromDate);
+    setToDate(d.toDate);
     setCurrency(""); setInvNo(""); setLotNo("");
     setSelectedParty(null); setPartyInput(""); setPartyOptions([]);
     setSelectedBroker(null); setBrokerInput(""); setBrokerOptions([]);

@@ -22,6 +22,7 @@ import {
   getSolitaireGradingComparisonDropdowns,
   getSolitaireGradingComparisonReport
 } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const fmtNum = (value, decimals = 2) => {
   if (value === null || value === undefined || value === "") return "-";
@@ -104,7 +105,7 @@ const getGradingCompTableTotals = (table) => {
 const SolitaireGradingComparisonReport = () => {
   const { t } = useTranslation();
 
-  const todayYMD = useMemo(() => formatLocalDate(new Date()), []);
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [dropdownData, setDropdownData] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -113,8 +114,8 @@ const SolitaireGradingComparisonReport = () => {
   const [reportRows, setReportRows] = useState([]);
 
   const [filters, setFilters] = useState({
-    fromDate: todayYMD,
-    toDate: todayYMD,
+    fromDate,
+    toDate,
     shape: [],
     color: [],
     clarity: [],
@@ -211,6 +212,10 @@ const SolitaireGradingComparisonReport = () => {
     loadDropdowns();
   }, [t]);
 
+  useEffect(() => {
+    setFilters((prev) => mergeDates(prev));
+  }, [fromDate, toDate, mergeDates]);
+
   const getOptions = useCallback(
     (key) => {
       const list = dropdownData?.[key] || [];
@@ -229,12 +234,11 @@ const SolitaireGradingComparisonReport = () => {
     }));
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    const d = await getDates();
     setHasSearched(false);
     setReportRows([]);
-    setFilters({
-      fromDate: todayYMD,
-      toDate: todayYMD,
+    setFilters(mergeDates({
       shape: [],
       color: [],
       clarity: [],
@@ -245,7 +249,7 @@ const SolitaireGradingComparisonReport = () => {
       lab: [],
       fluorescence: [],
       lotNo: ""
-    });
+    }, d));
   };
 
   const handleReport = async () => {

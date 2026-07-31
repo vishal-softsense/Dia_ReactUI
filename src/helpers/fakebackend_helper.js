@@ -725,9 +725,17 @@ export const getSolitaireConsignmentInDropdowns = () => api.get(url.SOLITAIRE_CO
 export const getSolitaireMemoOutReport = (filter) => api.create(url.SOLITAIRE_MEMO_OUT_REPORT, filter);
 export const getSolitaireMemoOutDropdowns = () => api.get(url.SOLITAIRE_MEMO_OUT_DROPDOWNS);
 
+// Solitaire Party Hold Report
+export const getSolitairePartyHoldReport = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_REPORT, filter);
+export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_HOLD_DROPDOWNS);
+
 // Solitaire Sale Report
 export const getSolitaireSaleReport = (filter) => api.create(url.SOLITAIRE_SALE_REPORT, filter);
 export const getSolitaireSaleDropdowns = () => api.get(url.SOLITAIRE_SALE_DROPDOWNS);
+
+// Solitaire Sale Performance Report
+export const getSolitaireSalePerformanceReport = (filter) => api.create(url.SOLITAIRE_SALE_PERFORMANCE_REPORT, filter);
+export const getSolitaireSalePerformanceDropdowns = () => api.get(url.SOLITAIRE_SALE_PERFORMANCE_DROPDOWNS);
 
 // Month Analysis Report
 export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);

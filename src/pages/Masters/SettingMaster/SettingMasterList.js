@@ -2,6 +2,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner, Nav, NavItem, NavLink } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getSettingData, filterSettingData, submitSettingData, uploadCompanyLogo } from "../../../helpers/fakebackend_helper";
+import {
+    SETTING_MAX_DATE_KEY,
+    SETTING_MIN_DATE_KEY,
+    normalizeSettingDate,
+    refreshSettingReportDates,
+    setCachedSettingReportDates
+} from "../../../helpers/reportDateDefaults";
 import { toast, ToastContainer } from "react-toastify";
 import classnames from "classnames";
 import * as Yup from "yup";
@@ -145,6 +152,24 @@ const SettingMasterList = () => {
                     if ((values.name || "").toLowerCase() === "companyloginlogo") {
                         localStorage.setItem("companyLoginLogo", values.value);
                         window.dispatchEvent(new Event("companyLogoUpdated"));
+                    }
+                    const settingName = (values.name || "").toLowerCase().replace(/\s+/g, "");
+                    if (settingName === "mindate" || settingName === "maxdate") {
+                        const normalized = normalizeSettingDate(values.value);
+                        if (settingName === "mindate") {
+                            setCachedSettingReportDates(
+                                normalized || values.value,
+                                localStorage.getItem(SETTING_MAX_DATE_KEY)
+                            );
+                        } else {
+                            // MaxDate must drive report To Date
+                            setCachedSettingReportDates(
+                                localStorage.getItem(SETTING_MIN_DATE_KEY),
+                                normalized || values.value
+                            );
+                        }
+                        // Re-read both from API so all open/next reports get latest Min/Max
+                        await refreshSettingReportDates();
                     }
                     setSettingModal(false);
                     loadTabData(activeTab);

@@ -23,6 +23,7 @@ import {
   getSolitaireStockSearchDropdowns,
   getSolitaireAdminLots
 } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const debounce = (func, delay) => {
   let timer;
@@ -170,12 +171,11 @@ const SolitaireStockHistoryReport = () => {
   // Price mode (MVC: default SalpurAvg=true)
   const [priceMode, setPriceMode] = useState("SalpurAvg"); // SalpurAvg | PurAvg | MarketAvg
 
-  const todayYMD = useMemo(() => formatLocalDate(new Date()), []);
-  const defaultFromDate = "2025-01-01";
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [filters, setFilters] = useState({
-    fromDate: defaultFromDate,
-    toDate: todayYMD,
+    fromDate,
+    toDate,
     shape: [],
     color: [],
     clarity: [],
@@ -339,6 +339,10 @@ const SolitaireStockHistoryReport = () => {
     fetchDropdowns();
   }, []);
 
+  useEffect(() => {
+    setFilters((prev) => mergeDates(prev));
+  }, [fromDate, toDate, mergeDates]);
+
   const fetchLotsList = useCallback(async (search = "") => {
     setLoadingLots(true);
     try {
@@ -379,20 +383,19 @@ const SolitaireStockHistoryReport = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    const d = await getDates();
     setHasSearched(false);
     setReportRows([]);
     setPriceMode("SalpurAvg");
     setSelectedTypes(["ALL"]);
-    setFilters({
-      fromDate: defaultFromDate,
-      toDate: todayYMD,
+    setFilters(mergeDates({
       shape: [],
       color: [],
       clarity: [],
       size: [],
       lotNo: ""
-    });
+    }, d));
   };
 
   const effectiveSelectedTypes = useMemo(() => {

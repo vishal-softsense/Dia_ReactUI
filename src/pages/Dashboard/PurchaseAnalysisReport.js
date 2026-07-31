@@ -40,6 +40,7 @@ import {
   getPurchaseAnalysisDropdowns,
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
 import "chart.js/auto";
 
 // MVC palette (PurchaseAnalysisReport.js createChart)
@@ -122,11 +123,11 @@ const arrowLinesPlugin = {
 const PurchaseAnalysisReport = () => {
   const { t } = useTranslation();
 
+  const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
+
   // Basic Filters State
-  const [fromDate, setFromDate] = useState("2025-01-01");
-  const [toDate, setToDate] = useState(
-    new Date().toISOString().substring(0, 10)
-  );
+  const [fromDate, setFromDate] = useState(settingFrom);
+  const [toDate, setToDate] = useState(settingTo);
   const [currency, setCurrency] = useState("");
   const [invNo, setInvNo] = useState("");
   const [billNo, setBillNo] = useState("");
@@ -261,6 +262,11 @@ const PurchaseAnalysisReport = () => {
     fetchDropdowns();
   }, []);
 
+  useEffect(() => {
+    setFromDate(settingFrom);
+    setToDate(settingTo);
+  }, [settingFrom, settingTo]);
+
   // Autocomplete account group lookup
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) {
@@ -379,9 +385,10 @@ const PurchaseAnalysisReport = () => {
     }
   };
 
-  const handleClear = () => {
-    setFromDate("2024-01-21");
-    setToDate(new Date().toISOString().substring(0, 10));
+  const handleClear = async () => {
+    const d = await getDates();
+    setFromDate(d.fromDate);
+    setToDate(d.toDate);
     setCurrency("");
     setInvNo("");
     setBillNo("");

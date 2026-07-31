@@ -41,6 +41,7 @@ import {
   getAccGrpMasterDropdowns,
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../helpers/excel_helper";
 
 ChartJS.register(
@@ -99,10 +100,12 @@ const ParcelPurchaseAnalysis = () => {
     currency: []
   });
 
+  const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
+
   // Filters
   const [activeReportType, setActiveReportType] = useState("Shape");
-  const [fromDate, setFromDate] = useState("2024-01-01");
-  const [toDate, setToDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [fromDate, setFromDate] = useState(settingFrom);
+  const [toDate, setToDate] = useState(settingTo);
   const [currency, setCurrency] = useState("");
   const [invNo, setInvNo] = useState("");
 
@@ -147,6 +150,11 @@ const ParcelPurchaseAnalysis = () => {
   useEffect(() => {
     fetchDropdowns();
   }, []);
+
+  useEffect(() => {
+    setFromDate(settingFrom);
+    setToDate(settingTo);
+  }, [settingFrom, settingTo]);
 
   const fetchDropdowns = async () => {
     try {
@@ -360,9 +368,10 @@ const ParcelPurchaseAnalysis = () => {
     }
   };
 
-  const handleClear = () => {
-    setFromDate("2024-01-01");
-    setToDate(new Date().toISOString().slice(0, 10));
+  const handleClear = async () => {
+    const d = await getDates();
+    setFromDate(d.fromDate);
+    setToDate(d.toDate);
     setCurrency("");
     setInvNo("");
     setSelectedParty(null);

@@ -12,6 +12,7 @@ import {
   getSolitaireRateReviseDropdowns,
   getSolitaireRateReviseReport
 } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -62,7 +63,7 @@ const getRateReviseTableTotals = (table) => {
 const SolitaireRateReviseReport = () => {
   const { t } = useTranslation();
 
-  const todayYMD = useMemo(() => formatLocalDate(new Date()), []);
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [dropdownData, setDropdownData] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -72,8 +73,8 @@ const SolitaireRateReviseReport = () => {
   const [reportRows, setReportRows] = useState([]);
 
   const [filters, setFilters] = useState({
-    fromDate: todayYMD,
-    toDate: todayYMD,
+    fromDate,
+    toDate,
     shape: [],
     size: [],
     color: [],
@@ -140,6 +141,10 @@ const SolitaireRateReviseReport = () => {
     loadDropdowns();
   }, [t]);
 
+  useEffect(() => {
+    setFilters((prev) => mergeDates(prev));
+  }, [fromDate, toDate, mergeDates]);
+
   const getOptions = useCallback(
     (dropdownKey) => {
       const list = dropdownData?.[dropdownKey] || [];
@@ -158,12 +163,11 @@ const SolitaireRateReviseReport = () => {
     }));
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    const d = await getDates();
     setHasSearched(false);
     setReportRows([]);
-    setFilters({
-      fromDate: todayYMD,
-      toDate: todayYMD,
+    setFilters(mergeDates({
       shape: [],
       size: [],
       color: [],
@@ -174,7 +178,7 @@ const SolitaireRateReviseReport = () => {
       lab: [],
       fluorescence: [],
       lotNo: ""
-    });
+    }, d));
   };
 
   const handleReport = async () => {

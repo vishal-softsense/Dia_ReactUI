@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireStockSearchHistory } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const fmtFixed = (value, decimals) => {
   if (value === null || value === undefined || value === "") return "";
@@ -12,9 +13,6 @@ const fmtFixed = (value, decimals) => {
   if (Number.isNaN(num)) return "";
   return num.toFixed(decimals);
 };
-
-const HISTORY_FROM_DATE = "2020-01-01";
-const HISTORY_TO_DATE = "2026-12-31";
 
 const getRowVal = (row, ...keys) => {
   for (const key of keys) {
@@ -56,6 +54,7 @@ const getParticulars = (row) => {
 
 const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
   const { t } = useTranslation();
+  const { getDates } = useSettingReportDates();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -72,9 +71,10 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
       setRows([]);
 
       try {
+        const { fromDate, toDate } = await getDates();
         const payload = {
-          FromDate: HISTORY_FROM_DATE,
-          ToDate: HISTORY_TO_DATE,
+          FromDate: fromDate,
+          ToDate: toDate,
           LotNo: stockId,
           SelectedTypes: ["ALL"],
           StkEff: true

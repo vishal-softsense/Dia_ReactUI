@@ -28,6 +28,7 @@ import {
   getSolitaireConsignmentInReport,
   getSolitaireConsignmentInSummary
 } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const dashText = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -72,13 +73,7 @@ const getTableTotals = (table) => {
 const SolitaireConsignmentReport = () => {
   const { t } = useTranslation();
 
-  const todayYMD = useMemo(() => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }, []);
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({ includeReturnDates: true });
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -91,8 +86,8 @@ const SolitaireConsignmentReport = () => {
   const [summaryRows, setSummaryRows] = useState([]);
 
   const [filters, setFilters] = useState({
-    fromDate: "2020-01-01",
-    toDate: todayYMD,
+    fromDate,
+    toDate,
     currency: "",
     invNo: "",
     type: "ALL",
@@ -100,8 +95,8 @@ const SolitaireConsignmentReport = () => {
     broker: "",
     seller: "",
     chkRtnDate: false,
-    fromRtnDate: "2020-01-01",
-    toRtnDate: todayYMD,
+    fromRtnDate: fromDate,
+    toRtnDate: toDate,
     clear: false,
     summary: false,
     lotNo: "",
@@ -210,19 +205,22 @@ const SolitaireConsignmentReport = () => {
     loadDropdowns();
   }, [t]);
 
+  useEffect(() => {
+    setFilters((prev) => mergeDates(prev));
+  }, [fromDate, toDate, mergeDates]);
+
   const handleMultiChange = (name, selected) => {
     setFilters((prev) => ({ ...prev, [name]: selected ? selected.map((x) => x.value) : [] }));
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    const d = await getDates();
     setHasSearched(false);
     setExpandedMemoNos(new Set());
     setReportRows([]);
     setSummaryRows([]);
     setIsSummaryMode(false);
-    setFilters({
-      fromDate: "2020-01-01",
-      toDate: todayYMD,
+    setFilters(mergeDates({
       currency: "",
       invNo: "",
       type: "ALL",
@@ -230,15 +228,13 @@ const SolitaireConsignmentReport = () => {
       broker: "",
       seller: "",
       chkRtnDate: false,
-      fromRtnDate: "2020-01-01",
-      toRtnDate: todayYMD,
       clear: false,
       summary: false,
       lotNo: "",
       shape: [], color: [], clarity: [], size: [], proportion: [], polish: [],
       symmetry: [], lab: [], fluorescence: [], milky: [], luster: [], natts: [],
       mines: [], productType: [], sieve: []
-    });
+    }, d));
   };
 
   const buildPayload = () => ({

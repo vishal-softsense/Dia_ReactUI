@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Container,
@@ -22,15 +22,18 @@ import {
   getMonthAnalysisDropdowns,
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
 import MonthAnalysisPivotView from "./MonthAnalysisPivotView";
 
 const MonthAnalysisReport = () => {
   const { t } = useTranslation();
 
-  const [fromDate, setFromDate] = useState("2025-01-01");
-  const [toDate, setToDate] = useState(new Date().toISOString().substring(0, 10));
-  const [fromDateDue, setFromDateDue] = useState("2025-01-01");
-  const [toDateDue, setToDateDue] = useState(new Date().toISOString().substring(0, 10));
+  const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
+
+  const [fromDate, setFromDate] = useState(settingFrom);
+  const [toDate, setToDate] = useState(settingTo);
+  const [fromDateDue, setFromDateDue] = useState(settingFrom);
+  const [toDateDue, setToDateDue] = useState(settingTo);
   const [dueChkBox, setDueChkBox] = useState(false);
 
   const [currency, setCurrency] = useState("");
@@ -93,6 +96,13 @@ const MonthAnalysisReport = () => {
     };
     fetchDropdowns();
   }, []);
+
+  useEffect(() => {
+    setFromDate(settingFrom);
+    setToDate(settingTo);
+    setFromDateDue(settingFrom);
+    setToDateDue(settingTo);
+  }, [settingFrom, settingTo]);
 
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) {
@@ -249,11 +259,12 @@ const MonthAnalysisReport = () => {
     }
   };
 
-  const handleClear = () => {
-    setFromDate("2025-01-01");
-    setToDate("2025-12-31");
-    setFromDateDue("2025-01-01");
-    setToDateDue("2025-12-31");
+  const handleClear = async () => {
+    const d = await getDates();
+    setFromDate(d.fromDate);
+    setToDate(d.toDate);
+    setFromDateDue(d.fromDate);
+    setToDateDue(d.toDate);
     setDueChkBox(false);
     setCurrency("");
     setDispCurrency("");

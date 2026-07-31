@@ -4,6 +4,7 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
 import { getSettingData } from '../../helpers/fakebackend_helper';
+import { refreshSettingReportDates } from '../../helpers/reportDateDefaults';
 import { api } from '../../config';
 
 //import images
@@ -128,6 +129,8 @@ const ProfileDropdown = () => {
         };
 
         fetchCompanySetting();
+        // Preload System Settings MinDate/MaxDate for all reports (MVC Session equivalent)
+        refreshSettingReportDates().catch(() => {});
 
         const handleCompanyNameUpdate = () => {
             const val = localStorage.getItem("companySettingName");

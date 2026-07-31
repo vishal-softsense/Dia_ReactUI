@@ -116,3 +116,15 @@ div[class*="-multiValue"] div[class*="-multiValueRemove"]:hover {
   background-color: #f3f3f9 !important; /* Velzon theme light footer */
   box-shadow: inset 0 1px 0 #e9ebec, inset 0 -1px 0 #e9ebec !important;
 }
+
+/* --- React Select Search Input Text Color Visibility in Dark/Light Themes --- */
+.react-select__input-container input,
+.react-select__input input,
+.react-select__input {
+  color: var(--vz-body-color, #495057) !important;
+}
+div[class*="-Input"] input,
+div[class*="-input"] input {
+  color: var(--vz-body-color, #495057) !important;
+}
+

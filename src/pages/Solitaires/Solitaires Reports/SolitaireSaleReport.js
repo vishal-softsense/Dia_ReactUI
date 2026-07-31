@@ -27,6 +27,7 @@ import {
   getSolitaireSaleDropdowns,
   getSolitaireSaleReport
 } from "../../../helpers/fakebackend_helper";
+import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -92,22 +93,7 @@ const getAgGrandTotalsFromRows = (rows) => {
 const SolitaireSaleReport = () => {
   const { t } = useTranslation();
 
-  const todayYMD = useMemo(() => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }, []);
-
-  const fiveDaysAgoYMD = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 5);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }, []);
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,8 +105,8 @@ const SolitaireSaleReport = () => {
   const [reportRows, setReportRows] = useState([]);
 
   const [filters, setFilters] = useState({
-    fromDate: fiveDaysAgoYMD,
-    toDate: todayYMD,
+    fromDate,
+    toDate,
     currency: "",
     invNo: "",
     billNo: "",
@@ -249,6 +235,10 @@ const SolitaireSaleReport = () => {
     loadDropdowns();
   }, [t]);
 
+  useEffect(() => {
+    setFilters((prev) => mergeDates(prev));
+  }, [fromDate, toDate, mergeDates]);
+
   const handleMultiChange = (name, selected) => {
     setFilters((prev) => ({
       ...prev,
@@ -257,9 +247,9 @@ const SolitaireSaleReport = () => {
   };
 
   const defaultFilters = useCallback(
-    () => ({
-      fromDate: fiveDaysAgoYMD,
-      toDate: todayYMD,
+    (fromDate, toDate) => ({
+      fromDate,
+      toDate,
       currency: "",
       invNo: "",
       billNo: "",
@@ -287,15 +277,16 @@ const SolitaireSaleReport = () => {
       productType: [],
       sieve: []
     }),
-    [fiveDaysAgoYMD, todayYMD]
+    []
   );
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    const d = await getDates();
     setHasSearched(false);
     setReportMode("standard");
     setExpandedGroups(new Set());
     setReportRows([]);
-    setFilters(defaultFilters());
+    setFilters(mergeDates(defaultFilters(d.fromDate, d.toDate), d));
   };
 
   const buildPayload = () => ({
