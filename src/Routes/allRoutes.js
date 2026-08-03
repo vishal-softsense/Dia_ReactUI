@@ -377,6 +377,7 @@ import SolitaireMemoOutReport from "../pages/Solitaires/Solitaires Reports/Solit
 import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReport";
 import SolitaireSalePerformanceReport from "../pages/Solitaires/Solitaires Reports/SolitaireSalePerformanceReport";
 import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/SolitairePartyHoldReport";
+import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 
 
 
@@ -479,6 +480,7 @@ const authProtectedRoutes = [
   { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
   { path: "/report/PartyHold-report", component: <SolitairePartyHoldReport /> },
   { path: "/report/partyhold-report", component: <SolitairePartyHoldReport /> },
+  { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   { path: "/report/sale-report", component: <SolitaireSaleReport /> },
   { path: "/report/sale-Performance-report", component: <SolitaireSalePerformanceReport /> },
   { path: "/report/sale-performance-report", component: <SolitaireSalePerformanceReport /> },

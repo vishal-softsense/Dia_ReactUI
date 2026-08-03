@@ -581,6 +581,9 @@ export const SOLITAIRE_MEMO_OUT_DROPDOWNS = "/api/SolitaireMemoOutReport/dropdow
 export const SOLITAIRE_PARTY_HOLD_REPORT = "/api/SolitairePartyHoldReport/search";
 export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dropdowns";
 
+// Solitaire Kapan Summary Report
+export const SOLITAIRE_KAPAN_SUMMARY_REPORT = "/api/SolitaireKapanSummaryReport/search";
+
 // Solitaire Sale Report
 export const SOLITAIRE_SALE_REPORT = "/api/SolitaireSaleReport/search";
 export const SOLITAIRE_SALE_DROPDOWNS = "/api/SolitaireSaleReport/dropdowns";

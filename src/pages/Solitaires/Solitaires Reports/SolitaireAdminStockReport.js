@@ -1358,7 +1358,7 @@ const SolitaireAdminStockReport = () => {
                       </div>
                       <div className="col-lg col-md-4 col-sm-6">
                         <Label className="fw-medium">{t("Color Group")}</Label>
-                        <Select isMulti name="colorGroup" options={getOptions("COLORGROUP")} value={getOptions("COLORGROUP").filter((o) => filters.colorGroup.includes(o.value))} onChange={(sel) => handleSelectChange("colorGroup", sel)} placeholder={t("ColorGroup")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="colorGroup" options={getOptions("COLORGROUP")} value={getOptions("COLORGROUP").filter((o) => filters.colorGroup.includes(o.value))} onChange={(sel) => handleSelectChange("colorGroup", sel)} placeholder={t("Color Group")} isLoading={loadingDropdowns} />
                       </div>
                       <div className="col-lg col-md-4 col-sm-6">
                         <Label className="fw-medium">{t("Color")}</Label>
@@ -1434,11 +1434,11 @@ const SolitaireAdminStockReport = () => {
                     <Row className="g-3 mb-3">
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("FL Color")}</Label>
-                        <Select isMulti name="flColor" options={getOptions("FLCOLOR")} value={getOptions("FLCOLOR").filter((o) => filters.flColor.includes(o.value))} onChange={(sel) => handleSelectChange("flColor", sel)} placeholder={t("FlColor")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="flColor" options={getOptions("FLCOLOR")} value={getOptions("FLCOLOR").filter((o) => filters.flColor.includes(o.value))} onChange={(sel) => handleSelectChange("flColor", sel)} placeholder={t("FL Color")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("Group")}</Label>
-                        <Select isMulti name="itemGroup" options={getOptions("ITEMGROUP")} value={getOptions("ITEMGROUP").filter((o) => filters.itemGroup.includes(o.value))} onChange={(sel) => handleSelectChange("itemGroup", sel)} placeholder={t("ItemGroup")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="itemGroup" options={getOptions("ITEMGROUP")} value={getOptions("ITEMGROUP").filter((o) => filters.itemGroup.includes(o.value))} onChange={(sel) => handleSelectChange("itemGroup", sel)} placeholder={t("Group")} isLoading={loadingDropdowns} />
                       </Col>
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("Pair")}</Label>
@@ -1446,7 +1446,7 @@ const SolitaireAdminStockReport = () => {
                       </Col>
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("Box Name")}</Label>
-                        <Select isMulti name="boxNm" options={getOptions("BoxName")} value={getOptions("BoxName").filter((o) => filters.boxNm.includes(o.value))} onChange={(sel) => handleSelectChange("boxNm", sel)} placeholder={t("BoxName")} isLoading={loadingDropdowns} />
+                        <Select isMulti name="boxNm" options={getOptions("BoxName")} value={getOptions("BoxName").filter((o) => filters.boxNm.includes(o.value))} onChange={(sel) => handleSelectChange("boxNm", sel)} placeholder={t("Box Name")} isLoading={loadingDropdowns} />
                       </Col>
                     </Row>
 

@@ -729,6 +729,9 @@ export const getSolitaireMemoOutDropdowns = () => api.get(url.SOLITAIRE_MEMO_OUT
 export const getSolitairePartyHoldReport = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_REPORT, filter);
 export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_HOLD_DROPDOWNS);
 
+// Solitaire Kapan Summary Report
+export const getSolitaireKapanSummaryReport = (filter) => api.create(url.SOLITAIRE_KAPAN_SUMMARY_REPORT, filter);
+
 // Solitaire Sale Report
 export const getSolitaireSaleReport = (filter) => api.create(url.SOLITAIRE_SALE_REPORT, filter);
 export const getSolitaireSaleDropdowns = () => api.get(url.SOLITAIRE_SALE_DROPDOWNS);

@@ -859,7 +859,7 @@ const SolitaireConsignmentReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
-                            placeholder={t("MemoNo")}
+                            placeholder={t("Memo No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -873,6 +873,7 @@ const SolitaireConsignmentReport = () => {
                             options={typeOptions}
                             value={typeOptions.find((o) => o.value === filters.type) || typeOptions[0]}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, type: sel?.value || "ALL" }))}
+                            placeholder={t("Select Type")}
                           />
                         </FormGroup>
                       </Col>
@@ -1064,7 +1065,7 @@ const SolitaireConsignmentReport = () => {
                 <Row className="g-2">
                   {[
                     { label: "Mines", key: "mines" },
-                    { label: "ProductType", key: "productType" },
+                    { label: "Product Type", key: "productType" },
                     { label: "Sieve", key: "sieve" }
                   ].map(({ label, key }) => (
                     <Col sm={2} key={key}>

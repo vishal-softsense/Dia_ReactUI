@@ -1231,7 +1231,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("currency")}
                             value={getOptions("currency").find((o) => o.value === filters.currency) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, currency: sel?.value || "" }))}
-                            placeholder={t("Currency")}
+                            placeholder={t("Select Currency")}
                           />
                         </FormGroup>
                       </Col>
@@ -1244,6 +1244,7 @@ const SolitaireSaleReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
+                            placeholder={t("Invoice No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -1257,6 +1258,7 @@ const SolitaireSaleReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.billNo}
+                            placeholder={t("Bill No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, billNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -1272,7 +1274,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("type")}
                             value={getOptions("type").find((o) => o.value === filters.type) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, type: sel?.value || "" }))}
-                            placeholder={t("Type")}
+                            placeholder={t("Select Type")}
                           />
                         </FormGroup>
                       </Col>
@@ -1281,7 +1283,7 @@ const SolitaireSaleReport = () => {
                     <Row className="g-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("SubType")}</Label>
+                          <Label className="fw-medium mb-1 small">{t("Sub Type")}</Label>
                           <Select
                             classNamePrefix="react-select"
                             styles={customStyles}
@@ -1289,7 +1291,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("subType")}
                             value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))}
-                            placeholder={t("SubType")}
+                            placeholder={t("Select Sub Type")}
                           />
                         </FormGroup>
                       </Col>
@@ -1304,7 +1306,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("category")}
                             value={getOptions("category").find((o) => o.value === filters.category) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, category: sel?.value || "" }))}
-                            placeholder={t("Category")}
+                            placeholder={t("Select Category")}
                           />
                         </FormGroup>
                       </Col>
@@ -1319,7 +1321,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("account")}
                             value={getOptions("account").find((o) => o.value === filters.party) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, party: sel?.value || "" }))}
-                            placeholder={t("Party")}
+                            placeholder={t("Search Party")}
                             isLoading={loadingDropdowns}
                           />
                         </FormGroup>
@@ -1335,7 +1337,7 @@ const SolitaireSaleReport = () => {
                             options={getOptions("account")}
                             value={getOptions("account").find((o) => o.value === filters.broker) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, broker: sel?.value || "" }))}
-                            placeholder={t("Broker")}
+                            placeholder={t("Search Broker")}
                             isLoading={loadingDropdowns}
                           />
                         </FormGroup>
@@ -1592,7 +1594,7 @@ const SolitaireSaleReport = () => {
 
                   <Col sm={2}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("ProductType")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Product Type")}</Label>
                       <Select
                         isMulti
                         classNamePrefix="react-select"
@@ -1601,7 +1603,7 @@ const SolitaireSaleReport = () => {
                         value={getOptions("productType").filter((o) => filters.productType.includes(o.value))}
                         onChange={(sel) => handleMultiChange("productType", sel)}
                         isLoading={loadingDropdowns}
-                        placeholder={t("ProductType")}
+                        placeholder={t("Product Type")}
                       />
                     </FormGroup>
                   </Col>
@@ -1624,7 +1626,7 @@ const SolitaireSaleReport = () => {
 
                   <Col sm={2}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("ExpParty")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Exp Party")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -1632,7 +1634,7 @@ const SolitaireSaleReport = () => {
                         options={getOptions("account")}
                         value={getOptions("account").find((o) => o.value === filters.expParty) || null}
                         onChange={(sel) => setFilters((prev) => ({ ...prev, expParty: sel?.value || "" }))}
-                        placeholder={t("ExpParty")}
+                        placeholder={t("Search Exp Party")}
                         isLoading={loadingDropdowns}
                       />
                     </FormGroup>

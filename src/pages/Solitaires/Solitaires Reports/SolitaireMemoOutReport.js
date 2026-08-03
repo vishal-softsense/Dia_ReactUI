@@ -597,7 +597,7 @@ const SolitaireMemoOutReport = () => {
     { label: "Luster", key: "luster" },
     { label: "Natts", key: "natts" },
     { label: "Mines", key: "mines" },
-    { label: "ProductType", key: "productType" },
+    { label: "Product Type", key: "productType" },
     { label: "Sieve", key: "sieve" }
   ];
 
@@ -678,13 +678,13 @@ const SolitaireMemoOutReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
-                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("MemoNo")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
+                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("Memo No")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Type")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} options={typeOptions} value={typeOptions.find((o) => o.value === filters.type) || typeOptions[0]} onChange={(sel) => setFilters((p) => ({ ...p, type: sel?.value || "ALL" }))} />
+                          <Select classNamePrefix="react-select" styles={customStyles} options={typeOptions} value={typeOptions.find((o) => o.value === filters.type) || typeOptions[0]} onChange={(sel) => setFilters((p) => ({ ...p, type: sel?.value || "ALL" }))} placeholder={t("Select Type")} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>

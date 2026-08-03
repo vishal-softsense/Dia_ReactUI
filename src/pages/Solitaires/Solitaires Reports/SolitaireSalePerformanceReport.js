@@ -835,7 +835,7 @@ const SolitaireSalePerformanceReport = () => {
     { label: "Luster", key: "luster" },
     { label: "Natts", key: "natts" },
     { label: "Mines", key: "mines" },
-    { label: "ProductType", key: "productType" },
+    { label: "Product Type", key: "productType" },
     { label: "Sieve", key: "sieve" }
   ];
 
@@ -1099,7 +1099,7 @@ const SolitaireSalePerformanceReport = () => {
                         onChange={(sel) =>
                           setFilters((p) => ({ ...p, expParty: sel?.value || "" }))
                         }
-                        placeholder={t("Exp Party")}
+                        placeholder={t("Search Exp Party")}
                         isLoading={loadingDropdowns}
                       />
                     </FormGroup>
