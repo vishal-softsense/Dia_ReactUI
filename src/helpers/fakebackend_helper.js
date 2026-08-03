@@ -776,3 +776,17 @@ export const getParcelPurchaseAnalysisReport = (filter) => api.create(url.PARCEL
 export const getParcelPurchaseAnalysisDropdowns = () => api.get(url.PARCEL_PURCHASE_ANALYSIS_REPORT_DROPDOWNS);
 
 
+// Parcel Stock Search Report
+export const getParcelStockSearchReport = (filter) => api.create(url.Parcel_STOCK_SEARCH_REPORT, filter);
+export const getParcelStockSearchList = (filter) => api.create(url.Parcel_STOCK_SEARCH_List, filter);
+export const getParcelStockSearchDropdowns = () => api.get(url.Parcel_STOCK_SEARCH_DROPDOWNS);
+export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
+export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
+
+
+// Parcel Stock Register / History Report
+export const getParcelStockHistoryReport = (filter) => api.create(url.Parcel_STOCK_REGISTER_REPORT, filter);
+export const getParcelStockRegisterDropdowns = () => api.get(url.Parcel_STOCK_REGISTER_DROPDOWNS);
+export const getParcelStockRegisterLots = (searchby) =>
+  api.get(`${url.GET_ParcelStockRegister_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);

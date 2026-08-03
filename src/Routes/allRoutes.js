@@ -380,6 +380,14 @@ import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/Sol
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 
 
+// Parcel Stock Search Report
+import ParcelStockSearchReport from "../pages/Parcel/Parcel Reports/ParcelStockSearchReport";
+
+
+// Parcel Stock Register Report
+import ParcelStockRegisterReport from "../pages/Parcel/Parcel Reports/ParcelStockRegisterReport";
+
+
 
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
@@ -490,6 +498,13 @@ const authProtectedRoutes = [
   { path: "/dashboard/parcel-sale-analysis", component: <ParcelSaleAnalysisReport /> },
   { path: "/dashboard/parcel-purchase-analysis", component: <ParcelPurchaseAnalysis /> },
   { path: "/ParcelChartsReport/ParcelPurchaseChartReports", component: <ParcelPurchaseAnalysis /> },
+
+
+  // Parcel Stock Search Report
+  { path: "/ParcelStock/Pstock-search", component: <ParcelStockSearchReport /> },
+
+// Parcel Stock Register Report
+  { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
@@ -701,6 +716,9 @@ const authProtectedRoutes = [
   { path: "/apps-job-new", component: <NewJobs /> },
   { path: "/apps-job-companies-lists", component: <CompaniesList /> },
   { path: "/apps-job-categories", component: <JobCategories /> },
+
+
+  
 
 
   //User Profile

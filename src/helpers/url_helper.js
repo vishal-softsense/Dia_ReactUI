@@ -624,3 +624,20 @@ export const PARCEL_SALE_ANALYSIS_REPORT_DROPDOWNS = "/api/ParcelSaleAnalysis/dr
 // Parcel Purchase Analysis Report
 export const PARCEL_PURCHASE_ANALYSIS_REPORT_DATA = "/api/ParcelPurchaseAnalysis/parcelpur-data";
 export const PARCEL_PURCHASE_ANALYSIS_REPORT_DROPDOWNS = "/api/ParcelPurchaseAnalysis/dropdowns";
+
+
+
+// Parcel Stock Search Report
+export const Parcel_STOCK_SEARCH_REPORT = "/api/ParcelStockSearchReport/load";
+export const Parcel_STOCK_SEARCH_List = "/api/ParcelStockSearchReport/list";
+export const Parcel_STOCK_SEARCH_DROPDOWNS = "/api/ParcelStockSearchReport/dropdowns";
+export const GET_Parcel_LOTS = "/api/ParcelStockSearchReport/get-parcel-lots";
+export const Parcel_STOCK_SEARCH_UPDATE_LOCATION = "/api/ParcelStockSearchReport/update-location";
+export const Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP = "/api/ParcelStockSearchReport/update-box-group";
+
+
+// Parcel Stock Register Report
+export const Parcel_STOCK_REGISTER_REPORT = "/api/ParcelStockRegisterReport/datatable";
+// export const Parcel_STOCK_REGISTER_List = "/api/ParcelStockRegisterReport/datatable";
+export const Parcel_STOCK_REGISTER_DROPDOWNS = "/api/ParcelStockRegisterReport/dropdowns";
+export const GET_ParcelStockRegister_LOTS = "/api/ParcelStockRegisterReport/get-parcel-lots";
