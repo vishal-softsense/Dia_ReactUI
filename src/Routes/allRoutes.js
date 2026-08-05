@@ -387,6 +387,18 @@ import ParcelStockSearchReport from "../pages/Parcel/Parcel Reports/ParcelStockS
 // Parcel Stock Register Report
 import ParcelStockRegisterReport from "../pages/Parcel/Parcel Reports/ParcelStockRegisterReport";
 
+// Mix Purchase Report
+import MixPurchaseReport from "../pages/Parcel/Parcel Reports/MixPurchaseReport";
+
+// Mix Memo Out Report
+import MixMemoOutReport from "../pages/Parcel/Parcel Reports/MixMemoOutReport";
+
+// Mix Sale Report
+import MixSaleReport from "../pages/Parcel/Parcel Reports/MixSaleReport";
+
+// Mix Consignment Report
+import MixConsignmentReport from "../pages/Parcel/Parcel Reports/MixConsignmentReport";
+
 // Jewellery Stock Search Report
 import JewelleryStockSearchReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockSearchReport";
 
@@ -511,6 +523,19 @@ const authProtectedRoutes = [
 
 // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },
+
+
+  // Mix Purchase Report (MVC: /mixreport/MixPurchase-Report)
+  { path: "/mixreport/MixPurchase-Report", component: <MixPurchaseReport /> },
+
+  // Mix Memo Out Report (MVC: /mixreport/MixMemoout-Report)
+  { path: "/mixreport/mixmemo-report", component: <MixMemoOutReport /> },
+
+  // Mix Sale Report (MVC: /mixreport/GeneralSale-Report)
+  { path: "/mixreport/GeneralSale-Report", component: <MixSaleReport /> },
+
+  // Mix Consignment Report (MVC: /mixreport/MixConsignment-report)
+  { path: "/mixreport/MixConsignment-report", component: <MixConsignmentReport /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
