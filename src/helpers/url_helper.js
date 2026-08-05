@@ -581,6 +581,13 @@ export const SOLITAIRE_MEMO_OUT_DROPDOWNS = "/api/SolitaireMemoOutReport/dropdow
 export const SOLITAIRE_PARTY_HOLD_REPORT = "/api/SolitairePartyHoldReport/search";
 export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dropdowns";
 
+// Solitaire Aging Report
+export const SOLITAIRE_AGING_REPORT = "/api/SolitaireAgingReport/search";
+export const SOLITAIRE_AGING_DROPDOWNS = "/api/SolitaireAgingReport/dropdowns";
+
+// Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)
+export const SOLITAIRE_LOT_ASSORTMENT_REPORT = "/api/SolitaireLotAssortmentReport/search";
+
 // Solitaire Kapan Summary Report
 export const SOLITAIRE_KAPAN_SUMMARY_REPORT = "/api/SolitaireKapanSummaryReport/search";
 
@@ -591,6 +598,10 @@ export const SOLITAIRE_SALE_DROPDOWNS = "/api/SolitaireSaleReport/dropdowns";
 // Solitaire Sale Performance Report
 export const SOLITAIRE_SALE_PERFORMANCE_REPORT = "/api/SolitaireSalePerformanceReport/search";
 export const SOLITAIRE_SALE_PERFORMANCE_DROPDOWNS = "/api/SolitaireSalePerformanceReport/dropdowns";
+
+// Solitaire Stock Consumption Report (MVC: report/stock-consumption-report)
+export const SOLITAIRE_CONSUMPTION_REPORT = "/api/SolitaireConsumptionReport/search";
+export const SOLITAIRE_CONSUMPTION_DROPDOWNS = "/api/SolitaireConsumptionReport/dropdowns";
 
 // Month Analysis Report
 export const MONTH_ANALYSIS_REPORT_DATA = "/api/MonthAnalysisReport/report";

@@ -729,6 +729,14 @@ export const getSolitaireMemoOutDropdowns = () => api.get(url.SOLITAIRE_MEMO_OUT
 export const getSolitairePartyHoldReport = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_REPORT, filter);
 export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_HOLD_DROPDOWNS);
 
+// Solitaire Aging Report
+export const getSolitaireAgingReport = (filter) => api.create(url.SOLITAIRE_AGING_REPORT, filter);
+export const getSolitaireAgingDropdowns = () => api.get(url.SOLITAIRE_AGING_DROPDOWNS);
+
+// Solitaire Lot Assortment Report
+export const getSolitaireLotAssortmentReport = (filter) =>
+  api.create(url.SOLITAIRE_LOT_ASSORTMENT_REPORT, filter);
+
 // Solitaire Kapan Summary Report
 export const getSolitaireKapanSummaryReport = (filter) => api.create(url.SOLITAIRE_KAPAN_SUMMARY_REPORT, filter);
 
@@ -739,6 +747,10 @@ export const getSolitaireSaleDropdowns = () => api.get(url.SOLITAIRE_SALE_DROPDO
 // Solitaire Sale Performance Report
 export const getSolitaireSalePerformanceReport = (filter) => api.create(url.SOLITAIRE_SALE_PERFORMANCE_REPORT, filter);
 export const getSolitaireSalePerformanceDropdowns = () => api.get(url.SOLITAIRE_SALE_PERFORMANCE_DROPDOWNS);
+
+// Solitaire Stock Consumption Report
+export const getSolitaireConsumptionReport = (filter) => api.create(url.SOLITAIRE_CONSUMPTION_REPORT, filter);
+export const getSolitaireConsumptionDropdowns = () => api.get(url.SOLITAIRE_CONSUMPTION_DROPDOWNS);
 
 // Month Analysis Report
 export const getMonthAnalysisReport = (filter) => api.create(url.MONTH_ANALYSIS_REPORT_DATA, filter);

@@ -115,14 +115,16 @@ const SolitairePurchaseReport = () => {
         backgroundColor: "var(--vz-secondary-bg, #fff)",
         borderColor: "var(--vz-border-color, #ced4da)",
         color: "var(--vz-body-color, #495057)",
-        height: "35px",
+        height: "auto",
         minHeight: "35px"
       }),
       valueContainer: (provided) => ({
         ...provided,
-        height: "35px",
+        height: "auto",
+        minHeight: "35px",
         padding: "0 6px",
         display: "flex",
+        flexWrap: "wrap",
         alignItems: "center"
       }),
       input: (provided) => ({

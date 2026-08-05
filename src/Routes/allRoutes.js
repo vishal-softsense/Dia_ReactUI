@@ -376,8 +376,11 @@ import SolitaireConsignmentReport from "../pages/Solitaires/Solitaires Reports/S
 import SolitaireMemoOutReport from "../pages/Solitaires/Solitaires Reports/SolitaireMemoOutReport";
 import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReport";
 import SolitaireSalePerformanceReport from "../pages/Solitaires/Solitaires Reports/SolitaireSalePerformanceReport";
+import SolitaireConsumptionReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsumptionReport";
 import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/SolitairePartyHoldReport";
+import SolitaireAgingReport from "../pages/Solitaires/Solitaires Reports/SolitaireAgingReport";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
+import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 
 
 // Parcel Stock Search Report
@@ -488,11 +491,21 @@ const authProtectedRoutes = [
   { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
   { path: "/report/PartyHold-report", component: <SolitairePartyHoldReport /> },
   { path: "/report/partyhold-report", component: <SolitairePartyHoldReport /> },
+  // Solitaire Aging Report (MVC: /report/aging-report)
+  { path: "/report/aging-report", component: <SolitaireAgingReport /> },
+  { path: "/report/Aging-Report", component: <SolitaireAgingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
+  // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)
+  { path: "/report/lotAssortment-report", component: <SolitaireLotAssortmentReport /> },
+  { path: "/report/lotassortment-report", component: <SolitaireLotAssortmentReport /> },
   { path: "/report/sale-report", component: <SolitaireSaleReport /> },
   { path: "/report/sale-Performance-report", component: <SolitaireSalePerformanceReport /> },
   { path: "/report/sale-performance-report", component: <SolitaireSalePerformanceReport /> },
   { path: "/report/rate-revise-report", component: <SolitaireRateReviseReport /> },
+
+  // Solitaire Stock Consumption Report (MVC: report/stock-consumption-report)
+  { path: "/report/stock-consumption-report", component: <SolitaireConsumptionReport /> },
+  { path: "/report/Stock-Consumption-Report", component: <SolitaireConsumptionReport /> },
 
   { path: "/dashboard/parcel-stock-analysis", component: <ParcelStockAnalysis /> },
   { path: "/dashboard/parcel-sale-analysis", component: <ParcelSaleAnalysisReport /> },
