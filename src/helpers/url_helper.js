@@ -652,3 +652,26 @@ export const Parcel_STOCK_REGISTER_REPORT = "/api/ParcelStockRegisterReport/data
 // export const Parcel_STOCK_REGISTER_List = "/api/ParcelStockRegisterReport/datatable";
 export const Parcel_STOCK_REGISTER_DROPDOWNS = "/api/ParcelStockRegisterReport/dropdowns";
 export const GET_ParcelStockRegister_LOTS = "/api/ParcelStockRegisterReport/get-parcel-lots";
+
+// Jewellery Stock Search Report
+export const JEWELLERY_STOCK_SEARCH_REPORT = "/api/JewelleryStockReport/search";
+export const JEWELLERY_STOCK_SEARCH_DROPDOWNS = "/api/JewelleryStockReport/dropdowns";
+export const JEWELLERY_STOCK_SEARCH_STOCK_IDS = "/api/JewelleryStockReport/stock-ids";
+
+
+// Mix Purchase Report
+export const MIX_PURCHASE_REPORT_DROPDOWNS = "/api/mixreport/dropdowns";
+export const MIX_PURCHASE_REPORT_LIST = "/api/mixreport/generalpurchase-report-list";
+
+// Mix Memo Out Report
+export const MIX_MEMO_OUT_REPORT_DROPDOWNS = "/api/mixreport/mixmemo-report-dropdowns";
+export const MIX_MEMO_OUT_REPORT_LIST = "/api/mixreport/mixmemo-report-list";
+
+// Mix Sale Report (MVC: /mixreport/GeneralSale-Report)
+export const MIX_SALE_REPORT_DROPDOWNS = "/api/GeneralSale-Report/dropdowns";
+export const MIX_SALE_REPORT_LIST = "/api/GeneralSale-Report/generalsale-report-list";
+
+// Mix Consignment Report (MVC: /mixreport/MixConsignment-report)
+export const MIX_CONSIGNMENT_REPORT_DROPDOWNS = "/api/MixConsignment-report/mixconsignment-report-dropdowns";
+export const MIX_CONSIGNMENT_REPORT_LIST = "/api/MixConsignment-report/mixconsignment-report-list";
+export const MIX_CONSIGNMENT_REPORT_SUMMARY = "/api/MixConsignment-report/mixconsignment-summary";

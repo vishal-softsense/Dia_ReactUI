@@ -792,6 +792,11 @@ export const getParcelPurchaseAnalysisDropdowns = () => api.get(url.PARCEL_PURCH
 export const getParcelStockSearchReport = (filter) => api.create(url.Parcel_STOCK_SEARCH_REPORT, filter);
 export const getParcelStockSearchList = (filter) => api.create(url.Parcel_STOCK_SEARCH_List, filter);
 export const getParcelStockSearchDropdowns = () => api.get(url.Parcel_STOCK_SEARCH_DROPDOWNS);
+
+// Jewellery Stock Search Report
+export const getJewelleryStockSearchReport = (filter) => api.create(url.JEWELLERY_STOCK_SEARCH_REPORT, filter);
+export const getJewelleryStockSearchDropdowns = () => api.get(url.JEWELLERY_STOCK_SEARCH_DROPDOWNS);
+export const getJewelleryStockIds = (searchText) => api.create(url.JEWELLERY_STOCK_SEARCH_STOCK_IDS, { searchText });
 export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
 export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
 export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
@@ -802,3 +807,21 @@ export const getParcelStockHistoryReport = (filter) => api.create(url.Parcel_STO
 export const getParcelStockRegisterDropdowns = () => api.get(url.Parcel_STOCK_REGISTER_DROPDOWNS);
 export const getParcelStockRegisterLots = (searchby) =>
   api.get(`${url.GET_ParcelStockRegister_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+
+
+// Mix Purchase Report
+export const getMixPurchaseReportDropdowns = () => api.get(url.MIX_PURCHASE_REPORT_DROPDOWNS);
+export const getMixPurchaseReport = (filter) => api.create(url.MIX_PURCHASE_REPORT_LIST, filter);
+
+// Mix Memo Out Report
+export const getMixMemoOutReportDropdowns = () => api.get(url.MIX_MEMO_OUT_REPORT_DROPDOWNS);
+export const getMixMemoOutReport = (filter) => api.create(url.MIX_MEMO_OUT_REPORT_LIST, filter);
+
+// Mix Sale Report
+export const getMixSaleReportDropdowns = () => api.get(url.MIX_SALE_REPORT_DROPDOWNS);
+export const getMixSaleReport = (filter) => api.create(url.MIX_SALE_REPORT_LIST, filter);
+
+// Mix Consignment Report
+export const getMixConsignmentReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_REPORT_DROPDOWNS);
+export const getMixConsignmentReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_LIST, filter);
+export const getMixConsignmentSummaryReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_SUMMARY, filter);
