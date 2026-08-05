@@ -641,3 +641,8 @@ export const Parcel_STOCK_REGISTER_REPORT = "/api/ParcelStockRegisterReport/data
 // export const Parcel_STOCK_REGISTER_List = "/api/ParcelStockRegisterReport/datatable";
 export const Parcel_STOCK_REGISTER_DROPDOWNS = "/api/ParcelStockRegisterReport/dropdowns";
 export const GET_ParcelStockRegister_LOTS = "/api/ParcelStockRegisterReport/get-parcel-lots";
+
+// Jewellery Stock Search Report
+export const JEWELLERY_STOCK_SEARCH_REPORT = "/api/JewelleryStockReport/search";
+export const JEWELLERY_STOCK_SEARCH_DROPDOWNS = "/api/JewelleryStockReport/dropdowns";
+export const JEWELLERY_STOCK_SEARCH_STOCK_IDS = "/api/JewelleryStockReport/stock-ids";

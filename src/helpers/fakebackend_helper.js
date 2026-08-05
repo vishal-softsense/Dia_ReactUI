@@ -780,6 +780,11 @@ export const getParcelPurchaseAnalysisDropdowns = () => api.get(url.PARCEL_PURCH
 export const getParcelStockSearchReport = (filter) => api.create(url.Parcel_STOCK_SEARCH_REPORT, filter);
 export const getParcelStockSearchList = (filter) => api.create(url.Parcel_STOCK_SEARCH_List, filter);
 export const getParcelStockSearchDropdowns = () => api.get(url.Parcel_STOCK_SEARCH_DROPDOWNS);
+
+// Jewellery Stock Search Report
+export const getJewelleryStockSearchReport = (filter) => api.create(url.JEWELLERY_STOCK_SEARCH_REPORT, filter);
+export const getJewelleryStockSearchDropdowns = () => api.get(url.JEWELLERY_STOCK_SEARCH_DROPDOWNS);
+export const getJewelleryStockIds = (searchText) => api.create(url.JEWELLERY_STOCK_SEARCH_STOCK_IDS, { searchText });
 export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
 export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
 export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);

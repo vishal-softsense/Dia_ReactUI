@@ -387,6 +387,9 @@ import ParcelStockSearchReport from "../pages/Parcel/Parcel Reports/ParcelStockS
 // Parcel Stock Register Report
 import ParcelStockRegisterReport from "../pages/Parcel/Parcel Reports/ParcelStockRegisterReport";
 
+// Jewellery Stock Search Report
+import JewelleryStockSearchReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockSearchReport";
+
 
 
 const authProtectedRoutes = [
@@ -502,6 +505,9 @@ const authProtectedRoutes = [
 
   // Parcel Stock Search Report
   { path: "/ParcelStock/Pstock-search", component: <ParcelStockSearchReport /> },
+
+  // Jewellery Stock Search Report (MVC: /report/jew-stock-report)
+  { path: "/report/jew-stock-report", component: <JewelleryStockSearchReport /> },
 
 // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },
