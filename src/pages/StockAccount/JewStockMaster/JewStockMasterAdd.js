@@ -18,9 +18,11 @@ import {
   getAllLotNoList,
   getAddMountingStockData,
   getJewLotNoData,
+  getMountingStockDetail,
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import TableContainer from "../../../Components/Common/TableContainer";
+import JewStockMediaPreview from "./JewStockMediaPreview";
 
 /*
   ─────────────────────────────────────────────────────────────────────────
@@ -361,7 +363,7 @@ export default function AddMountingMaster() {
   const [makingType, setMakingType] = useState("");
   const [makingRate, setMakingRate] = useState("");
   const [makingCharges, setMakingCharges] = useState("");
-  const [settingCharges] = useState("0.00");
+  const [settingCharges, setSettingCharges] = useState("0.00");
   const [handlingCarat, setHandlingCarat] = useState("");
   const [handlingCharges, setHandlingCharges] = useState("");
   const [handlingAmount, setHandlingAmount] = useState("");
@@ -436,12 +438,28 @@ export default function AddMountingMaster() {
         setClarityOptions(basicDataToOptions(data.Clarity ?? data.clarity));
         setSieveOptions(basicDataToOptions(data.Sieve ?? data.sieve));
         setCategoryOptions(idOnlyOptions(data.JewCategories ?? data.jewCategories, "CategoryID"));
-        setSubCategoryOptions(idOnlyOptions(data.JewSubCategories ?? data.jewSubCategories, "SubCategoryID"));
+        setSubCategoryOptions(
+          (Array.isArray(data.JewSubCategories ?? data.jewSubCategories)
+            ? (data.JewSubCategories ?? data.jewSubCategories)
+            : []
+          ).map((item) => {
+            const id = getItemField(item, "SubCategoryID", "subCategoryID", "subCategoryId");
+            return {
+              value: String(id),
+              label: String(id),
+              categoryId: getItemField(item, "CategoryID", "categoryID", "categoryId"),
+            };
+          }).filter((o) => o.value !== "")
+        );
         setMetalTypeOptions(idOnlyOptions(data.JewMetalType ?? data.jewMetalType, "MetalID"));
         setColorOptions(idOnlyOptions(data.JewColor ?? data.jewColor, "JewColorID"));
         const settingValues = data.JewSettingValue ?? data.jewSettingValue;
         if (Array.isArray(settingValues) && settingValues.length > 0) {
           setSettingTypeOptions(settingValues.map((v) => ({ value: v, label: v })));
+        }
+        const basis = data.DecimalinInvoiceAmount ?? data.decimalinInvoiceAmount ?? "";
+        if (basis) {
+          setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
         }
       } catch (err) {
         if (!cancelled) {
@@ -615,6 +633,7 @@ export default function AddMountingMaster() {
   }, [carats, rate]);
 
   // ─── Load Mounting Stock options (dropdown) ───────────────────────────────
+  // MVC: option value = ID (JewCode), text = Name; save uses selected text
   useEffect(() => {
     if (!showMountingSection || !jewCategory) {
       setMountOpts([]);
@@ -625,13 +644,137 @@ export default function AddMountingMaster() {
       .then((response) => {
         const { success, data, message } = unwrapApiResponse(response);
         if (success && Array.isArray(data)) {
-          setMountOpts(toOptions(data));
+          setMountOpts(
+            data.map((item) => {
+              const name = getItemField(item, "Name", "name", "TextName", "textName");
+              const id = getItemField(item, "ID", "id", "Id");
+              return {
+                value: String(id || name),
+                label: String(name || id),
+              };
+            }).filter((o) => o.value !== "")
+          );
         } else {
           toast.error(message || "Error loading mounting stock options.");
         }
       })
       .catch(() => toast.error("Error loading mounting stock options."));
   }, [jewCategory]);
+
+  // MVC: $('#UseMounting').on('change') → get-all-Mounting-details and fill form + diamond grid
+  const applyMountingDetail = useCallback(async (mountingJewCode) => {
+    if (!mountingJewCode) {
+      setTableRows([]);
+      return;
+    }
+    try {
+      const response = await getMountingStockDetail(mountingJewCode);
+      const success = response?.success ?? response?.Success ?? response?.data?.Success ?? response?.data?.success;
+      const data =
+        response?.Data ??
+        response?.data?.Data ??
+        response?.data?.StockData ??
+        response?.data ??
+        null;
+      const diamondList =
+        response?.DiamondList ??
+        response?.diamondList ??
+        response?.data?.DiamondList ??
+        response?.data?.diamondList ??
+        [];
+
+      if (!success && !data) {
+        toast.error(response?.message || response?.Message || "Failed to load mounting details.");
+        return;
+      }
+      if (!data) return;
+
+      setCategory(data.category || data.Category || "");
+      setSubCategory(data.subCategory || data.SubCategory || "");
+      setJewSize(data.jewSize || data.JewSize || "");
+      setMetal(data.metalType || data.MetalType || "");
+      setColor(data.color || data.Color || "");
+      setMetalPurity(data.purity || data.Purity || "");
+      setPurityRatio(
+        data.pureRatio != null || data.PureRatio != null
+          ? Number(data.pureRatio ?? data.PureRatio).toFixed(3)
+          : ""
+      );
+      setGrossWeight(
+        data.grossWeight != null || data.GrossWeight != null
+          ? Number(data.grossWeight ?? data.GrossWeight).toFixed(3)
+          : ""
+      );
+      setNetWeight(
+        data.netWeight != null || data.NetWeight != null
+          ? Number(data.netWeight ?? data.NetWeight).toFixed(3)
+          : ""
+      );
+      setMetalPricePerGm(
+        data.metalPriceGm != null || data.MetalPriceGm != null
+          ? Number(data.metalPriceGm ?? data.MetalPriceGm).toFixed(3)
+          : ""
+      );
+      setMetalAmount(
+        data.totalMetalAmount != null || data.TotalMetalAmount != null
+          ? Number(data.totalMetalAmount ?? data.TotalMetalAmount).toFixed(2)
+          : ""
+      );
+      setMakingType(data.makingType || data.MakingType || "");
+      setMakingRate(data.makingRate ?? data.MakingRate ?? "");
+      setMakingCharges(data.makingCharges ?? data.MakingCharges ?? "");
+      setSettingCharges(
+        data.settingCharges != null || data.SettingCharges != null
+          ? Number(data.settingCharges ?? data.SettingCharges).toFixed(2)
+          : "0.00"
+      );
+      setHandlingCarat(data.handlingCarat ?? data.HandlingCarat ?? "");
+      setHandlingCharges(data.handlingChargesPerCarat ?? data.HandlingChargesPerCarat ?? "");
+      setHandlingAmount(data.totalHandlingCharges ?? data.TotalHandlingCharges ?? "");
+      setJewCert(data.jewelleryCertificate || data.JewelleryCertificate || "");
+      setCertificateCharges(data.totalCertificateCharges ?? data.TotalCertificateCharges ?? "");
+      setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
+      setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
+      setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
+      setFinalAmount(data.finalAmount ?? data.FinalAmount ?? "");
+      setDiamondAmount(data.totalDiamondAmount ?? data.TotalDiamondAmount ?? "");
+      setImagePath(data.imagePath || data.ImagePath || "");
+      setVideoPath(data.videoPath || data.VideoPath || "");
+      setCertPath(data.certPath || data.CertPath || "");
+      setDescription(data.description || data.Description || "");
+      setCertNo(data.jewelleryCerNo || data.JewelleryCerNo || "");
+      setTotalPcs(data.pcs ?? data.Pcs ?? "");
+      setAskingRate(data.askingRate ?? data.AskingRate ?? "");
+      setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
+      setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
+      setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
+
+      const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
+        id: idx + 1,
+        stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
+        stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
+        shape: item.shape || item.Shape || "",
+        size: item.size || item.Size || "",
+        sieve: item.sieve || item.Sieve || "",
+        color: item.color || item.Color || "",
+        clarity: item.clarity || item.Clarity || "",
+        pcs: item.pcs || item.Pcs || 0,
+        carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
+        rate: item.price || item.Price || item.rate || item.Rate || 0,
+        amount: item.amount || item.Amount || 0,
+        lab: item.lab || item.Lab || item.cert || item.Cert || "",
+      }));
+      setTableRows(rows);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching mounting details.");
+    }
+  }, []);
+
+  const handleUseMountingChange = (selectedId) => {
+    setUseMounting(selectedId);
+    applyMountingDetail(selectedId);
+  };
 
   // ─── Metal Purity change → the get-pure-ratio effect above fetches the
   //     ratio automatically whenever `metal` + `metalPurity` are both set.
@@ -822,34 +965,23 @@ export default function AddMountingMaster() {
 
     setSubmitLoading(true);
     try {
-      const diamond = tableRows
-        .filter(row => row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond")
-        .map(row => ({
-          StockID: row.stockID,
-          Type: row.stoneType,
-          Shape: row.shape,
-          Size: row.size,
-          Sieve: row.sieve,
-          Color: row.color,
-          Clarity: row.clarity,
-          Pcs: parseInt(row.pcs) || 0,
-          Carat: parseFloat(row.carats) || 0,
-          Price: parseFloat(row.rate) || 0,
-          Amount: parseFloat(row.amount) || 0,
-          Lab: row.lab
-        }));
+      // MVC SubmitMountingStockData: all Mounting-diamond-details rows go to DiamondDetails
+      const diamond = tableRows.map(row => ({
+        StockID: row.stockID,
+        Type: row.stoneType,
+        Shape: row.shape,
+        Size: row.size,
+        Sieve: row.sieve,
+        Color: row.color,
+        Clarity: row.clarity,
+        Pcs: parseInt(row.pcs) || 0,
+        Carat: parseFloat(row.carats) || 0,
+        Price: parseFloat(row.rate) || 0,
+        Amount: parseFloat(row.amount) || 0,
+        Lab: row.lab
+      }));
 
-      const setting = tableRows
-        .filter(row => row.stoneType === "Gem Stone")
-        .map(row => ({
-          Type: row.stoneType,
-          Shape: row.shape,
-          Size: row.size,
-          Pcs: parseInt(row.pcs) || 0,
-          SettingType: row.lab || "",
-          Price: parseFloat(row.rate) || 0,
-          Amount: parseFloat(row.amount) || 0
-        }));
+      const setting = [];
 
       let totalDiaCarat = 0;
       let totalStnCarat = 0;
@@ -861,6 +993,10 @@ export default function AddMountingMaster() {
           totalStnCarat += c;
         }
       });
+
+      const selectedMount = mountOpts.find((o) => String(o.value) === String(useMounting));
+      // MVC: UseMounting = option selected text (Name); value was ID
+      const useMountingName = selectedMount?.label || useMounting || "";
 
       const payload = {
         Model: {
@@ -887,8 +1023,10 @@ export default function AddMountingMaster() {
           TotalMetalAmount: parseFloat(metalAmount) || 0,
           ImagePath: imagePath,
           ImageBinary: null,
-          UseMounting: useMounting,
-          UseMountingId: useMounting,
+          VideoPath: videoPath,
+          CertPath: certPath,
+          UseMounting: useMountingName,
+          UseMountingId: useMounting || "",
           MountCategory: jewCategory,
           MakingType: makingType,
           MakingRate: parseFloat(makingRate) || 0,
@@ -1095,7 +1233,7 @@ export default function AddMountingMaster() {
                       {showMountingSection && (
                         <FieldRow label="Use Mounting">
                           <select style={selectStyle} value={useMounting}
-                            onChange={(e) => setUseMounting(e.target.value)}>
+                            onChange={(e) => handleUseMountingChange(e.target.value)}>
                             <option value="">Select Lot No</option>
                             {mountOpts.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1150,16 +1288,11 @@ export default function AddMountingMaster() {
                   )}
 
                   {leftTab === "image" && (
-                    <div className="text-center">
-                      <img src="/Images/jewring1.jpeg" alt="Jewellery"
-                        style={{ width: "100%", borderRadius: 6, maxHeight: 240, objectFit: "cover" }}
-                        onError={(e) => { e.target.style.display = "none"; }} />
-                      <p className="mt-2 text-muted" style={{ fontSize: 12 }}>
-                        📷 Camera &nbsp;|&nbsp; 🎬 Video &nbsp;|&nbsp;
-                        <a href="https://www.igi.org/verify-your-report/" target="_blank"
-                          rel="noreferrer" style={{ color: "#5A8DEE" }}>IGI Verify</a>
-                      </p>
-                    </div>
+                    <JewStockMediaPreview
+                      imagePath={imagePath}
+                      videoPath={videoPath}
+                      certPath={certPath}
+                    />
                   )}
                 </CardBody>
               </Card>
@@ -1287,13 +1420,18 @@ export default function AddMountingMaster() {
                       <select style={{ ...selectStyle, flex: 1 }} value={makingType}
                         onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
-
-                        <option value="Per Gm">Per Gm</option>
-                        <option value="Per Pcs">Per Pcs</option>
-                        <option value="Lumsum">Lumsum</option>
-                        <option value="Wastage">Wastage</option>
-                        <option value="Per%">Per%</option>
-
+                        {(settingTypeOptions.length > 0
+                          ? settingTypeOptions
+                          : [
+                              { value: "Per Gm", label: "Per Gm" },
+                              { value: "Per Pcs", label: "Per Pcs" },
+                              { value: "Lumsum", label: "Lumsum" },
+                              { value: "Wastage", label: "Wastage" },
+                              { value: "Per%", label: "Per%" },
+                            ]
+                        ).map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                       <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }}
                         placeholder="Making Rate" value={makingRate}

@@ -365,6 +365,9 @@ import JewStockMasterList from "../pages/StockAccount/JewStockMaster/JewStockMas
 import JewStockMasterAdd from "../pages/StockAccount/JewStockMaster/JewStockMasterAdd";
 import JewStockMasterEdit from "../pages/StockAccount/JewStockMaster/JewStockMasterEdit";
 
+// DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
+import StockAnalyze from "../pages/DiaAnalytics/StockAnalyze";
+
 // Solitaire Stock Search Report
 import SolitairesStockSearchReport from "../pages/Solitaires/Solitaires Reports/SolitairesStockSearchReport";
 import SolitaireAdminStockReport from "../pages/Solitaires/Solitaires Reports/SolitaireAdminStockReport";
@@ -372,6 +375,11 @@ import SolitaireStockHistoryReport from "../pages/Solitaires/Solitaires Reports/
 import SolitaireGradingComparisonReport from "../pages/Solitaires/Solitaires Reports/SolitaireGradingComparisonReport";
 import SolitaireRateReviseReport from "../pages/Solitaires/Solitaires Reports/SolitaireRateReviseReport";
 import SolitairePurchaseReport from "../pages/Solitaires/Solitaires Reports/SolitairePurchaseReport";
+import SolitairePurchaseReturnReport from "../pages/Solitaires/Solitaires Reports/SolitairePurchaseReturnReport";
+import SolitaireSaleReturnReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReturnReport";
+import SolitaireConsignmentReturnReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsignmentReturnReport";
+import SolitaireMemoReturnReport from "../pages/Solitaires/Solitaires Reports/SolitaireMemoReturnReport";
+
 import SolitaireConsignmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsignmentReport";
 import SolitaireMemoOutReport from "../pages/Solitaires/Solitaires Reports/SolitaireMemoOutReport";
 import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/SolitaireSaleReport";
@@ -381,6 +389,7 @@ import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/Sol
 import SolitaireAgingReport from "../pages/Solitaires/Solitaires Reports/SolitaireAgingReport";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
+import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
 
 
 // Parcel Stock Search Report
@@ -482,6 +491,9 @@ const authProtectedRoutes = [
   { path: "/master/add-stock-Mounting", component: <JewStockMasterAdd /> },
   { path: "/master/edit-Mounting-stock", component: <JewStockMasterEdit /> },
 
+  // DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
+  { path: "/data/StockAnalyze", component: <StockAnalyze /> },
+
   // Solitaire Stock Search Report
   { path: "/solitaire/stock-search", component: <SolitairesStockSearchReport /> },
   { path: "/Stock/stock-search", component: <SolitairesStockSearchReport /> },
@@ -502,6 +514,11 @@ const authProtectedRoutes = [
   { path: "/report/stock-register-report", component: <SolitaireStockHistoryReport /> },
   { path: "/report/grading-comparision-report", component: <SolitaireGradingComparisonReport /> },
   { path: "/report/purchase-report", component: <SolitairePurchaseReport /> },
+  { path: "/report/purchase-return-report", component: <SolitairePurchaseReturnReport /> },
+  { path: "/report/sale-return-report", component: <SolitaireSaleReturnReport /> },
+  { path: "/report/consignment-return-report", component: <SolitaireConsignmentReturnReport /> },
+  { path: "/report/MemoOut-return-report", component: <SolitaireMemoReturnReport /> },
+
   { path: "/report/consignment-report", component: <SolitaireConsignmentReport /> },
   { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
   { path: "/report/PartyHold-report", component: <SolitairePartyHoldReport /> },
@@ -509,6 +526,7 @@ const authProtectedRoutes = [
   // Solitaire Aging Report (MVC: /report/aging-report)
   { path: "/report/aging-report", component: <SolitaireAgingReport /> },
   { path: "/report/Aging-Report", component: <SolitaireAgingReport /> },
+  { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)
   { path: "/report/lotAssortment-report", component: <SolitaireLotAssortmentReport /> },

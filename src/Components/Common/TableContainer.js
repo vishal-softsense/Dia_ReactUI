@@ -270,7 +270,7 @@ const TableContainer = ({
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className={thClass}>
+                  <th key={header.id} className={`${thClass || ""} ${header.column.columnDef.className || ""}`.trim()}>
                     {header.isPlaceholder ? null : (
                       <React.Fragment>
                         <div
@@ -320,7 +320,29 @@ const TableContainer = ({
                       );
                     })}
                   </tr>
-                  {renderSubRows && renderSubRows(row)}
+                  {(() => {
+                    if (!renderSubRows) return null;
+                    const subRows = renderSubRows(row);
+                    if (!subRows) return null;
+                    
+                    return React.Children.map(subRows, (tr) => {
+                      if (!React.isValidElement(tr)) return tr;
+                      
+                      const newChildren = React.Children.map(tr.props.children, (td, idx) => {
+                        if (!React.isValidElement(td)) return td;
+                        const column = row.getVisibleCells()[idx]?.column;
+                        const colClassName = column?.columnDef?.className || "";
+                        if (colClassName) {
+                          return React.cloneElement(td, {
+                            className: `${td.props.className || ""} ${colClassName}`.trim()
+                          });
+                        }
+                        return td;
+                      });
+                      
+                      return React.cloneElement(tr, {}, newChildren);
+                    });
+                  })()}
                 </Fragment>
               );
             })}
@@ -330,7 +352,7 @@ const TableContainer = ({
               {table.getFooterGroups().map(footerGroup => (
                 <tr key={footerGroup.id}>
                   {footerGroup.headers.map(header => (
-                    <th key={header.id} style={{ padding: "8px 10px" }}>
+                    <th key={header.id} className={header.column.columnDef.className || ""}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -347,7 +369,7 @@ const TableContainer = ({
       </div>
 
       {isPagination && (
-        <div style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-card-bg, #fff)", zIndex: 1, paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
+        <div style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
         <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
           <div className="col-sm">
             <div className="text-muted">

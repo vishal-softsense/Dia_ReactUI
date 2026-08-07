@@ -20,6 +20,7 @@ import {
   getJewLotNoData,
 } from "../../../helpers/fakebackend_helper";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+import JewStockMediaPreview from "./JewStockMediaPreview";
 
 const FieldRow = ({ label, children, wide = false }) => (
   <div className="row mb-2" style={{ alignItems: "center" }}>
@@ -90,7 +91,7 @@ export default function JewStockMasterEdit() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const id = searchParams.get("id");
+  const id = searchParams.get("id") || searchParams.get("ID");
 
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -136,7 +137,11 @@ export default function JewStockMasterEdit() {
   const [imagePath, setImagePath] = useState("");
   const [videoPath, setVideoPath] = useState("");
   const [certPath, setCertPath] = useState("");
+  const [imageBinary, setImageBinary] = useState(null);
   const [useMounting, setUseMounting] = useState("");
+  const [leftTab, setLeftTab] = useState("stock");   // "stock" | "image"
+  const [midTab, setMidTab] = useState("metal");     // "metal" | "images"
+  const [calcBasis, setCalcBasis] = useState("NetWeight"); // "GrossWeight" | "NetWeight"
 
   // Dropdown data
   const [metalTypeOptions, setMetalTypeOptions] = useState([]);
@@ -209,12 +214,28 @@ export default function JewStockMasterEdit() {
         setClarityOptions(basicDataToOptions(data.Clarity ?? data.clarity));
         setSieveOptions(basicDataToOptions(data.Sieve ?? data.sieve));
         setCategoryOptions(idOnlyOptions(data.JewCategories ?? data.jewCategories, "CategoryID"));
-        setSubCategoryOptions(idOnlyOptions(data.JewSubCategories ?? data.jewSubCategories, "SubCategoryID"));
+        setSubCategoryOptions(
+          (Array.isArray(data.JewSubCategories ?? data.jewSubCategories)
+            ? (data.JewSubCategories ?? data.jewSubCategories)
+            : []
+          ).map((item) => {
+            const sid = getItemField(item, "SubCategoryID", "subCategoryID", "subCategoryId");
+            return {
+              value: String(sid),
+              label: String(sid),
+              categoryId: getItemField(item, "CategoryID", "categoryID", "categoryId"),
+            };
+          }).filter((o) => o.value !== "")
+        );
         setMetalTypeOptions(idOnlyOptions(data.JewMetalType ?? data.jewMetalType, "MetalID"));
         setColorOptions(idOnlyOptions(data.JewColor ?? data.jewColor, "JewColorID"));
         const settingValues = data.JewSettingValue ?? data.jewSettingValue;
         if (Array.isArray(settingValues) && settingValues.length > 0) {
           setSettingTypeOptions(settingValues.map((v) => ({ value: v, label: v })));
+        }
+        const basis = data.DecimalinInvoiceAmount ?? data.decimalinInvoiceAmount ?? "";
+        if (basis) {
+          setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
         }
       } catch (err) {
         if (!cancelled) {
@@ -235,9 +256,11 @@ export default function JewStockMasterEdit() {
   }, [id]);
 
   const [initialMountingLoaded, setInitialMountingLoaded] = useState(false);
+  const [savedMountingName, setSavedMountingName] = useState("");
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
   const showDetailsSection = jewCategory !== "Mounting" && jewCategory !== "Metal";
 
+  // MVC: option value = ID, text = Name
   useEffect(() => {
     if (!showMountingSection || !jewCategory) {
       setMountOpts([]);
@@ -246,13 +269,154 @@ export default function JewStockMasterEdit() {
     }
     getMountingStockDropdown(jewCategory, "edit")
       .then((response) => {
-        const arr = response?.data ?? response;
+        const { success, data } = unwrapApiResponse(response);
+        const arr = success && Array.isArray(data) ? data : (response?.data ?? response);
         if (Array.isArray(arr)) {
-          setMountOpts(normalizeDropdown(arr));
+          setMountOpts(
+            arr.map((item) => {
+              const name = getItemField(item, "Name", "name", "TextName", "textName");
+              const mid = getItemField(item, "ID", "id", "Id");
+              return {
+                value: String(mid || name),
+                label: String(name || mid),
+              };
+            }).filter((o) => o.value !== "")
+          );
         }
       })
       .catch(() => { });
   }, [jewCategory, showMountingSection]);
+
+  // Restore Use Mounting selection after options load (MVC SavedMountingId / SavedMounting)
+  useEffect(() => {
+    if (!mountOpts.length || !savedMountingName) return;
+    const byId = mountOpts.find((o) => String(o.value) === String(useMounting));
+    if (byId) return;
+    const byName = mountOpts.find(
+      (o) => o.label === savedMountingName || String(o.value) === String(savedMountingName)
+    );
+    if (byName) setUseMounting(byName.value);
+  }, [mountOpts, savedMountingName]);
+
+  // MVC: Use Mounting change → get-all-Mounting-details fill
+  const applyMountingDetail = useCallback(async (mountingJewCode) => {
+    if (!mountingJewCode) {
+      setTableRows([]);
+      return;
+    }
+    try {
+      const response = await getMountingStockDetail(mountingJewCode);
+      const success = response?.success ?? response?.Success ?? response?.data?.Success ?? response?.data?.success;
+      const data =
+        response?.Data ??
+        response?.data?.Data ??
+        response?.data?.StockData ??
+        response?.data ??
+        null;
+      const diamondList =
+        response?.DiamondList ??
+        response?.diamondList ??
+        response?.data?.DiamondList ??
+        response?.data?.diamondList ??
+        [];
+
+      if (!success && !data) {
+        toast.error(response?.message || response?.Message || "Failed to load mounting details.");
+        return;
+      }
+      if (!data) return;
+
+      setCategory(data.category || data.Category || "");
+      setSubCategory(data.subCategory || data.SubCategory || "");
+      setJewSize(data.jewSize || data.JewSize || "");
+      setMetal(data.metalType || data.MetalType || "");
+      setColor(data.color || data.Color || "");
+      setMetalPurity(data.purity || data.Purity || "");
+      setPurityRatio(
+        data.pureRatio != null || data.PureRatio != null
+          ? Number(data.pureRatio ?? data.PureRatio).toFixed(3)
+          : ""
+      );
+      setGrossWeight(
+        data.grossWeight != null || data.GrossWeight != null
+          ? Number(data.grossWeight ?? data.GrossWeight).toFixed(3)
+          : ""
+      );
+      setNetWeight(
+        data.netWeight != null || data.NetWeight != null
+          ? Number(data.netWeight ?? data.NetWeight).toFixed(3)
+          : ""
+      );
+      setMetalPricePerGm(
+        data.metalPriceGm != null || data.MetalPriceGm != null
+          ? Number(data.metalPriceGm ?? data.MetalPriceGm).toFixed(3)
+          : ""
+      );
+      setMetalAmount(
+        data.totalMetalAmount != null || data.TotalMetalAmount != null
+          ? Number(data.totalMetalAmount ?? data.TotalMetalAmount).toFixed(2)
+          : ""
+      );
+      setMakingType(data.makingType || data.MakingType || "");
+      setMakingRate(data.makingRate ?? data.MakingRate ?? "");
+      setMakingCharges(data.makingCharges ?? data.MakingCharges ?? "");
+      setSettingCharges(
+        data.settingCharges != null || data.SettingCharges != null
+          ? Number(data.settingCharges ?? data.SettingCharges).toFixed(2)
+          : "0.00"
+      );
+      setHandlingCarat(data.handlingCarat ?? data.HandlingCarat ?? "");
+      setHandlingCharges(data.handlingChargesPerCarat ?? data.HandlingChargesPerCarat ?? "");
+      setHandlingAmount(data.totalHandlingCharges ?? data.TotalHandlingCharges ?? "");
+      setJewCert(data.jewelleryCertificate || data.JewelleryCertificate || "");
+      setCertificateCharges(data.totalCertificateCharges ?? data.TotalCertificateCharges ?? "");
+      setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
+      setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
+      setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
+      setFinalAmount(data.finalAmount ?? data.FinalAmount ?? "");
+      setDiamondAmount(data.totalDiamondAmount ?? data.TotalDiamondAmount ?? "");
+      setImagePath(data.imagePath || data.ImagePath || "");
+      setVideoPath(data.videoPath || data.VideoPath || "");
+      setCertPath(data.certPath || data.CertPath || "");
+      setDescription(data.description || data.Description || "");
+      setCertNo(data.jewelleryCerNo || data.JewelleryCerNo || "");
+      setTotalPcs(data.pcs ?? data.Pcs ?? "");
+      setAskingRate(data.askingRate ?? data.AskingRate ?? "");
+      setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
+      setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
+      setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
+
+      if (data.metalType || data.MetalType) {
+        loadPurity(data.metalType || data.MetalType);
+      }
+
+      const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
+        id: idx + 1,
+        stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
+        stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
+        shape: item.shape || item.Shape || "",
+        size: item.size || item.Size || "",
+        sieve: item.sieve || item.Sieve || "",
+        color: item.color || item.Color || "",
+        clarity: item.clarity || item.Clarity || "",
+        pcs: item.pcs || item.Pcs || 0,
+        carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
+        rate: item.price || item.Price || item.rate || item.Rate || 0,
+        amount: item.amount || item.Amount || 0,
+        lab: item.lab || item.Lab || item.cert || item.Cert || "",
+      }));
+      setTableRows(rows);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching mounting details.");
+    }
+  }, []);
+
+  const handleUseMountingChange = (selectedId) => {
+    setUseMounting(selectedId);
+    setSavedMountingName(mountOpts.find((o) => String(o.value) === String(selectedId))?.label || "");
+    applyMountingDetail(selectedId);
+  };
 
   const subCategoryOptionsForCategory = useMemo(() => {
     if (!category) return subCategoryOptions;
@@ -267,9 +431,20 @@ export default function JewStockMasterEdit() {
     setLoading(true);
     try {
       const response = await getMountingStockDetail(jewCode);
-      if (response.success || response.Success) {
-        const data = response.data || response.Data;
-        const diamondList = response.diamondList || response.DiamondList || [];
+      const success = response?.success ?? response?.Success ?? response?.data?.Success ?? response?.data?.success;
+      if (success || response?.Data || response?.data) {
+        const data =
+          response?.Data ??
+          response?.data?.Data ??
+          response?.data?.StockData ??
+          response?.data ??
+          {};
+        const diamondList =
+          response?.DiamondList ??
+          response?.diamondList ??
+          response?.data?.DiamondList ??
+          response?.data?.diamondList ??
+          [];
 
         // Populate form fields
         setTrnDate(data.trnDate || data.TrnDate || "");
@@ -307,24 +482,31 @@ export default function JewStockMasterEdit() {
         setImagePath(data.imagePath || data.ImagePath || "");
         setVideoPath(data.videoPath || data.VideoPath || "");
         setCertPath(data.certPath || data.CertPath || "");
-        setUseMounting(data.useMounting || data.UseMounting || "");
+        setImageBinary(data.imageBinary || data.ImageBinary || null);
+        const mountName = data.useMounting || data.UseMounting || "";
+        const mountId = data.useMountingId || data.UseMountingId || "";
+        setSavedMountingName(mountName);
+        setUseMounting(mountId || mountName || "");
+        setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
+        setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
+        setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
         setInitialMountingLoaded(true);
 
         // Populate table rows from diamond list
-        const rows = diamondList.map((item, idx) => ({
+        const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
           id: idx + 1,
-          stockID: item.stockID || item.StockID || "",
-          stoneType: item.type || item.Type || "Natural Diamond",
+          stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
+          stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
           shape: item.shape || item.Shape || "",
           size: item.size || item.Size || "",
           sieve: item.sieve || item.Sieve || "",
           color: item.color || item.Color || "",
           clarity: item.clarity || item.Clarity || "",
           pcs: item.pcs || item.Pcs || 0,
-          carats: item.carat || item.Carat || 0,
-          rate: item.price || item.Price || 0,
+          carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
+          rate: item.price || item.Price || item.rate || item.Rate || 0,
           amount: item.amount || item.Amount || 0,
-          lab: item.lab || item.Lab || "",
+          lab: item.lab || item.Lab || item.cert || item.Cert || "",
         }));
         setTableRows(rows);
 
@@ -333,7 +515,7 @@ export default function JewStockMasterEdit() {
           loadPurity(data.metalType || data.MetalType);
         }
       } else {
-        toast.error(response.message || response.Message || "Failed to load mounting stock details");
+        toast.error(response?.message || response?.Message || response?.data?.Message || "Failed to load mounting stock details");
       }
     } catch (error) {
       console.error(error);
@@ -382,18 +564,30 @@ export default function JewStockMasterEdit() {
     if (metal && value) loadRatio(metal, value);
   };
 
-  // ─── Auto-calcs ───
-  useEffect(() => {
-    const gw = parseFloat(grossWeight) || 0;
-    const ratio = parseFloat(purityRatio) || 0;
-    setNetWeight(ratio ? (gw * ratio / 100).toFixed(3) : "");
-  }, [grossWeight, purityRatio]);
+  // ─── Auto-calcs (aligned with MVC JewDesign.js + Add page) ───
+  const totalCarat = useMemo(
+    () => tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0),
+    [tableRows]
+  );
 
   useEffect(() => {
-    const nw = parseFloat(netWeight) || 0;
+    const gw = parseFloat(grossWeight) || 0;
+    if (gw !== 0) {
+      const lessWeight = totalCarat / 5; // 5 carats = 1 gram
+      setNetWeight((gw - lessWeight).toFixed(3));
+    } else {
+      setNetWeight(gw.toFixed(3));
+    }
+  }, [grossWeight, totalCarat]);
+
+  useEffect(() => {
     const pp = parseFloat(metalPricePerGm) || 0;
-    setMetalAmount((nw * pp).toFixed(2));
-  }, [netWeight, metalPricePerGm]);
+    const gw = parseFloat(grossWeight) || 0;
+    const nw = parseFloat(netWeight) || 0;
+    const ratio = parseFloat(purityRatio) || 0;
+    const ma = calcBasis === "GrossWeight" ? pp * gw : pp * ratio * nw;
+    setMetalAmount(ma.toFixed(2));
+  }, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
     const r = parseFloat(makingRate) || 0;
@@ -600,34 +794,23 @@ export default function JewStockMasterEdit() {
     }
     setSubmitLoading(true);
     try {
-      const diamond = tableRows
-        .filter(row => row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond")
-        .map(row => ({
-          StockID: row.stockID,
-          Type: row.stoneType,
-          Shape: row.shape,
-          Size: row.size,
-          Sieve: row.sieve,
-          Color: row.color,
-          Clarity: row.clarity,
-          Pcs: parseInt(row.pcs) || 0,
-          Carat: parseFloat(row.carats) || 0,
-          Price: parseFloat(row.rate) || 0,
-          Amount: parseFloat(row.amount) || 0,
-          Lab: row.lab
-        }));
+      // MVC: all Mounting-diamond-details rows → DiamondDetails
+      const diamond = tableRows.map(row => ({
+        StockID: row.stockID,
+        Type: row.stoneType,
+        Shape: row.shape,
+        Size: row.size,
+        Sieve: row.sieve,
+        Color: row.color,
+        Clarity: row.clarity,
+        Pcs: parseInt(row.pcs) || 0,
+        Carat: parseFloat(row.carats) || 0,
+        Price: parseFloat(row.rate) || 0,
+        Amount: parseFloat(row.amount) || 0,
+        Lab: row.lab
+      }));
 
-      const setting = tableRows
-        .filter(row => row.stoneType === "Gem Stone")
-        .map(row => ({
-          Type: row.stoneType,
-          Shape: row.shape,
-          Size: row.size,
-          Pcs: parseInt(row.pcs) || 0,
-          SettingType: row.lab || "",
-          Price: parseFloat(row.rate) || 0,
-          Amount: parseFloat(row.amount) || 0
-        }));
+      const setting = [];
 
       let totalDiaCarat = 0;
       let totalStnCarat = 0;
@@ -639,6 +822,9 @@ export default function JewStockMasterEdit() {
           totalStnCarat += c;
         }
       });
+
+      const selectedMount = mountOpts.find((o) => String(o.value) === String(useMounting));
+      const useMountingName = selectedMount?.label || savedMountingName || useMounting || "";
 
       const payload = {
         Model: {
@@ -665,8 +851,10 @@ export default function JewStockMasterEdit() {
           TotalMetalAmount: parseFloat(metalAmount) || 0,
           ImagePath: imagePath,
           ImageBinary: null,
-          UseMounting: useMounting,
-          UseMountingId: useMounting,
+          VideoPath: videoPath,
+          CertPath: certPath,
+          UseMounting: useMountingName,
+          UseMountingId: useMounting || "",
           MountCategory: jewCategory,
           MakingType: makingType,
           MakingRate: parseFloat(makingRate) || 0,
@@ -769,6 +957,12 @@ export default function JewStockMasterEdit() {
   };
   const selectStyle = { ...inputStyle };
   const roStyle = { ...inputStyle, background: "#f8f9fa" };
+  const tabBtn = (active) => ({
+    padding: "6px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+    fontWeight: 600, fontSize: 12, marginRight: 4, transition: "all .2s",
+    background: active ? "#5A8DEE" : "#f2f4f7",
+    color: active ? "#fff" : "#5A8DEE",
+  });
 
   if (loading) {
     return (
@@ -827,174 +1021,223 @@ export default function JewStockMasterEdit() {
           </Card>
 
           <Row className="mb-3 align-items-stretch">
+            {/* ── COL 1 : Stock Details / Image ── */}
             <Col xl={4} lg={4} md={4} className="d-flex flex-column mb-3 mb-md-0">
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
-                  <h6 style={{ fontWeight: 600, color: "#5A8DEE", marginBottom: 16, fontSize: 14 }}>
-                    Stock Details
-                  </h6>
-                  <FieldRow label="Date">
+                  <div className="d-flex justify-content-center mb-3 gap-1">
+                    <button type="button" style={tabBtn(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
+                      <i className="ri-bar-chart-line me-1"></i>Stock Details
+                    </button>
+                    <button type="button" style={tabBtn(leftTab === "image")} onClick={() => setLeftTab("image")}>
+                      <i className="ri-image-line me-1"></i>Image
+                    </button>
+                  </div>
+
+                  {leftTab === "stock" && (
                     <>
-                      <input type="date" 
-                        className={`form-control ${errors.trnDate ? 'is-invalid' : ''}`}
-                        style={{ ...inputStyle, padding: "5px 8px" }} 
-                        value={trnDate} 
-                        onChange={(e) => {
-                            setTrnDate(e.target.value);
-                            if (e.target.value) setErrors(prev => ({ ...prev, trnDate: false }));
-                        }} 
-                        onBlur={() => {
-                            if (!trnDate) setErrors(prev => ({ ...prev, trnDate: true }));
-                        }}
-                      />
-                      {errors.trnDate && <div className="invalid-feedback d-block">{t("Date is required")}</div>}
+                      <FieldRow label="Date">
+                        <>
+                          <input type="date"
+                            className={`form-control ${errors.trnDate ? "is-invalid" : ""}`}
+                            style={{ ...inputStyle, padding: "5px 8px" }}
+                            value={trnDate}
+                            onChange={(e) => {
+                              setTrnDate(e.target.value);
+                              if (e.target.value) setErrors((prev) => ({ ...prev, trnDate: false }));
+                            }}
+                            onBlur={() => {
+                              if (!trnDate) setErrors((prev) => ({ ...prev, trnDate: true }));
+                            }}
+                          />
+                          {errors.trnDate && <div className="invalid-feedback d-block">{t("Date is required")}</div>}
+                        </>
+                      </FieldRow>
+                      <FieldRow label="Stock ID">
+                        <>
+                          <input type="text"
+                            className={`form-control ${errors.stockID ? "is-invalid" : ""}`}
+                            style={{ ...inputStyle, padding: "5px 8px", background: "#f8f9fa" }}
+                            value={stockID}
+                            readOnly
+                          />
+                          {errors.stockID && <div className="invalid-feedback d-block">{t("Stock ID is required")}</div>}
+                        </>
+                      </FieldRow>
+                      <FieldRow label="Jewellery Category">
+                        <>
+                          <select
+                            className={`form-select ${errors.jewCategory ? "is-invalid" : ""}`}
+                            style={{ ...selectStyle, padding: "5px 8px" }}
+                            value={jewCategory}
+                            onChange={(e) => {
+                              setJewCategory(e.target.value);
+                              if (e.target.value) setErrors((prev) => ({ ...prev, jewCategory: false }));
+                            }}
+                            onBlur={() => {
+                              if (!jewCategory) setErrors((prev) => ({ ...prev, jewCategory: true }));
+                            }}
+                          >
+                            <option value="">Select Jewellery Category</option>
+                            <option value="Finished Jewellery">Finished Jewellery</option>
+                            <option value="Semi Jewellery">Semi Jewellery</option>
+                            <option value="Mounting">Mounting</option>
+                            <option value="Metal">Metal</option>
+                          </select>
+                          {errors.jewCategory && <div className="invalid-feedback d-block">{t("Jewellery Category is required")}</div>}
+                        </>
+                      </FieldRow>
+                      {showMountingSection && (
+                        <FieldRow label="Use Mounting">
+                          <select style={selectStyle} value={useMounting} onChange={(e) => handleUseMountingChange(e.target.value)}>
+                            <option value="">Select Mounting Stock</option>
+                            {mountOpts.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        </FieldRow>
+                      )}
+                      <FieldRow label="Category">
+                        <select style={selectStyle} value={category} onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
+                          <option value="">Select Category</option>
+                          {categoryOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Sub Category">
+                        <select style={selectStyle} value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
+                          <option value="">Select Sub Category</option>
+                          {subCategoryOptionsForCategory.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Jewellery Size">
+                        <input type="text" style={inputStyle} value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Certificate">
+                        <select style={selectStyle} value={jewCert} onChange={(e) => setJewCert(e.target.value)}>
+                          <option value="">Select Certificate</option>
+                          <option value="IGI">IGI</option>
+                          <option value="GIA">GIA</option>
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Certificate No">
+                        <input type="text" style={inputStyle} value={certNo} onChange={(e) => setCertNo(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Description">
+                        <input type="text" style={inputStyle} value={description} onChange={(e) => setDescription(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Pcs">
+                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Pcs"
+                          value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
+                      </FieldRow>
                     </>
-                  </FieldRow>
-                  <FieldRow label="Stock ID">
-                    <>
-                      <input type="text" 
-                        className={`form-control ${errors.stockID ? 'is-invalid' : ''}`}
-                        style={{ ...inputStyle, padding: "5px 8px", background: "#f8f9fa" }} 
-                        value={stockID} 
-                        readOnly 
-                      />
-                      {errors.stockID && <div className="invalid-feedback d-block">{t("Stock ID is required")}</div>}
-                    </>
-                  </FieldRow>
-                  <FieldRow label="Jewellery Category">
-                    <>
-                      <select 
-                        className={`form-select ${errors.jewCategory ? 'is-invalid' : ''}`}
-                        style={{ ...selectStyle, padding: "5px 8px" }} 
-                        value={jewCategory} 
-                        onChange={(e) => {
-                            setJewCategory(e.target.value);
-                            if (e.target.value) setErrors(prev => ({ ...prev, jewCategory: false }));
-                        }}
-                        onBlur={() => {
-                            if (!jewCategory) setErrors(prev => ({ ...prev, jewCategory: true }));
-                        }}
-                      >
-                        <option value="">Select Jewellery Category</option>
-                        <option value="Finished Jewellery">Finished Jewellery</option>
-                        <option value="Semi Jewellery">Semi Jewellery</option>
-                        <option value="Mounting">Mounting</option>
-                        <option value="Metal">Metal</option>
-                      </select>
-                      {errors.jewCategory && <div className="invalid-feedback d-block">{t("Jewellery Category is required")}</div>}
-                    </>
-                  </FieldRow>
-                  {showMountingSection && (
-                    <FieldRow label="Use Mounting">
-                      <select style={selectStyle} value={useMounting} onChange={(e) => setUseMounting(e.target.value)}>
-                        <option value="">Select Mounting Stock</option>
-                        {mountOpts.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </FieldRow>
                   )}
-                  <FieldRow label="Category">
-                    <select style={selectStyle} value={category} onChange={(e) => setCategory(e.target.value)}>
-                      <option value="">Select Category</option>
-                      {categoryOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Sub Category">
-                    <select style={selectStyle} value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
-                      <option value="">Select Sub Category</option>
-                      {subCategoryOptionsForCategory.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Jewellery Size">
-                    <input type="text" style={inputStyle} value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Certificate">
-                    <select style={selectStyle} value={jewCert} onChange={(e) => setJewCert(e.target.value)}>
-                      <option value="">Select Certificate</option>
-                      <option value="IGI">IGI</option>
-                      <option value="GIA">GIA</option>
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Certificate No">
-                    <input type="text" style={inputStyle} value={certNo} onChange={(e) => setCertNo(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Description">
-                    <input type="text" style={inputStyle} value={description} onChange={(e) => setDescription(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Pcs">
-                    <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Pcs"
-                      value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
-                  </FieldRow>
+
+                  {leftTab === "image" && (
+                    <JewStockMediaPreview
+                      imagePath={imagePath}
+                      videoPath={videoPath}
+                      certPath={certPath}
+                      imageBinary={imageBinary}
+                    />
+                  )}
                 </CardBody>
               </Card>
             </Col>
 
+            {/* ── COL 2 : Metal Details / Images Details ── */}
             <Col xl={4} lg={4} md={4} className="d-flex flex-column mb-3 mb-md-0">
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
-                  <h6 style={{ fontWeight: 600, color: "#5A8DEE", marginBottom: 16, fontSize: 14 }}>
-                    Metal Details
-                  </h6>
-                  <FieldRow label="Metal Type">
-                    <select style={selectStyle} value={metal} onChange={(e) => handleMetalChange(e.target.value)}>
-                      <option value="">Select Metal Type</option>
-                      {metalTypeOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Color">
-                    <select style={selectStyle} value={color} onChange={(e) => setColor(e.target.value)}>
-                      <option value="">Select Color</option>
-                      {colorOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Purity">
-                    <select style={selectStyle} value={metalPurity} onChange={(e) => handlePurityChange(e.target.value)}>
-                      <option value="">Select Metal Purity</option>
-                      {purityOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FieldRow>
-                  <FieldRow label="Purity Ratio">
-                    <input type="text" style={roStyle} value={purityRatio} readOnly />
-                  </FieldRow>
-                  <FieldRow label="Gross Weight">
-                    <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Net Weight">
-                    <input type="text" style={{ ...roStyle, textAlign: "right" }} value={netWeight} readOnly />
-                  </FieldRow>
-                  <FieldRow label="Metal Price/Gm">
-                    <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Metal Amount">
-                    <input type="text" style={{ ...roStyle, textAlign: "right" }} value={metalAmount} readOnly />
-                  </FieldRow>
-                  <FieldRow label="Diamond">
-                    <div className="d-flex gap-1">
-                      <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={diamondAmount} readOnly />
-                      <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={diamondQty} readOnly />
-                    </div>
-                  </FieldRow>
-                  <FieldRow label="Stone">
-                    <div className="d-flex gap-1">
-                      <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={stoneAmount} readOnly />
-                      <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={stoneQty} readOnly />
-                    </div>
-                  </FieldRow>
+                  <div className="d-flex justify-content-center mb-3 gap-1">
+                    <button type="button" style={tabBtn(midTab === "metal")} onClick={() => setMidTab("metal")}>
+                      <i className="ri-settings-3-line me-1"></i>Metal Details
+                    </button>
+                    <button type="button" style={tabBtn(midTab === "images")} onClick={() => setMidTab("images")}>
+                      <i className="ri-folder-image-line me-1"></i>Images Details
+                    </button>
+                  </div>
+
+                  {midTab === "metal" && (
+                    <>
+                      <FieldRow label="Metal Type">
+                        <select style={selectStyle} value={metal} onChange={(e) => handleMetalChange(e.target.value)}>
+                          <option value="">Select Metal Type</option>
+                          {metalTypeOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Color">
+                        <select style={selectStyle} value={color} onChange={(e) => setColor(e.target.value)}>
+                          <option value="">Select Color</option>
+                          {colorOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Purity">
+                        <select style={selectStyle} value={metalPurity} onChange={(e) => handlePurityChange(e.target.value)}>
+                          <option value="">Select Metal Purity</option>
+                          {purityOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
+                      <FieldRow label="Purity Ratio">
+                        <input type="text" style={roStyle} value={purityRatio} readOnly />
+                      </FieldRow>
+                      <FieldRow label="Gross Weight">
+                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Net Weight">
+                        <input type="text" style={{ ...roStyle, textAlign: "right" }} value={netWeight} readOnly />
+                      </FieldRow>
+                      <FieldRow label="Metal Price/Gm">
+                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Metal Amount">
+                        <input type="text" style={{ ...roStyle, textAlign: "right" }} value={metalAmount} readOnly />
+                      </FieldRow>
+                      <FieldRow label="Diamond">
+                        <div className="d-flex gap-1">
+                          <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={diamondAmount} readOnly />
+                          <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={diamondQty} readOnly />
+                        </div>
+                      </FieldRow>
+                      <FieldRow label="Stone">
+                        <div className="d-flex gap-1">
+                          <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={stoneAmount} readOnly />
+                          <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={stoneQty} readOnly />
+                        </div>
+                      </FieldRow>
+                    </>
+                  )}
+
+                  {midTab === "images" && (
+                    <>
+                      <FieldRow label="Image Path" wide>
+                        <input type="text" style={inputStyle} placeholder="Image Path"
+                          value={imagePath} onChange={(e) => setImagePath(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Video Path" wide>
+                        <input type="text" style={inputStyle} placeholder="Video Path"
+                          value={videoPath} onChange={(e) => setVideoPath(e.target.value)} />
+                      </FieldRow>
+                      <FieldRow label="Cert Path" wide>
+                        <input type="text" style={inputStyle} placeholder="Cert Path"
+                          value={certPath} onChange={(e) => setCertPath(e.target.value)} />
+                      </FieldRow>
+                    </>
+                  )}
                 </CardBody>
               </Card>
             </Col>
 
+            {/* ── COL 3 : Charges Details ── */}
             <Col xl={4} lg={4} md={4} className="d-flex flex-column">
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
@@ -1005,11 +1248,18 @@ export default function JewStockMasterEdit() {
                     <div className="d-flex gap-1">
                       <select style={{ ...selectStyle, flex: 1 }} value={makingType} onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
-                        <option value="Per Gm">Per Gm</option>
-                        <option value="Per Pcs">Per Pcs</option>
-                        <option value="Lumsum">Lumsum</option>
-                        <option value="Wastage">Wastage</option>
-                        <option value="Per%">Per%</option>
+                        {(settingTypeOptions.length > 0
+                          ? settingTypeOptions
+                          : [
+                              { value: "Per Gm", label: "Per Gm" },
+                              { value: "Per Pcs", label: "Per Pcs" },
+                              { value: "Lumsum", label: "Lumsum" },
+                              { value: "Wastage", label: "Wastage" },
+                              { value: "Per%", label: "Per%" },
+                            ]
+                        ).map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
                       </select>
                       <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }} value={makingRate} onChange={(e) => setMakingRate(e.target.value)} />
                     </div>

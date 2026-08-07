@@ -568,6 +568,23 @@ export const SOLITAIRE_RATE_REVISE_DROPDOWNS = "/api/SolitaireRateReviseReport/d
 export const SOLITAIRE_PURCHASE_REPORT = "/api/SolitairePurchaseReport/search";
 export const SOLITAIRE_PURCHASE_DROPDOWNS = "/api/SolitairePurchaseReport/dropdowns";
 
+// Solitaire Purchase Return Report
+export const SOLITAIRE_PURCHASE_RETURN_REPORT = "/api/SolitairePurchaseReturnReport/search";
+export const SOLITAIRE_PURCHASE_RETURN_DROPDOWNS = "/api/SolitairePurchaseReturnReport/dropdowns";
+
+// Solitaire Sale Return Report
+export const SOLITAIRE_SALE_RETURN_REPORT = "/api/SolitaireSaleReturnReport/search";
+export const SOLITAIRE_SALE_RETURN_DROPDOWNS = "/api/SolitaireSaleReturnReport/dropdowns";
+
+// Solitaire Consignment Return Report
+export const SOLITAIRE_CONSIGNMENT_RETURN_REPORT = "/api/SolitaireConsignmentReturnReport/search";
+export const SOLITAIRE_CONSIGNMENT_RETURN_DROPDOWNS = "/api/SolitaireConsignmentReturnReport/dropdowns";
+
+// Solitaire Memo Return Report
+export const SOLITAIRE_MEMO_RETURN_REPORT = "/api/SolitaireMemoReturnReport/search";
+export const SOLITAIRE_MEMO_RETURN_DROPDOWNS = "/api/SolitaireMemoReturnReport/dropdowns";
+
+
 // Solitaire Consignment In Report
 export const SOLITAIRE_CONSIGNMENT_IN_REPORT = "/api/SolitaireConsignmentInReport/search";
 export const SOLITAIRE_CONSIGNMENT_IN_SUMMARY = "/api/SolitaireConsignmentInReport/summary";
@@ -584,6 +601,11 @@ export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dro
 // Solitaire Aging Report
 export const SOLITAIRE_AGING_REPORT = "/api/SolitaireAgingReport/search";
 export const SOLITAIRE_AGING_DROPDOWNS = "/api/SolitaireAgingReport/dropdowns";
+
+// Solitaire Fast Moving Report
+export const SOLITAIRE_FAST_MOVING_REPORT = "/api/SolitaireFastMovingReport/search";
+export const SOLITAIRE_FAST_MOVING_DISPLAY = "/api/SolitaireFastMovingReport/display";
+export const SOLITAIRE_FAST_MOVING_DROPDOWNS = "/api/SolitaireFastMovingReport/dropdowns";
 
 // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)
 export const SOLITAIRE_LOT_ASSORTMENT_REPORT = "/api/SolitaireLotAssortmentReport/search";
@@ -657,6 +679,9 @@ export const GET_ParcelStockRegister_LOTS = "/api/ParcelStockRegisterReport/get-
 export const JEWELLERY_STOCK_SEARCH_REPORT = "/api/JewelleryStockReport/search";
 export const JEWELLERY_STOCK_SEARCH_DROPDOWNS = "/api/JewelleryStockReport/dropdowns";
 export const JEWELLERY_STOCK_SEARCH_STOCK_IDS = "/api/JewelleryStockReport/stock-ids";
+
+// DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
+export const GET_STOCK_ANALYZE_CONFIG = "/api/StockAnalyze/config";
 
 
 // Mix Purchase Report
