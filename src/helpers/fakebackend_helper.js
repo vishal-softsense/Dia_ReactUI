@@ -716,6 +716,23 @@ export const getSolitaireRateReviseDropdowns = () => api.get(url.SOLITAIRE_RATE_
 export const getSolitairePurchaseReport = (filter) => api.create(url.SOLITAIRE_PURCHASE_REPORT, filter);
 export const getSolitairePurchaseDropdowns = () => api.get(url.SOLITAIRE_PURCHASE_DROPDOWNS);
 
+// Solitaire Purchase Return Report
+export const getSolitairePurchaseReturnReport = (filter) => api.create(url.SOLITAIRE_PURCHASE_RETURN_REPORT, filter);
+export const getSolitairePurchaseReturnDropdowns = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_DROPDOWNS);
+
+// Solitaire Sale Return Report
+export const getSolitaireSaleReturnReport = (filter) => api.create(url.SOLITAIRE_SALE_RETURN_REPORT, filter);
+export const getSolitaireSaleReturnDropdowns = () => api.get(url.SOLITAIRE_SALE_RETURN_DROPDOWNS);
+
+// Solitaire Consignment Return Report
+export const getSolitaireConsignmentReturnReport = (filter) => api.create(url.SOLITAIRE_CONSIGNMENT_RETURN_REPORT, filter);
+export const getSolitaireConsignmentReturnDropdowns = () => api.get(url.SOLITAIRE_CONSIGNMENT_RETURN_DROPDOWNS);
+
+// Solitaire Memo Return Report
+export const getSolitaireMemoReturnReport = (filter) => api.create(url.SOLITAIRE_MEMO_RETURN_REPORT, filter);
+export const getSolitaireMemoReturnDropdowns = () => api.get(url.SOLITAIRE_MEMO_RETURN_DROPDOWNS);
+
+
 // Solitaire Consignment In Report
 export const getSolitaireConsignmentInReport = (filter) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_REPORT, filter);
 export const getSolitaireConsignmentInSummary = (filter) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_SUMMARY, filter);
@@ -732,6 +749,11 @@ export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_
 // Solitaire Aging Report
 export const getSolitaireAgingReport = (filter) => api.create(url.SOLITAIRE_AGING_REPORT, filter);
 export const getSolitaireAgingDropdowns = () => api.get(url.SOLITAIRE_AGING_DROPDOWNS);
+
+// Solitaire Fast Moving Report
+export const getSolitaireFastMovingReport = (filter) => api.create(url.SOLITAIRE_FAST_MOVING_REPORT, filter);
+export const getSolitaireFastMovingDisplay = (filter) => api.create(url.SOLITAIRE_FAST_MOVING_DISPLAY, filter);
+export const getSolitaireFastMovingDropdowns = () => api.get(url.SOLITAIRE_FAST_MOVING_DROPDOWNS);
 
 // Solitaire Lot Assortment Report
 export const getSolitaireLotAssortmentReport = (filter) =>
@@ -837,6 +859,9 @@ export const getMixSaleRtnReport = (filter) => api.create(url.MIX_SALE_RTN_REPOR
 export const getMixConsignmentReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_REPORT_DROPDOWNS);
 export const getMixConsignmentReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_LIST, filter);
 export const getMixConsignmentSummaryReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_SUMMARY, filter);
+
+// DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
+export const getStockAnalyzeConfig = () => api.get(url.GET_STOCK_ANALYZE_CONFIG);
 
 // Mix Consignment Return Report (MemoIn Return)
 export const getMixConsignmentInRtnReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_IN_RTN_REPORT_DROPDOWNS);
