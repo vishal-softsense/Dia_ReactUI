@@ -20,6 +20,63 @@ const dashText = (value) => {
     return String(value);
 };
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_MAP = {
+    jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+    jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+};
+
+const parseReportDateParts = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const text = String(value).trim();
+    if (!text) return null;
+
+    const dmyMatch = text.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+        return { day: Number(dmyMatch[1]), month: Number(dmyMatch[2]), year: Number(dmyMatch[3]) };
+    }
+
+    const dmyMmm = text.match(/^(\d{1,2})[-/]([A-Za-z]{3,9})[-/](\d{4})/);
+    if (dmyMmm) {
+        const monthKey = dmyMmm[2].slice(0, 3).toLowerCase();
+        return {
+            day: Number(dmyMmm[1]),
+            month: MONTH_MAP[monthKey] || 1,
+            year: Number(dmyMmm[3])
+        };
+    }
+
+    const isoMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (isoMatch) {
+        return { day: Number(isoMatch[3]), month: Number(isoMatch[2]), year: Number(isoMatch[1]) };
+    }
+
+    return null;
+};
+
+/** Display date in DD-MMM-YYYY format (e.g. 19-Nov-2025) */
+const formatReportDisplayDate = (value) => {
+    if (value === null || value === undefined || value === "") return "-";
+    const parts = parseReportDateParts(value);
+    if (!parts) {
+        const text = String(value).trim();
+        return text || "-";
+    }
+
+    const d = String(parts.day).padStart(2, "0");
+    const mmm = MONTH_NAMES[parts.month - 1] || "Jan";
+    return `${d}-${mmm}-${parts.year}`;
+};
+
+/** Sort key for date ordering: YYYYMMDD */
+const getReportDateSortKey = (value) => {
+    const parts = parseReportDateParts(value);
+    if (!parts) return "00000000";
+    const m = String(parts.month).padStart(2, "0");
+    const d = String(parts.day).padStart(2, "0");
+    return `${parts.year}${m}${d}`;
+};
+
 const fmtFixed = (value, decimals) => {
     if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) {
         return (0).toFixed(decimals);
@@ -34,55 +91,7 @@ const getRowVal = (row, ...keys) => {
     return "";
 };
 
-const formatReportDisplayDate = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
-    const MONTH_MAP = {
-        jan: "01",
-        feb: "02",
-        mar: "03",
-        apr: "04",
-        may: "05",
-        jun: "06",
-        jul: "07",
-        aug: "08",
-        sep: "09",
-        oct: "10",
-        nov: "11",
-        dec: "12"
-    };
-
-    const text = String(value).trim();
-    if (!text) return "-";
-
-    // Handles DD-MM-YYYY / DD/MM/YYYY, optional time
-    const dmyMatch = text.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-    if (dmyMatch) {
-        const day = dmyMatch[1].padStart(2, "0");
-        const month = dmyMatch[2].padStart(2, "0");
-        const year = dmyMatch[3];
-        return `${day}-${month}-${year}`;
-    }
-
-    // Handles DD-MMM-YYYY (e.g. 31-Mar-2024)
-    const dmyMmm = text.match(/^(\d{1,2})[-/]([A-Za-z]{3,9})[-/](\d{4})/);
-    if (dmyMmm) {
-        const day = dmyMmm[1].padStart(2, "0");
-        const monthKey = dmyMmm[2].slice(0, 3).toLowerCase();
-        const month = MONTH_MAP[monthKey] || "01";
-        return `${day}-${month}-${dmyMmm[3]}`;
-    }
-
-    // Handles ISO YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
-    const isoMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-    if (isoMatch) {
-        const year = isoMatch[1];
-        const month = isoMatch[2].padStart(2, "0");
-        const day = isoMatch[3].padStart(2, "0");
-        return `${day}-${month}-${year}`;
-    }
-
-    return text;
-};
+const getRowDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date");
 
 const MixMemoOutReport = () => {
     const { t } = useTranslation();
@@ -433,36 +442,42 @@ const MixMemoOutReport = () => {
         });
 
         const out = [];
-        Object.keys(grouped)
-            .sort()
-            .forEach((memoNo) => {
-                const rows = grouped[memoNo] || [];
-                const first = rows[0];
+        Object.keys(grouped).forEach((memoNo) => {
+            const rows = grouped[memoNo] || [];
+            const first = rows[0];
 
-                const totalCarats = rows.reduce((s, r) => s + Number(getRowVal(r, "Carats", "carats") || 0), 0);
-                const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
-                const totalEstimate = rows.reduce((s, r) => s + Number(getRowVal(r, "Estimate", "estimate") || 0), 0);
-                const totalReturn = rows.reduce((s, r) => s + Number(getRowVal(r, "Return", "return") || 0), 0);
-                const totalBalance = rows.reduce((s, r) => s + Number(getRowVal(r, "Balance", "balance") || 0), 0);
-                const totalBalanceAmt = rows.reduce((s, r) => s + Number(getRowVal(r, "BalanceAmt", "balanceAmt") || 0), 0);
+            const totalCarats = rows.reduce((s, r) => s + Number(getRowVal(r, "Carats", "carats") || 0), 0);
+            const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
+            const totalEstimate = rows.reduce((s, r) => s + Number(getRowVal(r, "Estimate", "estimate") || 0), 0);
+            const totalReturn = rows.reduce((s, r) => s + Number(getRowVal(r, "Return", "return") || 0), 0);
+            const totalBalance = rows.reduce((s, r) => s + Number(getRowVal(r, "Balance", "balance") || 0), 0);
+            const totalBalanceAmt = rows.reduce((s, r) => s + Number(getRowVal(r, "BalanceAmt", "balanceAmt") || 0), 0);
 
-                const totalPrice = totalCarats > 0 ? totalAmount / totalCarats : 0;
+            const totalPrice = totalCarats > 0 ? totalAmount / totalCarats : 0;
 
-                out.push({
-                    ...first,
-                    isParent: true,
-                    Code: "",
-                    MemoNo: memoNo,
-                    Carats: totalCarats,
-                    Price: totalPrice,
-                    Amount: totalAmount,
-                    Estimate: totalEstimate,
-                    Return: totalReturn,
-                    Balance: totalBalance,
-                    BalanceAmt: totalBalanceAmt,
-                    childRecords: rows
-                });
+            out.push({
+                ...first,
+                isParent: true,
+                Code: "",
+                ConDATE: getRowDateRaw(first),
+                MemoNo: memoNo,
+                Carats: totalCarats,
+                Price: totalPrice,
+                Amount: totalAmount,
+                Estimate: totalEstimate,
+                Return: totalReturn,
+                Balance: totalBalance,
+                BalanceAmt: totalBalanceAmt,
+                childRecords: rows
             });
+        });
+
+        out.sort((a, b) => {
+            const ak = getReportDateSortKey(getRowDateRaw(a));
+            const bk = getReportDateSortKey(getRowDateRaw(b));
+            if (ak !== bk) return ak < bk ? -1 : 1;
+            return String(a.MemoNo ?? "").localeCompare(String(b.MemoNo ?? ""), undefined, { numeric: true });
+        });
 
         return out;
     }, [reportRows]);
@@ -574,8 +589,20 @@ const MixMemoOutReport = () => {
             },
             {
                 header: t("DATE"),
-                accessorKey: "ConDATE",
-                cell: ({ row }) => dashText(formatReportDisplayDate(getRowVal(row.original, "ConDATE", "conDATE", "condate", "Date", "date"))),
+                id: "ConDATE",
+                accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
+                sortingFn: (rowA, rowB) => {
+                    const a = getReportDateSortKey(getRowDateRaw(rowA.original));
+                    const b = getReportDateSortKey(getRowDateRaw(rowB.original));
+                    return a < b ? -1 : a > b ? 1 : 0;
+                },
+                filterFn: (row, columnId, filterValue) => {
+                    const search = String(filterValue ?? "").trim().toLowerCase();
+                    if (!search) return true;
+                    const display = String(row.getValue(columnId) ?? "").toLowerCase();
+                    return display.includes(search);
+                },
+                cell: ({ getValue }) => dashText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
             {
@@ -702,7 +729,7 @@ const MixMemoOutReport = () => {
         ];
 
         const rows = reportRows.map((r) => [
-            dashText(formatReportDisplayDate(getRowVal(r, "ConDATE", "conDATE", "condate"))),
+            dashText(formatReportDisplayDate(getRowDateRaw(r))),
             fmtFixed(getRowVal(r, "DueDays", "dueDays"), 0),
             dashText(getRowVal(r, "MemoNo", "memoNo")),
             dashText(getRowVal(r, "BillNo", "billNo")),

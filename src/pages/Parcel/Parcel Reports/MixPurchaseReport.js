@@ -27,55 +27,61 @@ import { useSettingReportDates } from "../../../Components/Hooks/useSettingRepor
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_MAP = {
-    jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
-    jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+    jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+    jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
 };
 
-/** Display date in DD-MM-YYYY numeric format (e.g. 31-03-2024) */
-const formatReportDisplayDate = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
-
+const parseReportDateParts = (value) => {
+    if (value === null || value === undefined || value === "") return null;
     const text = String(value).trim();
-    if (!text) return "-";
+    if (!text) return null;
 
-    // 1. Handles DD-MM-YYYY or DD/MM/YYYY with optional time (e.g., "31-03-2024 00:00:00")
     const dmyMatch = text.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (dmyMatch) {
-        const day = dmyMatch[1].padStart(2, "0");
-        const month = dmyMatch[2].padStart(2, "0");
-        const year = dmyMatch[3];
-        return `${day}-${month}-${year}`;
+        return { day: Number(dmyMatch[1]), month: Number(dmyMatch[2]), year: Number(dmyMatch[3]) };
     }
 
-    // 2. Handles DD-MMM-YYYY (e.g., "31-Mar-2024")
     const dmyMmm = text.match(/^(\d{1,2})[-/]([A-Za-z]{3,9})[-/](\d{4})/);
     if (dmyMmm) {
-        const day = dmyMmm[1].padStart(2, "0");
         const monthKey = dmyMmm[2].slice(0, 3).toLowerCase();
-        const month = MONTH_MAP[monthKey] || "01";
-        return `${day}-${month}-${dmyMmm[3]}`;
+        return {
+            day: Number(dmyMmm[1]),
+            month: MONTH_MAP[monthKey] || 1,
+            year: Number(dmyMmm[3])
+        };
     }
 
-    // 3. Handles ISO YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
     const isoMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
     if (isoMatch) {
-        const year = isoMatch[1];
-        const month = isoMatch[2].padStart(2, "0");
-        const day = isoMatch[3].padStart(2, "0");
-        return `${day}-${month}-${year}`;
+        return { day: Number(isoMatch[3]), month: Number(isoMatch[2]), year: Number(isoMatch[1]) };
     }
 
-    // 4. Standard Date fallback
-    const parsed = new Date(text);
-    if (!Number.isNaN(parsed.getTime())) {
-        const day = String(parsed.getDate()).padStart(2, "0");
-        const month = String(parsed.getMonth() + 1).padStart(2, "0");
-        const year = parsed.getFullYear();
-        return `${day}-${month}-${year}`;
+    return null;
+};
+
+/** Display date in DD-MMM-YYYY format (e.g. 19-Nov-2025) */
+const formatReportDisplayDate = (value) => {
+    if (value === null || value === undefined || value === "") return "-";
+    const parts = parseReportDateParts(value);
+    if (!parts) {
+        const text = String(value).trim();
+        return text || "-";
     }
 
-    return text;
+    const d = String(parts.day).padStart(2, "0");
+    const mmm = MONTH_NAMES[parts.month - 1] || "Jan";
+    return `${d}-${mmm}-${parts.year}`;
+};
+
+/** Sort key for date ordering: YYYYMMDD */
+const getReportDateSortKey = (value) => {
+    const parts = parseReportDateParts(value);
+    if (!parts) return "00000000";
+    const m = String(parts.month).padStart(2, "0");
+    const d = String(parts.day).padStart(2, "0");
+    return `${parts.year}${m}${d}`;
 };
 
 const fmtFixed = (value, decimals) => {
@@ -89,6 +95,8 @@ const getRowVal = (row, ...keys) => {
     }
     return "";
 };
+
+const getRowDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date");
 
 const getTableTotals = (table) => {
     const rows = table.getFilteredRowModel().rows.map((r) => r.original);
@@ -381,52 +389,57 @@ const MixPurchaseReport = () => {
         });
 
         const out = [];
-        Object.keys(grouped)
-            .sort()
-            .forEach((invnoKey) => {
-                const rows = grouped[invnoKey] || [];
-                const first = rows[0];
+        Object.keys(grouped).forEach((invnoKey) => {
+            const rows = grouped[invnoKey] || [];
+            const first = rows[0];
 
-                const totalCarat = rows.reduce((s, r) => s + Number(getRowVal(r, "Carats", "carats") || 0), 0);
-                const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
-                const totalINR = rows.reduce(
-                    (s, r) => s + Number(getRowVal(r, "MasterCurrencyAmount", "masterCurrencyAmount") || 0),
-                    0
-                );
-                const totalUSD = rows.reduce(
-                    (s, r) => s + Number(getRowVal(r, "StockCurrencyAmount", "stockCurrencyAmount") || 0),
-                    0
-                );
+            const totalCarat = rows.reduce((s, r) => s + Number(getRowVal(r, "Carats", "carats") || 0), 0);
+            const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
+            const totalINR = rows.reduce(
+                (s, r) => s + Number(getRowVal(r, "MasterCurrencyAmount", "masterCurrencyAmount") || 0),
+                0
+            );
+            const totalUSD = rows.reduce(
+                (s, r) => s + Number(getRowVal(r, "StockCurrencyAmount", "stockCurrencyAmount") || 0),
+                0
+            );
 
-                out.push({
-                    isParent: true,
-                    Code: getRowVal(first, "Code", "code"),
-                    ConDATE: getRowVal(first, "ConDATE", "conDATE", "conDate", "Date", "date"),
-                    Invno: invnoKey,
-                    BillNo: getRowVal(first, "BillNo", "billNo", "billno"),
-                    ShapeId: "",
-                    SizeId: "",
-                    ColorId: "",
-                    ClarityId: "",
-                    SieveId: "",
-                    Party: getRowVal(first, "Party", "party"),
-                    Item: "Total",
-                    IssueCarats: "",
-                    Discount: "",
-                    ReturnCarats: "",
-                    Carats: totalCarat,
-                    Rate: totalCarat > 0 ? totalAmount / totalCarat : 0,
-                    Amount: totalAmount,
-                    Broker: "",
-                    Less1: "",
-                    Less2: "",
-                    Less3: "",
-                    MasterCurrencyAmount: totalINR,
-                    StockCurrencyAmount: totalUSD,
-                    StockType: "",
-                    childRecords: rows
-                });
+            out.push({
+                isParent: true,
+                Code: getRowVal(first, "Code", "code"),
+                ConDATE: getRowVal(first, "ConDATE", "conDATE", "conDate", "Date", "date"),
+                Invno: invnoKey,
+                BillNo: getRowVal(first, "BillNo", "billNo", "billno"),
+                ShapeId: "",
+                SizeId: "",
+                ColorId: "",
+                ClarityId: "",
+                SieveId: "",
+                Party: getRowVal(first, "Party", "party"),
+                Item: "Total",
+                IssueCarats: "",
+                Discount: "",
+                ReturnCarats: "",
+                Carats: totalCarat,
+                Rate: totalCarat > 0 ? totalAmount / totalCarat : 0,
+                Amount: totalAmount,
+                Broker: "",
+                Less1: "",
+                Less2: "",
+                Less3: "",
+                MasterCurrencyAmount: totalINR,
+                StockCurrencyAmount: totalUSD,
+                StockType: "",
+                childRecords: rows
             });
+        });
+
+        out.sort((a, b) => {
+            const ak = getReportDateSortKey(getRowDateRaw(a));
+            const bk = getReportDateSortKey(getRowDateRaw(b));
+            if (ak !== bk) return ak < bk ? -1 : 1;
+            return String(a.Invno ?? "").localeCompare(String(b.Invno ?? ""), undefined, { numeric: true });
+        });
 
         return out;
     }, [reportRows]);
@@ -448,9 +461,9 @@ const MixPurchaseReport = () => {
                                 <td key={cell.id}>
                                     {column.columnDef.cell
                                         ? flexRender(column.columnDef.cell, {
-                                            ...cell.getContext(),
-                                            row: { ...row, original: childRow }
-                                        })
+                                              ...cell.getContext(),
+                                              row: { ...row, original: childRow }
+                                          })
                                         : dashText(childRow[column.columnDef.accessorKey])}
                                 </td>
                             );
@@ -517,6 +530,23 @@ const MixPurchaseReport = () => {
                 },
                 footer: () => <span className="fw-bold text-center d-block">{t("Total")}:</span>
             },
+            {
+                header: t("Date"),
+                id: "ConDATE",
+                accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
+                sortingFn: (rowA, rowB) => {
+                    const a = getReportDateSortKey(getRowDateRaw(rowA.original));
+                    const b = getReportDateSortKey(getRowDateRaw(rowB.original));
+                    return a < b ? -1 : a > b ? 1 : 0;
+                },
+                filterFn: (row, columnId, filterValue) => {
+                    const search = String(filterValue ?? "").trim().toLowerCase();
+                    if (!search) return true;
+                    const display = String(row.getValue(columnId) ?? "").toLowerCase();
+                    return display.includes(search);
+                },
+                cell: ({ getValue }) => dashText(getValue())
+            },
             { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
             { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
             { header: t("Shape"), accessorKey: "ShapeId", cell: ({ row }) => dashText(getRowVal(row.original, "ShapeId", "shapeId")) },
@@ -525,12 +555,6 @@ const MixPurchaseReport = () => {
             { header: t("Clarity"), accessorKey: "ClarityId", cell: ({ row }) => dashText(getRowVal(row.original, "ClarityId", "clarityId")) },
             { header: t("Sieve"), accessorKey: "SieveId", cell: ({ row }) => dashText(getRowVal(row.original, "SieveId", "sieveId")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-            {
-                header: t("Date"),
-                accessorKey: "ConDATE",
-                cell: ({ row }) =>
-                    formatReportDisplayDate(getRowVal(row.original, "ConDATE", "conDATE", "condate", "Date", "date"))
-            },
             {
                 header: t("LotNo"),
                 accessorKey: "Item",
@@ -640,7 +664,6 @@ const MixPurchaseReport = () => {
             "USD Amount",
             "StockType"
         ];
-
         const rows = reportRows.map((row) => [
             dashText(getRowVal(row, "Invno", "invno", "InvNo", "invNo")),
             dashText(getRowVal(row, "BillNo", "billNo", "billno")),
@@ -666,7 +689,36 @@ const MixPurchaseReport = () => {
             fmtFixed(getRowVal(row, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
             dashText(getRowVal(row, "StockType", "stockType"))
         ]);
-
+        const totalCarat = reportRows.reduce((s, r) => s + Number(getRowVal(r, "Carats", "carats") || 0), 0);
+        const totalAmt = reportRows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
+        const totalINR = reportRows.reduce((s, r) => s + Number(getRowVal(r, "MasterCurrencyAmount", "masterCurrencyAmount") || 0), 0);
+        const totalUSD = reportRows.reduce((s, r) => s + Number(getRowVal(r, "StockCurrencyAmount", "stockCurrencyAmount") || 0), 0);
+        const totalRate = totalCarat > 0 ? totalAmt / totalCarat : 0;
+        rows.push([
+            "Total:",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            fmtFixed(totalCarat, 3),
+            fmtFixed(totalRate, 2),
+            fmtFixed(totalAmt, 2),
+            "",
+            "",
+            "",
+            "",
+            fmtFixed(totalINR, 2),
+            fmtFixed(totalUSD, 2),
+            ""
+        ]);
         const res = await exportToExcel(headers, rows, "MixPur-report", "MixPur-report");
         if (!res?.success) toast.error(t("Excel export failed."));
     };

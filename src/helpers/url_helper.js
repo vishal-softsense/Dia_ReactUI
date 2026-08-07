@@ -663,15 +663,31 @@ export const JEWELLERY_STOCK_SEARCH_STOCK_IDS = "/api/JewelleryStockReport/stock
 export const MIX_PURCHASE_REPORT_DROPDOWNS = "/api/mixreport/dropdowns";
 export const MIX_PURCHASE_REPORT_LIST = "/api/mixreport/generalpurchase-report-list";
 
+// Mix Purchase Return Report (MVC: /mixreport/GeneralPur-Return-report)
+export const MIX_PUR_RTN_REPORT_DROPDOWNS = "/api/GeneralPur-Return-report/mixpur-return-report-dropdowns";
+export const MIX_PUR_RTN_REPORT_LIST = "/api/GeneralPur-Return-report/mixpur-return-report-list";
+
 // Mix Memo Out Report
 export const MIX_MEMO_OUT_REPORT_DROPDOWNS = "/api/mixreport/mixmemo-report-dropdowns";
 export const MIX_MEMO_OUT_REPORT_LIST = "/api/mixreport/mixmemo-report-list";
+
+// Mix Memo Return Report (MVC: /mixreport/MixMemo-Return-report)
+export const MIX_MEMO_OUT_RTN_REPORT_DROPDOWNS = "/api/MixMemo-Return-report/mixmemoreturn-report-dropdowns";
+export const MIX_MEMO_OUT_RTN_REPORT_LIST = "/api/MixMemo-Return-report/mixmemoreturn-report-list";
 
 // Mix Sale Report (MVC: /mixreport/GeneralSale-Report)
 export const MIX_SALE_REPORT_DROPDOWNS = "/api/GeneralSale-Report/dropdowns";
 export const MIX_SALE_REPORT_LIST = "/api/GeneralSale-Report/generalsale-report-list";
 
+// Mix Sale Return Report (MVC: /mixreport/GeneralSale-Return-report)
+export const MIX_SALE_RTN_REPORT_DROPDOWNS = "/api/GeneralSale-Return-report/dropdowns";
+export const MIX_SALE_RTN_REPORT_LIST = "/api/GeneralSale-Return-report/Generalsale-rtnreport-list";
+
 // Mix Consignment Report (MVC: /mixreport/MixConsignment-report)
 export const MIX_CONSIGNMENT_REPORT_DROPDOWNS = "/api/MixConsignment-report/mixconsignment-report-dropdowns";
 export const MIX_CONSIGNMENT_REPORT_LIST = "/api/MixConsignment-report/mixconsignment-report-list";
 export const MIX_CONSIGNMENT_REPORT_SUMMARY = "/api/MixConsignment-report/mixconsignment-summary";
+
+// Mix Consignment Return Report (MVC: /mixreport/MixConsignment-Return-report)
+export const MIX_CONSIGNMENT_IN_RTN_REPORT_DROPDOWNS = "/api/MixConsignment-Return-report/MixConsignment-Return-report-dropdown";
+export const MIX_CONSIGNMENT_IN_RTN_REPORT_LIST = "/api/MixConsignment-Return-report/MixConsignment-report-Returnlist";

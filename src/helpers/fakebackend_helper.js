@@ -813,15 +813,31 @@ export const getParcelStockRegisterLots = (searchby) =>
 export const getMixPurchaseReportDropdowns = () => api.get(url.MIX_PURCHASE_REPORT_DROPDOWNS);
 export const getMixPurchaseReport = (filter) => api.create(url.MIX_PURCHASE_REPORT_LIST, filter);
 
+// Mix Purchase Return Report
+export const getMixPurRtnReportDropdowns = () => api.get(url.MIX_PUR_RTN_REPORT_DROPDOWNS);
+export const getMixPurRtnReport = (filter) => api.create(url.MIX_PUR_RTN_REPORT_LIST, filter);
+
 // Mix Memo Out Report
 export const getMixMemoOutReportDropdowns = () => api.get(url.MIX_MEMO_OUT_REPORT_DROPDOWNS);
 export const getMixMemoOutReport = (filter) => api.create(url.MIX_MEMO_OUT_REPORT_LIST, filter);
+
+// Mix Memo Return Report
+export const getMixMemoOutRtnReportDropdowns = () => api.get(url.MIX_MEMO_OUT_RTN_REPORT_DROPDOWNS);
+export const getMixMemoOutRtnReport = (filter) => api.create(url.MIX_MEMO_OUT_RTN_REPORT_LIST, filter);
 
 // Mix Sale Report
 export const getMixSaleReportDropdowns = () => api.get(url.MIX_SALE_REPORT_DROPDOWNS);
 export const getMixSaleReport = (filter) => api.create(url.MIX_SALE_REPORT_LIST, filter);
 
+// Mix Sale Return Report
+export const getMixSaleRtnReportDropdowns = () => api.get(url.MIX_SALE_RTN_REPORT_DROPDOWNS);
+export const getMixSaleRtnReport = (filter) => api.create(url.MIX_SALE_RTN_REPORT_LIST, filter);
+
 // Mix Consignment Report
 export const getMixConsignmentReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_REPORT_DROPDOWNS);
 export const getMixConsignmentReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_LIST, filter);
 export const getMixConsignmentSummaryReport = (filter) => api.create(url.MIX_CONSIGNMENT_REPORT_SUMMARY, filter);
+
+// Mix Consignment Return Report (MemoIn Return)
+export const getMixConsignmentInRtnReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_IN_RTN_REPORT_DROPDOWNS);
+export const getMixConsignmentInRtnReport = (filter) => api.create(url.MIX_CONSIGNMENT_IN_RTN_REPORT_LIST, filter);

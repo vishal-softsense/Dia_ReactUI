@@ -393,14 +393,26 @@ import ParcelStockRegisterReport from "../pages/Parcel/Parcel Reports/ParcelStoc
 // Mix Purchase Report
 import MixPurchaseReport from "../pages/Parcel/Parcel Reports/MixPurchaseReport";
 
+// Mix Purchase Return Report
+import MixPurRtnReport from "../pages/Parcel/Parcel Reports/MixPurRtn";
+
 // Mix Memo Out Report
 import MixMemoOutReport from "../pages/Parcel/Parcel Reports/MixMemoOutReport";
+
+// Mix Memo Return Report
+import MixMemoOutRtnReport from "../pages/Parcel/Parcel Reports/MixMemoOutRtnReport";
 
 // Mix Sale Report
 import MixSaleReport from "../pages/Parcel/Parcel Reports/MixSaleReport";
 
+// Mix Sale Return Report
+import MixSaleRtnReport from "../pages/Parcel/Parcel Reports/MixSaleRtnReport";
+
 // Mix Consignment Report
 import MixConsignmentReport from "../pages/Parcel/Parcel Reports/MixConsignmentReport";
+
+// Mix Consignment Return Report (MemoIn Return)
+import MixConsignmentInRtnReport from "../pages/Parcel/Parcel Reports/MixConsignmentInRtnReport";
 
 // Jewellery Stock Search Report
 import JewelleryStockSearchReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockSearchReport";
@@ -541,14 +553,26 @@ const authProtectedRoutes = [
   // Mix Purchase Report (MVC: /mixreport/MixPurchase-Report)
   { path: "/mixreport/MixPurchase-Report", component: <MixPurchaseReport /> },
 
+  // Mix Purchase Return Report (MVC: /mixreport/GeneralPur-Return-report)
+  { path: "/mixreport/GeneralPur-Return-report", component: <MixPurRtnReport /> },
+
   // Mix Memo Out Report (MVC: /mixreport/MixMemoout-Report)
   { path: "/mixreport/mixmemo-report", component: <MixMemoOutReport /> },
+
+  // Mix Memo Return Report (MVC: /mixreport/MixMemo-Return-report)
+  { path: "/mixreport/MixMemo-Return-report", component: <MixMemoOutRtnReport /> },
 
   // Mix Sale Report (MVC: /mixreport/GeneralSale-Report)
   { path: "/mixreport/GeneralSale-Report", component: <MixSaleReport /> },
 
+  // Mix Sale Return Report (MVC: /mixreport/GeneralSale-Return-report)
+  { path: "/mixreport/GeneralSale-Return-report", component: <MixSaleRtnReport /> },
+
   // Mix Consignment Report (MVC: /mixreport/MixConsignment-report)
   { path: "/mixreport/MixConsignment-report", component: <MixConsignmentReport /> },
+
+  // Mix Consignment Return Report (MVC: /mixreport/MixConsignment-Return-report)
+  { path: "/mixreport/MixConsignment-Return-report", component: <MixConsignmentInRtnReport /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
