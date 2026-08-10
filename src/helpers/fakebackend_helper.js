@@ -866,3 +866,16 @@ export const getStockAnalyzeConfig = () => api.get(url.GET_STOCK_ANALYZE_CONFIG)
 // Mix Consignment Return Report (MemoIn Return)
 export const getMixConsignmentInRtnReportDropdowns = () => api.get(url.MIX_CONSIGNMENT_IN_RTN_REPORT_DROPDOWNS);
 export const getMixConsignmentInRtnReport = (filter) => api.create(url.MIX_CONSIGNMENT_IN_RTN_REPORT_LIST, filter);
+// Ledger Report (MVC: /Account/LedgerRpt)
+export const getLedgerReportDropdowns = () => api.get(url.LEDGER_REPORT_DROPDOWNS);
+export const getLedgerReportLists = (filter) => api.create(url.LEDGER_REPORT_LISTS, filter);
+export const getLedgerReportList1 = (filter) => api.create(url.LEDGER_REPORT_LIST1, filter);
+export const getLedgerReportPrintJS = (filter) => api.create(url.LEDGER_REPORT_PRINT_JS, filter);
+
+// Month Expense Report (MVC: /report/month-expense-report)
+export const getMonthExpenseReportPermission = () => api.get(url.MONTH_EXPENSE_REPORT_PERMISSION);
+export const getMonthExpenseReport = () => api.create(url.MONTH_EXPENSE_REPORT_DATA, {});
+
+// Cash Flow Report (MVC: /report/cash-flow-report)
+export const getCashFlowReportPermission = () => api.get(url.CASH_FLOW_REPORT_PERMISSION);
+export const getCashFlowReport = () => api.create(url.CASH_FLOW_REPORT_DATA, {});

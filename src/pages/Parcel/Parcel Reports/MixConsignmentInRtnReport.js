@@ -15,9 +15,17 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
-const dashText = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
+/** MVC safe(): empty → blank; numbers → fixed decimals */
+const safeText = (value) => {
+    if (value === null || value === undefined || value === "" || value === "None") return "";
     return String(value);
+};
+
+const safeFixed = (value, decimals) => {
+    if (value === null || value === undefined || value === "" || value === "None") return "";
+    const num = Number(value);
+    if (Number.isNaN(num)) return "";
+    return num.toFixed(decimals);
 };
 
 const fmtFixed = (value, decimals) => {
@@ -75,17 +83,22 @@ const parseReportDateParts = (value) => {
         return { day: Number(isoMatch[3]), month: Number(isoMatch[2]), year: Number(isoMatch[1]) };
     }
 
+    const parsed = new Date(text);
+    if (!Number.isNaN(parsed.getTime())) {
+        return { day: parsed.getDate(), month: parsed.getMonth() + 1, year: parsed.getFullYear() };
+    }
+
     return null;
 };
 
-/** Display like MVC example: 19-Nov-2025 (filter by jan, feb, mar...) */
+/** Display like dd-Mmm-yyyy, e.g. 19-Nov-2025 */
 const formatReportDisplayDate = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
+    if (value === null || value === undefined || value === "") return "";
 
     const parts = parseReportDateParts(value);
     if (!parts) {
         const text = String(value).trim();
-        return text || "-";
+        return text || "";
     }
 
     const d = String(parts.day).padStart(2, "0");
@@ -361,16 +374,24 @@ const MixConsignmentInRtnReport = () => {
             const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
             const totalPrice = rows.reduce((s, r) => s + Number(getRowVal(r, "Price", "price") || 0), 0);
 
+            // Parent row matches MVC MixConsignment-Return-report FillDataTable
             out.push({
                 ...first,
                 isParent: true,
+                MemoNo: memoNo,
+                BillNo: getRowVal(first, "BillNo", "billNo"),
+                TrnDate: getRowDateRaw(first),
+                Party: getRowVal(first, "Party", "party", "AccGrpName", "accGrpName"),
                 Lotno: "",
                 ItemName: "Total",
-                MemoNo: memoNo,
                 Return: totalReturn,
+                carats: totalReturn,
                 Price: totalPrice,
+                rate: totalPrice,
                 Amount: totalAmount,
+                amount: totalAmount,
                 Broker: "",
+                invtype: "",
                 Invtype: "",
                 StockType: "",
                 childRecords: rows
@@ -421,7 +442,7 @@ const MixConsignmentInRtnReport = () => {
                                         ...cell.getContext(),
                                         row: { ...row, original: { ...child, isParent: false } }
                                     })
-                                    : dashText(child[column.columnDef.accessorKey])}
+                                    : safeText(child[column.columnDef.accessorKey])}
                             </td>
                         );
                     })}
@@ -472,34 +493,35 @@ const MixConsignmentInRtnReport = () => {
                     const display = String(row.getValue(columnId) ?? "").toLowerCase();
                     return display.includes(search);
                 },
-                cell: ({ getValue }) => dashText(getValue()),
+                cell: ({ getValue }) => safeText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
-            },            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+            },
+            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
             {
                 header: t("Party"),
                 accessorKey: "Party",
-                cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party", "AccGrpName", "accGrpName"))
+                cell: ({ row }) => safeText(getRowVal(row.original, "Party", "party", "AccGrpName", "accGrpName"))
             },
             {
                 header: t("LotNo"),
                 accessorKey: "Lotno",
-                cell: ({ row }) => (row.original?.isParent ? "" : dashText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
+                cell: ({ row }) => (row.original?.isParent ? "" : safeText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
             },
             {
                 header: t("ItemName"),
                 accessorKey: "ItemName",
                 cell: ({ row }) => {
                     const r = row.original;
-                    if (r?.isParent) return <strong>{t("Total")}</strong>;
-                    return dashText(getRowVal(r, "ItemName", "itemName"));
+                    if (r?.isParent) return <strong>Total</strong>;
+                    return safeText(getRowVal(r, "ItemName", "itemName"));
                 }
             },
             {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Return", "return"), 3),
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
                     return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
@@ -509,13 +531,13 @@ const MixConsignmentInRtnReport = () => {
                 header: t("Price"),
                 accessorKey: "Price",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Price", "price"), 2)
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Price", "price"), 2)
             },
             {
                 header: t("Amount"),
                 accessorKey: "Amount",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Amount", "amount"), 2),
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Amount", "amount"), 2),
                 footer: ({ table }) => {
                     const { totalAmount } = getTableTotals(table);
                     return <span className="fw-bold text-end d-block">{fmtFixed(totalAmount, 2)}</span>;
@@ -524,21 +546,21 @@ const MixConsignmentInRtnReport = () => {
             {
                 header: t("Broker"),
                 accessorKey: "Broker",
-                cell: ({ row }) => (row.original?.isParent ? "" : dashText(getRowVal(row.original, "Broker", "broker")))
+                cell: ({ row }) => (row.original?.isParent ? "" : safeText(getRowVal(row.original, "Broker", "broker")))
             },
             {
                 header: t("invtype"),
-                accessorKey: "Invtype",
+                accessorKey: "invtype",
                 cell: ({ row }) =>
                     row.original?.isParent
                         ? ""
-                        : dashText(getRowVal(row.original, "Invtype", "invtype", "InvType", "invType"))
+                        : safeText(getRowVal(row.original, "invtype", "Invtype", "InvType", "invType"))
             },
             {
                 header: t("StockType"),
                 accessorKey: "StockType",
                 cell: ({ row }) =>
-                    row.original?.isParent ? "" : dashText(getRowVal(row.original, "StockType", "stockType"))
+                    row.original?.isParent ? "" : safeText(getRowVal(row.original, "StockType", "stockType"))
             }
         ],
         [expandedMemoNos, t]
@@ -566,18 +588,18 @@ const MixConsignmentInRtnReport = () => {
         ];
 
         const rows = reportRows.map((r) => [
-            dashText(formatReportDisplayDate(getRowVal(r, "TrnDate", "trnDate", "ConDATE", "conDATE"))),
-            dashText(getRowVal(r, "MemoNo", "memoNo")),
-            dashText(getRowVal(r, "BillNo", "billNo")),
-            dashText(getRowVal(r, "Party", "party", "AccGrpName", "accGrpName")),
-            dashText(getRowVal(r, "Lotno", "lotno", "LotNo")),
-            dashText(getRowVal(r, "ItemName", "itemName")),
-            fmtFixed(getRowVal(r, "Return", "return"), 3),
-            fmtFixed(getRowVal(r, "Price", "price"), 2),
-            fmtFixed(getRowVal(r, "Amount", "amount"), 2),
-            dashText(getRowVal(r, "Broker", "broker")),
-            dashText(getRowVal(r, "Invtype", "invtype")),
-            dashText(getRowVal(r, "StockType", "stockType"))
+            safeText(formatReportDisplayDate(getRowDateRaw(r))),
+            safeText(getRowVal(r, "MemoNo", "memoNo")),
+            safeText(getRowVal(r, "BillNo", "billNo")),
+            safeText(getRowVal(r, "Party", "party", "AccGrpName", "accGrpName")),
+            safeText(getRowVal(r, "Lotno", "lotno", "LotNo")),
+            safeText(getRowVal(r, "ItemName", "itemName")),
+            safeFixed(getRowVal(r, "Return", "return"), 3),
+            safeFixed(getRowVal(r, "Price", "price"), 2),
+            safeFixed(getRowVal(r, "Amount", "amount"), 2),
+            safeText(getRowVal(r, "Broker", "broker")),
+            safeText(getRowVal(r, "invtype", "Invtype", "InvType", "invType")),
+            safeText(getRowVal(r, "StockType", "stockType"))
         ]);
 
         const totalReturn = reportRows.reduce((s, r) => s + Number(getRowVal(r, "Return", "return") || 0), 0);
@@ -602,7 +624,7 @@ const MixConsignmentInRtnReport = () => {
         if (!res?.success) toast.error(t("Excel export failed."));
     };
 
-    document.title = `${t("Mix MemoIn Return Report")} | ${t("Reports")}`;
+    document.title = `${t("General MemoIn Return Report")} | ${t("Reports")}`;
 
     return (
         <React.Fragment>
@@ -610,12 +632,12 @@ const MixConsignmentInRtnReport = () => {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Mix MemoIn Return Report")} pageTitle={t("Parcel Reports")} />
+                    <BreadCrumb title={t("General MemoIn Return Report")} pageTitle={t("Parcel Reports")} />
 
                     <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
                         <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
                             <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"} />
-                            {hasSearched ? t("Mix MemoIn Return Report Results") : t("Mix MemoIn Return Report Filters")}
+                            {hasSearched ? t("General MemoIn Return Report Results") : t("General MemoIn Return Report Filters")}
                         </h5>
 
                         <div className="d-flex gap-2">

@@ -716,3 +716,16 @@ export const MIX_CONSIGNMENT_REPORT_SUMMARY = "/api/MixConsignment-report/mixcon
 // Mix Consignment Return Report (MVC: /mixreport/MixConsignment-Return-report)
 export const MIX_CONSIGNMENT_IN_RTN_REPORT_DROPDOWNS = "/api/MixConsignment-Return-report/MixConsignment-Return-report-dropdown";
 export const MIX_CONSIGNMENT_IN_RTN_REPORT_LIST = "/api/MixConsignment-Return-report/MixConsignment-report-Returnlist";
+// Ledger Report (MVC: /Account/LedgerRpt)
+export const LEDGER_REPORT_DROPDOWNS = "/api/LedgerReport/LedgerRpt";
+export const LEDGER_REPORT_LISTS = "/api/LedgerReport/GetLedgerReportLists";
+export const LEDGER_REPORT_LIST1 = "/api/LedgerReport/GetLedgerReporList1";
+export const LEDGER_REPORT_PRINT_JS = "/api/LedgerReport/LedgerReportPrintJS";
+
+// Month Expense Report (MVC: /report/month-expense-report)
+export const MONTH_EXPENSE_REPORT_PERMISSION = "/api/MonthExpenseReport/month-expense-report";
+export const MONTH_EXPENSE_REPORT_DATA = "/api/MonthExpenseReport/month-expense-report";
+
+// Cash Flow Report (MVC: /report/cash-flow-report)
+export const CASH_FLOW_REPORT_PERMISSION = "/api/CashFlowReport/cash-flow-report";
+export const CASH_FLOW_REPORT_DATA = "/api/CashFlowReport/cash-flow-report";

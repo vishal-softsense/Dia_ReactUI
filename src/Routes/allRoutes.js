@@ -426,6 +426,15 @@ import MixConsignmentInRtnReport from "../pages/Parcel/Parcel Reports/MixConsign
 // Jewellery Stock Search Report
 import JewelleryStockSearchReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockSearchReport";
 
+// Ledger Report (MVC: /Account/LedgerRpt)
+import LedgerReport from "../pages/Reports/Financial Reports/LedgerReport";
+
+// Month Expense Report (MVC: /report/month-expense-report)
+import MonthExpenseReport from "../pages/Reports/Financial Reports/MonthExpenseReport";
+
+// Cash Flow Report (MVC: /report/cash-flow-report)
+import CashFlowReport from "../pages/Reports/Financial Reports/CashFlowReport";
+
 
 
 const authProtectedRoutes = [
@@ -563,6 +572,15 @@ const authProtectedRoutes = [
 
   // Jewellery Stock Search Report (MVC: /report/jew-stock-report)
   { path: "/report/jew-stock-report", component: <JewelleryStockSearchReport /> },
+
+  // Ledger Report (MVC: /Account/LedgerRpt)
+  { path: "/Account/LedgerRpt", component: <LedgerReport /> },
+
+  // Month Expense Report (MVC: /report/month-expense-report)
+  { path: "/report/month-expense-report", component: <MonthExpenseReport /> },
+
+  // Cash Flow Report (MVC: /report/cash-flow-report)
+  { path: "/report/cash-flow-report", component: <CashFlowReport /> },
 
 // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },

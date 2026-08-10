@@ -15,9 +15,17 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
-const dashText = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
+/** MVC safe(): empty → blank; numbers → fixed decimals */
+const safeText = (value) => {
+    if (value === null || value === undefined || value === "" || value === "None") return "";
     return String(value);
+};
+
+const safeFixed = (value, decimals) => {
+    if (value === null || value === undefined || value === "" || value === "None") return "";
+    const num = Number(value);
+    if (Number.isNaN(num)) return "";
+    return num.toFixed(decimals);
 };
 
 const fmtFixed = (value, decimals) => {
@@ -87,12 +95,12 @@ const parseReportDateParts = (value) => {
 
 /** Display like dd-Mmm-yyyy, e.g. 19-Nov-2025 */
 const formatReportDisplayDate = (value) => {
-    if (value === null || value === undefined || value === "") return "-";
+    if (value === null || value === undefined || value === "") return "";
 
     const parts = parseReportDateParts(value);
     if (!parts) {
         const text = String(value).trim();
-        return text || "-";
+        return text || "";
     }
 
     const d = String(parts.day).padStart(2, "0");
@@ -116,7 +124,7 @@ const parseRowDateForCompare = (value) => {
     return new Date(parts.year, parts.month - 1, parts.day);
 };
 
-const getRowDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate", "ConDATE", "conDATE", "Date", "date");
+const getRowDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate");
 
 const MixMemoOutRtnReport = () => {
     const { t } = useTranslation();
@@ -391,22 +399,29 @@ const MixMemoOutRtnReport = () => {
 
             const totalReturn = rows.reduce((s, r) => s + Number(getRowVal(r, "Return", "return") || 0), 0);
             const totalAmount = rows.reduce((s, r) => s + Number(getRowVal(r, "Amount", "amount") || 0), 0);
-            const totalPrice = totalReturn > 0 ? totalAmount / totalReturn : 0;
+            // MVC sums Price on parent row (footer shows weighted avg separately)
+            const totalPrice = rows.reduce((s, r) => s + Number(getRowVal(r, "Price", "price") || 0), 0);
 
+            // Parent row fields match MVC MixMemoReturnreport FillDataTable
             out.push({
-                ...first,
                 isParent: true,
+                MemoNo: memoNo,
+                BillNo: getRowVal(first, "BillNo", "billNo"),
+                TrnDate: getRowDateRaw(first),
+                AccGrpName: getRowVal(first, "AccGrpName", "accGrpName", "Party", "party"),
                 Lotno: "",
                 ItemName: "Total",
-                MemoNo: memoNo,
                 Return: totalReturn,
                 Price: totalPrice,
                 Amount: totalAmount,
+                Broker: getRowVal(first, "Broker", "broker"),
+                invtype: getRowVal(first, "invtype", "Invtype", "InvType", "invType"),
+                StockType: getRowVal(first, "StockType", "stockType"),
                 childRecords: rows
             });
         });
 
-        // Order chronologically by date (then by memo no.).
+        // Order chronologically by TrnDate (then by memo no.) — matches MVC date sort
         out.sort((a, b) => {
             const ak = getReportDateSortKey(getRowDateRaw(a));
             const bk = getReportDateSortKey(getRowDateRaw(b));
@@ -450,7 +465,7 @@ const MixMemoOutRtnReport = () => {
                                         ...cell.getContext(),
                                         row: { ...row, original: { ...child, isParent: false } }
                                     })
-                                    : dashText(child[column.columnDef.accessorKey])}
+                                    : safeText(child[column.columnDef.accessorKey])}
                             </td>
                         );
                     })}
@@ -501,35 +516,35 @@ const MixMemoOutRtnReport = () => {
                     const display = String(row.getValue(columnId) ?? "").toLowerCase();
                     return display.includes(search);
                 },
-                cell: ({ getValue }) => dashText(getValue()),
+                cell: ({ getValue }) => safeText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
             {
                 header: t("Party"),
                 accessorKey: "AccGrpName",
-                cell: ({ row }) => dashText(getRowVal(row.original, "AccGrpName", "accGrpName", "Party", "party"))
+                cell: ({ row }) => safeText(getRowVal(row.original, "AccGrpName", "accGrpName", "Party", "party"))
             },
             {
                 header: t("LotNo"),
                 accessorKey: "Lotno",
-                cell: ({ row }) => (row.original?.isParent ? "" : dashText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
+                cell: ({ row }) => (row.original?.isParent ? "" : safeText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
             },
             {
                 header: t("ItemName"),
                 accessorKey: "ItemName",
                 cell: ({ row }) => {
                     const r = row.original;
-                    if (r?.isParent) return <strong>{t("Total")}</strong>;
-                    return dashText(getRowVal(r, "ItemName", "itemName"));
+                    if (r?.isParent) return <strong>Total</strong>;
+                    return safeText(getRowVal(r, "ItemName", "itemName"));
                 }
             },
             {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Return", "return"), 3),
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
                     return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
@@ -539,7 +554,7 @@ const MixMemoOutRtnReport = () => {
                 header: t("Price"),
                 accessorKey: "Price",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Price", "price"), 2),
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Price", "price"), 2),
                 footer: ({ table }) => {
                     const { totalReturn, totalAmount } = getTableTotals(table);
                     const price = totalReturn > 0 ? totalAmount / totalReturn : 0;
@@ -550,22 +565,22 @@ const MixMemoOutRtnReport = () => {
                 header: t("Amount"),
                 accessorKey: "Amount",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Amount", "amount"), 2),
+                cell: ({ row }) => safeFixed(getRowVal(row.original, "Amount", "amount"), 2),
                 footer: ({ table }) => {
                     const { totalAmount } = getTableTotals(table);
                     return <span className="fw-bold text-end d-block">{fmtFixed(totalAmount, 2)}</span>;
                 }
             },
-            { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
+            { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => safeText(getRowVal(row.original, "Broker", "broker")) },
             {
                 header: t("invtype"),
-                accessorKey: "Invtype",
-                cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype", "InvType", "invType"))
+                accessorKey: "invtype",
+                cell: ({ row }) => safeText(getRowVal(row.original, "invtype", "Invtype", "InvType", "invType"))
             },
             {
                 header: t("StockType"),
                 accessorKey: "StockType",
-                cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType"))
+                cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType"))
             }
         ],
         [expandedMemoNos, t]
@@ -593,18 +608,18 @@ const MixMemoOutRtnReport = () => {
         ];
 
         const rows = filteredReportRows.map((r) => [
-            dashText(formatReportDisplayDate(getRowDateRaw(r))),
-            dashText(getRowVal(r, "MemoNo", "memoNo")),
-            dashText(getRowVal(r, "BillNo", "billNo")),
-            dashText(getRowVal(r, "AccGrpName", "accGrpName", "Party", "party")),
-            dashText(getRowVal(r, "Lotno", "lotno")),
-            dashText(getRowVal(r, "ItemName", "itemName")),
-            fmtFixed(getRowVal(r, "Return", "return"), 3),
-            fmtFixed(getRowVal(r, "Price", "price"), 2),
-            fmtFixed(getRowVal(r, "Amount", "amount"), 2),
-            dashText(getRowVal(r, "Broker", "broker")),
-            dashText(getRowVal(r, "Invtype", "invtype")),
-            dashText(getRowVal(r, "StockType", "stockType"))
+            safeText(formatReportDisplayDate(getRowDateRaw(r))),
+            safeText(getRowVal(r, "MemoNo", "memoNo")),
+            safeText(getRowVal(r, "BillNo", "billNo")),
+            safeText(getRowVal(r, "AccGrpName", "accGrpName", "Party", "party")),
+            safeText(getRowVal(r, "Lotno", "lotno")),
+            safeText(getRowVal(r, "ItemName", "itemName")),
+            safeFixed(getRowVal(r, "Return", "return"), 3),
+            safeFixed(getRowVal(r, "Price", "price"), 2),
+            safeFixed(getRowVal(r, "Amount", "amount"), 2),
+            safeText(getRowVal(r, "Broker", "broker")),
+            safeText(getRowVal(r, "invtype", "Invtype", "InvType", "invType")),
+            safeText(getRowVal(r, "StockType", "stockType"))
         ]);
 
         const totalReturn = filteredReportRows.reduce((s, r) => s + Number(getRowVal(r, "Return", "return") || 0), 0);
@@ -630,7 +645,7 @@ const MixMemoOutRtnReport = () => {
         if (!res?.success) toast.error(t("Excel export failed."));
     };
 
-    document.title = `${t("Mix Memo Return Report")} | ${t("Reports")}`;
+    document.title = `${t("General Memo Return Report")} | ${t("Reports")}`;
 
     return (
         <React.Fragment>
@@ -638,12 +653,12 @@ const MixMemoOutRtnReport = () => {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Mix Memo Return Report")} pageTitle={t("Parcel Reports")} />
+                    <BreadCrumb title={t("General Memo Return Report")} pageTitle={t("Parcel Reports")} />
 
                     <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
                         <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
                             <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"} />
-                            {hasSearched ? t("Mix Memo Return Report Results") : t("Mix Memo Return Report Filters")}
+                            {hasSearched ? t("General Memo Return Report Results") : t("General Memo Return Report Filters")}
                         </h5>
 
                         <div className="d-flex gap-2">

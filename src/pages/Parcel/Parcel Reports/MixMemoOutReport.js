@@ -91,7 +91,34 @@ const getRowVal = (row, ...keys) => {
     return "";
 };
 
-const getRowDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date");
+const getRowTrnDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate");
+const getRowDueDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "DueDate", "dueDate");
+
+const sortGroupedByDate = (rows, getRawDate, getSecondaryKey) => {
+    rows.sort((a, b) => {
+        const ak = getReportDateSortKey(getRawDate(a));
+        const bk = getReportDateSortKey(getRawDate(b));
+        if (ak !== bk) return ak < bk ? -1 : 1;
+        return String(getSecondaryKey(a) ?? "").localeCompare(String(getSecondaryKey(b) ?? ""), undefined, { numeric: true });
+    });
+    return rows;
+};
+
+const dateColumnProps = (id, getRawDate) => ({
+    id,
+    accessorFn: (row) => formatReportDisplayDate(getRawDate(row)),
+    sortingFn: (rowA, rowB) => {
+        const a = getReportDateSortKey(getRawDate(rowA.original));
+        const b = getReportDateSortKey(getRawDate(rowB.original));
+        return a < b ? -1 : a > b ? 1 : 0;
+    },
+    filterFn: (row, columnId, filterValue) => {
+        const search = String(filterValue ?? "").trim().toLowerCase();
+        if (!search) return true;
+        const display = String(row.getValue(columnId) ?? "").toLowerCase();
+        return display.includes(search);
+    }
+});
 
 const MixMemoOutReport = () => {
     const { t } = useTranslation();
@@ -453,16 +480,25 @@ const MixMemoOutReport = () => {
             const totalBalance = rows.reduce((s, r) => s + Number(getRowVal(r, "Balance", "balance") || 0), 0);
             const totalBalanceAmt = rows.reduce((s, r) => s + Number(getRowVal(r, "BalanceAmt", "balanceAmt") || 0), 0);
 
-            const totalPrice = totalCarats > 0 ? totalAmount / totalCarats : 0;
-
             out.push({
-                ...first,
                 isParent: true,
-                Code: "",
-                ConDATE: getRowDateRaw(first),
                 MemoNo: memoNo,
+                Party: getRowVal(first, "Party", "party"),
+                TrnDate: getRowTrnDateRaw(first),
+                ConDATE: getRowDueDateRaw(first),
+                DueDays: getRowVal(first, "DueDays", "dueDays"),
+                BillNo: getRowVal(first, "BillNo", "billNo"),
+                Seller: getRowVal(first, "Seller", "seller"),
+                Broker: getRowVal(first, "Broker", "broker"),
+                Invtype: getRowVal(first, "Invtype", "invtype"),
+                SubType: getRowVal(first, "SubType", "subType"),
+                Category: getRowVal(first, "Category", "category"),
+                IssUser: getRowVal(first, "IssUser", "issUser"),
+                StockType: getRowVal(first, "StockType", "stockType"),
+                Lotno: "",
+                ItemName: "Total",
                 Carats: totalCarats,
-                Price: totalPrice,
+                Price: "",
                 Amount: totalAmount,
                 Estimate: totalEstimate,
                 Return: totalReturn,
@@ -472,14 +508,7 @@ const MixMemoOutReport = () => {
             });
         });
 
-        out.sort((a, b) => {
-            const ak = getReportDateSortKey(getRowDateRaw(a));
-            const bk = getReportDateSortKey(getRowDateRaw(b));
-            if (ak !== bk) return ak < bk ? -1 : 1;
-            return String(a.MemoNo ?? "").localeCompare(String(b.MemoNo ?? ""), undefined, { numeric: true });
-        });
-
-        return out;
+        return sortGroupedByDate(out, getRowTrnDateRaw, (row) => row.MemoNo);
     }, [reportRows]);
 
     const getTableTotals = (table) => {
@@ -585,37 +614,37 @@ const MixMemoOutReport = () => {
                             </a>
                         </div>
                     );
-                }
-            },
-            {
-                header: t("DATE"),
-                id: "ConDATE",
-                accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
-                sortingFn: (rowA, rowB) => {
-                    const a = getReportDateSortKey(getRowDateRaw(rowA.original));
-                    const b = getReportDateSortKey(getRowDateRaw(rowB.original));
-                    return a < b ? -1 : a > b ? 1 : 0;
                 },
-                filterFn: (row, columnId, filterValue) => {
-                    const search = String(filterValue ?? "").trim().toLowerCase();
-                    if (!search) return true;
-                    const display = String(row.getValue(columnId) ?? "").toLowerCase();
-                    return display.includes(search);
-                },
-                cell: ({ getValue }) => dashText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
             {
-                header: t("DueDays"),
+                header: t("DATE"),
+                ...dateColumnProps("TrnDate", getRowTrnDateRaw),
+                cell: ({ getValue }) => dashText(getValue())
+            },
+            {
+                header: t("DueDate"),
+                ...dateColumnProps("ConDATE", getRowDueDateRaw),
+                cell: ({ getValue }) => dashText(getValue())
+            },
+            {
+                header: t("OverDue"),
                 accessorKey: "DueDays",
-                className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "DueDays", "dueDays"), 0)
+                cell: ({ row }) => dashText(getRowVal(row.original, "DueDays", "dueDays"))
             },
             { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
             { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
             { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno", "Lotno")) },
-            { header: t("ItemName"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")) },
+            {
+                header: t("ItemName"),
+                accessorKey: "ItemName",
+                cell: ({ row }) => {
+                    const val = getRowVal(row.original, "ItemName", "itemName");
+                    if (row.original?.isParent) return <strong>{val}</strong>;
+                    return dashText(val);
+                }
+            },
             {
                 header: t("Carats"),
                 accessorKey: "Carats",
@@ -630,7 +659,10 @@ const MixMemoOutReport = () => {
                 header: t("Price"),
                 accessorKey: "Price",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Price", "price"), 2),
+                cell: ({ row }) => {
+                    if (row.original?.isParent) return "";
+                    return fmtFixed(getRowVal(row.original, "Price", "price"), 2);
+                },
                 footer: ({ table }) => {
                     const { totalCarats, totalAmount } = getTableTotals(table);
                     const price = totalCarats > 0 ? totalAmount / totalCarats : 0;
@@ -651,11 +683,7 @@ const MixMemoOutReport = () => {
                 header: t("Sold"),
                 accessorKey: "Estimate",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Estimate", "estimate"), 2),
-                footer: ({ table }) => {
-                    const { totalEstimate } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalEstimate, 2)}</span>;
-                }
+                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Estimate", "estimate"), 2)
             },
             {
                 header: t("Return"),
@@ -705,8 +733,9 @@ const MixMemoOutReport = () => {
         }
 
         const headers = [
-            "Date",
-            "DueDays",
+            "DATE",
+            "DueDate",
+            "OverDue",
             "MemoNo",
             "BillNo",
             "Party",
@@ -729,8 +758,9 @@ const MixMemoOutReport = () => {
         ];
 
         const rows = reportRows.map((r) => [
-            dashText(formatReportDisplayDate(getRowDateRaw(r))),
-            fmtFixed(getRowVal(r, "DueDays", "dueDays"), 0),
+            dashText(formatReportDisplayDate(getRowTrnDateRaw(r))),
+            dashText(formatReportDisplayDate(getRowDueDateRaw(r))),
+            dashText(getRowVal(r, "DueDays", "dueDays")),
             dashText(getRowVal(r, "MemoNo", "memoNo")),
             dashText(getRowVal(r, "BillNo", "billNo")),
             dashText(getRowVal(r, "Party", "party")),
@@ -784,11 +814,11 @@ const MixMemoOutReport = () => {
             ""
         ]);
 
-        const res = await exportToExcel(headers, rows, "MixMemoOutReport", "MixMemoOutReport");
+        const res = await exportToExcel(headers, rows, "MixMemo-Report", "MixMemo-Report");
         if (!res?.success) toast.error(t("Excel export failed."));
     };
 
-    document.title = `${t("Mix Memo Out Report")} | ${t("Reports")}`;
+    document.title = `${t("Mix Memo Report")} | ${t("Reports")}`;
 
     return (
         <React.Fragment>
@@ -796,12 +826,12 @@ const MixMemoOutReport = () => {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Mix Memo Out Report")} pageTitle={t("Parcel Reports")} />
+                    <BreadCrumb title={t("Mix Memo Report")} pageTitle={t("Parcel Reports")} />
 
                     <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
                         <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
                             <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"} />
-                            {hasSearched ? t("Mix Memo Out Report Results") : t("Mix Memo Out Report Filters")}
+                            {hasSearched ? t("Mix Memo Report Results") : t("Mix Memo Report Filters")}
                         </h5>
 
                         <div className="d-flex gap-2">
@@ -911,21 +941,6 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
-                                                <FormGroup className="mb-0">
-                                                    <div className="d-flex align-items-center gap-1" style={{ height: "35px" }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            id="clearMixMemoCheckbox"
-                                                            checked={filters.clear}
-                                                            onChange={(e) => setFilters((p) => ({ ...p, clear: e.target.checked }))}
-                                                        />
-                                                        <Label htmlFor="clearMixMemoCheckbox" className="mb-0 small">
-                                                            {t("Show Clear Mix Memo")}
-                                                        </Label>
-                                                    </div>
-                                                </FormGroup>
-                                            </Col>
                                         </Row>
 
                                         <Row className="g-2">
@@ -1007,6 +1022,21 @@ const MixMemoOutReport = () => {
                                                         placeholder={t("Search Broker")}
                                                         isLoading={loadingBrokers}
                                                     />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col sm={2}>
+                                                <FormGroup className="mb-0">
+                                                    <div className="d-flex align-items-center gap-1" style={{ height: "35px" }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            id="clearMixMemoCheckbox"
+                                                            checked={filters.clear}
+                                                            onChange={(e) => setFilters((p) => ({ ...p, clear: e.target.checked }))}
+                                                        />
+                                                        <Label htmlFor="clearMixMemoCheckbox" className="mb-0 small">
+                                                            {t("Show Clear Mix Memo")}
+                                                        </Label>
+                                                    </div>
                                                 </FormGroup>
                                             </Col>
                                         </Row>
