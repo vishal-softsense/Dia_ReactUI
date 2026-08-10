@@ -102,8 +102,8 @@ const getStockTableTotals = (table) => {
   let totalCarats = 0;
   let totalAmount = 0;
   let totalCostAmount = 0;
-  let totalMRPAmt = 0; // rapa * carats
-  let totalMrpAmountColumn = 0; // sum of mrpAmount
+  let totalMRPAmt = 0;
+  let totalMrpAmountColumn = 0;
 
   rows.forEach((r) => {
     const carats = Number(getRowVal(r, "carats", "Carats") || 0);
@@ -202,7 +202,6 @@ const allColumns = [
   { label: "HoldPartyName", key: "holdPartyName" }
 ];
 
-// Custom Components for react-select Lot No Checkbox Dropdown
 const CustomOption = (props) => {
   return (
     <components.Option {...props}>
@@ -228,7 +227,6 @@ const CustomMenuList = (props) => {
 
   return (
     <components.MenuList {...props}>
-      {/* Select All Checkbox */}
       <div
         className="px-3 py-2 border-bottom d-flex align-items-center gap-2 select-all-row"
         style={{
@@ -253,7 +251,6 @@ const CustomMenuList = (props) => {
         </span>
       </div>
 
-      {/* Render the actual options */}
       {props.children}
     </components.MenuList>
   );
@@ -286,32 +283,26 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitairesStockSearchReport = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("1"); // Filter Tabs
-  // Filter lists fetched from API
+  const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
 
-  // Show Lot No dropdown states
   const [lotOptions, setLotOptions] = useState([]);
   const [loadingLots, setLoadingLots] = useState(false);
 
-  // Search Results & Pivot Data
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
 
 
-  // Selected Rows state
   const [selectedRows, setSelectedRows] = useState({});
 
-  // Stock ID Detail Modal
   const [detailModal, setDetailModal] = useState(false);
   const [selectedRowDetail, setSelectedRowDetail] = useState(null);
   const [detailMediaTab, setDetailMediaTab] = useState("image");
   const [historyModal, setHistoryModal] = useState(false);
 
-  // More Modal & Location Modal states
   const [moreModal, setMoreModal] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
   const [boxNameUpdate, setBoxNameUpdate] = useState("");
@@ -320,7 +311,6 @@ const SolitairesStockSearchReport = () => {
   const [locationState, setLocationState] = useState("");
   const [locationCountry, setLocationCountry] = useState("");
 
-  // Email Modal states
   const [emailModal, setEmailModal] = useState(false);
   const [emailFrom, setEmailFrom] = useState("");
   const [emailTo, setEmailTo] = useState("");
@@ -330,11 +320,9 @@ const SolitairesStockSearchReport = () => {
   const [emailBody, setEmailBody] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
-  // Print format dropdown state
   const [printFormat, setPrintFormat] = useState("DirectPrint");
   const [printDropdownOpen, setPrintDropdownOpen] = useState(false);
 
-  // Dynamic status list
   const statusOptions = [
     { value: "M", label: t("On Memo") },
     { value: "L", label: t("On Hand") },
@@ -347,7 +335,6 @@ const SolitairesStockSearchReport = () => {
     { value: "MI", label: t("Memo Invoice") }
   ];
 
-  // Filters state
   const initialFilters = {
     date: formatLocalDate(new Date()),
     filterSize: "Sort On Shape-Size-Color-Clarity-LotNo",
@@ -425,7 +412,6 @@ const SolitairesStockSearchReport = () => {
 
   const [filters, setFilters] = useState(initialFilters);
 
-  // Fetch lot list from API
   const fetchLotsList = useCallback(async (search = "") => {
     setLoadingLots(true);
     try {
@@ -446,12 +432,10 @@ const SolitairesStockSearchReport = () => {
     return debounce(fetchLotsList, 300);
   }, [fetchLotsList]);
 
-  // Fetch initial lots on mount
   useEffect(() => {
     fetchLotsList("");
   }, [fetchLotsList]);
 
-  // Sync selected values
   const selectedLotValues = useMemo(() => {
     return filters.lotNo
       ? filters.lotNo.split("\n").map(v => v.trim()).filter(Boolean)
@@ -467,7 +451,6 @@ const SolitairesStockSearchReport = () => {
 
   const handleSelectAllLots = () => {
     if (isAllSelected) {
-      // Deselect all options that are in the current list
       const currentOptionValues = lotOptions.map(o => o.value);
       const remainingValues = selectedLotValues.filter(val => !currentOptionValues.includes(val));
       setFilters((prev) => ({
@@ -475,7 +458,6 @@ const SolitairesStockSearchReport = () => {
         lotNo: remainingValues.join("\n")
       }));
     } else {
-      // Select all options in the current list, merge with existing
       const currentOptionValues = lotOptions.map(o => o.value);
       const mergedValues = Array.from(new Set([...selectedLotValues, ...currentOptionValues]));
       setFilters((prev) => ({
@@ -565,7 +547,6 @@ const SolitairesStockSearchReport = () => {
     }));
   };
 
-  // Fetch all dropdown options
   useEffect(() => {
     const fetchDropdowns = async () => {
       setLoadingDropdowns(true);
@@ -625,11 +606,9 @@ const SolitairesStockSearchReport = () => {
 
   const buildPayload = () => {
     const payload = { ...filters };
-    // Format dates to strings for Flatpickr instances
     if (Array.isArray(payload.date)) {
       payload.date = payload.date[0] ? formatLocalDate(new Date(payload.date[0])) : "";
     }
-    // Clean up numeric strings (must default to 0 for non-nullable floats in API)
     const numericFields = [
       "ctsFrm", "ctsTo", "backFrm", "backTo", "priceFrm", "priceTo",
       "lotFrm", "lotTo", "tDepthFrm", "tDepthTo", "tablePerFrm", "tablePerTo",
@@ -645,14 +624,12 @@ const SolitairesStockSearchReport = () => {
       }
     });
 
-    // Rename properties to match PascalCase properties in C# DTO (handled case-insensitively by System.Text.Json)
     payload.proportion = payload.prop;
     payload.polish = payload.pol;
     payload.symmetry = payload.sym;
     payload.fluorescence = payload.fl;
     payload.natts = payload.nts;
 
-    // Map date check boxes
     payload.purchaseChkBox = payload.purCheck;
     payload.reviseCheckBox = payload.revCheck;
     payload.newArrivalChkBox = payload.newArrCheck;
@@ -660,7 +637,6 @@ const SolitairesStockSearchReport = () => {
     payload.unholdDateChkBox = payload.unholdCheck;
     payload.labDateChkBox = payload.labCheck;
 
-    // Delete keys that don't match DTO names
     delete payload.prop;
     delete payload.pol;
     delete payload.sym;
@@ -697,7 +673,6 @@ const SolitairesStockSearchReport = () => {
     setLoading(false);
   };
 
-  // Row selection helpers
   const handleSelectAll = (e) => {
     const checked = e.target.checked;
     React.startTransition(() => {
@@ -947,7 +922,6 @@ const SolitairesStockSearchReport = () => {
     return cols;
   }, [searchResults, selectedRows, t]);
 
-  // Sync selected lot numbers with sessionStorage
   useEffect(() => {
     const selectedLots = Object.keys(selectedRows)
       .filter((key) => selectedRows[key])
@@ -956,7 +930,6 @@ const SolitairesStockSearchReport = () => {
     sessionStorage.setItem("selectedLotNumbers", JSON.stringify(selectedLots));
   }, [selectedRows, searchResults]);
 
-  // Update Location submit
   const handleUpdateLocation = async () => {
     const selectedLots = Object.keys(selectedRows)
       .filter((key) => selectedRows[key])
@@ -990,7 +963,6 @@ const SolitairesStockSearchReport = () => {
     }
   };
 
-  // Update Box & Group submit
   const handleUpdateBoxAndGroup = async () => {
     const selectedLots = Object.keys(selectedRows)
       .filter((key) => selectedRows[key])
@@ -1029,7 +1001,6 @@ const SolitairesStockSearchReport = () => {
     }
   };
 
-  // Selected totals logic
   const totals = useMemo(() => {
     let pcs = 0;
     let carats = 0;
@@ -1071,7 +1042,6 @@ const SolitairesStockSearchReport = () => {
 
 
 
-  // ── Print Format Definitions ────────────────────────────────────────────────
   const PRINT_FORMATS = {
     DirectPrint: {
       label: "Direct Print",
@@ -1283,7 +1253,6 @@ const SolitairesStockSearchReport = () => {
     }
   };
 
-  // Export to Excel — format-aware, fully client-side (no API call)
   const handleExport = async (format) => {
     if (searchResults.length === 0) {
       toast.warning("No data available to export.");
@@ -1430,7 +1399,6 @@ const SolitairesStockSearchReport = () => {
   };
 
 
-  // Helper function for dropdown list
   const getOptions = (typeKey) => {
     return masterDropdowns[typeKey.toUpperCase()] || [];
   };
@@ -1442,7 +1410,6 @@ const SolitairesStockSearchReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Solitaire Stock Search")} pageTitle={t("Reports")} />
 
-          {/* Top Control Bar */}
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
@@ -1503,18 +1470,9 @@ const SolitairesStockSearchReport = () => {
 
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
-              {/* <CardHeader className="bg-primary py-3 rounded-top">
-                <h5 className="mb-0 fw-bold d-flex align-items-center gap-2 text-white" style={{ color: "white" }}>
-                  <i className="ri-search-eye-line fs-20 text-white" style={{ color: "white" }}></i>
-                  {t("Solitaire Stock Search Filters")}
-                </h5>
-              </CardHeader> */}
               <CardBody className="bg-light-subtle">
-                {/* Outer priority filters layout: Left (All other filters in 2 rows), Right (Enter Lot No stacked) */}
                 <Row className="g-3 mb-3">
-                  {/* Other priority filters on the left */}
                   <Col lg={10} md={9}>
-                    {/* Row 1: Stock Till Date | Show | Hold/UnHold | Single/Parcel | Sorting */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Stock Till Date")}</Label>
@@ -1574,7 +1532,6 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 2: Back % | Back +- | Rate % | Rate +- | Status */}
                     <Row className="g-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Back %")}</Label>
@@ -1609,7 +1566,6 @@ const SolitairesStockSearchReport = () => {
                     </Row>
                   </Col>
 
-                  {/* Enter Lot No (Dropdown + Textarea) Stacked on the Right */}
                   <Col lg={2} md={3} className="d-flex flex-column">
                     <FormGroup className="mb-0 h-100 d-flex flex-column">
                       <Label className="fw-medium mb-1">{t("Enter Lot No")}</Label>
@@ -1714,9 +1670,7 @@ const SolitairesStockSearchReport = () => {
                 </Nav>
 
                 <TabContent activeTab={activeTab}>
-                  {/* Basic & Grading Tab */}
                   <TabPane tabId="1">
-                    {/* Row 1: Shape | Color Group | Color | Size | Clarity | Show Lot No */}
                     <Row className="g-3 mb-3">
                       <div className="col-lg col-md-4 col-sm-6">
                         <Label className="fw-medium">{t("Shape")}</Label>
@@ -1740,7 +1694,6 @@ const SolitairesStockSearchReport = () => {
                       </div>
                     </Row>
 
-                    {/* Row 2: PROP. | POLISH | SYM. | LAB | ROUGH | HA */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Prop.")}</Label>
@@ -1768,7 +1721,6 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 3: LOCATION | FLOU. | MILKY | LUSTER | NATTS | SHADE */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Location")}</Label>
@@ -1796,7 +1748,6 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 4: FL COLOR | GROUP | PAIR | BOX NAME */}
                     <Row className="g-3 mb-3">
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("FL Color")}</Label>
@@ -1816,7 +1767,6 @@ const SolitairesStockSearchReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 5–6: Carats / Back / Price / LotNo ranges */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Carats From")}</Label>
@@ -1855,7 +1805,6 @@ const SolitairesStockSearchReport = () => {
                     </Row>
                   </TabPane>
 
-                  {/* Numeric Search Tab */}
                   <TabPane tabId="2">
                     <Row className="g-3">
                       <Col lg={2} md={4}>
@@ -1909,7 +1858,6 @@ const SolitairesStockSearchReport = () => {
                     </Row>
                   </TabPane>
 
-                  {/* Date Search Tab */}
                   <TabPane tabId="3">
                     <Row className="g-3">
                       <Col lg={4} md={6}>
@@ -2062,7 +2010,6 @@ const SolitairesStockSearchReport = () => {
             </Card>
           )}
 
-          {/* Results grid / Pivot container */}
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
               <CardBody>
@@ -2073,9 +2020,7 @@ const SolitairesStockSearchReport = () => {
                     </div>
                   </div>
                 ) : (
-                  /* Report Grid View using centralized TableContainer */
                   <React.Fragment>
-                    {/* Status Color Guide */}
                     {searchResults.length > 0 && (
                       <div className="d-flex flex-wrap gap-4 align-items-center mb-3 py-2 px-3 bg-light rounded border border-light-subtle">
                         <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
@@ -2096,13 +2041,11 @@ const SolitairesStockSearchReport = () => {
                       </div>
                     )}
 
-                    {/* Selected Summary + Action Buttons — clean, professional card design */}
                     {searchResults.length > 0 && (
                       <Card className="border shadow-sm mb-3">
                         <CardBody className="p-3 bg-light-subtle">
                           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
 
-                            {/* Left: Stats with vertical dividers */}
                             <div className="d-flex flex-wrap align-items-center gap-4">
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
@@ -2149,7 +2092,6 @@ const SolitairesStockSearchReport = () => {
                               </div>
                             </div>
 
-                            {/* Right: Actions */}
                             <div className="d-flex flex-wrap align-items-center gap-2">
                               {selectedLotNos.length > 0 && (
                                 <div className="d-flex align-items-center gap-1 me-2 bg-light p-1 rounded border border-light-subtle">
@@ -2253,7 +2195,6 @@ const SolitairesStockSearchReport = () => {
           )}
         </Container>
       </div>
-      {/* Stock ID Detail View Modal */}
       <Modal
         isOpen={detailModal}
         toggle={() => setDetailModal(!detailModal)}
@@ -2561,7 +2502,6 @@ const SolitairesStockSearchReport = () => {
         stockId={selectedRowDetail?.lotNo || selectedRowDetail?.LotNo || ""}
       />
 
-      {/* More Actions Modal */}
       <Modal isOpen={moreModal} toggle={() => setMoreModal(!moreModal)} centered>
         <ModalHeader toggle={() => setMoreModal(!moreModal)}>
           {t("More Actions")}
@@ -2604,7 +2544,6 @@ const SolitairesStockSearchReport = () => {
         </ModalBody>
       </Modal>
 
-      {/* Location Update Modal */}
       <Modal isOpen={locationModal} toggle={() => setLocationModal(!locationModal)} centered size="lg">
         <ModalHeader toggle={() => setLocationModal(!locationModal)}>
           {t("Update Location")}
@@ -2668,7 +2607,6 @@ const SolitairesStockSearchReport = () => {
         </div>
       </Modal>
 
-      {/* Email Modal */}
       <Modal isOpen={emailModal} toggle={() => setEmailModal(!emailModal)} centered size="lg">
         <ModalHeader toggle={() => setEmailModal(!emailModal)}>
           {t("Email Stock List")}

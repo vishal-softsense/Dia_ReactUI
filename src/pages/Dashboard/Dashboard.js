@@ -69,7 +69,6 @@ const Dashboard = () => {
         { value: 'Year', label: 'Year' }
     ];
 
-    // Broker Chart Configuration
     const brokerChartSeries = [{
         name: 'Sales ($)',
         data: topBrokers.map(b => b.sales)
@@ -88,7 +87,6 @@ const Dashboard = () => {
                         const isSelected = selectedPoints.includes(dataIndex);
 
                         if (isSelected) {
-                            // Defer the deselection to avoid recursive event loops
                             setTimeout(() => {
                                 chartContext.toggleDataPointSelection(config.seriesIndex, dataIndex);
                             }, 50);
@@ -131,7 +129,6 @@ const Dashboard = () => {
         }
     };
 
-    // Country Donut Chart Configuration
     const countryChartSeries = countrySales.map(c => c.sales);
     const countryChartOptions = {
         chart: {
@@ -145,7 +142,6 @@ const Dashboard = () => {
                         const isSelected = selectedPoints.includes(dataIndex);
 
                         if (isSelected) {
-                            // Defer the deselection to avoid recursive event loops
                             setTimeout(() => {
                                 chartContext.toggleDataPointSelection(config.seriesIndex, dataIndex);
                             }, 50);
@@ -248,7 +244,6 @@ const Dashboard = () => {
             <div className="page-content">
                 <Container fluid>
 
-                    {/* Header */}
                     <Row className="mb-3 pb-1">
                         <Col xs={12}>
                             <div className="d-flex align-items-lg-center flex-lg-row flex-column">
@@ -337,9 +332,7 @@ const Dashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* KPI Widgets */}
                     <Row>
-                        {/* Best Seller Widget */}
                         <Col xl={4} md={6}>
                             <Card className="card-animate border shadow-sm" style={{ backgroundImage: "linear-gradient(135deg, rgba(64, 81, 137, 0.04) 0%, rgba(64, 81, 137, 0.01) 100%)", borderColor: "rgba(64, 81, 137, 0.12)" }}>
                                 <CardBody>
@@ -370,7 +363,6 @@ const Dashboard = () => {
                             </Card>
                         </Col>
 
-                        {/* Overdue Purchase */}
                         <Col xl={4} md={6}>
                             <Card className="card-animate border shadow-sm" style={{ backgroundImage: "linear-gradient(135deg, rgba(240, 101, 72, 0.04) 0%, rgba(240, 101, 72, 0.01) 100%)", borderColor: "rgba(240, 101, 72, 0.12)" }}>
                                 <CardBody>
@@ -401,7 +393,6 @@ const Dashboard = () => {
                             </Card>
                         </Col>
 
-                        {/* Overdue Sale */}
                         <Col xl={4} md={6}>
                             <Card className="card-animate border shadow-sm" style={{ backgroundImage: "linear-gradient(135deg, rgba(247, 184, 75, 0.04) 0%, rgba(247, 184, 75, 0.01) 100%)", borderColor: "rgba(247, 184, 75, 0.12)" }}>
                                 <CardBody>
@@ -433,7 +424,6 @@ const Dashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Data Visualization Row */}
                     <Row>
                         <Col xl={4}>
                             <Card className="card-height-100">
@@ -518,7 +508,6 @@ const Dashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Additional Analytics Row */}
                     <Row>
                         <Col xl={4}>
                             <Card className="card-height-100">

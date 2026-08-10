@@ -4,15 +4,11 @@ import { Container, Card, CardBody, Spinner } from "reactstrap";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import { getStockAnalyzeConfig } from "../../helpers/fakebackend_helper";
 
-/**
- * MVC: Views/StockAnalyze/StockAnalyze.cshtml
- * Route: /data/StockAnalyze
- * Embeds Diasense Stock Analyze AI in an iframe.
- */
 const StockAnalyze = () => {
   const { t } = useTranslation();
   const [iframeUrl, setIframeUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const [iframeLoading, setIframeLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -21,6 +17,7 @@ const StockAnalyze = () => {
 
     const load = async () => {
       setLoading(true);
+      setIframeLoading(true);
       setError("");
       try {
         const response = await getStockAnalyzeConfig();
@@ -72,14 +69,22 @@ const StockAnalyze = () => {
             ) : error ? (
               <div className="text-center text-danger py-5 px-3">{error}</div>
             ) : (
-              <iframe
-                title="Stock Analyze"
-                src={iframeUrl}
-                height="830"
-                frameBorder="0"
-                className="w-100"
-                style={{ minHeight: 830, border: 0, display: "block" }}
-              />
+              <>
+                {iframeLoading && (
+                  <div className="text-center py-5">
+                    <Spinner color="primary" />
+                  </div>
+                )}
+                <iframe
+                  title="Stock Analyze"
+                  src={iframeUrl}
+                  height="830"
+                  frameBorder="0"
+                  className="w-100"
+                  onLoad={() => setIframeLoading(false)}
+                  style={{ minHeight: 830, border: 0, display: iframeLoading ? "none" : "block" }}
+                />
+              </>
             )}
           </CardBody>
         </Card>

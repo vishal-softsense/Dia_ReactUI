@@ -298,7 +298,7 @@ const SolitairePurchaseReturnReport = () => {
         setReportRows(data);
         setHasSearched(true);
         toast.success(t("Report loaded successfully."));
-        setExpandedInvnos(new Set()); // reset toggles
+        setExpandedInvnos(new Set());
       } else {
         toast.warning(response?.Data || response?.data || response?.Message || t("Failed to load report."));
       }
@@ -321,7 +321,7 @@ const SolitairePurchaseReturnReport = () => {
 
     const out = [];
     const invnos = Object.keys(grouped);
-    invnos.sort(); // stable order
+    invnos.sort();
 
     invnos.forEach((invnoKey) => {
       const rows = grouped[invnoKey] || [];

@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView wrapper — mirrors MVC MonthAnalysisReport.js
- * Uses global `ej` from CDN (public/index.html).
- */
 const MonthAnalysisPivotView = ({
   data = [],
   reportType = "",
@@ -128,7 +124,6 @@ const MonthAnalysisPivotView = ({
       const aValue = parseFloat(parts[3]) || 0;
       const rValue = parseFloat(parts[4]) || 0;
 
-      // Always render 5 metric lines so every data cell shares the same height
       cell.innerHTML = `
         <div class="mar-metric-cell">
           <div>${pValue !== 0 ? pValue : "&nbsp;"}</div>
@@ -140,14 +135,12 @@ const MonthAnalysisPivotView = ({
     });
   };
 
-  /** Equalize PartyName (frozen) row height with matching data (movable) row — body only, not header. */
   const syncPartyRowHeights = () => {
     const host = containerRef.current;
     if (!host) return;
 
     const ROW_HEIGHT = 150;
 
-    // Never touch header cells — keep compact like MVC
     host.querySelectorAll(".e-gridheader td, .e-frozenheader td, .e-movableheader td").forEach((td) => {
       td.style.height = "";
       td.style.minHeight = "";
@@ -163,7 +156,6 @@ const MonthAnalysisPivotView = ({
       const frozenRow = frozenRows[i];
       const movableRow = movableRows[i];
 
-      // Reset so natural content height can be measured
       [frozenRow, movableRow].forEach((row) => {
         row.style.height = "auto";
         row.querySelectorAll("td").forEach((td) => {
@@ -193,7 +185,6 @@ const MonthAnalysisPivotView = ({
       });
     }
 
-    // Single-table fallback (no freeze)
     if (pairCount === 0) {
       host.querySelectorAll(".e-gridcontent tbody tr").forEach((tr) => {
         if (tr.closest(".e-gridheader")) return;
@@ -220,13 +211,11 @@ const MonthAnalysisPivotView = ({
       } else if (typeof pivot.refresh === "function") {
         pivot.refresh();
       }
-      // Re-align after layout settles (layoutRefresh re-renders cells)
       setTimeout(() => {
         formatUnderscoreCells();
         syncPartyRowHeights();
       }, 250);
     } catch (e) {
-      /* ignore */
     }
   };
 
@@ -235,7 +224,6 @@ const MonthAnalysisPivotView = ({
       try {
         pivotRef.current.destroy();
       } catch (e) {
-        /* ignore */
       }
       pivotRef.current = null;
     }
@@ -682,7 +670,6 @@ const MonthAnalysisPivotView = ({
     setupHeatmapToggle();
   };
 
-  // Continuously hide Syncfusion trial/license banner if injected into DOM
   useEffect(() => {
     const hideLicenseBanner = () => {
       document
@@ -705,7 +692,6 @@ const MonthAnalysisPivotView = ({
     };
   }, []);
 
-  // Refill full card width when sidebar collapses / window resizes
   useEffect(() => {
     let timer = null;
     const scheduleRefresh = () => {
@@ -788,7 +774,6 @@ const MonthAnalysisPivotView = ({
           box-shadow: none !important;
         }
 
-        /* Compact column headers like MVC (~36px per header row) */
         .month-analysis-pivot-wrap .e-movableheader .e-headercell,
         .month-analysis-pivot-wrap .e-movableheader td,
         .month-analysis-pivot-wrap .e-gridheader:not(.e-frozenheader) .e-headercell {
@@ -809,7 +794,6 @@ const MonthAnalysisPivotView = ({
           padding-bottom: 4px !important;
           vertical-align: middle !important;
         }
-        /* PartyName corner cell spans both header rows — keep natural height */
         .month-analysis-pivot-wrap .e-frozenheader .e-headercell[rowspan],
         .month-analysis-pivot-wrap .e-frozenheader td[rowspan] {
           height: auto !important;
@@ -836,7 +820,6 @@ const MonthAnalysisPivotView = ({
           height: 36px !important;
         }
 
-        /* Remove white gap/line under column headers */
         .month-analysis-pivot-wrap .e-grid .e-gridheader,
         .month-analysis-pivot-wrap .e-frozenheader,
         .month-analysis-pivot-wrap .e-movableheader,
@@ -868,7 +851,6 @@ const MonthAnalysisPivotView = ({
           border-bottom-color: #e0e0e0 !important;
         }
 
-        /* Body rows only: equal PartyName + value cell height (MVC #PivotView rule) */
         .month-analysis-pivot-wrap .e-frozencontent td.e-rowsheader,
         .month-analysis-pivot-wrap .e-frozencontent td.e-rowcell,
         .month-analysis-pivot-wrap .e-movablecontent td.e-valuescontent,

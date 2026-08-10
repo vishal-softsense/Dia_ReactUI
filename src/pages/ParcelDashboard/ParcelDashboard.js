@@ -77,13 +77,12 @@ const ParcelDashboard = () => {
         handleFilterChange
     } = useParcelDashboardData();
 
-    // Modal state for View All reports
     const [detailsModal, setDetailsModal] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
     const [modalTitle, setModalTitle] = useState('');
     const [modalData, setModalData] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [reportType, setReportType] = useState(''); // 'brokers', 'customers', etc.
+    const [reportType, setReportType] = useState('');
     const [activeTab, setActiveTab] = useState('customers');
 
     const dateOptions = [
@@ -191,7 +190,6 @@ const ParcelDashboard = () => {
         }
     };
 
-    // Filter list based on search bar
     const getFilteredModalData = () => {
         if (!searchQuery) return modalData;
         const q = searchQuery.toLowerCase().trim();
@@ -202,7 +200,6 @@ const ParcelDashboard = () => {
         });
     };
 
-    // Grand Totals Calculation for Modal
     const calculateTotals = (data) => {
         let totals = { cts: 0, receivableUsd: 0, receivableInr: 0, sales: 0, pl: 0, remainingAmount: 0, invoiceAmount: 0 };
         data.forEach(item => {
@@ -219,7 +216,6 @@ const ParcelDashboard = () => {
 
     const currentTotals = calculateTotals(getFilteredModalData());
 
-    // Export to Excel Function
     const handleExportExcel = async () => {
         try {
             const dataToExport = getFilteredModalData();
@@ -243,7 +239,6 @@ const ParcelDashboard = () => {
                         Number(item.overdueDays || 0)
                     ]);
                 });
-                // Totals
                 rows.push([
                     "TOTAL",
                     "",
@@ -264,7 +259,6 @@ const ParcelDashboard = () => {
                         Number(item.pl || 0)
                     ]);
                 });
-                // Totals
                 rows.push([
                     "TOTAL",
                     Number(currentTotals.cts || 0),
@@ -283,7 +277,6 @@ const ParcelDashboard = () => {
                         Number(item.receivableINR || item.receivableInr || 0)
                     ]);
                 });
-                // Totals
                 rows.push([
                     "TOTAL",
                     Number(currentTotals.cts || 0),
@@ -369,7 +362,7 @@ const ParcelDashboard = () => {
             `}</style>
             <div className="page-content">
                 <Container fluid>
-                    {/* Header Zone */}
+
                     <Row className="mb-4 pb-1">
                         <Col xs={12}>
                             <div className="d-flex align-items-lg-center flex-lg-row flex-column justify-content-between">
@@ -378,7 +371,7 @@ const ParcelDashboard = () => {
                                     <p className="text-muted mb-0">High-fidelity metrics and analytics mapping legacy MVC Parcel Dashboard endpoints.</p>
                                 </div>
                                 <div className="mt-3 mt-lg-0 d-flex flex-wrap gap-2 align-items-center">
-                                    {/* Date Dropdown */}
+
                                     <div className="input-group" style={{ width: '220px' }}>
                                         <span className="input-group-text bg-light text-muted border-light-subtle fs-14">
                                             <i className="ri-calendar-event-line"></i>
@@ -432,7 +425,7 @@ const ParcelDashboard = () => {
                                             }}
                                         />
                                     </div>
-                                    {/* Action Links */}
+
                                     <div className="d-flex gap-2">
                                         <Link to="/dashboard/parcel-stock-analysis" className="btn btn-outline-primary border-dashed waves-effect waves-light shadow-none d-flex align-items-center fw-semibold py-2">
                                             <i className="ri-pie-chart-2-line me-1"></i> Parcel Stock Analysis
@@ -449,9 +442,9 @@ const ParcelDashboard = () => {
                         </Col>
                     </Row>
  
-                    {/* Top Hero Row */}
+
                     <Row>
-                        {/* Best Selling Seller Card */}
+
                         <Col lg={4}>
                             <Card className="parcel-glass-card parcel-glow-primary border-0 overflow-hidden shadow-lg" style={{ minHeight: '140px' }}>
                                 <div className="card-body p-4 position-relative">
@@ -482,7 +475,7 @@ const ParcelDashboard = () => {
                             </Card>
                         </Col>
  
-                        {/* Overdue Purchase Invoice Count Card */}
+
                         <Col lg={4} md={6}>
                             <Card className="parcel-glass-card parcel-glow-danger border-0 shadow-lg" style={{ minHeight: '140px' }}>
                                 <CardBody className="p-4 d-flex flex-column justify-content-between">
@@ -507,7 +500,7 @@ const ParcelDashboard = () => {
                             </Card>
                         </Col>
  
-                        {/* Overdue Sale Invoice Count Card */}
+
                         <Col lg={4} md={6}>
                             <Card className="parcel-glass-card parcel-glow-warning border-0 shadow-lg" style={{ minHeight: '140px' }}>
                                 <CardBody className="p-4 d-flex flex-column justify-content-between">
@@ -533,9 +526,9 @@ const ParcelDashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Middle Ledger Row: Customers, Brokers, and Sales By Countries */}
+
                     <Row className="mt-3">
-                        {/* Top Customers & Brokers Combined Card */}
+
                         <Col lg={8} md={12}>
                             <Card style={{ minHeight: '450px' }} className="parcel-glass-card parcel-glow-primary border-0 shadow-lg">
                                 <CardHeader className="d-flex align-items-center justify-content-between py-2 bg-light-subtle border-bottom border-light-subtle">
@@ -644,7 +637,7 @@ const ParcelDashboard = () => {
                             </Card>
                         </Col>
 
-                        {/* Sales by Countries visual bar indicator */}
+
                         <Col lg={4} md={12}>
                             <Card style={{ minHeight: '450px' }} className="parcel-glass-card parcel-glow-success border-0 shadow-lg">
                                 <CardHeader className="py-3 bg-light-subtle border-bottom border-light-subtle">
@@ -686,9 +679,9 @@ const ParcelDashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Third Row: Financial Ledger - Open Memo, Outstanding, Payable */}
+
                     <Row className="mt-3">
-                        {/* Top 10 Open Memo */}
+
                         <Col lg={4} md={6}>
                             <Card style={{ minHeight: '430px' }} className="parcel-glass-card parcel-glow-primary border-0 shadow-lg">
                                 <CardHeader className="d-flex align-items-center justify-content-between py-3 bg-light-subtle border-bottom border-light-subtle">
@@ -732,7 +725,7 @@ const ParcelDashboard = () => {
                             </Card>
                         </Col>
 
-                        {/* Top 10 Outstanding (Receivable) */}
+
                         <Col lg={4} md={6}>
                             <Card style={{ minHeight: '430px' }} className="parcel-glass-card parcel-glow-primary border-0 shadow-lg">
                                 <CardHeader className="d-flex align-items-center justify-content-between py-3 bg-light-subtle border-bottom border-light-subtle">
@@ -776,7 +769,7 @@ const ParcelDashboard = () => {
                             </Card>
                         </Col>
 
-                        {/* Top 10 Payable */}
+
                         <Col lg={4} md={12}>
                             <Card style={{ minHeight: '430px' }} className="parcel-glass-card parcel-glow-danger border-0 shadow-lg">
                                 <CardHeader className="d-flex align-items-center justify-content-between py-3 bg-light-subtle border-bottom border-light-subtle">
@@ -821,7 +814,7 @@ const ParcelDashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Row 4: Top 10 Overdue Sales (Full Width Alert Section) */}
+
                     <Row className="mt-2 mb-4">
                         <Col xs={12}>
                             <Card className="parcel-glass-card parcel-glow-danger border-0 shadow-lg">
@@ -874,7 +867,7 @@ const ParcelDashboard = () => {
                         </Col>
                     </Row>
 
-                    {/* Highly Interactive View All Ledger Details Modal */}
+
                     <Modal isOpen={detailsModal} toggle={() => setDetailsModal(!detailsModal)} size="xl" centered scrollable>
                         <ModalHeader toggle={() => setDetailsModal(!detailsModal)} className="bg-light border-bottom p-3">
                             <div className="d-flex align-items-center justify-content-between w-100 me-2">
@@ -887,7 +880,7 @@ const ParcelDashboard = () => {
                             </div>
                         </ModalHeader>
                         <ModalBody className="p-0">
-                            {/* Search Filter Bar */}
+
                             <div className="p-3 border-bottom d-flex align-items-center justify-content-between" style={{ backgroundColor: 'var(--vz-light, #f3f3f9)', borderBottom: '1px solid var(--vz-border-color)' }}>
                                 <div className="position-relative flex-grow-1 me-3">
                                     <Input 
@@ -915,7 +908,7 @@ const ParcelDashboard = () => {
                                 <div className="text-center py-5"><Spinner color="primary" /> <p className="mt-2 text-muted">Loading ledger transactions...</p></div>
                             ) : (
                                 <div className="table-responsive">
-                                    {/* Floating Column Headers */}
+
                                     {!modalLoading && getFilteredModalData().length > 0 && (
                                         <div className="px-4 py-2.5 text-uppercase text-muted fw-bold fs-11 d-flex align-items-center justify-content-between border-bottom" style={{ backgroundColor: 'var(--vz-light, #f3f3f9)', borderBottom: '1px solid var(--vz-border-color)' }}>
                                             {reportType === 'overdues' ? (
@@ -943,7 +936,7 @@ const ParcelDashboard = () => {
                                         </div>
                                     )}
 
-                                    {/* Scrollable Container with Custom Cards */}
+
                                     <div className="px-4 py-3 d-flex flex-column gap-2" style={{ maxHeight: '50vh', overflowY: 'auto', backgroundColor: 'var(--vz-body-bg-custom, var(--vz-body-bg, #f3f3f9))' }}>
                                         {getFilteredModalData().map((item, idx) => {
                                             let borderClass = 'border-left-primary';
@@ -959,27 +952,27 @@ const ParcelDashboard = () => {
                                                 <div key={idx} className={`parcel-row-card p-3 rounded-3 d-flex align-items-center justify-content-between ${borderClass}`}>
                                                     {reportType === 'overdues' ? (
                                                         <>
-                                                            {/* Invoice Number & Date */}
+
                                                             <div style={{ width: '15%' }}>
                                                                 <span className="fw-extrabold text-primary fs-14">#{item.invNo}</span>
                                                                 <div className="text-muted fs-11 mt-0.5">{item.invDate}</div>
                                                             </div>
-                                                            {/* Customer Avatar & Name */}
+
                                                             <div style={{ width: '20%' }} className="d-flex align-items-center gap-2">
                                                                 <div className={`avatar-xs rounded-circle d-flex align-items-center justify-content-center fw-bold fs-11 ${getAvatarColorClass(item.customer)}`} style={{ width: '30px', height: '30px', minWidth: '30px' }}>
                                                                     {getInitials(item.customer)}
                                                                 </div>
                                                                 <span className="fw-semibold text-truncate text-body" style={{ maxWidth: '120px' }}>{item.customer || '—'}</span>
                                                             </div>
-                                                            {/* Invoice Amount */}
+
                                                             <div style={{ width: '20%', textAlign: 'right' }} className="fw-semibold text-body">
                                                                 ${Number(item.invoiceAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
-                                                            {/* Remaining Amount */}
+
                                                             <div style={{ width: '20%', textAlign: 'right' }} className="fw-bold text-danger">
                                                                 ${Number(item.remainingAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
-                                                            {/* Overdue Days Badge */}
+
                                                             <div style={{ width: '25%', textAlign: 'center' }}>
                                                                 <Badge color="danger" className="bg-danger-subtle text-danger px-3 py-1.5 rounded-pill fs-11 border border-danger-subtle">
                                                                     {item.overdueDays} Days
@@ -988,7 +981,7 @@ const ParcelDashboard = () => {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            {/* Avatar & Name */}
+
                                                             <div style={{ width: reportType === 'brokers' ? '25%' : '35%' }} className="d-flex align-items-center gap-2">
                                                                 <div className={`avatar-xs rounded-circle d-flex align-items-center justify-content-center fw-bold fs-11 ${getAvatarColorClass(item.customer || item.broker || '—')}`} style={{ width: '32px', height: '32px', minWidth: '32px' }}>
                                                                     {getInitials(item.customer || item.broker)}
@@ -997,27 +990,27 @@ const ParcelDashboard = () => {
                                                                     {item.customer || item.broker || '—'}
                                                                 </span>
                                                             </div>
-                                                            {/* Carats */}
+
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '20%', textAlign: 'right' }}>
                                                                 <span className="badge bg-light text-body border border-light-subtle rounded px-2.5 py-1.5 fw-semibold">
                                                                     {Number(item.cts || 0).toFixed(3)} Cts
                                                                 </span>
                                                             </div>
-                                                            {/* Receivable USD */}
+
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '22%', textAlign: 'right' }} className="fw-extrabold text-success fs-14">
                                                                 ${Number(item.receivableUSD || item.receivableUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
-                                                            {/* Receivable INR */}
+
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '23%', textAlign: 'right' }} className="fw-semibold text-muted fs-13">
                                                                 ₹{Number(item.receivableINR || item.receivableInr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
                                                             {reportType === 'brokers' && (
                                                                 <>
-                                                                    {/* Sales */}
+
                                                                     <div style={{ width: '15%', textAlign: 'right' }} className="fw-semibold text-success">
                                                                         ${Number(item.sales || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                                     </div>
-                                                                    {/* PL */}
+
                                                                     <div style={{ width: '15%', textAlign: 'right' }} className="fw-bold text-info">
                                                                         ${Number(item.pl || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                                     </div>
@@ -1033,7 +1026,7 @@ const ParcelDashboard = () => {
                                         )}
                                     </div>
 
-                                    {/* Grand Totals Footer Panel */}
+
                                     {!modalLoading && getFilteredModalData().length > 0 && (
                                         <div className="px-4 py-3 border-top border-2 sticky-bottom d-flex align-items-center justify-content-between text-uppercase fw-extrabold fs-13" style={{ backgroundColor: 'var(--vz-card-bg-custom, var(--vz-card-bg, var(--vz-secondary-bg, #fff)))', borderTop: '2px solid var(--vz-border-color)', zIndex: 10 }}>
                                             {reportType === 'overdues' ? (

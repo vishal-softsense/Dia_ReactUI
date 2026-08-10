@@ -43,13 +43,11 @@ const Select = (props) => (
   />
 );
 
-// MVC palette
 const CHART_COLORS = [
   "#FF6384", "#91eded", "#FFCE25", "#4BC0C0",
   "#9966FF", "#FF00FF", "#0000FF", "#75cb7c", "#38A2EB"
 ];
 
-/** MVC arrowLinesPlugin — external labels with leader lines (pie/donut only) */
 const arrowLinesPlugin = {
   id: "arrowLinesPlugin",
   afterDatasetsDraw(chart) {
@@ -105,7 +103,6 @@ const arrowLinesPlugin = {
   }
 };
 
-// Grouping Options matching ParcelSaleAnalysisReport.js
 const SALE_ANA_OPTIONS = [
   { value: "Shape",         label: "Shape" },
   { value: "Size",          label: "Size" },
@@ -122,19 +119,19 @@ const ParcelSaleAnalysisReport = () => {
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
-  // ── Filters ────────────────────────────────────────────────────────────────
+
   const [fromDate,   setFromDate]   = useState(settingFrom);
   const [toDate,     setToDate]     = useState(settingTo);
   const [currency,   setCurrency]   = useState("");
   const [invNo,      setInvNo]      = useState("");
 
-  // Party Autocomplete State (matching MVC /common/get-account)
+
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
   const [selectedParty, setSelectedParty] = useState(null);
   const [loadingParties, setLoadingParties] = useState(false);
 
-  // Broker Autocomplete State (matching MVC /common/get-account)
+
   const [brokerInput, setBrokerInput] = useState("");
   const [brokerOptions, setBrokerOptions] = useState([]);
   const [selectedBroker, setSelectedBroker] = useState(null);
@@ -143,7 +140,7 @@ const ParcelSaleAnalysisReport = () => {
   const [lotNo,      setLotNo]      = useState("");
   const [saleAna,    setSaleAna]    = useState("Shape");
 
-  // Multi-select Lists
+
   const [selectedShapeGroups,     setSelectedShapeGroups]     = useState([]);
   const [selectedShapes,          setSelectedShapes]          = useState([]);
   const [selectedColorGroups,     setSelectedColorGroups]     = useState([]);
@@ -155,13 +152,13 @@ const ParcelSaleAnalysisReport = () => {
   const [selectedPartyLocations,  setSelectedPartyLocations]  = useState([]);
   const [selectedItemGroups,      setSelectedItemGroups]      = useState([]);
 
-  // Dropdown master options
+
   const [dropdownOptions, setDropdownOptions] = useState({
     currency: [], shapeGroup: [], shape: [], colorGroup: [], color: [],
     size: [], clarity: [], sieve: [], boxname: [], location: [], itemGroup: []
   });
 
-  // ── UI state ───────────────────────────────────────────────────────────────
+
   const [loading,         setLoading]         = useState(false);
   const [pivotLoading,    setPivotLoading]     = useState(false);
   const [reportData,      setReportData]       = useState([]);
@@ -172,19 +169,19 @@ const ParcelSaleAnalysisReport = () => {
   const [activeTab,       setActiveTab]        = useState("table");
   const [showPivot,       setShowPivot]        = useState(false);
 
-  // Chart settings
+
   const [chartType,         setChartType]         = useState("doughnut");
   const [showExportMenu,    setShowExportMenu]     = useState(false);
   const [showChartTypeMenu, setShowChartTypeMenu]  = useState(false);
   const chartMenusRef = useRef(null);
 
-  // Pagination & search
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize,    setPageSize]    = useState(500);
   const [searchTerm,  setSearchTerm]  = useState("");
   const [colFilters,  setColFilters]  = useState({});
 
-  // Close menus on outside click
+
   useEffect(() => {
     const onDocClick = (e) => {
       if (chartMenusRef.current && !chartMenusRef.current.contains(e.target)) {
@@ -196,7 +193,7 @@ const ParcelSaleAnalysisReport = () => {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // Fetch dropdowns from backend API on mount
+
   useEffect(() => {
     fetchDropdowns();
   }, []);
@@ -247,7 +244,7 @@ const ParcelSaleAnalysisReport = () => {
           itemGroup:  filterByType("ItemGroup")
         };
 
-        // Fallback for currency if primary API returns empty currency list
+
         if (!grouped.currency || !grouped.currency.length) {
           try {
             const accGrpRes = await getAccGrpMasterDropdowns();
@@ -260,7 +257,7 @@ const ParcelSaleAnalysisReport = () => {
           }
         }
 
-        // Default currency options fallback
+
         if (!grouped.currency || !grouped.currency.length) {
           grouped.currency = ["USD", "INR", "EUR", "GBP", "HKD", "AED", "CAD", "AUD"].map((code) => ({ id: code, name: code }));
         }
@@ -272,7 +269,7 @@ const ParcelSaleAnalysisReport = () => {
     }
   };
 
-  // Autocomplete account lookup matching MVC /common/get-account
+
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) {
       setOptions([]);
@@ -329,7 +326,7 @@ const ParcelSaleAnalysisReport = () => {
     return String(selected);
   };
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+
   const mapSelectVal = (list) => {
     if (!list || !list.length) return null;
     const vals = list.map((i) => i.value).filter((v) => v != null && String(v).trim() !== "");
@@ -621,11 +618,11 @@ const ParcelSaleAnalysisReport = () => {
     }
   };
 
-  // ── Filtered / paginated data ───────────────────────────────────────────────
+
   const filteredData = useMemo(() => {
     let data = reportData;
 
-    // Quick Search across ALL table columns
+
     if (searchTerm && searchTerm.trim() !== "") {
       const term = searchTerm.trim().toLowerCase();
       data = data.filter((row) =>
@@ -635,7 +632,7 @@ const ParcelSaleAnalysisReport = () => {
       );
     }
 
-    // Column-wise filters with %, 00.00, and 0 format support
+
     Object.keys(colFilters).forEach((key) => {
       const val = colFilters[key];
       if (val && val.trim() !== "") {
@@ -656,7 +653,7 @@ const ParcelSaleAnalysisReport = () => {
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
 
-  // ── Footer totals ──────────────────────────────────────────────────────────
+
   const totals = useMemo(() => {
     const s = { pcs: 0, carats: 0, saleAmtdollar: 0, plDollar: 0, cOGSdollar: 0, saleAmtINR: 0, plINR: 0, cOGSINR: 0 };
     filteredData.forEach((row) => {
@@ -672,7 +669,7 @@ const ParcelSaleAnalysisReport = () => {
     return s;
   }, [filteredData]);
 
-  // ── Chart data ─────────────────────────────────────────────────────────────
+
   const chartData = useMemo(() => {
     if (!reportData.length) return null;
     const labels        = reportData.map((r) => getGroupingValue(r, activeReportType) || "Unknown");
@@ -729,7 +726,7 @@ const ParcelSaleAnalysisReport = () => {
     }
   });
 
-  // ── Excel export ───────────────────────────────────────────────────────────
+
   const handleExportExcel = async () => {
     if (!filteredData.length) {
       toast.warning(t("No data available to export"));
@@ -781,7 +778,7 @@ const ParcelSaleAnalysisReport = () => {
     }
   };
 
-  // ── Chart image export ─────────────────────────────────────────────────────
+
   const canvasIds = ["parcelSaleCaratPerChart", "parcelSaleSaleAmtChart", "parcelSalePLCOGSChart"];
 
   const handleChartExport = (format) => {
@@ -827,12 +824,12 @@ const ParcelSaleAnalysisReport = () => {
     }
   };
 
-  // ── Page title ─────────────────────────────────────────────────────────────
+
   useEffect(() => {
     document.title = `${t("Parcel Sale Analysis Report")} | ${t("Admin")}`;
   }, []);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <React.Fragment>
       <style>{`
@@ -852,7 +849,7 @@ const ParcelSaleAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
-        /* MVC chart toolbar: download + hamburger */
+
         .par-chart-toolbar {
           display: flex;
           justify-content: flex-end;
@@ -911,7 +908,7 @@ const ParcelSaleAnalysisReport = () => {
           position: relative;
         }
 
-        /* ── Report Table Theme & Layout Styling ── */
+
         .par-report-table {
           border-collapse: separate !important;
           border-spacing: 0 !important;
@@ -922,7 +919,7 @@ const ParcelSaleAnalysisReport = () => {
           white-space: nowrap !important;
           vertical-align: middle;
         }
-        /* Sticky header row 1 (Titles) */
+
         .par-report-table thead tr:first-child th {
           position: sticky;
           top: 0;
@@ -935,7 +932,7 @@ const ParcelSaleAnalysisReport = () => {
           padding: 8px 10px;
           letter-spacing: 0.2px;
         }
-        /* Sticky header row 2 (Filter inputs) */
+
         .par-report-table thead tr:nth-child(2) th {
           position: sticky;
           top: 35px;
@@ -944,13 +941,13 @@ const ParcelSaleAnalysisReport = () => {
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
           padding: 4px 6px;
         }
-        /* Data table rows */
+
         .par-report-table tbody td {
           padding: 6px 10px;
           font-size: 12px;
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
         }
-        /* Fixed static footer matching report design */
+
         .par-report-table tfoot td {
           position: sticky;
           bottom: 0;
@@ -978,7 +975,7 @@ const ParcelSaleAnalysisReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Parcel Sale Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar */}
+
           <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-line-chart-line fs-20 text-primary"></i>
@@ -1040,7 +1037,7 @@ const ParcelSaleAnalysisReport = () => {
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2">
                 <form id="parcel-sale-analysis-form" onSubmit={handleSearch}>
-                  {/* Row 1: Date, To Date, Currency, Invoice No, Party, Broker */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1136,7 +1133,7 @@ const ParcelSaleAnalysisReport = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 2: Shape Group, Shape, Size, Sieve, Color Group, Color */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1212,7 +1209,7 @@ const ParcelSaleAnalysisReport = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 3: Clarity, Box Name, Party Location, Group, Enter Lot No */}
+
                   <Row className="g-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1280,7 +1277,7 @@ const ParcelSaleAnalysisReport = () => {
             </Card>
           )}
 
-          {/* ── Pivot view ── */}
+
           {showPivot && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center bg-transparent">
@@ -1306,7 +1303,7 @@ const ParcelSaleAnalysisReport = () => {
             </Card>
           )}
 
-          {/* ── Report data card ── */}
+
           {searched && !showPivot && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
@@ -1362,7 +1359,7 @@ const ParcelSaleAnalysisReport = () => {
                 ) : (
                   <TabContent activeTab={activeTab}>
 
-                    {/* ── Table tab ── */}
+
                     <TabPane tabId="table">
                       <div className="table-responsive report-table-scroll" style={{ maxHeight: "calc(100vh - 380px)", overflowY: "auto" }}>
                         <table className="table table-bordered table-hover align-middle mb-0 text-end par-report-table">
@@ -1494,7 +1491,7 @@ const ParcelSaleAnalysisReport = () => {
                         </table>
                       </div>
 
-                      {/* Pagination */}
+
                       {filteredData.length > 0 && (
                         <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                           <div className="d-flex align-items-center gap-2">
@@ -1518,7 +1515,7 @@ const ParcelSaleAnalysisReport = () => {
                       )}
                     </TabPane>
 
-                    {/* ── Charts tab ── */}
+
                     <TabPane tabId="charts">
                       {!chartData ? (
                         <div className="text-center p-5">

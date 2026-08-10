@@ -77,13 +77,13 @@ const ParcelPurchaseAnalysis = () => {
   document.title = "Parcel Purchase Analysis | Premium Jewellery ERP";
   const { t } = useTranslation();
 
-  // ── States ──────────────────────────────────────────────────────────────────
+
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
   const [showFilterPanel, setShowFilterPanel] = useState(true);
 
-  // Dynamic Dropdown Lists from API
+
   const [dropdownOptions, setDropdownOptions] = useState({
     shapeGroup: [],
     shape: [],
@@ -102,20 +102,20 @@ const ParcelPurchaseAnalysis = () => {
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
-  // Filters
+
   const [activeReportType, setActiveReportType] = useState("Shape");
   const [fromDate, setFromDate] = useState(settingFrom);
   const [toDate, setToDate] = useState(settingTo);
   const [currency, setCurrency] = useState("");
   const [invNo, setInvNo] = useState("");
 
-  // Party Autocomplete State (matching MVC /common/get-account)
+
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
   const [selectedParty, setSelectedParty] = useState(null);
   const [loadingParties, setLoadingParties] = useState(false);
 
-  // Broker Autocomplete State (matching MVC /common/get-account)
+
   const [brokerInput, setBrokerInput] = useState("");
   const [brokerOptions, setBrokerOptions] = useState([]);
   const [selectedBroker, setSelectedBroker] = useState(null);
@@ -133,20 +133,20 @@ const ParcelPurchaseAnalysis = () => {
   const [selectedItemGroups, setSelectedItemGroups] = useState([]);
   const [lotNo, setLotNo] = useState("");
 
-  // Table State
+
   const [searchTerm, setSearchTerm] = useState("");
   const [colFilters, setColFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
   const [activeTab, setActiveTab] = useState("table");
 
-  // Chart State
+
   const [chartType, setChartType] = useState("doughnut");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showChartTypeMenu, setShowChartTypeMenu] = useState(false);
   const chartMenusRef = useRef(null);
 
-  // ── Load Dropdowns dynamically from API ──────────────────────────────────────
+
   useEffect(() => {
     fetchDropdowns();
   }, []);
@@ -172,7 +172,7 @@ const ParcelPurchaseAnalysis = () => {
         rawData = res;
       }
 
-      // Helper to filter raw DTO list by Type (case-insensitive)
+
       const filterByType = (...typeStrs) => {
         const typesLower = typeStrs.map((t) => t.toLowerCase());
         return rawData.filter((x) =>
@@ -180,7 +180,7 @@ const ParcelPurchaseAnalysis = () => {
         );
       };
 
-      // Helper to convert DTO objects into { label, value } options for react-select
+
       const toOptions = (list) => {
         if (!list || !Array.isArray(list)) return [];
         return list
@@ -212,7 +212,7 @@ const ParcelPurchaseAnalysis = () => {
           .filter(Boolean);
       };
 
-      // Extract Currency options
+
       let currencyOpts = toOptions(filterByType("Currency"));
       if (!currencyOpts.length) {
         try {
@@ -222,7 +222,7 @@ const ParcelPurchaseAnalysis = () => {
             currencyOpts = toOptions(accPayload);
           }
         } catch (e) {
-          // ignore fallback
+
         }
       }
       if (!currencyOpts.length) {
@@ -253,7 +253,7 @@ const ParcelPurchaseAnalysis = () => {
     }
   };
 
-  // Close chart popover menus on outside click
+
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (chartMenusRef.current && !chartMenusRef.current.contains(e.target)) {
@@ -265,7 +265,7 @@ const ParcelPurchaseAnalysis = () => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  // Autocomplete account lookup matching MVC /common/get-account
+
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) {
       setOptions([]);
@@ -322,7 +322,7 @@ const ParcelPurchaseAnalysis = () => {
     return String(selected);
   };
 
-  // ── Execute Search ──────────────────────────────────────────────────────────
+
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -398,7 +398,7 @@ const ParcelPurchaseAnalysis = () => {
     setShowFilterPanel(true);
   };
 
-  // ── Field Pickers & Value Extractors ────────────────────────────────────────
+
   const pick = (row, ...names) => {
     if (!row) return undefined;
     for (const name of names) {
@@ -440,7 +440,7 @@ const ParcelPurchaseAnalysis = () => {
 
   const rowNum = (row, ...names) => Number(pick(row, ...names) ?? 0);
 
-  // ── Formatted Column Search Strings for Filtering ──────────────────────────
+
   const ALL_COL_KEYS = [
     "grouping", "pcs", "pcsPer", "carats", "caratsPer",
     "purAmtDollar", "purDollarPer", "purAmtInr", "purInrPer",
@@ -532,11 +532,11 @@ const ParcelPurchaseAnalysis = () => {
     }
   };
 
-  // ── Filtered & Paginated Data ───────────────────────────────────────────────
+
   const filteredData = useMemo(() => {
     let data = reportData;
 
-    // Quick Search across all columns
+
     if (searchTerm && searchTerm.trim() !== "") {
       const term = searchTerm.trim().toLowerCase();
       data = data.filter((row) =>
@@ -546,7 +546,7 @@ const ParcelPurchaseAnalysis = () => {
       );
     }
 
-    // Column-wise filters
+
     Object.keys(colFilters).forEach((key) => {
       const val = colFilters[key];
       if (val && val.trim() !== "") {
@@ -567,7 +567,7 @@ const ParcelPurchaseAnalysis = () => {
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
 
-  // ── Footer Totals ──────────────────────────────────────────────────────────
+
   const totals = useMemo(() => {
     const s = { pcs: 0, carats: 0, purAmtDollar: 0, purAmtInr: 0 };
     filteredData.forEach((row) => {
@@ -579,7 +579,7 @@ const ParcelPurchaseAnalysis = () => {
     return s;
   }, [filteredData]);
 
-  // ── Chart Data Preparation ──────────────────────────────────────────────────
+
   const chartData = useMemo(() => {
     if (!reportData || reportData.length === 0) return null;
 
@@ -685,7 +685,7 @@ const ParcelPurchaseAnalysis = () => {
     }
   });
 
-  // ── Chart Export ────────────────────────────────────────────────────────────
+
   const handleChartExport = (format) => {
     setShowExportMenu(false);
     const canvasIds = ["parcelPurCaratPerChart", "parcelPurSaleAmtChart"];
@@ -728,7 +728,7 @@ const ParcelPurchaseAnalysis = () => {
     }
   };
 
-  // ── Excel Export ─────────────────────────────────────────────────────────────
+
   const handleExportExcel = async () => {
     if (!filteredData || filteredData.length === 0) {
       toast.warning("No data available to export");
@@ -856,7 +856,7 @@ const ParcelPurchaseAnalysis = () => {
           position: relative;
         }
 
-        /* ── Report Table Theme & Layout Styling ── */
+
         .par-report-table {
           border-collapse: separate !important;
           border-spacing: 0 !important;
@@ -867,7 +867,7 @@ const ParcelPurchaseAnalysis = () => {
           white-space: nowrap !important;
           vertical-align: middle;
         }
-        /* Sticky header row 1 (Titles) */
+
         .par-report-table thead tr:first-child th {
           position: sticky;
           top: 0;
@@ -880,7 +880,7 @@ const ParcelPurchaseAnalysis = () => {
           padding: 8px 10px;
           letter-spacing: 0.2px;
         }
-        /* Sticky header row 2 (Filter inputs) */
+
         .par-report-table thead tr:nth-child(2) th {
           position: sticky;
           top: 35px;
@@ -889,13 +889,13 @@ const ParcelPurchaseAnalysis = () => {
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
           padding: 4px 6px;
         }
-        /* Data table rows */
+
         .par-report-table tbody td {
           padding: 6px 10px;
           font-size: 12px;
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
         }
-        /* Fixed static footer matching report design */
+
         .par-report-table tfoot td {
           position: sticky;
           bottom: 0;
@@ -924,7 +924,7 @@ const ParcelPurchaseAnalysis = () => {
         <Container fluid>
           <BreadCrumb title={t("Parcel Purchase Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar matching ParcelSaleAnalysisReport.js design */}
+
           <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-shopping-basket-line fs-20 text-primary"></i>
@@ -973,12 +973,12 @@ const ParcelPurchaseAnalysis = () => {
             </div>
           </div>
 
-          {/* Search Filters Form Card matching ParcelSaleAnalysisReport.js layout */}
+
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2">
                 <form id="parcel-purchase-analysis-form" onSubmit={handleSearch}>
-                  {/* Row 1: Date, To Date, Currency, Invoice No, Party, Broker */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1071,7 +1071,7 @@ const ParcelPurchaseAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 2: Shape Group, Shape, Size, Sieve, Color Group, Color */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1147,7 +1147,7 @@ const ParcelPurchaseAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 3: Clarity, Box Name, Party Location, Group, Enter Lot No */}
+
                   <Row className="g-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1215,7 +1215,7 @@ const ParcelPurchaseAnalysis = () => {
             </Card>
           )}
 
-          {/* ── Report Data Card ── */}
+
           {searched && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
@@ -1270,7 +1270,7 @@ const ParcelPurchaseAnalysis = () => {
                   </div>
                 ) : (
                   <TabContent activeTab={activeTab}>
-                    {/* ── Table Tab ── */}
+
                     <TabPane tabId="table">
                       <div className="table-responsive report-table-scroll" style={{ maxHeight: "calc(100vh - 380px)", overflowY: "auto" }}>
                         <table className="table table-bordered table-hover align-middle mb-0 text-end par-report-table">
@@ -1382,7 +1382,7 @@ const ParcelPurchaseAnalysis = () => {
                         </table>
                       </div>
 
-                      {/* Pagination */}
+
                       {filteredData.length > 0 && (
                         <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                           <div className="d-flex align-items-center gap-2">
@@ -1406,7 +1406,7 @@ const ParcelPurchaseAnalysis = () => {
                       )}
                     </TabPane>
 
-                    {/* ── Charts Tab ── */}
+
                     <TabPane tabId="charts">
                       {!chartData ? (
                         <div className="text-center p-5">

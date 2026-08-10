@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView — Solitaire Stock Consumption Report
- * Display + aggregation ported exactly from MVC StockConsumption.js
- */
 const SolitaireConsumptionPivotView = ({ data = [] }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
@@ -55,17 +51,14 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
 
     let val = NaN;
 
-    // Case 1: explicit "C:" value (older template fallback)
     const cMatch = text.match(/C:\s*([\-0-9.]+)/);
     if (cMatch && !isNaN(parseFloat(cMatch[1]))) {
       val = parseFloat(cMatch[1]);
     }
-    // Case 2: underscore format
     else if (text.includes("_")) {
       const parts = text.split("_").map((p) => parseFloat(p) || NaN);
       if (!isNaN(parts[0])) val = parts[0];
     }
-    // Case 3: plain number
     else {
       const num = parseFloat(text.replace(/[^0-9.\-]/g, ""));
       if (!isNaN(num)) val = num;
@@ -137,10 +130,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
     formatTimersRef.current.push(id);
   };
 
-  /**
-   * Exact MVC StockConsumption.js formatUnderscoreCells
-   * Shows only non-zero lines: pcs | carats | disc% | $ amt K
-   */
   const formatUnderscoreCells = () => {
     const host = hostElRef.current;
     if (!host || !aliveRef.current) return;
@@ -177,7 +166,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
     });
   };
 
-  /** Safe destroy — Syncfusion owns hostEl; React only owns wrapper */
   const destroyPivot = () => {
     clearFormatTimers();
 
@@ -188,7 +176,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
       try {
         pivot.destroy();
       } catch (e) {
-        /* ignore Syncfusion destroy races */
       }
     }
 
@@ -198,7 +185,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
       try {
         host.parentNode.removeChild(host);
       } catch (e) {
-        /* already detached */
       }
     }
   };
@@ -341,7 +327,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
           weightedDiscNumerator += a;
         };
 
-        // Build raw string from numeric fields if *Data missing (fallback)
         const buildFromNumeric = (row, base) => {
           const p = toNum(getFieldValue(row, `${base}_Pcs`));
           const c = toNum(getFieldValue(row, `${base}_Carats`));
@@ -491,7 +476,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
         if (reportItem && pivotRef.current) {
           const report = JSON.parse(reportItem.report);
           report.dataSourceSettings.dataSource = mappedData;
-          // Force all 4 value fields back if a saved report dropped them
           if (!report.dataSourceSettings.values || report.dataSourceSettings.values.length < 4) {
             report.dataSourceSettings.values = defaultValues;
           }
@@ -530,7 +514,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
       }
     });
 
-    // Mount Syncfusion onto a dedicated host node (not the React-managed wrapper)
     const wrapper = containerRef.current;
     if (!wrapper) return;
 
@@ -583,7 +566,6 @@ const SolitaireConsumptionPivotView = ({ data = [] }) => {
           font-size: 11px !important;
         }
       `}</style>
-      {/* React owns this empty wrapper only — Syncfusion mounts into a child host */}
       <div ref={containerRef} style={{ width: "100%" }} />
     </div>
   );

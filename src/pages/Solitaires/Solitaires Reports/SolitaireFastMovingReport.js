@@ -51,7 +51,6 @@ const SolitaireFastMovingReport = () => {
   const [dropdownData, setDropdownData] = useState({});
   const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
 
-  // Filters State matching SolitaireSaleReport array pattern
   const [filters, setFilters] = useState({
     fromDate: "2025-01-01",
     toDate: new Date().toISOString().substring(0, 10),
@@ -64,7 +63,6 @@ const SolitaireFastMovingReport = () => {
     fluorescence: []
   });
 
-  // Modal Details State
   const [modalOpen, setModalOpen] = useState(false);
   const [modalColor, setModalColor] = useState("");
   const [modalClarity, setModalClarity] = useState("");
@@ -74,7 +72,6 @@ const SolitaireFastMovingReport = () => {
   const caratDecimal = 3;
   const amtDecimal = 2;
 
-  // React Select Custom Styles matching SolitaireSaleReport
   const customStyles = useMemo(
     () => ({
       control: (provided) => ({
@@ -152,7 +149,6 @@ const SolitaireFastMovingReport = () => {
     [dropdownData]
   );
 
-  // Load Dropdowns
   useEffect(() => {
     const loadDropdowns = async () => {
       setLoadingDropdowns(true);
@@ -171,7 +167,6 @@ const SolitaireFastMovingReport = () => {
     loadDropdowns();
   }, [t]);
 
-  // Load Company Defaults
   useEffect(() => {
     const loadCompanySettings = async () => {
       const company = await getReportCompanySettings({ forceRefresh: true });
@@ -190,7 +185,6 @@ const SolitaireFastMovingReport = () => {
     };
   }, []);
 
-  // Update default dates from hook
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
@@ -257,23 +251,19 @@ const SolitaireFastMovingReport = () => {
     }
   };
 
-  // Case-insensitive / format-insensitive JSON property retrieval
   const getPropVal = useCallback((item, baseKey) => {
     if (!item) return 0;
     if (item[baseKey] !== undefined && item[baseKey] !== null) return item[baseKey];
     
-    // Camel case check: "Opening_Pcs" -> "opening_Pcs"
     const camel = baseKey.charAt(0).toLowerCase() + baseKey.slice(1);
     if (item[camel] !== undefined && item[camel] !== null) return item[camel];
 
-    // Lowercase check: "Opening_Pcs" -> "opening_pcs"
     const lower = baseKey.toLowerCase();
     if (item[lower] !== undefined && item[lower] !== null) return item[lower];
 
     return 0;
   }, []);
 
-  // Extract Clarities and Colors from Data (case-insensitive)
   const clarities = useMemo(() => {
     const list = reportRows.map((x) => x.clarityName || x.ClarityName || x.clarityname);
     return [...new Set(list)].filter(Boolean);
@@ -286,7 +276,6 @@ const SolitaireFastMovingReport = () => {
 
   const metrics = ["Opening", "Purchase", "Sale", "Closing"];
 
-  // Helper to fetch cell values for the grid matrix (casing immune)
   const getCellValues = useCallback((color, clarity, metric) => {
     const item = reportRows.find(
       (x) =>
@@ -304,7 +293,6 @@ const SolitaireFastMovingReport = () => {
     };
   }, [reportRows, getPropVal]);
 
-  // Highlighting comparison helper
   const getCellHighlight = useCallback((color, clarity, metric, valKey, currentVal) => {
     if (metric === "Closing") {
       const ref = getCellValues(color, clarity, "Opening");
@@ -320,7 +308,6 @@ const SolitaireFastMovingReport = () => {
     return "";
   }, [getCellValues]);
 
-  // Modal Cell Click Details
   const handleCellClick = async (color, clarity) => {
     setModalColor(color);
     setModalClarity(clarity);
@@ -347,7 +334,6 @@ const SolitaireFastMovingReport = () => {
     }
   };
 
-  // Format Dates
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     let d = new Date(dateStr);
@@ -357,7 +343,6 @@ const SolitaireFastMovingReport = () => {
     return `${day}-${month}-${d.getFullYear()}`;
   };
 
-  // Custom XML/XLS Excel Export matching MVC style with colors
   const handleExcelExport = () => {
     const table = document.getElementById("FastMovingReportT");
     if (!table) {
@@ -417,7 +402,6 @@ const SolitaireFastMovingReport = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Print Report
   const handlePrint = () => {
     const node = printRef.current;
     if (!node) {
@@ -474,7 +458,6 @@ const SolitaireFastMovingReport = () => {
     printWindow.print();
   };
 
-  // Render Subtable for Modal Detail view
   const renderDetailSubTable = (trnType, title) => {
     const rows = detailRows.filter((x) => x.trnType === trnType || x.TrnType === trnType);
     if (!rows.length) {
@@ -576,7 +559,6 @@ const SolitaireFastMovingReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Fast Moving Report")} pageTitle={t("Reports")} />
 
-          {/* Header Bar matching SolitaireSaleReport */}
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
@@ -617,7 +599,6 @@ const SolitaireFastMovingReport = () => {
             </div>
           </div>
 
-          {/* Filters Card matching SolitaireSaleReport Layout */}
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody className="bg-light-subtle">
@@ -777,7 +758,6 @@ const SolitaireFastMovingReport = () => {
             </Card>
           )}
 
-          {/* Pivot Table Display Card */}
           {hasSearched && reportRows.length > 0 && (
             <Card className="shadow-lg border-0 rounded-3">
               <CardBody className="p-4">
@@ -827,7 +807,6 @@ const SolitaireFastMovingReport = () => {
                     <tbody className="fs-11">
                       {colors.map((color, colorIdx) => (
                         <React.Fragment key={colorIdx}>
-                          {/* Color Row Header */}
                           <tr className="table-light border-bottom-3">
                             <td
                               colSpan={2 + clarities.length * 5}
@@ -838,7 +817,6 @@ const SolitaireFastMovingReport = () => {
                             </td>
                           </tr>
 
-                          {/* 4 Rows per color */}
                           {metrics.map((metric, metricIdx) => (
                             <tr key={metricIdx}>
                               {metricIdx === 0 ? (
@@ -864,7 +842,6 @@ const SolitaireFastMovingReport = () => {
                                   metric
                                 );
 
-                                // Get highlights
                                 const highlightPcs = getCellHighlight(
                                   color,
                                   clarity,
@@ -961,7 +938,6 @@ const SolitaireFastMovingReport = () => {
             </Card>
           )}
 
-          {/* Modal for detail view */}
           <Modal
             isOpen={modalOpen}
             toggle={() => setModalOpen(!modalOpen)}

@@ -146,11 +146,9 @@ const SolitaireConsumptionReport = () => {
         const list = response.Data || response.data || [];
         setReportData(Array.isArray(list) ? list : []);
         setHasSearched(true);
-        // Clear any previously saved broken pivot layout so default Clarity x Col loads
         try {
           localStorage.removeItem("pivotviewReports_StockConsumption");
         } catch (e) {
-          /* ignore */
         }
         if (!list.length) {
           toast.info(t("No record found matching the configurations"));

@@ -40,7 +40,6 @@ const getRowVal = (row, ...keys) => {
   return "";
 };
 
-// Returns "-" for empty string, null or undefined; otherwise returns value as-is
 const dash = (val) => (val === "" || val === null || val === undefined) ? "-" : val;
 
 const compareBg = (flag) => {

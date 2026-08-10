@@ -43,13 +43,11 @@ import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDa
 import "chart.js/auto";
 import SaleAnalysisPivotView from "./SaleAnalysisPivotView";
 
-// MVC palette
 const CHART_COLORS = [
   "#FF6384", "#91eded", "#FFCE25", "#4BC0C0",
   "#9966FF", "#FF00FF", "#0000FF", "#75cb7c", "#38A2EB"
 ];
 
-/** MVC arrowLinesPlugin — external labels with leader lines (pie/donut only) */
 const arrowLinesPlugin = {
   id: "arrowLinesPlugin",
   afterDatasetsDraw(chart) {
@@ -105,9 +103,6 @@ const arrowLinesPlugin = {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Grouping options (MVC SaleChartReports.cshtml #saleana select)
-// ─────────────────────────────────────────────────────────────────────────────
 const SALE_ANA_OPTIONS = [
   { value: "Lab",          label: "Lab" },
   { value: "Shape",        label: "Shape" },
@@ -133,7 +128,6 @@ const SaleAnalysisReport = () => {
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
-  // ── Filters ────────────────────────────────────────────────────────────────
   const [fromDate,   setFromDate]   = useState(settingFrom);
   const [toDate,     setToDate]     = useState(settingTo);
   const [currency,   setCurrency]   = useState("");
@@ -146,7 +140,6 @@ const SaleAnalysisReport = () => {
   const [purRtn,     setPurRtn]     = useState(false);
   const [saleAna,    setSaleAna]    = useState("Lab");
 
-  // Autocomplete selects
   const [partyInput,       setPartyInput]       = useState("");
   const [partyOptions,     setPartyOptions]     = useState([]);
   const [selectedParty,    setSelectedParty]    = useState(null);
@@ -162,7 +155,6 @@ const SaleAnalysisReport = () => {
   const [selectedExpParty, setSelectedExpParty] = useState(null);
   const [loadingExpParties,setLoadingExpParties]= useState(false);
 
-  // Multi-select lists
   const [selectedShapes,       setSelectedShapes]       = useState([]);
   const [selectedColors,       setSelectedColors]       = useState([]);
   const [selectedClarities,    setSelectedClarities]    = useState([]);
@@ -179,7 +171,6 @@ const SaleAnalysisReport = () => {
   const [selectedProductTypes, setSelectedProductTypes] = useState([]);
   const [selectedSieves,       setSelectedSieves]       = useState([]);
 
-  // Dropdown master options
   const [dropdownOptions, setDropdownOptions] = useState({
     currency: [], type: [], subType: [], category: [],
     shape: [], color: [], size: [], clarity: [], lab: [],
@@ -187,7 +178,6 @@ const SaleAnalysisReport = () => {
     milky: [], luster: [], natts: [], mines: [], productType: [], sieve: []
   });
 
-  // ── UI state ───────────────────────────────────────────────────────────────
   const [loading,         setLoading]         = useState(false);
   const [pivotLoading,    setPivotLoading]     = useState(false);
   const [reportData,      setReportData]       = useState([]);
@@ -198,19 +188,16 @@ const SaleAnalysisReport = () => {
   const [activeTab,       setActiveTab]        = useState("table");
   const [showPivot,       setShowPivot]        = useState(false);
 
-  // Chart settings
   const [chartType,           setChartType]           = useState("doughnut");
   const [showExportMenu,      setShowExportMenu]       = useState(false);
   const [showChartTypeMenu,   setShowChartTypeMenu]    = useState(false);
   const chartMenusRef = useRef(null);
 
-  // Pagination & search
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize,    setPageSize]    = useState(500);
   const [searchTerm,  setSearchTerm]  = useState("");
   const [colFilters,  setColFilters]  = useState({});
 
-  // Close menus on outside click
   useEffect(() => {
     const onDocClick = (e) => {
       if (chartMenusRef.current && !chartMenusRef.current.contains(e.target)) {
@@ -222,7 +209,6 @@ const SaleAnalysisReport = () => {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // Load dropdowns on mount
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -263,7 +249,6 @@ const SaleAnalysisReport = () => {
     setToDate(settingTo);
   }, [settingFrom, settingTo]);
 
-  // Autocomplete account-group lookup (party / broker / exp-party)
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) { setOptions([]); return; }
     setLoadingState(true);
@@ -276,7 +261,7 @@ const SaleAnalysisReport = () => {
           label: item.accGrpName || item.AccGrpName
         })));
       }
-    } catch { /* ignore */ } finally { setLoadingState(false); }
+    } catch { } finally { setLoadingState(false); }
   };
 
   useEffect(() => {
@@ -292,7 +277,6 @@ const SaleAnalysisReport = () => {
     return () => clearTimeout(t2);
   }, [expPartyInput]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const mapSelectVal = (list) => {
     if (!list || !list.length) return null;
     const vals = list.map((i) => i.value).filter((v) => v != null && String(v).trim() !== "");
@@ -405,7 +389,6 @@ const SaleAnalysisReport = () => {
     setColFilters({});
   };
 
-  // Case-insensitive field picker (API may camelCase some keys)
   const pick = (row, ...names) => {
     if (!row) return undefined;
     for (const name of names) {
@@ -479,7 +462,6 @@ const SaleAnalysisReport = () => {
 
   const rowNum = (row, ...names) => Number(pick(row, ...names) ?? 0);
 
-  // ── Filtered / paginated data ───────────────────────────────────────────────
   const filteredData = useMemo(() => {
     let data = reportData;
     if (searchTerm) {
@@ -515,7 +497,6 @@ const SaleAnalysisReport = () => {
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
 
-  // ── Footer totals (matches MVC DataTable footerCallback cols 1,3,5,7,9,11,13,15) ──
   const totals = useMemo(() => {
     const s = { pcs: 0, carats: 0, saleAmtdollar: 0, plDollar: 0, purCostDollar: 0, saleAmtINR: 0, plINR: 0, purCostINR: 0 };
     filteredData.forEach((row) => {
@@ -531,7 +512,6 @@ const SaleAnalysisReport = () => {
     return s;
   }, [filteredData]);
 
-  // ── Chart data (MVC ParcelSaleLabinitializeCharts / SaleLabinitializeCharts) ──
   const chartData = useMemo(() => {
     if (!reportData.length) return null;
     const labels        = reportData.map((r) => getGroupingValue(r, activeReportType) || "Unknown");
@@ -540,7 +520,6 @@ const SaleAnalysisReport = () => {
     const saleAmtdollar = reportData.map((r) => rowNum(r, "SaleAmtdollar"));
     const saleperdollar = reportData.map((r) => rowNum(r, "Saleperdollar"));
     const plDollar      = reportData.map((r) => rowNum(r, "PLdollar"));
-    // MVC SaleLabinitializeCharts uses PLperOnPurAmtdollar for the 3rd chart
     const plperOnPurAmt = reportData.map((r) => rowNum(r, "PLperOnPurAmtdollar"));
 
     const makeChart = (title, perValues, hoverValues, isAmt) => ({
@@ -589,7 +568,6 @@ const SaleAnalysisReport = () => {
     }
   });
 
-  // ── CSV export ─────────────────────────────────────────────────────────────
   const handleExportCSV = () => {
     const headers = [
       activeReportType,
@@ -635,7 +613,6 @@ const SaleAnalysisReport = () => {
     link.click();
   };
 
-  // ── Chart image export ─────────────────────────────────────────────────────
   const canvasIds = ["saleCaratPerChart", "saleSaleAmtChart", "salePLCOGSChart"];
 
   const handleChartExport = (format) => {
@@ -681,12 +658,10 @@ const SaleAnalysisReport = () => {
     }
   };
 
-  // ── Page title ─────────────────────────────────────────────────────────────
   useEffect(() => {
     document.title = `${t("Sale Analysis Report")} | ${t("Admin")}`;
   }, []);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <React.Fragment>
       <style>{`
@@ -706,7 +681,6 @@ const SaleAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
-        /* MVC chart toolbar: download + hamburger */
         .par-chart-toolbar {
           display: flex;
           justify-content: flex-end;
@@ -769,7 +743,6 @@ const SaleAnalysisReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Sale Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar */}
           <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-line-chart-line fs-20 text-primary"></i>
@@ -831,7 +804,6 @@ const SaleAnalysisReport = () => {
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2">
                 <form id="sale-analysis-form" onSubmit={handleSearch}>
-                  {/* Row 1: dates, currency, inv no, bill no, type */}
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -885,7 +857,6 @@ const SaleAnalysisReport = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 2: sub-type, category, party, broker, exp party, lot no */}
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -953,7 +924,6 @@ const SaleAnalysisReport = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 3: multi-select diamond attributes */}
                   <Row className="g-2 mb-2">
                     <Col sm={2}><FormGroup className="mb-0"><Label>{t("Shape")}</Label>
                       <Select isMulti options={makeSelectOptions(dropdownOptions.shape)} value={selectedShapes} onChange={setSelectedShapes} placeholder={t("Shape")} /></FormGroup></Col>
@@ -1005,7 +975,6 @@ const SaleAnalysisReport = () => {
             </Card>
           )}
 
-          {/* ── Pivot view ── */}
           {showPivot && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="pb-2 border-0 d-flex justify-content-between align-items-center bg-transparent">
@@ -1031,7 +1000,6 @@ const SaleAnalysisReport = () => {
             </Card>
           )}
 
-          {/* ── Report data card ── */}
           {searched && !showPivot && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
@@ -1086,7 +1054,6 @@ const SaleAnalysisReport = () => {
                 ) : (
                   <TabContent activeTab={activeTab}>
 
-                    {/* ── Table tab ── */}
                     <TabPane tabId="table">
                       {filteredData.length === 0 ? (
                         <div className="text-center p-5">
@@ -1211,7 +1178,6 @@ const SaleAnalysisReport = () => {
                             </table>
                           </div>
 
-                          {/* Pagination */}
                           <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                             <div className="d-flex align-items-center gap-2">
                               <span className="text-muted small">
@@ -1235,7 +1201,6 @@ const SaleAnalysisReport = () => {
                       )}
                     </TabPane>
 
-                    {/* ── Charts tab ── */}
                     <TabPane tabId="charts">
                       {!chartData ? (
                         <div className="text-center p-5">

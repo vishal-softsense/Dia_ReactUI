@@ -74,7 +74,6 @@ const MonthAnalysisReport = () => {
   const [reportData, setReportData] = useState([]);
   const [searched, setSearched] = useState(false);
   const [activeReportType, setActiveReportType] = useState("");
-  // MVC-style: filters open by default; collapse after Generate, reopen via chevron
   const [showFilterPanel, setShowFilterPanel] = useState(true);
 
   useEffect(() => {
@@ -241,7 +240,7 @@ const MonthAnalysisReport = () => {
         }));
         setReportData(mappedList);
         setActiveReportType(reportType);
-        setShowFilterPanel(false); // collapse filters, show report (MVC SetSearchDiv report)
+        setShowFilterPanel(false);
         if (!mappedList.length) {
           toast.info("No record found matching the configurations");
         }
@@ -285,7 +284,6 @@ const MonthAnalysisReport = () => {
     setShowFilterPanel(true);
   };
 
-  /** MVC SetSearchDiv('search') — hide report, show filter card again */
   const openFilterPanel = () => {
     setShowFilterPanel(true);
   };
@@ -359,7 +357,6 @@ const MonthAnalysisReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Month Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar */}
           <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-calendar-todo-line fs-20 text-primary"></i>

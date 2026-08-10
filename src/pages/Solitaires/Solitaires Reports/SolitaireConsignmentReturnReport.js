@@ -71,7 +71,7 @@ const SolitaireConsignmentReturnReport = () => {
     fromDate,
     toDate,
     currency: "",
-    invNo: "", // Maps to Memo No
+    invNo: "",
     type: "ALL",
     party: "",
     broker: "",

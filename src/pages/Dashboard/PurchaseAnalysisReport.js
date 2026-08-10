@@ -43,7 +43,6 @@ import {
 import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
 import "chart.js/auto";
 
-// MVC palette (PurchaseAnalysisReport.js createChart)
 const CHART_COLORS = [
   "#FF6384",
   "#91eded",
@@ -56,7 +55,6 @@ const CHART_COLORS = [
   "#38A2EB"
 ];
 
-/** MVC arrowLinesPlugin — external "Abbrev - n%" labels with leader lines (pie/donut only). */
 const arrowLinesPlugin = {
   id: "arrowLinesPlugin",
   afterDatasetsDraw(chart) {
@@ -125,7 +123,6 @@ const PurchaseAnalysisReport = () => {
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
-  // Basic Filters State
   const [fromDate, setFromDate] = useState(settingFrom);
   const [toDate, setToDate] = useState(settingTo);
   const [currency, setCurrency] = useState("");
@@ -138,7 +135,6 @@ const PurchaseAnalysisReport = () => {
   const [saleRtn, setSaleRtn] = useState(false);
   const [purAna, setPurAna] = useState("Lab");
 
-  // Autocomplete Select Filters
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
   const [selectedParty, setSelectedParty] = useState(null);
@@ -154,7 +150,6 @@ const PurchaseAnalysisReport = () => {
   const [selectedExpParty, setSelectedExpParty] = useState(null);
   const [loadingExpParties, setLoadingExpParties] = useState(false);
 
-  // Multi-select Lists State
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedClarities, setSelectedClarities] = useState([]);
@@ -171,7 +166,6 @@ const PurchaseAnalysisReport = () => {
   const [selectedProductTypes, setSelectedProductTypes] = useState([]);
   const [selectedSieves, setSelectedSieves] = useState([]);
 
-  // Dropdown Master Options
   const [dropdownOptions, setDropdownOptions] = useState({
     currency: [],
     type: [],
@@ -194,20 +188,17 @@ const PurchaseAnalysisReport = () => {
     sieve: []
   });
 
-  // Report Data and UI State
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
   const [searched, setSearched] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(true);
   const [activeReportType, setActiveReportType] = useState("Lab");
 
-  // Pagination & Search in Table
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
   const [searchTerm, setSearchTerm] = useState("");
   const [colFilters, setColFilters] = useState({});
 
-  // Chart Settings
   const [activeTab, setActiveTab] = useState("table");
   const [chartType, setChartType] = useState("doughnut");
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -267,7 +258,6 @@ const PurchaseAnalysisReport = () => {
     setToDate(settingTo);
   }, [settingFrom, settingTo]);
 
-  // Autocomplete account group lookup
   const handleAccountSearch = async (term, setOptions, setLoadingState) => {
     if (!term || term.length < 2) {
       setOptions([]);
@@ -325,7 +315,6 @@ const PurchaseAnalysisReport = () => {
       return vals.length ? vals : null;
     };
 
-    // Match MVC ajax: only send filled filters (null = skipped in PurAnaData)
     const payload = {
       fromDate: fromDate || null,
       toDate: toDate || null,
@@ -427,7 +416,6 @@ const PurchaseAnalysisReport = () => {
     setColFilters({});
   };
 
-  // Case-insensitive field read — ASP.NET camelCase turns INRPLper→iNRPLper, CPS→cPS, etc.
   const pick = (row, ...names) => {
     if (!row) return undefined;
     for (const name of names) {
@@ -443,7 +431,6 @@ const PurchaseAnalysisReport = () => {
     return undefined;
   };
 
-  // MVC DataTable uses data: PurAna (Lab/Shape/…) as first column key
   const getGroupingValue = (row, field) => {
     if (!row || !field) return "";
     const v = pick(row, field, field.charAt(0).toLowerCase() + field.slice(1));
@@ -520,7 +507,6 @@ const PurchaseAnalysisReport = () => {
     }
   };
 
-  // MVC ListBox uses ID for both value and display
   const makeSelectOptions = (arr) =>
     (arr || []).map((x) => ({
       value: x.id ?? x.ID ?? x.name ?? x.Name,
@@ -537,7 +523,6 @@ const PurchaseAnalysisReport = () => {
 
   const rowNum = (row, ...names) => Number(pick(row, ...names) ?? 0);
 
-  // Filter and Paginate Table Data
   const filteredData = useMemo(() => {
     let data = reportData;
     if (searchTerm) {
@@ -574,7 +559,6 @@ const PurchaseAnalysisReport = () => {
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
 
-  // Compute footer aggregates on full filtered data set
   const totals = useMemo(() => {
     const sums = {
       purPcs: 0,
@@ -613,7 +597,6 @@ const PurchaseAnalysisReport = () => {
     return sums;
   }, [filteredData]);
 
-  // Export report to CSV
   const handleExportCSV = () => {
     const headers = [
       activeReportType,
@@ -683,7 +666,6 @@ const PurchaseAnalysisReport = () => {
       pick(row, "TotalPLdollarper", "totalPLdollarper") ?? 0
     ]);
 
-    // Append summary totals row
     rows.push([
       "Total",
       totals.purPcs,
@@ -734,7 +716,6 @@ const PurchaseAnalysisReport = () => {
     document.body.removeChild(link);
   };
 
-  // Charts match MVC: series = % (SoldPLdollarper / INRPLper), default doughnut
   const chartLabels = filteredData.map((row) => getGroupingValue(row, activeReportType) || "Unknown");
   const soldPLDollarAbs = filteredData.map((row) => rowNum(row, "SoldPLdollar", "soldPLdollar"));
   const soldPLDollarPer = filteredData.map((row) => rowNum(row, "SoldPLdollarper", "soldPLdollarper"));
@@ -823,7 +804,6 @@ const PurchaseAnalysisReport = () => {
     return inst.canvas || inst;
   };
 
-  /** MVC downloadAllChartsCombined — PNG / JPG / PDF of both charts side by side */
   const downloadAllChartsCombined = (format) => {
     setShowExportMenu(false);
     const canvasDollar = getChartCanvas(chartDollarRef);
@@ -993,7 +973,6 @@ const PurchaseAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
-        /* Visible outline buttons in light + dark (MVC btn-outline-primary) */
         .par-header-btn {
           border: 1px solid var(--vz-primary, #405189) !important;
           color: var(--vz-primary, #405189) !important;
@@ -1019,7 +998,6 @@ const PurchaseAnalysisReport = () => {
         .multi-select-row .form-group {
           margin-bottom: 12px;
         }
-        /* MVC chart toolbar: download + hamburger */
         .par-chart-toolbar {
           display: flex;
           justify-content: flex-end;
@@ -1093,7 +1071,6 @@ const PurchaseAnalysisReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Purchase Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar */}
           <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-shopping-bag-3-line fs-20 text-primary"></i>
@@ -1164,7 +1141,6 @@ const PurchaseAnalysisReport = () => {
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2">
                 <form id="purchase-analysis-form" onSubmit={handleSearch}>
-                  {/* MVC layout: left filters + right Lot No textarea */}
                   <Row className="g-2">
                     <Col md={10}>
                       <Row className="g-2">
@@ -1283,7 +1259,6 @@ const PurchaseAnalysisReport = () => {
                     </Col>
                   </Row>
 
-                  {/* MVC attribute rows: Shape→Polish | Symmetry→Natts | Mines→Exp Party */}
                   <Row className="g-2 multi-select-row mt-1">
                     <Col sm={2}><FormGroup><Label>{t("Shape")}</Label><Select isMulti options={makeSelectOptions(dropdownOptions.shape)} value={selectedShapes} onChange={setSelectedShapes} placeholder={t("Shape")} /></FormGroup></Col>
                     <Col sm={2}><FormGroup><Label>{t("Color")}</Label><Select isMulti options={makeSelectOptions(dropdownOptions.color)} value={selectedColors} onChange={setSelectedColors} placeholder={t("Color")} /></FormGroup></Col>

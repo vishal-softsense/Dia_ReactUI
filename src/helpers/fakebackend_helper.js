@@ -750,6 +750,18 @@ export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_
 export const getSolitaireAgingReport = (filter) => api.create(url.SOLITAIRE_AGING_REPORT, filter);
 export const getSolitaireAgingDropdowns = () => api.get(url.SOLITAIRE_AGING_DROPDOWNS);
 
+export const getOutstandingReportDropdowns = () => api.get(url.OUTSTANDING_REPORT_DROPDOWNS);
+export const getOutstandingReport = (filter) => api.create(url.OUTSTANDING_REPORT_LIST, filter);
+
+export const getLoanOutstandingReportDropdowns = () => api.get(url.LOAN_OUTSTANDING_REPORT_DROPDOWNS);
+export const getLoanOutstandingReport = (filter) => api.create(url.LOAN_OUTSTANDING_REPORT_LIST, filter);
+
+export const getBrokerageOutstandingReportDropdowns = () => api.get(url.BROKERAGE_OUTSTANDING_REPORT_DROPDOWNS);
+export const getBrokerageOutstandingReport = (filter) => api.create(url.BROKERAGE_OUTSTANDING_REPORT_LIST, filter);
+
+export const getCommissionOutstandingReportDropdowns = () => api.get(url.COMMISSION_OUTSTANDING_REPORT_DROPDOWNS);
+export const getCommissionOutstandingReport = (filter) => api.create(url.COMMISSION_OUTSTANDING_REPORT_LIST, filter);
+
 // Solitaire Fast Moving Report
 export const getSolitaireFastMovingReport = (filter) => api.create(url.SOLITAIRE_FAST_MOVING_REPORT, filter);
 export const getSolitaireFastMovingDisplay = (filter) => api.create(url.SOLITAIRE_FAST_MOVING_DISPLAY, filter);
