@@ -232,7 +232,6 @@ const SolitaireAgingReport = () => {
         );
       }
     } catch {
-      /* ignore */
     } finally {
       setLoadingParties(false);
     }
@@ -543,7 +542,6 @@ const SolitaireAgingReport = () => {
     <React.Fragment>
       <ToastContainer />
       <style>{`
-        /* Light theme styles */
         .aging-party-header td {
           background-color: #eef1f6 !important;
           color: var(--vz-dark, #212529) !important;
@@ -557,7 +555,6 @@ const SolitaireAgingReport = () => {
           color: var(--vz-dark, #212529) !important;
         }
 
-        /* Dark theme styles */
         [data-layout-mode="dark"] .aging-party-header td,
         [data-bs-theme="dark"] .aging-party-header td {
           background-color: #2b303c !important;

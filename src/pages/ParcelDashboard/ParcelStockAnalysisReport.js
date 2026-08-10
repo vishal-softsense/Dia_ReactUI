@@ -111,13 +111,11 @@ const Select = (props) => (
   />
 );
 
-// Chart visual colors matching Velzon and legacy MVC report style
 const CHART_COLORS = [
   "#FF6384", "#91eded", "#FFCE25", "#4BC0C0",
   "#9966FF", "#FF00FF", "#0000FF", "#75cb7c", "#38A2EB"
 ];
 
-// Stock Analysis GroupBy grouping options
 const STOCK_ANA_OPTIONS = [
   { value: "Shape", label: "Shape" },
   { value: "Size", label: "Size" },
@@ -159,7 +157,6 @@ const STATUS_OPTIONS = [
   { value: "All - Party Hold", label: "All - Party Hold" }
 ];
 
-// Debounced Input for filters
 const DebouncedInput = ({
   value: initialValue,
   onChange,
@@ -193,7 +190,6 @@ const DebouncedInput = ({
   );
 };
 
-// Column filter helper
 const Filter = ({ column }) => {
   const columnFilterValue = column.getFilterValue();
 
@@ -235,28 +231,23 @@ const arrowLinesPlugin = {
       const angle = (arc.startAngle + arc.endAngle) / 2;
       const outerRadius = arc.outerRadius;
 
-      // Center of the doughnut chart
       const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
       const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
 
-      // Compute label position
       const labelRadius = outerRadius * 1.05;
       let labelX = centerX + Math.cos(angle) * labelRadius;
       let labelY = centerY + Math.sin(angle) * labelRadius;
 
-      // Prevent overlapping by checking and adjusting Y position
       while (usedPositions.some(pos => Math.abs(pos - labelY) < 14)) {
         labelY += (labelY > centerY ? 14 : -14);
       }
       usedPositions.push(labelY);
 
-      // Adjust text alignment
       const isRightSide = labelX > centerX;
       const textOffset = isRightSide ? 10 : -10;
       ctx.textAlign = isRightSide ? "left" : "right";
       ctx.textBaseline = "middle";
 
-      // Draw label line
       const lineEndX = labelX + (isRightSide ? 20 : -20);
       ctx.beginPath();
       ctx.moveTo(centerX + Math.cos(angle) * outerRadius, centerY + Math.sin(angle) * outerRadius);
@@ -266,7 +257,6 @@ const arrowLinesPlugin = {
 
       const val = Number(dataset.data[index] || 0).toFixed(2);
 
-      // Draw label text outside the pie chart
       ctx.fillText(`${chart.data.labels[index]} - ${val}%`, lineEndX + textOffset, labelY);
     });
 
@@ -277,7 +267,7 @@ const arrowLinesPlugin = {
 const ParcelStockAnalysis = () => {
   const { t } = useTranslation();
 
-  // ── FILTER STATE ──
+
   const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
   const [show, setShow] = useState("Unsold");
   const [holdUnHold, setHoldUnHold] = useState("Unhold");
@@ -291,7 +281,7 @@ const ParcelStockAnalysis = () => {
   const [backPlusMinus, setBackPlusMinus] = useState("");
   const [lotNo, setLotNo] = useState("");
 
-  // Multi-select Lists
+
   const [selectedShapeGroups, setSelectedShapeGroups] = useState([]);
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectedColorGroups, setSelectedColorGroups] = useState([]);
@@ -303,7 +293,7 @@ const ParcelStockAnalysis = () => {
   const [selectedItemGroups, setSelectedItemGroups] = useState([]);
   const [selectedBoxNms, setSelectedBoxNms] = useState([]);
 
-  // Range inputs
+
   const [ctsFrm, setCtsFrm] = useState("");
   const [ctsTo, setCtsTo] = useState("");
   const [priceFrm, setPriceFrm] = useState("");
@@ -311,13 +301,13 @@ const ParcelStockAnalysis = () => {
   const [lotFrm, setLotFrm] = useState("");
   const [lotTo, setLotTo] = useState("");
 
-  // ── MASTER OPTIONS ──
+
   const [dropdownOptions, setDropdownOptions] = useState({
     shapeGroup: [], shape: [], colorGroup: [], color: [], size: [], clarity: [],
     sieve: [], location: [], itemGroup: [], boxname: []
   });
 
-  // ── UI INTERACTIVE STATE ──
+
   const [loading, setLoading] = useState(false);
   const [pivotLoading, setPivotLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
@@ -334,13 +324,13 @@ const ParcelStockAnalysis = () => {
     pageSize: 50,
   });
 
-  // Chart state
+
   const [chartType, setChartType] = useState("doughnut");
   const [showChartTypeMenu, setShowChartTypeMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const chartMenusRef = useRef(null);
 
-  // Close chart menus on outside click
+
   useEffect(() => {
     const onDocClick = (e) => {
       if (chartMenusRef.current && !chartMenusRef.current.contains(e.target)) {
@@ -352,13 +342,13 @@ const ParcelStockAnalysis = () => {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // Set page title and fetch dropdowns
+
   useEffect(() => {
     document.title = `${t("Parcel Stock Analysis Report")} | Premium Jewellery ERP`;
     fetchDropdowns();
   }, []);
 
-  // Fetch dropdowns from database SP
+
   const fetchDropdowns = async () => {
     try {
       const response = await getParcelStockAnalysisDropdowns();
@@ -386,7 +376,7 @@ const ParcelStockAnalysis = () => {
     }
   };
 
-  // Helper to map ReactSelect multi-selection values
+
   const mapSelectVal = (selectedList) => {
     if (!selectedList || !selectedList.length) return null;
     return selectedList.map(x => String(x.value));
@@ -411,7 +401,7 @@ const ParcelStockAnalysis = () => {
       backPer: Number(backPer) || 0,
       backPlusMinus: Number(backPlusMinus) || 0,
 
-      // Multi-Select Fields
+
       shapeGroup: mapSelectVal(selectedShapeGroups),
       shape: mapSelectVal(selectedShapes),
       colorGroup: mapSelectVal(selectedColorGroups),
@@ -423,7 +413,7 @@ const ParcelStockAnalysis = () => {
       itemGroup: mapSelectVal(selectedItemGroups),
       boxNm: mapSelectVal(selectedBoxNms),
 
-      // Ranges
+
       ctsFrm: Number(ctsFrm) || 0,
       ctsTo: Number(ctsTo) || 0,
       priceFrm: Number(priceFrm) || 0,
@@ -467,7 +457,7 @@ const ParcelStockAnalysis = () => {
     }
   };
 
-  // Mirrors MVC ParcelStockPivotData() → Syncfusion PivotView
+
   const handlePivot = async () => {
     setPivotLoading(true);
     setShowPivot(true);
@@ -535,7 +525,7 @@ const ParcelStockAnalysis = () => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   };
 
-  // Safe property selector for camelCase backend mapping
+
   const pick = (row, ...names) => {
     if (!row) return undefined;
     for (const name of names) {
@@ -594,7 +584,7 @@ const ParcelStockAnalysis = () => {
     return String(raw || "");
   };
 
-  // ── REACT TABLE DEFINITION ──
+
   const columns = useMemo(() => [
     {
       header: () => activeReportType,
@@ -726,12 +716,12 @@ const ParcelStockAnalysis = () => {
     }
   };
 
-  // Reset pageIndex on filter change
+
   useEffect(() => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [globalFilter, columnFilters]);
 
-  // Calculations for totals and cards based on filtered rows
+
   const filteredRows = table.getFilteredRowModel().rows;
   const summaryMetrics = useMemo(() => {
     let pcs = 0;
@@ -763,8 +753,7 @@ const ParcelStockAnalysis = () => {
     return { pcs, carats, amount, avgRate, avgBack };
   }, [filteredRows]);
 
-  // Chart configuration
-  // Chart configuration
+
   const chartData = useMemo(() => {
     if (!reportData.length) return null;
     const labels = reportData.map(r => getGroupName(r));
@@ -863,7 +852,7 @@ const ParcelStockAnalysis = () => {
     };
   }, [chartData, chartType, t]);
 
-  // Excel Export handler
+
   const handleExcelExport = async () => {
     if (!reportData.length) {
       toast.warning(t("No data available to export"));
@@ -1030,7 +1019,7 @@ const ParcelStockAnalysis = () => {
           position: relative;
         }
 
-        /* ── Report Table Theme & Layout Styling ── */
+
         .par-report-table {
           border-collapse: separate !important;
           border-spacing: 0 !important;
@@ -1041,7 +1030,7 @@ const ParcelStockAnalysis = () => {
           white-space: nowrap !important;
           vertical-align: middle;
         }
-        /* Sticky header row 1 (Titles) */
+
         .par-report-table thead tr:first-child th {
           position: sticky;
           top: 0;
@@ -1054,7 +1043,7 @@ const ParcelStockAnalysis = () => {
           padding: 8px 10px;
           letter-spacing: 0.2px;
         }
-        /* Sticky header row 2 (Filter inputs) */
+
         .par-report-table thead tr:nth-child(2) th {
           position: sticky;
           top: 35px;
@@ -1063,13 +1052,13 @@ const ParcelStockAnalysis = () => {
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
           padding: 4px 6px;
         }
-        /* Data table rows */
+
         .par-report-table tbody td {
           padding: 6px 10px;
           font-size: 12px;
           border-bottom: 1px solid var(--vz-border-color, #e9ebec);
         }
-        /* Fixed static footer matching report design */
+
         .par-report-table tfoot td {
           position: sticky;
           bottom: 0;
@@ -1097,7 +1086,7 @@ const ParcelStockAnalysis = () => {
         <Container fluid>
           <BreadCrumb title={t("Parcel Stock Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar matching ParcelSaleAnalysisReport.js design */}
+
           <div className="card d-flex flex-row flex-wrap align-items-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-shopping-bag-3-line fs-20 text-primary"></i>
@@ -1155,12 +1144,12 @@ const ParcelStockAnalysis = () => {
             </div>
           </div>
 
-          {/* Search Filters Form Card matching ParcelSaleAnalysisReport.js layout */}
+
           {showFilterPanel && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2">
                 <form id="parcel-stock-analysis-form" onSubmit={handleSearch}>
-                  {/* Row 1: Stock Till Date, Show, Hold/Unhold, Single/Parcel, Status, Rate % */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1244,7 +1233,7 @@ const ParcelStockAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 2: Rate +-, Back %, Back +-, Cts From, Cts To, Price From */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1320,7 +1309,7 @@ const ParcelStockAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 3: Price To, LotNo From, LotNo To, Enter Lot No */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1372,7 +1361,7 @@ const ParcelStockAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 4: Shape Group, Shape, Color Group, Color, Size, Sieve */}
+
                   <Row className="g-2 mb-2">
                     <Col sm={2}>
                       <FormGroup className="mb-0">
@@ -1448,7 +1437,7 @@ const ParcelStockAnalysis = () => {
                     </Col>
                   </Row>
 
-                  {/* Row 5: Clarity, Box Name, Location, Group */}
+
                   <Row className="g-2">
                     <Col sm={3}>
                       <FormGroup className="mb-0">
@@ -1504,7 +1493,7 @@ const ParcelStockAnalysis = () => {
             </Card>
           )}
 
-          {/* ── PIVOT REPORT SECTION ── */}
+
           {showPivot && (
             <div className="control-section mb-4" id="pivot-table-section">
               {pivotLoading ? (
@@ -1528,7 +1517,7 @@ const ParcelStockAnalysis = () => {
             </div>
           )}
 
-          {/* ── REPORT DATA CARD ── */}
+
           {searched && !showPivot && (
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardHeader className="d-flex align-items-center justify-content-between pb-2 border-0 bg-transparent">
@@ -1567,7 +1556,7 @@ const ParcelStockAnalysis = () => {
 
               <CardBody className="pt-2">
                 <TabContent activeTab={activeResultTab}>
-                  {/* TAB 1: SUMMARY DATA GRID */}
+
                   <TabPane tabId="table">
                     <div className="border border-dashed border-end-0 border-start-0 py-3 mb-3">
                       <Row className="align-items-center g-3">
@@ -1710,7 +1699,7 @@ const ParcelStockAnalysis = () => {
                     </div>
                   </TabPane>
 
-                  {/* TAB 2: ANALYTICAL CHARTS */}
+
                   <TabPane tabId="charts">
                     {!chartData ? (
                       <div className="text-center py-5">

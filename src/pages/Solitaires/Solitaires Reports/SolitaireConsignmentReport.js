@@ -46,9 +46,6 @@ const getRowVal = (row, ...keys) => {
   return "";
 };
 
-// ──────────────────────────────────────────────
-// Footer totals for main report (parent rows)
-// ──────────────────────────────────────────────
 const getTableTotals = (table) => {
   const rows = table.getFilteredRowModel().rows.map((r) => r.original);
   let totalCarats = 0, totalAmount = 0, totalReturn = 0, totalPurchase = 0;
@@ -316,9 +313,6 @@ const SolitaireConsignmentReport = () => {
     }
   };
 
-  // ──────────────────────────────────────────────
-  // Group raw rows by MemoNo → parent + children
-  // ──────────────────────────────────────────────
   const groupedVisibleRows = useMemo(() => {
     const grouped = {};
     (reportRows || []).forEach((r) => {
@@ -370,9 +364,6 @@ const SolitaireConsignmentReport = () => {
     return out;
   }, [reportRows]);
 
-  // ──────────────────────────────────────────────
-  // Render child rows on expand
-  // ──────────────────────────────────────────────
   const renderSubRows = useCallback(
     (row) => {
       const parent = row.original;
@@ -401,9 +392,6 @@ const SolitaireConsignmentReport = () => {
     [expandedMemoNos]
   );
 
-  // ──────────────────────────────────────────────
-  // Main report columns (normal mode)
-  // ──────────────────────────────────────────────
   const columns = useMemo(
     () => [
       {
@@ -611,9 +599,6 @@ const SolitaireConsignmentReport = () => {
     [expandedMemoNos, t]
   );
 
-  // ──────────────────────────────────────────────
-  // Summary mode columns
-  // ──────────────────────────────────────────────
   const summaryColumns = useMemo(
     () => [
       {
@@ -656,9 +641,6 @@ const SolitaireConsignmentReport = () => {
     [t]
   );
 
-  // ──────────────────────────────────────────────
-  // Excel export
-  // ──────────────────────────────────────────────
   const handleExcel = async () => {
     if (isSummaryMode) {
       if (!summaryRows || summaryRows.length === 0) {
@@ -754,7 +736,6 @@ const SolitaireConsignmentReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Consignment Report")} pageTitle={t("Reports")} />
 
-          {/* ── Header Bar ── */}
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
@@ -806,14 +787,11 @@ const SolitaireConsignmentReport = () => {
             </div>
           </div>
 
-          {/* ── Filter Panel ── */}
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody className="bg-light-subtle">
                 <Row className="g-3">
-                  {/* Left 10 cols */}
                   <Col md={10}>
-                    {/* Row 1: Date, ToDate, Currency, MemoNo, Type, Summary+Clear */}
                     <Row className="g-2 mb-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
@@ -905,7 +883,6 @@ const SolitaireConsignmentReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 2: Return Date, Party, Broker, Seller */}
                     <Row className="g-2 mb-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
@@ -989,7 +966,6 @@ const SolitaireConsignmentReport = () => {
                     </Row>
                   </Col>
 
-                  {/* Right 2 cols — Lot No textarea */}
                   <Col md={2}>
                     <FormGroup className="mb-0">
                       <Label className="fw-medium mb-1 small">{t("Enter Lot No")}</Label>
@@ -1007,7 +983,6 @@ const SolitaireConsignmentReport = () => {
 
                 <hr className="my-3 text-muted opacity-25" />
 
-                {/* Row 3: Shape, Color, Clarity, Size, Proportion, Polish */}
                 <Row className="g-2 mb-2">
                   {[
                     { label: "Shape", key: "shape" },
@@ -1035,7 +1010,6 @@ const SolitaireConsignmentReport = () => {
                   ))}
                 </Row>
 
-                {/* Row 4: Symmetry, LAB, Fluorescence, Milky, Luster, Natts */}
                 <Row className="g-2 mb-2">
                   {[
                     { label: "Symmetry", key: "symmetry" },
@@ -1063,7 +1037,6 @@ const SolitaireConsignmentReport = () => {
                   ))}
                 </Row>
 
-                {/* Row 5: Mines, ProductType, Sieve */}
                 <Row className="g-2">
                   {[
                     { label: "Mines", key: "mines" },
@@ -1091,7 +1064,6 @@ const SolitaireConsignmentReport = () => {
             </Card>
           )}
 
-          {/* ── Results Panel ── */}
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody>

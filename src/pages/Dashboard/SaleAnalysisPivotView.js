@@ -1,10 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView wrapper for Sale Analysis Report.
- * Mirrors MVC initializeSyncfusionPivotSale (ChartReports.js line ~3441).
- * Uses global `ej` from CDN (public/index.html).
- */
 const SaleAnalysisPivotView = ({ data = [] }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
@@ -27,7 +22,6 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
     });
   };
 
-  // Column-wise heatmap — red gradient (matches MVC applyHeatmapColors)
   const applyHeatmapColors = () => {
     setTimeout(() => {
       const cells = Array.from(
@@ -86,13 +80,11 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
 
   const destroyPivot = () => {
     if (pivotRef.current) {
-      try { pivotRef.current.destroy(); } catch (e) { /* ignore */ }
+      try { pivotRef.current.destroy(); } catch (e) {}
       pivotRef.current = null;
     }
   };
 
-  // API returns camelCase JSON; Syncfusion needs exact field name matches.
-  // Normalize every row to PascalCase keys that match the MVC pivot config.
   const normalizeRow = (item) => {
     const get = (key) => {
       if (item[key] !== undefined) return item[key];
@@ -123,7 +115,6 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
 
     const parsed = pivotData.map(normalizeRow);
 
-    // If pivot already exists just refresh its data (MVC pattern)
     if (pivotRef.current) {
       pivotRef.current.setProperties(
         { dataSourceSettings: { dataSource: parsed } },
@@ -137,7 +128,6 @@ const SaleAnalysisPivotView = ({ data = [] }) => {
       dataSourceSettings: {
         dataSource: parsed,
         expandAll: false,
-        // MVC default: columns = Clarity + Size, rows = Color + Shape
         columns: [
           { name: "Clarity", caption: "Clarity" },
           { name: "Size",    caption: "Size" }

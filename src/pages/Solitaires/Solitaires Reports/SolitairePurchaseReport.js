@@ -178,11 +178,6 @@ const SolitairePurchaseReport = () => {
     (dropdownKey) => {
       const list = dropdownData?.[dropdownKey] || [];
       return list.map((item) => ({
-        // MVC uses different "values" for different dropdowns:
-        // - Currency uses ID
-        // - Type/SubType/Category use Name for both value+text
-        // - Party/Broker/ExpParty uses select2 .text() (name)
-        // - Most attribute listboxes use ID
         value:
           dropdownKey === "type" ||
           dropdownKey === "subType" ||
@@ -303,7 +298,7 @@ const SolitairePurchaseReport = () => {
         setReportRows(data);
         setHasSearched(true);
         toast.success(t("Report loaded successfully."));
-        setExpandedInvnos(new Set()); // reset toggles
+        setExpandedInvnos(new Set());
       } else {
         toast.warning(response?.Data || response?.data || response?.Message || t("Failed to load report."));
       }
@@ -316,7 +311,6 @@ const SolitairePurchaseReport = () => {
   };
 
   const groupedVisibleRows = useMemo(() => {
-    // Build parent rows grouped by Invno.
     const grouped = {};
     (reportRows || []).forEach((r) => {
       const invNoVal = getRowVal(r, "Invno", "invno", "InvNo", "invNo");
@@ -327,7 +321,7 @@ const SolitairePurchaseReport = () => {
 
     const out = [];
     const invnos = Object.keys(grouped);
-    invnos.sort(); // stable order
+    invnos.sort();
 
     invnos.forEach((invnoKey) => {
       const rows = grouped[invnoKey] || [];
@@ -479,7 +473,6 @@ const SolitairePurchaseReport = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  // Same behavior as MVC setlink() for purchase records.
                   const url = `../purchase/edit-purchase?Id=${code}&Mode=view`;
                   const win = window.open(url, "_blank");
                   if (win) win.focus();
@@ -619,7 +612,6 @@ const SolitairePurchaseReport = () => {
       return;
     }
 
-    // MVC export uses the grid fields with camelCase for totals computed in JS.
     const headers = [
       "Date",
       "Due",
@@ -663,7 +655,6 @@ const SolitairePurchaseReport = () => {
       "USD Amount"
     ];
 
-    // Export child rows (detailed records) like the nested grid contains.
     const rows = reportRows.map((row) => [
       dashText(getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date")),
       fmtFixed(getRowVal(row, "Due", "due"), 0),
@@ -759,7 +750,6 @@ const SolitairePurchaseReport = () => {
                     <DropdownMenu>
                       <DropdownItem
                         onClick={() => {
-                          // MVC uses DP vs PR. For now export the detailed child rows.
                           handleExcel();
                         }}
                       >
@@ -767,7 +757,6 @@ const SolitairePurchaseReport = () => {
                       </DropdownItem>
                       <DropdownItem
                         onClick={() => {
-                          // Placeholder for PR generation (server-side formatted excel).
                           handleExcel();
                         }}
                       >
@@ -784,9 +773,7 @@ const SolitairePurchaseReport = () => {
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody className="bg-light-subtle">
                 <Row className="g-3">
-                  {/* Left Side: 10/12 cols */}
                   <Col md={10}>
-                    {/* Row 1: Date, To Date, Currency, Invoice No, Bill No, Type */}
                     <Row className="g-2 mb-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
@@ -873,7 +860,6 @@ const SolitairePurchaseReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 2: SubType, Category, Party, Broker, Sale Return checkbox */}
                     <Row className="g-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
@@ -954,7 +940,6 @@ const SolitairePurchaseReport = () => {
                     </Row>
                   </Col>
 
-                  {/* Right Side: 2/12 cols - Enter Lot No */}
                   <Col md={2}>
                     <FormGroup className="mb-0">
                       <Label className="fw-medium mb-1 small">{t("Enter Lot No")}</Label>
@@ -972,8 +957,6 @@ const SolitairePurchaseReport = () => {
 
                 <hr className="my-3 text-muted opacity-25" />
 
-                {/* Attributes Multi-Select Lists */}
-                {/* Row 3: Shape, Color, Clarity, Size, Proportion, Polish */}
                 <Row className="g-2 mb-2">
                   <Col sm={2}>
                     <FormGroup className="mb-0">
@@ -1072,7 +1055,6 @@ const SolitairePurchaseReport = () => {
                   </Col>
                 </Row>
 
-                {/* Row 4: Symmetry, Lab, Fluorescence, Milky, Luster, Natts */}
                 <Row className="g-2 mb-2">
                   <Col sm={2}>
                     <FormGroup className="mb-0">
@@ -1171,7 +1153,6 @@ const SolitairePurchaseReport = () => {
                   </Col>
                 </Row>
 
-                {/* Row 5: Mines, ProductType, Sieve, Exp Party */}
                 <Row className="g-2">
                   <Col sm={2}>
                     <FormGroup className="mb-0">

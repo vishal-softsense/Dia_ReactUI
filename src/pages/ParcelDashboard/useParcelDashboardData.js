@@ -8,15 +8,12 @@ import {
 const getResponseData = (res) => {
     if (!res) return null;
     
-    // Case 1: Standard response object from our API, e.g., { success: true, data: [...] }
-    // Note: Casing might be 'success' or 'Success', and 'data' or 'Data'.
     const hasSuccess = res.success !== undefined ? res.success : res.Success;
     if (hasSuccess) {
         const payload = res.data !== undefined ? res.data : res.Data;
         if (payload !== undefined) return payload;
     }
     
-    // Case 2: If the interceptor did not strip the Axios wrapper for some reason: res.data contains the response body
     if (res.data) {
         const innerSuccess = res.data.success !== undefined ? res.data.success : res.data.Success;
         if (innerSuccess) {
@@ -28,7 +25,6 @@ const getResponseData = (res) => {
         }
     }
     
-    // Case 3: Direct array
     if (Array.isArray(res)) {
         return res;
     }
@@ -72,7 +68,7 @@ export const useParcelDashboardData = () => {
             } else if (filterDate.value === 'Week') {
                 let curr = new Date();
                 let day = curr.getDay();
-                let diffToMonday = day === 0 ? -6 : 1 - day; // Monday
+                let diffToMonday = day === 0 ? -6 : 1 - day;
                 let first = new Date(curr);
                 first.setDate(curr.getDate() + diffToMonday);
                 let last = new Date(first);

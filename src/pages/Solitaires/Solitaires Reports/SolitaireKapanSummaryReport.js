@@ -20,14 +20,12 @@ import { getSolitaireKapanSummaryReport } from "../../../helpers/fakebackend_hel
 const getRowVal = (row, ...keys) => {
   if (!row || typeof row !== "object") return "";
 
-  // Exact key match (allow 0)
   for (const key of keys) {
     if (Object.prototype.hasOwnProperty.call(row, key) && row[key] !== undefined && row[key] !== null) {
       return row[key];
     }
   }
 
-  // Case-insensitive fallback (handles oP_Pcs vs OP_Pcs from camelCase serializers)
   const entries = Object.entries(row);
   for (const key of keys) {
     const found = entries.find(([k]) => k.toLowerCase() === String(key).toLowerCase());
@@ -428,7 +426,6 @@ const SolitaireKapanSummaryReport = () => {
                             background: "var(--vz-card-bg, #fff)"
                           }}
                         >
-                          {/* Section header */}
                           <div
                             className="d-flex flex-wrap align-items-center justify-content-between gap-2 px-2 py-1"
                             style={{
@@ -462,7 +459,6 @@ const SolitaireKapanSummaryReport = () => {
                             </span>
                           </div>
 
-                          {/* Comparison matrix */}
                           <div className="table-responsive">
                             <table
                               className="kapan-matrix mb-0"
@@ -557,7 +553,6 @@ const SolitaireKapanSummaryReport = () => {
                             </table>
                           </div>
 
-                          {/* Summary strip */}
                           <div
                             className="kapan-totals px-2 py-1"
                             style={{

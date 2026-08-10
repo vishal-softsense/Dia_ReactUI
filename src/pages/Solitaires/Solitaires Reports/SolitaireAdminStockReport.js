@@ -90,8 +90,8 @@ const getAdminStockTableTotals = (table) => {
   let totalCarats = 0;
   let totalAmount = 0;
   let totalCostAmount = 0;
-  let totalMRPAmt = 0; // rapa * carats
-  let totalMrpAmountColumn = 0; // sum of mrpAmount
+  let totalMRPAmt = 0;
+  let totalMrpAmountColumn = 0;
 
   rows.forEach((r) => {
     const carats = Number(getRowVal(r, "carats", "Carats") || 0);
@@ -196,7 +196,6 @@ const allColumns = [
   { label: "HoldPartyName", key: "holdPartyName" }
 ];
 
-// Custom Components for react-select Lot No Checkbox Dropdown
 const CustomOption = (props) => {
   return (
     <components.Option {...props}>
@@ -277,29 +276,24 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitaireAdminStockReport = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("1"); // Filter Tabs
+  const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
 
-  // Show Lot No dropdown states
   const [lotOptions, setLotOptions] = useState([]);
   const [loadingLots, setLoadingLots] = useState(false);
 
-  // Search Results
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Selected Rows state
   const [selectedRows, setSelectedRows] = useState({});
 
-  // Detail Modal popup
   const [detailModal, setDetailModal] = useState(false);
   const [selectedRowDetail, setSelectedRowDetail] = useState(null);
   const [historyModal, setHistoryModal] = useState(false);
   const [detailMediaTab, setDetailMediaTab] = useState("image");
 
-  // Modals for actions
   const [moreModal, setMoreModal] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
   const [boxNameUpdate, setBoxNameUpdate] = useState("");
@@ -311,7 +305,6 @@ const SolitaireAdminStockReport = () => {
   const [printFormat, setPrintFormat] = useState("Print");
   const [printDropdownOpen, setPrintDropdownOpen] = useState(false);
 
-  // Filters state
   const initialFilters = {
     date: formatLocalDate(new Date()),
     shapeGroup: [],
@@ -388,7 +381,6 @@ const SolitaireAdminStockReport = () => {
 
   const [filters, setFilters] = useState(initialFilters);
 
-  // Fetch lot list from API
   const fetchLotsList = useCallback(async (search = "") => {
     setLoadingLots(true);
     try {
@@ -409,12 +401,10 @@ const SolitaireAdminStockReport = () => {
     return debounce(fetchLotsList, 300);
   }, [fetchLotsList]);
 
-  // Fetch initial lots on mount
   useEffect(() => {
     fetchLotsList("");
   }, [fetchLotsList]);
 
-  // Sync selected values
   const selectedLotValues = useMemo(() => {
     return filters.lotNo
       ? filters.lotNo.split("\n").map(v => v.trim()).filter(Boolean)
@@ -440,7 +430,6 @@ const SolitaireAdminStockReport = () => {
     }
   };
 
-  // Fetch Master Dropdowns on mount
   useEffect(() => {
     const fetchDropdowns = async () => {
       setLoadingDropdowns(true);
@@ -912,14 +901,12 @@ const SolitaireAdminStockReport = () => {
     return cols;
   }, [searchResults, selectedRows, t]);
 
-  // Selected LotNos array
   const selectedLotNos = useMemo(() => {
     return searchResults
       .filter((_, idx) => selectedRows[idx])
       .map((item) => item.lotNo || item.LotNo || "");
   }, [searchResults, selectedRows]);
 
-  // Aggregate selected totals
   const totals = useMemo(() => {
     const selectedKeys = Object.keys(selectedRows).filter(k => selectedRows[k]);
     const currentList = selectedKeys.map(idx => searchResults[idx]).filter(Boolean);
@@ -944,11 +931,9 @@ const SolitaireAdminStockReport = () => {
     const avgPurRate = carats > 0 ? (purAmt / carats).toFixed(2) : "0.00";
     const avgActualRate = carats > 0 ? (actualAmt / carats).toFixed(2) : "0.00";
 
-    // Average Discount calculations
     const avgDis = mrpAmt > 0 ? (((purAmt / mrpAmt) * 100) - 100).toFixed(2) : "0.00";
     const avgAskingDis = mrpAmt > 0 ? (((amount / mrpAmt) * 100) - 100).toFixed(2) : "0.00";
 
-    // P&L %
     const plPer = purAmt > 0 ? (((amount / purAmt) - 1) * 100).toFixed(2) : "0.00";
 
     return {
@@ -1027,7 +1012,6 @@ const SolitaireAdminStockReport = () => {
     const activeFormat = format || printFormat || "Print";
     let exportCols = [...allColumns];
 
-    // Filter columns based on selected activeFormat
     if (activeFormat === "CustomerPrint") {
       const excludeKeys = [
         "purchaseBack", "purchaseRate", "purChaseAmount",
@@ -1072,7 +1056,6 @@ const SolitaireAdminStockReport = () => {
 
   return (
     <React.Fragment>
-      {/* Row color classes for results table */}
       <style>{`
         .text-danger-row td {
           color: #FF4444 !important;
@@ -1098,7 +1081,6 @@ const SolitaireAdminStockReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Admin Stock Search")} pageTitle={t("Reports")} />
 
-          {/* Top Control Bar */}
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
@@ -1162,11 +1144,8 @@ const SolitaireAdminStockReport = () => {
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody className="bg-light-subtle">
-                {/* Outer priority filters layout: Left (All other filters in 2 rows), Right (Enter Lot No stacked) */}
                 <Row className="g-3 mb-3">
-                  {/* Other priority filters on the left */}
                   <Col lg={10} md={9}>
-                    {/* Row 1: Date | Show | Hold/UnHold | Single/Parcel | Status */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Stock Till Date")}</Label>
@@ -1218,7 +1197,6 @@ const SolitaireAdminStockReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 2: Back % | Back +- | Rate % | Rate +- */}
                     <Row className="g-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Back %")}</Label>
@@ -1239,7 +1217,6 @@ const SolitaireAdminStockReport = () => {
                     </Row>
                   </Col>
 
-                  {/* Enter Lot No (Dropdown + Textarea) Stacked on the Right */}
                   <Col lg={2} md={3} className="d-flex flex-column">
                     <FormGroup className="mb-0 h-100 d-flex flex-column">
                       <Label className="fw-medium mb-1">{t("Enter Lot No")}</Label>
@@ -1344,9 +1321,7 @@ const SolitaireAdminStockReport = () => {
                 </Nav>
 
                 <TabContent activeTab={activeTab}>
-                  {/* Basic & Grading Tab */}
                   <TabPane tabId="1">
-                    {/* Row 1: Shape Group | Shape | Color Group | Color | Size | Clarity */}
                     <Row className="g-3 mb-3">
                       <div className="col-lg col-md-4 col-sm-6">
                         <Label className="fw-medium">{t("Shape Group")}</Label>
@@ -1374,7 +1349,6 @@ const SolitaireAdminStockReport = () => {
                       </div>
                     </Row>
 
-                    {/* Row 2: PROP. | POLISH | SYM. | LAB | ROUGH | HA */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Prop.")}</Label>
@@ -1402,7 +1376,6 @@ const SolitaireAdminStockReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 3: LOCATION | FLOU. | MILKY | LUSTER | NATTS | SHADE */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Location")}</Label>
@@ -1430,7 +1403,6 @@ const SolitaireAdminStockReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 4: FL COLOR | GROUP | PAIR | BOX NAME */}
                     <Row className="g-3 mb-3">
                       <Col lg={3} md={6}>
                         <Label className="fw-medium">{t("FL Color")}</Label>
@@ -1450,7 +1422,6 @@ const SolitaireAdminStockReport = () => {
                       </Col>
                     </Row>
 
-                    {/* Row 5–6: Carats / Back / Price / LotNo ranges */}
                     <Row className="g-3 mb-3">
                       <Col lg={2} md={4}>
                         <Label className="fw-medium">{t("Carats From")}</Label>
@@ -1489,7 +1460,6 @@ const SolitaireAdminStockReport = () => {
                     </Row>
                   </TabPane>
 
-                  {/* Numeric Search Tab */}
                   <TabPane tabId="2">
                     <Row className="g-3">
                       <Col lg={2} md={4}>
@@ -1543,7 +1513,6 @@ const SolitaireAdminStockReport = () => {
                     </Row>
                   </TabPane>
 
-                  {/* Date Filters Tab */}
                   <TabPane tabId="3">
                     <Row className="g-3">
                       <Col lg={4} md={6}>
@@ -1661,7 +1630,6 @@ const SolitaireAdminStockReport = () => {
             </Card>
           )}
 
-          {/* Results grid / Pivot container */}
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
               <CardBody>
@@ -1673,13 +1641,11 @@ const SolitaireAdminStockReport = () => {
                   </div>
                 ) : (
                   <React.Fragment>
-                    {/* Selected Summary + Action Buttons */}
                     {searchResults.length > 0 && (
                       <Card className="border shadow-sm mb-3">
                         <CardBody className="p-3 bg-light-subtle">
                           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
 
-                            {/* Aggregated totals */}
                             <div className="d-flex flex-wrap align-items-center gap-3">
                               <div className="pe-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>{t("SELECTED")}</span>
@@ -1706,14 +1672,12 @@ const SolitaireAdminStockReport = () => {
                                 <span className="text-dark fw-bold fs-13">${parseFloat(totals.avgMRP).toLocaleString()}</span>
                               </div>
 
-                              {/* Admin Cost fields */}
                               <div className="bg-light px-2 rounded border border-light-subtle d-flex flex-column justify-content-center">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px", color: "#6f42c1" }}>{t("TOTAL COST AMT")}</span>
                                 <span className="text-purple fw-bold fs-13">${parseFloat(totals.purAmt).toLocaleString()}</span>
                               </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div className="d-flex flex-wrap align-items-center gap-2">
                               {selectedLotNos.length > 0 && (
                                 <div className="d-flex align-items-center gap-1 me-2 bg-light p-1 rounded border">
@@ -1828,7 +1792,6 @@ const SolitaireAdminStockReport = () => {
         </Container>
       </div>
 
-      {/* Row Detailed Popup Modal */}
       <Modal isOpen={detailModal} toggle={() => setDetailModal(!detailModal)} centered size="xl">
         <ModalHeader toggle={() => setDetailModal(!detailModal)}>
           {t("Stock ID Detail View")}: <span className="text-primary">{selectedRowDetail?.lotNo || selectedRowDetail?.LotNo}</span>
@@ -2108,7 +2071,6 @@ const SolitaireAdminStockReport = () => {
         stockId={selectedRowDetail?.lotNo || selectedRowDetail?.LotNo || ""}
       />
 
-      {/* More Actions Modal */}
       <Modal isOpen={moreModal} toggle={() => setMoreModal(!moreModal)} centered>
         <ModalHeader toggle={() => setMoreModal(!moreModal)}>
           {t("Bulk Actions")}
@@ -2152,7 +2114,6 @@ const SolitaireAdminStockReport = () => {
         </ModalBody>
       </Modal>
 
-      {/* Location Update Modal */}
       <Modal isOpen={locationModal} toggle={() => setLocationModal(!locationModal)} centered size="lg">
         <ModalHeader toggle={() => setLocationModal(!locationModal)}>
           {t("Bulk Update Location")}

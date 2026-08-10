@@ -53,7 +53,6 @@ const parseLotList = (raw) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-/** Ported from MVC LotAssortReport.js — sort/group by Shape|Color|Size with purity % + totals */
 const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
   const data = [...(rows || [])].sort((a, b) => {
     const shapeA = String(getRowVal(a, "Shape", "shape") ?? "");

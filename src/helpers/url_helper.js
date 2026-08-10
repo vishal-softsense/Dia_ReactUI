@@ -602,6 +602,18 @@ export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dro
 export const SOLITAIRE_AGING_REPORT = "/api/SolitaireAgingReport/search";
 export const SOLITAIRE_AGING_DROPDOWNS = "/api/SolitaireAgingReport/dropdowns";
 
+export const OUTSTANDING_REPORT_DROPDOWNS = "/api/OutstandingReport/dropdowns";
+export const OUTSTANDING_REPORT_LIST = "/api/OutstandingReport/list";
+
+export const LOAN_OUTSTANDING_REPORT_DROPDOWNS = "/api/LoanOutstandingReport/dropdowns";
+export const LOAN_OUTSTANDING_REPORT_LIST = "/api/LoanOutstandingReport/list";
+
+export const BROKERAGE_OUTSTANDING_REPORT_DROPDOWNS = "/api/BrokerageOutstandingReport/dropdowns";
+export const BROKERAGE_OUTSTANDING_REPORT_LIST = "/api/BrokerageOutstandingReport/list";
+
+export const COMMISSION_OUTSTANDING_REPORT_DROPDOWNS = "/api/CommissionOutstandingReport/dropdowns";
+export const COMMISSION_OUTSTANDING_REPORT_LIST = "/api/CommissionOutstandingReport/list";
+
 // Solitaire Fast Moving Report
 export const SOLITAIRE_FAST_MOVING_REPORT = "/api/SolitaireFastMovingReport/search";
 export const SOLITAIRE_FAST_MOVING_DISPLAY = "/api/SolitaireFastMovingReport/display";

@@ -1,10 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView for Stock Analysis — Pivot (By Filter).
- * Mirrors MVC StockPivotNew / loadPivot (ChartReports.js).
- * Transforms GIA/HRD/IGI/CGL lab columns into rows for pivot display.
- */
 const StockAnalysisPivotByFilterView = ({ data = [] }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
@@ -109,7 +104,7 @@ const StockAnalysisPivotByFilterView = ({ data = [] }) => {
 
   const destroyPivot = () => {
     if (pivotRef.current) {
-      try { pivotRef.current.destroy(); } catch (e) { /* ignore */ }
+      try { pivotRef.current.destroy(); } catch (e) {}
       pivotRef.current = null;
     }
   };

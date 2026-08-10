@@ -52,7 +52,6 @@ const formatDateYMDToDMY = (dateStr) => {
   if (!dateStr) return "";
   const parts = String(dateStr).split("-");
   if (parts.length !== 3) return dateStr;
-  // yyyy-mm-dd → dd-mm-yyyy
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 };
 
@@ -73,7 +72,6 @@ const formatLocalDate = (date) => {
 
 
 
-// Custom Components for react-select Lot No Checkbox Dropdown
 const CustomOption = (props) => {
   return (
     <components.Option {...props}>
@@ -155,7 +153,6 @@ const CustomValueContainer = ({ children, ...props }) => {
 const SolitaireStockHistoryReport = () => {
   const { t } = useTranslation();
 
-  // UI state
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -164,12 +161,11 @@ const SolitaireStockHistoryReport = () => {
 
   const [reportRows, setReportRows] = useState([]);
 
-  const [selectedTypes, setSelectedTypes] = useState(["ALL"]); // if user unchecks everything, we will default to ALL at submit time
+  const [selectedTypes, setSelectedTypes] = useState(["ALL"]);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
 
-  // Price mode (MVC: default SalpurAvg=true)
-  const [priceMode, setPriceMode] = useState("SalpurAvg"); // SalpurAvg | PurAvg | MarketAvg
+  const [priceMode, setPriceMode] = useState("SalpurAvg");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -183,7 +179,6 @@ const SolitaireStockHistoryReport = () => {
     lotNo: ""
   });
 
-  // Lot No dropdown (optional selection + sync with textarea)
   const [lotOptions, setLotOptions] = useState([]);
   const [loadingLots, setLoadingLots] = useState(false);
   const [lotSearchValue, setLotSearchValue] = useState("");
@@ -288,7 +283,6 @@ const SolitaireStockHistoryReport = () => {
     [masterDropdowns]
   );
 
-  // Dropdown open/close
   useEffect(() => {
     const handler = (e) => {
       if (!typeDropdownRef.current) return;
@@ -299,7 +293,6 @@ const SolitaireStockHistoryReport = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch master dropdowns used by the filter selects
   useEffect(() => {
     const fetchDropdowns = async () => {
       setLoadingDropdowns(true);
@@ -422,14 +415,12 @@ const SolitaireStockHistoryReport = () => {
       return;
     }
 
-    // When ALL is selected, treat current selection as all non-ALL types.
     const current = selectedTypes?.includes("ALL")
       ? nonAllValues.slice()
       : (selectedTypes || []).filter((v) => v !== "ALL");
 
     let next = checked ? Array.from(new Set([...current, value])) : current.filter((v) => v !== value);
 
-    // If all non-ALL are selected, compress to ALL (matches MVC behavior)
     if (next.length === nonAllValues.length) next = ["ALL"];
 
     setSelectedTypes(next);
@@ -482,7 +473,6 @@ const SolitaireStockHistoryReport = () => {
       return;
     }
 
-    // Group by StockID (LotNo)
     const groupOrder = [];
     const grouped = new Map();
 
@@ -573,7 +563,6 @@ const SolitaireStockHistoryReport = () => {
         grandTotals.OutAmount += outAmt;
       });
 
-      // Subtotal row (same logic as MVC: totals only for StockIn/StockOut, blank for balance)
       rows.push([
         "Total:",
         "",
@@ -718,7 +707,6 @@ const SolitaireStockHistoryReport = () => {
                             val = opStkDate;
                           }
 
-                          // Special formatting
                           if (col.key === "inCts" || col.key === "outCts" || col.key === "balCts") {
                             val = fmtFixed(val, caratDecimals);
                           } else if (col.key === "inRate" || col.key === "outRate" || col.key === "balRate") {
@@ -784,7 +772,6 @@ const SolitaireStockHistoryReport = () => {
                   })}
 
                   <tr className="subtotal">
-                    {/* MVC subtotal uses: colspan=3 then StockIn/StockOut totals only */}
                     <td colSpan={3} style={{ textAlign: "left", fontWeight: "bold", padding: "10px 12px" }}>
                       Total:
                     </td>
@@ -838,7 +825,6 @@ const SolitaireStockHistoryReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Reports / Stock Register Report")} pageTitle={t("Stock History Report")} />
 
-          {/* Top Control Bar */}
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
@@ -1026,7 +1012,6 @@ const SolitaireStockHistoryReport = () => {
                                       const isChecked =
                                         selectedTypes?.includes("ALL") ? opt.value !== "ALL" ? true : selectedTypes.includes("ALL") : selectedTypes.includes(opt.value);
 
-                                      // For the ALL checkbox itself:
                                       const allChecked = opt.value === "ALL" ? selectedTypes?.includes("ALL") : isChecked;
 
                                       return (

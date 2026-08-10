@@ -387,6 +387,11 @@ import SolitaireSalePerformanceReport from "../pages/Solitaires/Solitaires Repor
 import SolitaireConsumptionReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsumptionReport";
 import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/SolitairePartyHoldReport";
 import SolitaireAgingReport from "../pages/Solitaires/Solitaires Reports/SolitaireAgingReport";
+
+import OutstandingReport from "../pages/Reports/Payable Receivables/OutstandingReport";
+import LoanOutstandingReport from "../pages/Reports/Payable Receivables/LoanOutstandingReport";
+import BrokerageOutstandingReport from "../pages/Reports/Payable Receivables/BrokerageOutstandingReport";
+import CommissionOutstandingReport from "../pages/Reports/Payable Receivables/CommissionOutstandingReport";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
@@ -538,6 +543,18 @@ const authProtectedRoutes = [
   // Solitaire Aging Report (MVC: /report/aging-report)
   { path: "/report/aging-report", component: <SolitaireAgingReport /> },
   { path: "/report/Aging-Report", component: <SolitaireAgingReport /> },
+
+  { path: "/report/outstanding-report", component: <OutstandingReport /> },
+  { path: "/report/Outstanding-Report", component: <OutstandingReport /> },
+
+  { path: "/report/loan-outstanding-report", component: <LoanOutstandingReport /> },
+  { path: "/report/Loan-Outstanding-Report", component: <LoanOutstandingReport /> },
+
+  { path: "/report/bro-outstanding-report", component: <BrokerageOutstandingReport /> },
+  { path: "/report/Bro-Outstanding-Report", component: <BrokerageOutstandingReport /> },
+
+  { path: "/report/adat-outstanding-report", component: <CommissionOutstandingReport /> },
+  { path: "/report/Adat-Outstanding-Report", component: <CommissionOutstandingReport /> },
   { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)

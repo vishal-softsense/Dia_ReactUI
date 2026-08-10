@@ -736,7 +736,6 @@ const StockAnalysisReport = () => {
         .par-chevron-btn i {
           font-size: 20px;
         }
-        /* MVC chart toolbar: download + hamburger */
         .par-chart-toolbar {
           display: flex;
           justify-content: flex-end;
@@ -799,7 +798,6 @@ const StockAnalysisReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Stock Analysis Report")} pageTitle={t("Dashboard")} />
 
-          {/* Top Control Bar */}
           <div className="card d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-3">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className="ri-database-line fs-20 text-primary"></i>
@@ -845,11 +843,8 @@ const StockAnalysisReport = () => {
             <Card className="shadow-lg border-0 rounded-3 mb-3">
               <CardBody className="bg-light-subtle py-2 pb-3">
                 <form id="stock-analysis-form" onSubmit={handleReport}>
-                  {/* Outer priority filters layout: Left (All other filters in 2 rows), Right (Enter Lot No stacked) */}
                   <Row className="g-3 mb-3">
-                    {/* Other priority filters on the left */}
                     <Col lg={10} md={9}>
-                      {/* Row 1: Stock Till Date | Show | Hold/UnHold | Single/Parcel | Sorting */}
                       <Row className="g-3 mb-3">
                         <Col lg={2} md={4}>
                           <Label className="fw-medium">{t("Stock Till Date")}</Label>
@@ -895,7 +890,6 @@ const StockAnalysisReport = () => {
                         </Col>
                       </Row>
 
-                      {/* Row 2: Status */}
                       <Row className="g-3">
                         <Col lg={4} md={8}>
                           <Label className="fw-medium">{t("Status")}</Label>
@@ -914,7 +908,6 @@ const StockAnalysisReport = () => {
                       </Row>
                     </Col>
 
-                    {/* Enter Lot No (Dropdown + Textarea) Stacked on the Right */}
                     <Col lg={2} md={3} className="d-flex flex-column">
                       <FormGroup className="mb-0 d-flex flex-column">
                         <Label className="fw-medium mb-1">{t("Enter Lot No")}</Label>
@@ -1040,7 +1033,6 @@ const StockAnalysisReport = () => {
 
                     <TabPane tabId="date">
                       <Row className="g-3">
-                        {/* Purchase Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input
@@ -1068,7 +1060,6 @@ const StockAnalysisReport = () => {
                           )}
                         </Col>
 
-                        {/* Revise Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input
@@ -1096,7 +1087,6 @@ const StockAnalysisReport = () => {
                           )}
                         </Col>
 
-                        {/* New Arrival Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input
@@ -1124,7 +1114,6 @@ const StockAnalysisReport = () => {
                           )}
                         </Col>
 
-                        {/* Web Revised Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input
@@ -1152,7 +1141,6 @@ const StockAnalysisReport = () => {
                           )}
                         </Col>
 
-                        {/* Unhold Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input
@@ -1180,7 +1168,6 @@ const StockAnalysisReport = () => {
                           )}
                         </Col>
 
-                        {/* Lab Date */}
                         <Col lg={4} md={6}>
                           <div className="form-check mb-2">
                             <Input

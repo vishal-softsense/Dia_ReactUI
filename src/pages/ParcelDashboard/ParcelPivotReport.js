@@ -1,10 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView for Parcel Stock Analysis Report.
- * Mirrors MVC initializeSyncfusionPivot & applyHeatmapColors (ParcelChartReports.js).
- * Dynamic heatmap colors calculated per column group matching MVC implementation.
- */
 const ParcelPivotReport = ({ data = [] }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
@@ -45,7 +40,6 @@ const ParcelPivotReport = ({ data = [] }) => {
     return undefined;
   };
 
-  // Exact MVC initializeSyncfusionPivot mapping (ParcelChartReports.js)
   const normalizeRow = (item) => ({
     ...item,
     Shape: toStr(pick(item, "Shape", "Shp")),
@@ -89,24 +83,18 @@ const ParcelPivotReport = ({ data = [] }) => {
     });
   };
 
-  // Dynamic Heatmap Calculation — Exact MVC Logic (ParcelChartReports.js)
   const applyHeatmapColors = () => {
     const doApply = () => {
-      // Get all value cells (matching MVC querySelectorAll('td.e-rowcell.e-valuescontent'))
       const selector =
         "#ParcelPivotView td.e-rowcell.e-valuescontent, #ParcelPivotView td.e-valuescontent, td.e-rowcell.e-valuescontent";
       const cells = Array.from(document.querySelectorAll(selector)).filter((cell) => {
         const row = cell.closest("tr");
         if (!row) return false;
-        // In MVC: !row.classList.contains('e-summary') && !row.textContent.includes('Grand Total')
-        // In Syncfusion grid's movable content table, row.textContent only contains cell numbers, not "Grand Total" text.
-        // Therefore Grand Total value cells are included in column groups in MVC.
         return !row.classList.contains("e-summary");
       });
 
       if (cells.length === 0) return;
 
-      // Group cells by column index
       const columnGroups = {};
       cells.forEach((cell) => {
         const colIndex = cell.getAttribute("aria-colindex") || cell.cellIndex;
@@ -116,7 +104,6 @@ const ParcelPivotReport = ({ data = [] }) => {
         }
       });
 
-      // Apply heatmap to each column separately (matching MVC ratio & RGB formula)
       Object.values(columnGroups).forEach((cellGroup) => {
         const values = [];
 
@@ -145,8 +132,6 @@ const ParcelPivotReport = ({ data = [] }) => {
             if (text !== "") {
               const val = parseFloat(text.replace(/[$,]/g, ""));
               if (!isNaN(val)) {
-                // Exact MVC formula: ratio = (val - min) / (max - min)
-                // When max === min, (val - min) / 0 yields NaN in MVC, so cell.style.backgroundColor is invalid and left uncolored (white).
                 if (max !== min) {
                   const ratio = (val - min) / (max - min);
                   if (!isNaN(ratio)) {
@@ -199,7 +184,6 @@ const ParcelPivotReport = ({ data = [] }) => {
           try {
             pivotRef.current.refresh();
           } catch (err) {
-            /* ignore */
           }
         }
       }
@@ -212,7 +196,6 @@ const ParcelPivotReport = ({ data = [] }) => {
       try {
         pivotRef.current.destroy();
       } catch (e) {
-        /* ignore */
       }
       pivotRef.current = null;
     }
@@ -224,12 +207,10 @@ const ParcelPivotReport = ({ data = [] }) => {
   const initPivot = (pivotData, ej) => {
     if (!containerRef.current) return;
 
-    // MVC: map all rows — do not drop any (totals must match)
     const parsed = (pivotData || []).map(normalizeRow);
 
     if (parsed.length === 0) return;
 
-    // Refresh existing instance (MVC pattern)
     if (pivotRef.current) {
       try {
         pivotRef.current.setProperties(
@@ -436,7 +417,6 @@ const ParcelPivotReport = ({ data = [] }) => {
     }
     if (!data || data.length === 0) return undefined;
 
-    // Defer until container is mounted (avoids empty pivot after spinner swap)
     const timer = setTimeout(() => {
       initPivot(data, ej);
     }, 50);

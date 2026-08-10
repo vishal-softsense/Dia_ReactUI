@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-/**
- * Syncfusion PivotView for Stock Analysis — Pivot (Fixed).
- * Mirrors MVC StockPivotData / loadPivot (ChartReports.js).
- */
 const StockAnalysisPivotFixedView = ({ data = [] }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
@@ -102,7 +98,7 @@ const StockAnalysisPivotFixedView = ({ data = [] }) => {
 
   const destroyPivot = () => {
     if (pivotRef.current) {
-      try { pivotRef.current.destroy(); } catch (e) { /* ignore */ }
+      try { pivotRef.current.destroy(); } catch (e) {}
       pivotRef.current = null;
     }
   };
