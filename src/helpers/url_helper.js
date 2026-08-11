@@ -757,3 +757,85 @@ export const MONTH_EXPENSE_REPORT_DATA = "/api/MonthExpenseReport/month-expense-
 // Cash Flow Report (MVC: /report/cash-flow-report)
 export const CASH_FLOW_REPORT_PERMISSION = "/api/CashFlowReport/cash-flow-report";
 export const CASH_FLOW_REPORT_DATA = "/api/CashFlowReport/cash-flow-report";
+
+// Profit and Loss Report (MVC: /Account/TradingAccount)
+export const PROFIT_LOSS_REPORT_PERMISSION = "/api/ProfitLossReport/TradingAccount";
+export const PROFIT_LOSS_REPORT_DATA = "/api/ProfitLossReport/Getprofitandlossdata";
+
+// Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+export const TRIAL_BALANCE_SHEET_REPORT_PERMISSION = "/api/TrialBalanceSheetReport/TrialBalSheet";
+export const TRIAL_BALANCE_SHEET_REPORT_DATA = "/api/TrialBalanceSheetReport/GetData";
+
+// Balance Sheet Report (MVC: /Account/BalanceSheet)
+export const BALANCE_SHEET_REPORT_PERMISSION = "/api/BalanceSheetReport/BalanceSheet";
+export const BALANCE_SHEET_REPORT_DATA = "/api/BalanceSheetReport/GetbalsheetReportListNew";
+
+// Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+export const INVOICE_LEDGER_REPORT_PERMISSION = "/api/InvoiceLedgerReport/invoice-ledger-report";
+export const INVOICE_LEDGER_REPORT_DATA = "/api/InvoiceLedgerReport/invoice-ledger-report";
+
+// Download MRP (MVC: /data/downloadMRP)
+export const DOWNLOAD_MRP_PERMISSION = "/api/DownloadMRP/downloadMRP";
+export const DOWNLOAD_MRP = "/api/DownloadMRP/downloadMRP";
+export const UPDATE_MRP = "/api/DownloadMRP/updateMRP";
+
+// Import Grading (MVC: /data/importgrading)
+export const IMPORT_GRADING_PERMISSION = "/api/ImportGrading/importgrading";
+export const IMPORT_GRADING_UPDATE_GIA = "/api/ImportGrading/update-gia-data";
+export const IMPORT_GRADING_UPDATE_IGI = "/api/ImportGrading/update-igi-data";
+export const IMPORT_GRADING_UPDATE_HRD = "/api/ImportGrading/update-hrd-data";
+export const IMPORT_GRADING_UPDATE_GRADER = "/api/ImportGrading/update-grader-data";
+export const IMPORT_GRADING_UPDATE_PURCHASE = "/api/ImportGrading/update-purchase-data";
+export const IMPORT_GRADING_UPDATE_IMAGE_VIDEO = "/api/ImportGrading/update-image-video-data";
+export const IMPORT_GRADING_UPDATE_PARCEL = "/api/ImportGrading/update-parcelitem-data";
+export const IMPORT_GRADING_UPDATE_SOLITAIRE = "/api/ImportGrading/update-solitaireitem-data";
+export const IMPORT_GRADING_UPDATE_ACCOUNT = "/api/ImportGrading/update-accountdata";
+export const IMPORT_GRADING_UPLOAD_PURCHASE = "/api/ImportGrading/upload-purchasedata";
+export const IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS = "/api/ImportGrading/upload-purchasedetails";
+export const IMPORT_GRADING_IMPORT_SALE = "/api/ImportGrading/import-sale-data";
+export const IMPORT_GRADING_UPLOAD_JEW_STOCK = "/api/ImportGrading/upload-jewstockdata";
+export const IMPORT_GRADING_UPLOAD_JEW_DIAMOND = "/api/ImportGrading/upload-jewstockdiamonddetailsdata";
+export const IMPORT_GRADING_UPDATE_SIZE_ID = "/api/ImportGrading/update-SizeId";
+export const IMPORT_GRADING_DELETE_RECORDS = "/api/ImportGrading/delete-deletedrecords";
+export const IMPORT_GRADING_UPLOAD_LOGO = "/api/ImportGrading/UploadLogo";
+export const IMPORT_GRADING_UPLOAD_JEWELLERY_FULL = "/api/ImportGrading/upload-jewellery-full";
+export const IMPORT_GRADING_IMPORT_ASKING_RATE = "/api/ImportGrading/Inventory/ImportAskingRate";
+
+
+// Jewellery Purchase Report
+export const JEWELLERY_PURCHASE_REPORT = "/api/JewelleryPurchaseReport/search";
+export const JEWELLERY_PURCHASE_DROPDOWNS = "/api/JewelleryPurchaseReport/dropdowns";
+
+// Jewellery Purchase Return Report
+export const JEWELLERY_PURCHASE_RETURN_REPORT = "/api/JewelleryPurchaseRetunReport/search";
+export const JEWELLERY_PURCHASE_RETURN_DROPDOWNS = "/api/JewelleryPurchaseRetunReport/dropdowns";
+
+// Jewellery Sale Report
+export const JEWELLERY_SALE_REPORT = "/api/JewellerySaleReport/search";
+export const JEWELLERY_SALE_DROPDOWNS = "/api/JewellerySaleReport/dropdowns";
+
+// Jewellery Sale Return Report
+export const JEWELLERY_SALE_RETURN_REPORT = "/api/JewSaleReturnReport/search";
+export const JEWELLERY_SALE_RETURN_DROPDOWNS = "/api/JewSaleReturnReport/dropdowns";
+
+// Jewellery MemoOut Report
+export const JEWELLERY_MEMO_OUT_REPORT = "/api/JewelleryMemoOutReport/search";
+export const JEWELLERY_MEMO_OUT_DROPDOWNS = "/api/JewelleryMemoOutReport/dropdowns";
+
+// Jewellery MemoIn Return Report
+export const JEWELLERY_MEMO_IN_RETURN_REPORT = "/api/JewelleryMemoInReturnReport/search";
+export const JEWELLERY_MEMO_IN_RETURN_DROPDOWNS = "/api/JewelleryMemoInReturnReport/dropdowns";
+
+// Jewellery MemoOut Return Report
+export const JEWELLERY_MEMO_OUT_RETURN_REPORT = "/api/JewelleryMemoOutReturnReporte/search";
+export const JEWELLERY_MEMO_OUT_RETURN_DROPDOWNS = "/api/JewelleryMemoOutReturnReporte/dropdowns";
+
+// Jewellery ConsignMent In Report
+export const JEWELLERY_CONSIGN_IN_REPORT = "/api/JewelleryConsignMentInReport/search";
+export const JEWELLERY_CONSIGN_IN_SUMMARY = "/api/JewelleryConsignMentInReport/summary";
+export const JEWELLERY_CONSIGN_IN_DROPDOWNS = "/api/JewelleryConsignMentInReport/dropdowns";
+
+// Jewellery Stock History Report
+export const JEWELLERY_STOCK_HISTORY_REPORT = "/api/JewelleryStockHistoryReport/jewstock-register-report-datatable";
+export const JEWELLERY_STOCK_HISTORY_DROPDOWNS = "/api/JewelleryStockHistoryReport/dropdowns";
+export const JEWELLERY_STOCK_HISTORY_STOCK_IDS = "/api/JewelleryStockHistoryReport/stock-ids";

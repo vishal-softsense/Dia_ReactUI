@@ -1,4 +1,4 @@
-import { getSettingData } from "./fakebackend_helper";
+import { filterSettingData, getSettingData } from "./fakebackend_helper";
 import { api } from "../config";
 
 export const REPORT_COMPANY_SETTINGS_EVENT = "reportCompanySettingsUpdated";
@@ -92,13 +92,28 @@ export async function getReportCompanySettings({ forceRefresh = true } = {}) {
   try {
     const response = await getSettingData();
     const rows = response?.data || response?.Data || [];
+
+    let companyEmail = pickSettingValue(rows, "CompanyEmail");
+    if (!companyEmail) {
+      try {
+        const emailRes = await filterSettingData("EMAIL SETTINGS");
+        const emailRows = emailRes?.data || emailRes?.Data || [];
+        companyEmail =
+          pickSettingValue(emailRows, "CompanyEmail") ||
+          pickSettingValue(emailRows, "Email") ||
+          pickSettingValue(emailRows, "Company Email");
+      } catch {
+        /* ignore */
+      }
+    }
+
     const company = {
       companyName: pickSettingValue(rows, "Company") || fallback.companyName,
       companyAddress: pickSettingValue(rows, "CompanyAddress") || fallback.companyAddress,
       companyAddress1: pickSettingValue(rows, "CompanyAddress1") || fallback.companyAddress1,
       companyAddress2: pickSettingValue(rows, "CompanyAddress2") || fallback.companyAddress2,
       companyPhone: pickSettingValue(rows, "CompanyTeleph") || fallback.companyPhone,
-      companyEmail: pickSettingValue(rows, "CompanyEmail") || fallback.companyEmail,
+      companyEmail: companyEmail || fallback.companyEmail,
       companyFooter: pickSettingValue(rows, "ReportFooterDesc") || fallback.companyFooter,
       companyLogo: pickSettingValue(rows, "CompanyLoginLogo") || fallback.companyLogo,
       stockSymbol: pickSettingValue(rows, "SSymbol") || fallback.stockSymbol

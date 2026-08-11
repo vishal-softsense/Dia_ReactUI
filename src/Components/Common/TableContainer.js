@@ -304,7 +304,14 @@ const TableContainer = ({
           </thead>
 
           <tbody>
-            {getRowModel().rows.map((row) => {
+              {getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={table.getVisibleLeafColumns().length} className="text-center py-5 text-muted fw-semibold fs-14">
+                  {t("No Data Found")}
+                </td>
+              </tr>
+            ) : (
+            getRowModel().rows.map((row) => {
               const customRowClass = getRowClass ? getRowClass(row) : "";
               return (
                 <Fragment key={row.id}>
@@ -345,7 +352,7 @@ const TableContainer = ({
                   })()}
                 </Fragment>
               );
-            })}
+            }))}
           </tbody>
           {table.getFooterGroups() && table.getFooterGroups().some(group => group.headers.some(h => h.column.columnDef.footer)) && (
             <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>

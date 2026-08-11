@@ -907,3 +907,102 @@ export const getMonthExpenseReport = () => api.create(url.MONTH_EXPENSE_REPORT_D
 // Cash Flow Report (MVC: /report/cash-flow-report)
 export const getCashFlowReportPermission = () => api.get(url.CASH_FLOW_REPORT_PERMISSION);
 export const getCashFlowReport = () => api.create(url.CASH_FLOW_REPORT_DATA, {});
+
+
+// Jewellery Stock History Report
+export const getJewelleryStockHistoryReport = (filter) => api.create(url.JEWELLERY_STOCK_HISTORY_REPORT, filter);
+export const getJewelleryStockHistoryDropdowns = () => api.get(url.JEWELLERY_STOCK_HISTORY_DROPDOWNS);
+export const getJewelleryStockHistoryStockIds = (searchText) => api.create(url.JEWELLERY_STOCK_HISTORY_STOCK_IDS, { searchText });
+export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
+export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
+
+// Jewellery Purchase Report
+export const getJewelleryPurchaseReport = (filter) => api.create(url.JEWELLERY_PURCHASE_REPORT, filter);
+export const getJewelleryPurchaseReportDropdowns = () => api.get(url.JEWELLERY_PURCHASE_DROPDOWNS);
+
+// Jewellery Purchase Return Report
+export const getJewelleryPurchaseReturnReport = (filter) => api.create(url.JEWELLERY_PURCHASE_RETURN_REPORT, filter);
+export const getJewelleryPurchaseReturnReportDropdowns = () => api.get(url.JEWELLERY_PURCHASE_RETURN_DROPDOWNS);
+
+// Jewellery Sale Report
+export const getJewellerySaleReport = (filter) => api.create(url.JEWELLERY_SALE_REPORT, filter);
+export const getJewellerySaleReportDropdowns = () => api.get(url.JEWELLERY_SALE_DROPDOWNS);
+
+// Jewellery Sale Return Report
+export const getJewellerySaleReturnReport = (filter) => api.create(url.JEWELLERY_SALE_RETURN_REPORT, filter);
+export const getJewellerySaleReturnReportDropdowns = () => api.get(url.JEWELLERY_SALE_RETURN_DROPDOWNS);
+
+// Jewellery MemoOut Report
+export const getJewelleryMemoOutReport = (filter) => api.create(url.JEWELLERY_MEMO_OUT_REPORT, filter);
+export const getJewelleryMemoOutReportDropdowns = () => api.get(url.JEWELLERY_MEMO_OUT_DROPDOWNS);
+
+// Jewellery MemoIn Return Report
+export const getJewelleryMemoInReturnReport = (filter) => api.create(url.JEWELLERY_MEMO_IN_RETURN_REPORT, filter);
+export const getJewelleryMemoInReturnReportDropdowns = () => api.get(url.JEWELLERY_MEMO_IN_RETURN_DROPDOWNS);
+
+// Jewellery MemoOut Return Report
+export const getJewelleryMemoOutReturnReporte = (filter) => api.create(url.JEWELLERY_MEMO_OUT_RETURN_REPORT, filter);
+export const getJewelleryMemoOutReturnReporteDropdowns = () => api.get(url.JEWELLERY_MEMO_OUT_RETURN_DROPDOWNS);
+
+// Jewellery ConsignMent In Report
+export const getJewelleryConsignMentInReport = (filter) => api.create(url.JEWELLERY_CONSIGN_IN_REPORT, filter);
+export const getJewelleryConsignMentInSummary = (filter) => api.create(url.JEWELLERY_CONSIGN_IN_SUMMARY, filter);
+export const getJewelleryConsignMentInReportDropdowns = () => api.get(url.JEWELLERY_CONSIGN_IN_DROPDOWNS);
+
+// Profit and Loss Report (MVC: /Account/TradingAccount)
+export const getProfitLossReportPermission = () => api.get(url.PROFIT_LOSS_REPORT_PERMISSION);
+export const getProfitLossReport = (filter, hideZeroBalance) =>
+    api.create(`${url.PROFIT_LOSS_REPORT_DATA}?value=${hideZeroBalance ? "true" : "false"}`, filter);
+
+// Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+export const getTrialBalanceSheetReportPermission = () => api.get(url.TRIAL_BALANCE_SHEET_REPORT_PERMISSION);
+export const getTrialBalanceSheetReport = (filter) => api.create(url.TRIAL_BALANCE_SHEET_REPORT_DATA, filter);
+
+// Balance Sheet Report (MVC: /Account/BalanceSheet)
+export const getBalanceSheetReportPermission = () => api.get(url.BALANCE_SHEET_REPORT_PERMISSION);
+export const getBalanceSheetReport = (filter, hideZeroBalance) =>
+    api.create(`${url.BALANCE_SHEET_REPORT_DATA}?Value=${hideZeroBalance ? "true" : "false"}`, filter);
+
+// Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+export const getInvoiceLedgerReportPermission = () => api.get(url.INVOICE_LEDGER_REPORT_PERMISSION);
+export const getInvoiceLedgerReport = (filter) => api.create(url.INVOICE_LEDGER_REPORT_DATA, filter);
+
+// Download MRP (MVC: /data/downloadMRP)
+export const getDownloadMRPPermission = () => api.get(url.DOWNLOAD_MRP_PERMISSION);
+export const downloadMRP = () => api.create(url.DOWNLOAD_MRP, {});
+export const updateMRPInStock = () => api.create(url.UPDATE_MRP, {});
+
+// Import Grading (MVC: /data/importgrading)
+export const getImportGradingPermission = () => api.get(url.IMPORT_GRADING_PERMISSION);
+
+const postImportGradingForm = (endpoint, payload) => {
+  const formData = new FormData();
+  if (payload?.ImportFile) formData.append("ImportFile", payload.ImportFile);
+  if (typeof payload?.ChkReplace === "boolean") formData.append("ChkReplace", payload.ChkReplace ? "true" : "false");
+  return api.create(endpoint, formData, { headers: { "Content-Type": undefined } });
+};
+
+export const updateGiaData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_GIA, payload);
+export const updateIgiData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_IGI, payload);
+export const updateHrdData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_HRD, payload);
+export const updateGraderData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_GRADER, payload);
+export const updatePurchaseData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_PURCHASE, payload);
+export const updateImageVideoData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_IMAGE_VIDEO, payload);
+export const updateParcelItemData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_PARCEL, payload);
+export const updateSolitaireItemData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_SOLITAIRE, payload);
+export const updateAccountData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_ACCOUNT, payload);
+export const uploadPurchaseData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE, payload);
+export const uploadPurchaseDetailsData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS, payload);
+export const importSaleData = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_SALE, payload);
+export const uploadJewStockData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_STOCK, payload);
+export const uploadJewStockDiamondData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_DIAMOND, payload);
+export const uploadJewelleryFull = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEWELLERY_FULL, payload);
+export const importAskingRate = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_ASKING_RATE, payload);
+export const updateImportSizeId = () => api.create(url.IMPORT_GRADING_UPDATE_SIZE_ID, {});
+export const deleteImportDeletedRecords = () => api.create(url.IMPORT_GRADING_DELETE_RECORDS, {});
+export const uploadImportLogo = image => {
+  const formData = new FormData();
+  if (image) formData.append("image", image);
+  return api.create(url.IMPORT_GRADING_UPLOAD_LOGO, formData, { headers: { "Content-Type": undefined } });
+};

@@ -445,6 +445,41 @@ import MonthExpenseReport from "../pages/Reports/Financial Reports/MonthExpenseR
 
 // Cash Flow Report (MVC: /report/cash-flow-report)
 import CashFlowReport from "../pages/Reports/Financial Reports/CashFlowReport";
+import ProfitLossReport from "../pages/Reports/Financial Reports/ProfitLossReport";
+import TrialBalanceSheetReport from "../pages/Reports/Financial Reports/TrialBalanceSheetReport";
+import BalanceSheetReport from "../pages/Reports/Financial Reports/BalanceSheetReport";
+import InvoiceLedgerReport from "../pages/Reports/Financial Reports/InvoiceLedgerReport";
+
+// Download MRP (MVC: /data/downloadMRP)
+import DownloadMRP from "../pages/Reports/Utility/DownloadMRP";
+import ImportGrading from "../pages/Reports/Utility/ImportGrading";
+
+// Jewellery Purchase Report
+import JewelleryPurchaseReport from "../pages/Jewellery/Jewellery Reports/JewelleryPurchaseReport";
+
+// Jewellery Stock History Report
+import JewelleryStockHistoryReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockHistoryReport";
+
+// Jewellery Purchase Return Report
+import JewelleryPurchaseRetunReport from "../pages/Jewellery/Jewellery Reports/JewelleryPurchaseRetunReport";
+
+// Jewellery Sale Report
+import JewellerySaleReport from "../pages/Jewellery/Jewellery Reports/JewellerySaleReport";
+
+// Jewellery Sale Return Report
+import JewSaleReturnReport from "../pages/Jewellery/Jewellery Reports/JewSaleReturnReport";
+
+// Jewellery MemoOut Report
+import JewelleryMemooutReport from "../pages/Jewellery/Jewellery Reports/JewelleryMemooutReport";
+
+// Jewellery MemoIn Return Report
+import JewelleryMemoInReturnReport from "../pages/Jewellery/Jewellery Reports/JewelleryMemoInReturnReport";
+
+// Jewellery MemoOut Return Report
+import JewelleryMemoOutReturnReporte from "../pages/Jewellery/Jewellery Reports/JewelleryMemoOutReturnReporte";
+
+// Jewellery ConsignMent In Report
+import JewelleryConsignMentInReport from "../pages/Jewellery/Jewellery Reports/JewelleryConsignMentInReport";
 
 
 
@@ -616,6 +651,22 @@ const authProtectedRoutes = [
   // Cash Flow Report (MVC: /report/cash-flow-report)
   { path: "/report/cash-flow-report", component: <CashFlowReport /> },
 
+  // Profit and Loss Report (MVC: /Account/TradingAccount)
+  { path: "/Account/TradingAccount", component: <ProfitLossReport /> },
+
+  // Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+  { path: "/Account/TrialBalSheet", component: <TrialBalanceSheetReport /> },
+
+  // Balance Sheet Report (MVC: /Account/BalanceSheet)
+  { path: "/Account/BalanceSheet", component: <BalanceSheetReport /> },
+
+  // Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+  { path: "/report/invoice-ledger-report", component: <InvoiceLedgerReport /> },
+
+  // Download MRP (MVC: /data/downloadMRP)
+  { path: "/data/downloadMRP", component: <DownloadMRP /> },
+  { path: "/data/importgrading", component: <ImportGrading /> },
+
 // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },
 
@@ -643,6 +694,34 @@ const authProtectedRoutes = [
 
   // Mix Consignment Return Report (MVC: /mixreport/MixConsignment-Return-report)
   { path: "/mixreport/MixConsignment-Return-report", component: <MixConsignmentInRtnReport /> },
+
+  
+// Jewellery Purchase Report
+  { path: "/JewReport/JewPurchaseReport", component: <JewelleryPurchaseReport /> },
+
+  // Jewellery Stock History Report
+  { path: "/jewreport/Jewstockhistory-report", component: <JewelleryStockHistoryReport /> },
+
+  // Jewellery Purchase Return Report
+  { path: "/JewReport/JewPurchaseReturnReport", component: <JewelleryPurchaseRetunReport /> },
+
+  // Jewellery Sale Report
+  { path: "/JewReport/JewSaleReport", component: <JewellerySaleReport /> },
+
+  // Jewellery Sale Return Report
+  { path: "/JewReport/JewSaleReturnReport", component: <JewSaleReturnReport /> },
+
+  // Jewellery MemoOut Report
+  { path: "/JewReport/JewMemoReport", component: <JewelleryMemooutReport /> },
+
+  // Jewellery MemoIn Return Report
+  { path: "/JewReport/JewMemoinRetunRpt", component: <JewelleryMemoInReturnReport /> },
+
+  // Jewellery MemoOut Return Report (MVC: jewreport/JewMemoOut-return-report)
+  { path: "/jewreport/JewMemoOut-return-report", component: <JewelleryMemoOutReturnReporte /> },
+
+  // Jewellery ConsignMent In Report
+  { path: "/JewReport/JewConsInReport", component: <JewelleryConsignMentInReport /> },
 
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
