@@ -913,9 +913,9 @@ export const getCashFlowReport = () => api.create(url.CASH_FLOW_REPORT_DATA, {})
 export const getJewelleryStockHistoryReport = (filter) => api.create(url.JEWELLERY_STOCK_HISTORY_REPORT, filter);
 export const getJewelleryStockHistoryDropdowns = () => api.get(url.JEWELLERY_STOCK_HISTORY_DROPDOWNS);
 export const getJewelleryStockHistoryStockIds = (searchText) => api.create(url.JEWELLERY_STOCK_HISTORY_STOCK_IDS, { searchText });
-export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
-export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
-export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
+// export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+// export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
+// export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
 
 // Jewellery Purchase Report
 export const getJewelleryPurchaseReport = (filter) => api.create(url.JEWELLERY_PURCHASE_REPORT, filter);
