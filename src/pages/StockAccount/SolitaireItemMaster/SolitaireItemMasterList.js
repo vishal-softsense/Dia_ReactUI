@@ -307,7 +307,7 @@ const SolitaireItemMasterList = () => {
           </div>
         </ModalBody>
       </Modal>
-      <ToastContainer closeButton={false} limit={1} />
+      <ToastContainer closeButton={false} />
     </React.Fragment>
   );
 };

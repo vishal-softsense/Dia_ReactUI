@@ -392,6 +392,12 @@ import OutstandingReport from "../pages/Reports/Payable Receivables/OutstandingR
 import LoanOutstandingReport from "../pages/Reports/Payable Receivables/LoanOutstandingReport";
 import BrokerageOutstandingReport from "../pages/Reports/Payable Receivables/BrokerageOutstandingReport";
 import CommissionOutstandingReport from "../pages/Reports/Payable Receivables/CommissionOutstandingReport";
+import SalePurchaseSummaryReport from "../pages/Reports/Payable Receivables/SalePurchaseSummaryReport";
+import SolitairePurchaseList from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseList";
+import SolitairePurchaseAdd from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseAdd";
+import SolitairePurchaseEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseEdit";
+import SolitairePurchasePrintView from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchasePrintView";
+import SolitairePurchaseCurStatus from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseCurStatus";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
@@ -564,6 +570,17 @@ const authProtectedRoutes = [
 
   { path: "/report/adat-outstanding-report", component: <CommissionOutstandingReport /> },
   { path: "/report/Adat-Outstanding-Report", component: <CommissionOutstandingReport /> },
+
+  { path: "/report/sale-pur-summary", component: <SalePurchaseSummaryReport /> },
+  { path: "/report/Sale-Pur-Summary", component: <SalePurchaseSummaryReport /> },
+
+  // Solitaire Purchase entry (MVC: /purchase/purchase-list)
+  { path: "/purchase/purchase-list", component: <SolitairePurchaseList /> },
+  { path: "/purchase/add-purchase", component: <SolitairePurchaseAdd /> },
+  { path: "/purchase/edit-purchase", component: <SolitairePurchaseEdit /> },
+  { path: "/purchase/printinvview", component: <SolitairePurchasePrintView /> },
+  { path: "/purchase/PurCurStatusPrintInv", component: <SolitairePurchaseCurStatus /> },
+  { path: "/purchase/purcurstatusprintinv", component: <SolitairePurchaseCurStatus /> },
   { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)

@@ -1406,7 +1406,7 @@ const LoanOutstandingReport = () => {
           )}
         </Container>
       </div>
-      <ToastContainer closeButton={false} limit={1} />
+      <ToastContainer closeButton={false} />
     </React.Fragment>
   );
 };

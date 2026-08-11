@@ -477,6 +477,19 @@ export const UPDATE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/edit"; // 
 export const DELETE_SOLITAIRE_ITEM_MASTER = "/api/SolitaireItemMaster/delete"; // append /{id}
 export const PREVIEW_SOLITAIRE_ITEM = "/api/SolitaireItemMaster/preview-full-item";
 
+// Solitaire Purchase (entry module) — MVC: /purchase/purchase-list
+export const SOLITAIRE_PURCHASE_LIST = "/api/SolitairePurchase/list";
+export const SOLITAIRE_PURCHASE_PAGE_DATA = "/api/SolitairePurchase/pagedata";
+export const SOLITAIRE_PURCHASE_DETAIL = "/api/SolitairePurchase/detail"; // append /{id}
+export const SOLITAIRE_PURCHASE_ADD = "/api/SolitairePurchase/add";
+export const SOLITAIRE_PURCHASE_EDIT = "/api/SolitairePurchase/edit";
+export const SOLITAIRE_PURCHASE_DELETE = "/api/SolitairePurchase/delete";
+export const SOLITAIRE_PURCHASE_LOT_DETAIL = "/api/SolitairePurchase/lot-detail";
+export const SOLITAIRE_PURCHASE_CONSIGNMENT = "/api/SolitairePurchase/consignment";
+export const SOLITAIRE_PURCHASE_ADD_SINGLE_LOT = "/api/SolitairePurchase/add-single-lot";
+export const SOLITAIRE_PURCHASE_PRINT_VIEW = "/api/SolitairePurchase/print-view"; // append /{invNo}
+export const SOLITAIRE_PURCHASE_CURRENT_STATUS = "/api/SolitairePurchase/current-status"; // append /{invNo}
+
 
 // Jew Stock Master (Mounting)
 export const GET_MOUNTING_STOCK_LIST = "/api/JewelleryStockMaster/mounting-stock";
@@ -613,6 +626,9 @@ export const BROKERAGE_OUTSTANDING_REPORT_LIST = "/api/BrokerageOutstandingRepor
 
 export const COMMISSION_OUTSTANDING_REPORT_DROPDOWNS = "/api/CommissionOutstandingReport/dropdowns";
 export const COMMISSION_OUTSTANDING_REPORT_LIST = "/api/CommissionOutstandingReport/list";
+
+export const SALE_PURCHASE_SUMMARY_REPORT_DROPDOWNS = "/api/SalePurchaseSummaryReport/dropdowns";
+export const SALE_PURCHASE_SUMMARY_REPORT_LIST = "/api/SalePurchaseSummaryReport/list";
 
 // Solitaire Fast Moving Report
 export const SOLITAIRE_FAST_MOVING_REPORT = "/api/SolitaireFastMovingReport/search";

@@ -606,6 +606,19 @@ export const deleteParcelItemMaster = id => api.delete(`${url.DELETE_PARCEL_ITEM
 
 // Solitaire Item Master
 export const getSolitaireItemMasters = (filter) => api.get(url.GET_SOLITAIRE_ITEM_MASTER_LIST + (filter ? `?filter=${filter}` : ""));
+
+// Solitaire Purchase entry
+export const getSolitairePurchaseList = () => api.get(url.SOLITAIRE_PURCHASE_LIST);
+export const getSolitairePurchasePageData = () => api.get(url.SOLITAIRE_PURCHASE_PAGE_DATA);
+export const getSolitairePurchaseDetail = (id) => api.get(`${url.SOLITAIRE_PURCHASE_DETAIL}/${id}`);
+export const addSolitairePurchase = (data) => api.create(url.SOLITAIRE_PURCHASE_ADD, data);
+export const editSolitairePurchase = (data) => api.create(url.SOLITAIRE_PURCHASE_EDIT, data);
+export const deleteSolitairePurchase = (id) => api.create(url.SOLITAIRE_PURCHASE_DELETE, { id });
+export const getSolitairePurchaseLotDetail = (lotNo) => api.create(url.SOLITAIRE_PURCHASE_LOT_DETAIL, { lotNo });
+export const getSolitairePurchaseConsignment = (payload) => api.create(url.SOLITAIRE_PURCHASE_CONSIGNMENT, payload);
+export const addSolitairePurchaseSingleLot = (payload) => api.create(url.SOLITAIRE_PURCHASE_ADD_SINGLE_LOT, payload);
+export const getSolitairePurchasePrintView = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_PRINT_VIEW}/${invNo}`);
+export const getSolitairePurchaseCurrentStatus = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_CURRENT_STATUS}/${invNo}`);
 export const getSolitaireItemMasterDropdowns = () => api.get(url.GET_SOLITAIRE_ITEM_MASTER_DROPDOWNS);
 export const getSolitaireItemMasterDetail = id => api.get(`${url.GET_SOLITAIRE_ITEM_MASTER_DETAIL}/${id}`);
 export const checkSolitaireLotNoExists = lotNo => api.get(`${url.CHECK_SOLITAIRE_LOT_NO_EXISTS}?lotNo=${lotNo}`);
@@ -761,6 +774,9 @@ export const getBrokerageOutstandingReport = (filter) => api.create(url.BROKERAG
 
 export const getCommissionOutstandingReportDropdowns = () => api.get(url.COMMISSION_OUTSTANDING_REPORT_DROPDOWNS);
 export const getCommissionOutstandingReport = (filter) => api.create(url.COMMISSION_OUTSTANDING_REPORT_LIST, filter);
+
+export const getSalePurchaseSummaryReportDropdowns = () => api.get(url.SALE_PURCHASE_SUMMARY_REPORT_DROPDOWNS);
+export const getSalePurchaseSummaryReport = (filter) => api.create(url.SALE_PURCHASE_SUMMARY_REPORT_LIST, filter);
 
 // Solitaire Fast Moving Report
 export const getSolitaireFastMovingReport = (filter) => api.create(url.SOLITAIRE_FAST_MOVING_REPORT, filter);

@@ -155,6 +155,12 @@ $value in $theme-colors {
     z-index: 1000;
 }
 
+// Keep page content clear from floating tools (back-to-top + customizer)
+// so bottom-right table/data never gets covered across pages.
+.page-content {
+    padding-bottom: calc(#{$footer-height} + 5.5rem);
+}
+
 // 
 code {
     user-select: all;
@@ -259,6 +265,12 @@ code {
     z-index: 1000;
     &:hover {
         animation: fade-up 1.5s infinite linear;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-content {
+        padding-bottom: calc(#{$footer-height} + 4rem);
     }
 }
 
