@@ -891,3 +891,45 @@ export const getMonthExpenseReport = () => api.create(url.MONTH_EXPENSE_REPORT_D
 // Cash Flow Report (MVC: /report/cash-flow-report)
 export const getCashFlowReportPermission = () => api.get(url.CASH_FLOW_REPORT_PERMISSION);
 export const getCashFlowReport = () => api.create(url.CASH_FLOW_REPORT_DATA, {});
+
+
+// Jewellery Stock History Report
+export const getJewelleryStockHistoryReport = (filter) => api.create(url.JEWELLERY_STOCK_HISTORY_REPORT, filter);
+export const getJewelleryStockHistoryDropdowns = () => api.get(url.JEWELLERY_STOCK_HISTORY_DROPDOWNS);
+export const getJewelleryStockHistoryStockIds = (searchText) => api.create(url.JEWELLERY_STOCK_HISTORY_STOCK_IDS, { searchText });
+export const getParcelLots = (searchby) => api.get(`${url.GET_Parcel_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+export const updateParcelStockLocation = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_LOCATION, data);
+export const updateParcelStockBoxGroup = (data) => api.create(url.Parcel_STOCK_SEARCH_UPDATE_BOX_GROUP, data);
+
+// Jewellery Purchase Report
+export const getJewelleryPurchaseReport = (filter) => api.create(url.JEWELLERY_PURCHASE_REPORT, filter);
+export const getJewelleryPurchaseReportDropdowns = () => api.get(url.JEWELLERY_PURCHASE_DROPDOWNS);
+
+// Jewellery Purchase Return Report
+export const getJewelleryPurchaseReturnReport = (filter) => api.create(url.JEWELLERY_PURCHASE_RETURN_REPORT, filter);
+export const getJewelleryPurchaseReturnReportDropdowns = () => api.get(url.JEWELLERY_PURCHASE_RETURN_DROPDOWNS);
+
+// Jewellery Sale Report
+export const getJewellerySaleReport = (filter) => api.create(url.JEWELLERY_SALE_REPORT, filter);
+export const getJewellerySaleReportDropdowns = () => api.get(url.JEWELLERY_SALE_DROPDOWNS);
+
+// Jewellery Sale Return Report
+export const getJewellerySaleReturnReport = (filter) => api.create(url.JEWELLERY_SALE_RETURN_REPORT, filter);
+export const getJewellerySaleReturnReportDropdowns = () => api.get(url.JEWELLERY_SALE_RETURN_DROPDOWNS);
+
+// Jewellery MemoOut Report
+export const getJewelleryMemoOutReport = (filter) => api.create(url.JEWELLERY_MEMO_OUT_REPORT, filter);
+export const getJewelleryMemoOutReportDropdowns = () => api.get(url.JEWELLERY_MEMO_OUT_DROPDOWNS);
+
+// Jewellery MemoIn Return Report
+export const getJewelleryMemoInReturnReport = (filter) => api.create(url.JEWELLERY_MEMO_IN_RETURN_REPORT, filter);
+export const getJewelleryMemoInReturnReportDropdowns = () => api.get(url.JEWELLERY_MEMO_IN_RETURN_DROPDOWNS);
+
+// Jewellery MemoOut Return Report
+export const getJewelleryMemoOutReturnReporte = (filter) => api.create(url.JEWELLERY_MEMO_OUT_RETURN_REPORT, filter);
+export const getJewelleryMemoOutReturnReporteDropdowns = () => api.get(url.JEWELLERY_MEMO_OUT_RETURN_DROPDOWNS);
+
+// Jewellery ConsignMent In Report
+export const getJewelleryConsignMentInReport = (filter) => api.create(url.JEWELLERY_CONSIGN_IN_REPORT, filter);
+export const getJewelleryConsignMentInSummary = (filter) => api.create(url.JEWELLERY_CONSIGN_IN_SUMMARY, filter);
+export const getJewelleryConsignMentInReportDropdowns = () => api.get(url.JEWELLERY_CONSIGN_IN_DROPDOWNS);
