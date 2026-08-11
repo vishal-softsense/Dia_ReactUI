@@ -439,6 +439,14 @@ import MonthExpenseReport from "../pages/Reports/Financial Reports/MonthExpenseR
 
 // Cash Flow Report (MVC: /report/cash-flow-report)
 import CashFlowReport from "../pages/Reports/Financial Reports/CashFlowReport";
+import ProfitLossReport from "../pages/Reports/Financial Reports/ProfitLossReport";
+import TrialBalanceSheetReport from "../pages/Reports/Financial Reports/TrialBalanceSheetReport";
+import BalanceSheetReport from "../pages/Reports/Financial Reports/BalanceSheetReport";
+import InvoiceLedgerReport from "../pages/Reports/Financial Reports/InvoiceLedgerReport";
+
+// Download MRP (MVC: /data/downloadMRP)
+import DownloadMRP from "../pages/Reports/Utility/DownloadMRP";
+import ImportGrading from "../pages/Reports/Utility/ImportGrading";
 
 
 
@@ -598,6 +606,22 @@ const authProtectedRoutes = [
 
   // Cash Flow Report (MVC: /report/cash-flow-report)
   { path: "/report/cash-flow-report", component: <CashFlowReport /> },
+
+  // Profit and Loss Report (MVC: /Account/TradingAccount)
+  { path: "/Account/TradingAccount", component: <ProfitLossReport /> },
+
+  // Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+  { path: "/Account/TrialBalSheet", component: <TrialBalanceSheetReport /> },
+
+  // Balance Sheet Report (MVC: /Account/BalanceSheet)
+  { path: "/Account/BalanceSheet", component: <BalanceSheetReport /> },
+
+  // Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+  { path: "/report/invoice-ledger-report", component: <InvoiceLedgerReport /> },
+
+  // Download MRP (MVC: /data/downloadMRP)
+  { path: "/data/downloadMRP", component: <DownloadMRP /> },
+  { path: "/data/importgrading", component: <ImportGrading /> },
 
 // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },

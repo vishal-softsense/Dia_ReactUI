@@ -741,3 +741,46 @@ export const MONTH_EXPENSE_REPORT_DATA = "/api/MonthExpenseReport/month-expense-
 // Cash Flow Report (MVC: /report/cash-flow-report)
 export const CASH_FLOW_REPORT_PERMISSION = "/api/CashFlowReport/cash-flow-report";
 export const CASH_FLOW_REPORT_DATA = "/api/CashFlowReport/cash-flow-report";
+
+// Profit and Loss Report (MVC: /Account/TradingAccount)
+export const PROFIT_LOSS_REPORT_PERMISSION = "/api/ProfitLossReport/TradingAccount";
+export const PROFIT_LOSS_REPORT_DATA = "/api/ProfitLossReport/Getprofitandlossdata";
+
+// Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+export const TRIAL_BALANCE_SHEET_REPORT_PERMISSION = "/api/TrialBalanceSheetReport/TrialBalSheet";
+export const TRIAL_BALANCE_SHEET_REPORT_DATA = "/api/TrialBalanceSheetReport/GetData";
+
+// Balance Sheet Report (MVC: /Account/BalanceSheet)
+export const BALANCE_SHEET_REPORT_PERMISSION = "/api/BalanceSheetReport/BalanceSheet";
+export const BALANCE_SHEET_REPORT_DATA = "/api/BalanceSheetReport/GetbalsheetReportListNew";
+
+// Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+export const INVOICE_LEDGER_REPORT_PERMISSION = "/api/InvoiceLedgerReport/invoice-ledger-report";
+export const INVOICE_LEDGER_REPORT_DATA = "/api/InvoiceLedgerReport/invoice-ledger-report";
+
+// Download MRP (MVC: /data/downloadMRP)
+export const DOWNLOAD_MRP_PERMISSION = "/api/DownloadMRP/downloadMRP";
+export const DOWNLOAD_MRP = "/api/DownloadMRP/downloadMRP";
+export const UPDATE_MRP = "/api/DownloadMRP/updateMRP";
+
+// Import Grading (MVC: /data/importgrading)
+export const IMPORT_GRADING_PERMISSION = "/api/ImportGrading/importgrading";
+export const IMPORT_GRADING_UPDATE_GIA = "/api/ImportGrading/update-gia-data";
+export const IMPORT_GRADING_UPDATE_IGI = "/api/ImportGrading/update-igi-data";
+export const IMPORT_GRADING_UPDATE_HRD = "/api/ImportGrading/update-hrd-data";
+export const IMPORT_GRADING_UPDATE_GRADER = "/api/ImportGrading/update-grader-data";
+export const IMPORT_GRADING_UPDATE_PURCHASE = "/api/ImportGrading/update-purchase-data";
+export const IMPORT_GRADING_UPDATE_IMAGE_VIDEO = "/api/ImportGrading/update-image-video-data";
+export const IMPORT_GRADING_UPDATE_PARCEL = "/api/ImportGrading/update-parcelitem-data";
+export const IMPORT_GRADING_UPDATE_SOLITAIRE = "/api/ImportGrading/update-solitaireitem-data";
+export const IMPORT_GRADING_UPDATE_ACCOUNT = "/api/ImportGrading/update-accountdata";
+export const IMPORT_GRADING_UPLOAD_PURCHASE = "/api/ImportGrading/upload-purchasedata";
+export const IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS = "/api/ImportGrading/upload-purchasedetails";
+export const IMPORT_GRADING_IMPORT_SALE = "/api/ImportGrading/import-sale-data";
+export const IMPORT_GRADING_UPLOAD_JEW_STOCK = "/api/ImportGrading/upload-jewstockdata";
+export const IMPORT_GRADING_UPLOAD_JEW_DIAMOND = "/api/ImportGrading/upload-jewstockdiamonddetailsdata";
+export const IMPORT_GRADING_UPDATE_SIZE_ID = "/api/ImportGrading/update-SizeId";
+export const IMPORT_GRADING_DELETE_RECORDS = "/api/ImportGrading/delete-deletedrecords";
+export const IMPORT_GRADING_UPLOAD_LOGO = "/api/ImportGrading/UploadLogo";
+export const IMPORT_GRADING_UPLOAD_JEWELLERY_FULL = "/api/ImportGrading/upload-jewellery-full";
+export const IMPORT_GRADING_IMPORT_ASKING_RATE = "/api/ImportGrading/Inventory/ImportAskingRate";

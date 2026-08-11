@@ -87,6 +87,7 @@
     "sass": "1.77.6",
     "save": "^2.9.0",
     "simplebar-react": "^3.2.6",
+    "sweetalert2": "^11.26.25",
     "swiper": "^11.1.14",
     "web-vitals": "^4.2.3",
     "yet-another-react-lightbox": "^3.21.6",

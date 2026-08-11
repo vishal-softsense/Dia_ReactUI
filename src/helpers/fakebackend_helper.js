@@ -891,3 +891,60 @@ export const getMonthExpenseReport = () => api.create(url.MONTH_EXPENSE_REPORT_D
 // Cash Flow Report (MVC: /report/cash-flow-report)
 export const getCashFlowReportPermission = () => api.get(url.CASH_FLOW_REPORT_PERMISSION);
 export const getCashFlowReport = () => api.create(url.CASH_FLOW_REPORT_DATA, {});
+
+// Profit and Loss Report (MVC: /Account/TradingAccount)
+export const getProfitLossReportPermission = () => api.get(url.PROFIT_LOSS_REPORT_PERMISSION);
+export const getProfitLossReport = (filter, hideZeroBalance) =>
+    api.create(`${url.PROFIT_LOSS_REPORT_DATA}?value=${hideZeroBalance ? "true" : "false"}`, filter);
+
+// Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
+export const getTrialBalanceSheetReportPermission = () => api.get(url.TRIAL_BALANCE_SHEET_REPORT_PERMISSION);
+export const getTrialBalanceSheetReport = (filter) => api.create(url.TRIAL_BALANCE_SHEET_REPORT_DATA, filter);
+
+// Balance Sheet Report (MVC: /Account/BalanceSheet)
+export const getBalanceSheetReportPermission = () => api.get(url.BALANCE_SHEET_REPORT_PERMISSION);
+export const getBalanceSheetReport = (filter, hideZeroBalance) =>
+    api.create(`${url.BALANCE_SHEET_REPORT_DATA}?Value=${hideZeroBalance ? "true" : "false"}`, filter);
+
+// Invoice Ledger Report (MVC: /report/invoice-ledger-report)
+export const getInvoiceLedgerReportPermission = () => api.get(url.INVOICE_LEDGER_REPORT_PERMISSION);
+export const getInvoiceLedgerReport = (filter) => api.create(url.INVOICE_LEDGER_REPORT_DATA, filter);
+
+// Download MRP (MVC: /data/downloadMRP)
+export const getDownloadMRPPermission = () => api.get(url.DOWNLOAD_MRP_PERMISSION);
+export const downloadMRP = () => api.create(url.DOWNLOAD_MRP, {});
+export const updateMRPInStock = () => api.create(url.UPDATE_MRP, {});
+
+// Import Grading (MVC: /data/importgrading)
+export const getImportGradingPermission = () => api.get(url.IMPORT_GRADING_PERMISSION);
+
+const postImportGradingForm = (endpoint, payload) => {
+  const formData = new FormData();
+  if (payload?.ImportFile) formData.append("ImportFile", payload.ImportFile);
+  if (typeof payload?.ChkReplace === "boolean") formData.append("ChkReplace", payload.ChkReplace ? "true" : "false");
+  return api.create(endpoint, formData, { headers: { "Content-Type": undefined } });
+};
+
+export const updateGiaData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_GIA, payload);
+export const updateIgiData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_IGI, payload);
+export const updateHrdData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_HRD, payload);
+export const updateGraderData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_GRADER, payload);
+export const updatePurchaseData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_PURCHASE, payload);
+export const updateImageVideoData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_IMAGE_VIDEO, payload);
+export const updateParcelItemData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_PARCEL, payload);
+export const updateSolitaireItemData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_SOLITAIRE, payload);
+export const updateAccountData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_ACCOUNT, payload);
+export const uploadPurchaseData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE, payload);
+export const uploadPurchaseDetailsData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS, payload);
+export const importSaleData = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_SALE, payload);
+export const uploadJewStockData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_STOCK, payload);
+export const uploadJewStockDiamondData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_DIAMOND, payload);
+export const uploadJewelleryFull = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEWELLERY_FULL, payload);
+export const importAskingRate = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_ASKING_RATE, payload);
+export const updateImportSizeId = () => api.create(url.IMPORT_GRADING_UPDATE_SIZE_ID, {});
+export const deleteImportDeletedRecords = () => api.create(url.IMPORT_GRADING_DELETE_RECORDS, {});
+export const uploadImportLogo = image => {
+  const formData = new FormData();
+  if (image) formData.append("image", image);
+  return api.create(url.IMPORT_GRADING_UPLOAD_LOGO, formData, { headers: { "Content-Type": undefined } });
+};

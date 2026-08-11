@@ -48,7 +48,7 @@ const ParcelItemMasterList = () => {
         fetchParcelItems(searchText);
     };
 
-    const handleDeleteClick = (id,lotNo) => {
+    const handleDeleteClick = (id, lotNo) => {
         setItemToDelete(id);
         setLotNo(lotNo);
         setDeleteModal(true);
@@ -258,45 +258,45 @@ const ParcelItemMasterList = () => {
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
                 <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
-    <div className="mt-2 text-center">
-        <lord-icon
-            src="https://cdn.lordicon.com/gsqxdxog.json"
-            trigger="loop"
-            colors="primary:#f7b84b,secondary:#f06548"
-            style={{ width: "100px", height: "100px" }}
-        ></lord-icon>
+                    <div className="mt-2 text-center">
+                        <lord-icon
+                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                            trigger="loop"
+                            colors="primary:#f7b84b,secondary:#f06548"
+                            style={{ width: "100px", height: "100px" }}
+                        ></lord-icon>
 
-        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h2 className="fw-bold">{t("Are You Sure ??")}</h2>
+                        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h2 className="fw-bold">{t("Are You Sure ??")}</h2>
 
-            <p className="text-muted mb-1">
-                {t("Selected record will be Removed !!")}
-            </p>
+                            <p className="text-muted mb-1">
+                                {t("Selected record will be Removed !!")}
+                            </p>
 
-            <p className="mb-0">
-                <strong>{t("LotNo")} :</strong> {lotNo}
-            </p>
-        </div>
-    </div>
+                            <p className="mb-0">
+                                <strong>{t("LotNo")} :</strong> {lotNo}
+                            </p>
+                        </div>
+                    </div>
 
-    <div className="d-flex gap-3 justify-content-center mt-4 mb-2">
-        <button
-            type="button"
-            className="btn btn-primary px-4"
-            onClick={handleDeleteConfirm}
-        >
-            {t("Yes, remove it")}
-        </button>
+                    <div className="d-flex gap-3 justify-content-center mt-4 mb-2">
+                        <button
+                            type="button"
+                            className="btn btn-primary px-4"
+                            onClick={handleDeleteConfirm}
+                        >
+                            {t("Yes, remove it")}
+                        </button>
 
-        <button
-            type="button"
-            className="btn btn-danger px-4"
-            onClick={() => setDeleteModal(false)}
-        >
-            {t("Cancel")}
-        </button>
-    </div>
-</ModalBody>
+                        <button
+                            type="button"
+                            className="btn btn-danger px-4"
+                            onClick={() => setDeleteModal(false)}
+                        >
+                            {t("Cancel")}
+                        </button>
+                    </div>
+                </ModalBody>
             </Modal>
             <ToastContainer autoClose={2000} />
         </React.Fragment>
