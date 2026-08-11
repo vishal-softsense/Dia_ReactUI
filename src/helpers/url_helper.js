@@ -784,3 +784,42 @@ export const IMPORT_GRADING_DELETE_RECORDS = "/api/ImportGrading/delete-deletedr
 export const IMPORT_GRADING_UPLOAD_LOGO = "/api/ImportGrading/UploadLogo";
 export const IMPORT_GRADING_UPLOAD_JEWELLERY_FULL = "/api/ImportGrading/upload-jewellery-full";
 export const IMPORT_GRADING_IMPORT_ASKING_RATE = "/api/ImportGrading/Inventory/ImportAskingRate";
+
+
+// Jewellery Purchase Report
+export const JEWELLERY_PURCHASE_REPORT = "/api/JewelleryPurchaseReport/search";
+export const JEWELLERY_PURCHASE_DROPDOWNS = "/api/JewelleryPurchaseReport/dropdowns";
+
+// Jewellery Purchase Return Report
+export const JEWELLERY_PURCHASE_RETURN_REPORT = "/api/JewelleryPurchaseRetunReport/search";
+export const JEWELLERY_PURCHASE_RETURN_DROPDOWNS = "/api/JewelleryPurchaseRetunReport/dropdowns";
+
+// Jewellery Sale Report
+export const JEWELLERY_SALE_REPORT = "/api/JewellerySaleReport/search";
+export const JEWELLERY_SALE_DROPDOWNS = "/api/JewellerySaleReport/dropdowns";
+
+// Jewellery Sale Return Report
+export const JEWELLERY_SALE_RETURN_REPORT = "/api/JewSaleReturnReport/search";
+export const JEWELLERY_SALE_RETURN_DROPDOWNS = "/api/JewSaleReturnReport/dropdowns";
+
+// Jewellery MemoOut Report
+export const JEWELLERY_MEMO_OUT_REPORT = "/api/JewelleryMemoOutReport/search";
+export const JEWELLERY_MEMO_OUT_DROPDOWNS = "/api/JewelleryMemoOutReport/dropdowns";
+
+// Jewellery MemoIn Return Report
+export const JEWELLERY_MEMO_IN_RETURN_REPORT = "/api/JewelleryMemoInReturnReport/search";
+export const JEWELLERY_MEMO_IN_RETURN_DROPDOWNS = "/api/JewelleryMemoInReturnReport/dropdowns";
+
+// Jewellery MemoOut Return Report
+export const JEWELLERY_MEMO_OUT_RETURN_REPORT = "/api/JewelleryMemoOutReturnReporte/search";
+export const JEWELLERY_MEMO_OUT_RETURN_DROPDOWNS = "/api/JewelleryMemoOutReturnReporte/dropdowns";
+
+// Jewellery ConsignMent In Report
+export const JEWELLERY_CONSIGN_IN_REPORT = "/api/JewelleryConsignMentInReport/search";
+export const JEWELLERY_CONSIGN_IN_SUMMARY = "/api/JewelleryConsignMentInReport/summary";
+export const JEWELLERY_CONSIGN_IN_DROPDOWNS = "/api/JewelleryConsignMentInReport/dropdowns";
+
+// Jewellery Stock History Report
+export const JEWELLERY_STOCK_HISTORY_REPORT = "/api/JewelleryStockHistoryReport/jewstock-register-report-datatable";
+export const JEWELLERY_STOCK_HISTORY_DROPDOWNS = "/api/JewelleryStockHistoryReport/dropdowns";
+export const JEWELLERY_STOCK_HISTORY_STOCK_IDS = "/api/JewelleryStockHistoryReport/stock-ids";
