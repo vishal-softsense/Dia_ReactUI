@@ -345,6 +345,13 @@ const mapBasic = (list = []) =>
     label: getVal(x, "Name", "TextName", "textName") || String(getVal(x, "ID"))
   }));
 
+const mapBasicWithNameAsValue = (list = []) =>
+  (list || []).map((x) => ({
+    value: String(getVal(x, "Name", "TextName", "textName") || getVal(x, "ID")),
+    label: getVal(x, "Name", "TextName", "textName") || String(getVal(x, "ID")),
+    id: String(getVal(x, "ID", "Id", "id") || "")
+  }));
+
 const resolveSelectValue = (options = [], rawValue, ...fallbacks) => {
   const raw = rawValue ?? fallbacks.find((x) => x != null && x !== "");
   if (raw == null || raw === "") return "";
@@ -352,7 +359,8 @@ const resolveSelectValue = (options = [], rawValue, ...fallbacks) => {
   const matched = (options || []).find((o) => {
     const v = String(o?.value ?? "").trim().toLowerCase();
     const l = String(o?.label ?? "").trim().toLowerCase();
-    return v === needle || l === needle;
+    const id = String(o?.id ?? "").trim().toLowerCase();
+    return v === needle || l === needle || (id && id === needle);
   });
   return matched ? matched.value : String(raw);
 };
@@ -563,9 +571,9 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         return null;
       }
       const d = res.Data || res.data || {};
-      const types = mapBasic(d.Type || d.type);
-      const subs = mapBasic(d.SubType || d.subType);
-      const cats = mapBasic(d.Category || d.category);
+      const types = mapBasicWithNameAsValue(d.Type || d.type);
+      const subs = mapBasicWithNameAsValue(d.SubType || d.subType);
+      const cats = mapBasicWithNameAsValue(d.Category || d.category);
       const curs = mapBasic(d.CurrencyList || d.currencyList);
       setTypeOpts(types);
       setSubTypeOpts(subs);

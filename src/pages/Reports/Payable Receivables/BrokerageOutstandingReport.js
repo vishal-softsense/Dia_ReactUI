@@ -27,6 +27,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT,
   resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
+import { openBroAdatTxnLink } from "../../../helpers/reportTxnLinks";
 
 const dashText = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -187,19 +188,6 @@ const NUMERIC_SORT_KEYS = [
   "stockrate",
   "Invoiceamount"
 ];
-
-const openTxnLink = (code, trnType) => {
-  const type = String(trnType || "").toUpperCase();
-  let url = "";
-  if (type === "PPUR") url = `../purchaseparcel/edit-purchaseparcel?ID=${code}&Mode=view`;
-  else if (type === "PUR") url = `../purchase/edit-purchase?ID=${code}&Mode=view`;
-  else if (type === "SALE") url = `../sale/edit-sale?ID=${code}&Mode=view`;
-  else if (type === "PSALE") url = `../saleParcel/edit-saleParcel?ID=${code}&Mode=view`;
-  else if (type === "CPUR") url = `../mix-purchase/edit-mixpur?ID=${code}&Mode=view`;
-  else if (type === "CSALE") url = `../mix/edit-mixdata?ID=${code}&Mode=view`;
-
-  if (url) window.open(url, "_blank")?.focus();
-};
 
 const BrokerageOutstandingReport = () => {
   const { t } = useTranslation();
@@ -470,7 +458,7 @@ const BrokerageOutstandingReport = () => {
         <button
           type="button"
           className="btn btn-soft-primary btn-sm p-1 py-0"
-          onClick={() => openTxnLink(code, trn)}
+          onClick={() => openBroAdatTxnLink(code, trn)}
           title={t("View")}
         >
           <i className="ri-eye-line" />

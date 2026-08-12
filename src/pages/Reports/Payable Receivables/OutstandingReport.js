@@ -49,6 +49,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT,
   resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
+import { openOutstandingTxnLink, productTypeToTrnType } from "../../../helpers/reportTxnLinks";
 
 const dashText = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -173,25 +174,6 @@ const STATEMENT_COLUMNS = [
   { key: "PaidAmount", header: "Payments/Credits", align: "right", sum: false },
   { key: "RemainAmount", header: "Balance", align: "right", sum: true }
 ];
-
-const openTxnLink = (code, trnType, payable) => {
-  const type = String(trnType || "").toUpperCase();
-  let url = "";
-  if (payable) {
-    if (type === "PPUR") url = `../purchaseparcel/edit-purchaseparcel?ID=${code}&Mode=view`;
-    else if (type === "PUR") url = `../purchase/edit-purchase?ID=${code}&Mode=view`;
-    else if (type === "SALERTN") url = `../salereturn/edit-salereturn?ID=${code}&Mode=view`;
-    else if (type === "PJEW") url = `../jewpurchase/edit-jew-purchase?ID=${code}&Mode=view`;
-    else if (type === "CPUR") url = `../mix-purchase/edit-mixpur?ID=${code}&Mode=view`;
-  } else {
-    if (type === "SALE") url = `../sale/edit-sale?ID=${code}&Mode=view`;
-    else if (type === "PSALE") url = `../saleParcel/edit-saleParcel?ID=${code}&Mode=view`;
-    else if (type === "PURRTN") url = `../purchasereturn/edit-purchasereturn?ID=${code}&Mode=view`;
-    else if (type === "SJEW") url = `../jewsale/edit-jew-sale?ID=${code}&Mode=view`;
-    else if (type === "CSALE") url = `../mix/edit-mixdata?ID=${code}&Mode=view`;
-  }
-  if (url) window.open(url, "_blank")?.focus();
-};
 
 const OutstandingReport = () => {
   const { t } = useTranslation();
@@ -498,7 +480,7 @@ const OutstandingReport = () => {
     Receivable: !!filters.receivable,
     SubType: filters.subType || null,
     Type: filters.type || null,
-    ProductType: filters.productType || null,
+    TrnType: productTypeToTrnType(filters.productType) || null,
     Category: filters.category || null,
     InvNo: filters.invNo || null,
     BillNo: filters.billNo || null,
@@ -1114,7 +1096,7 @@ const OutstandingReport = () => {
         <button
           type="button"
           className="btn btn-soft-primary btn-sm"
-          onClick={() => openTxnLink(code, trn, filters.payable)}
+          onClick={() => openOutstandingTxnLink(code, trn, filters.payable)}
           title={t("View")}
         >
           <i className="ri-eye-line" />
@@ -1976,7 +1958,7 @@ const OutstandingReport = () => {
                                       type="button"
                                       className="btn btn-soft-primary btn-sm no-print"
                                       onClick={() =>
-                                        openTxnLink(
+                                        openOutstandingTxnLink(
                                           getRowVal(row, "Code", "code"),
                                           getRowVal(row, "TrnType", "trnType"),
                                           filters.payable
