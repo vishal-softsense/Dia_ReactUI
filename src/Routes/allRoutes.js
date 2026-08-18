@@ -718,31 +718,31 @@ const authProtectedRoutes = [
 
   
 // Jewellery Purchase Report
-  { path: "/JewReport/JewPurchaseReport", component: <JewelleryPurchaseReport /> },
+  { path: "/jewreport/Purchase-Report", component: <JewelleryPurchaseReport /> },
 
   // Jewellery Stock History Report
   { path: "/jewreport/Jewstockhistory-report", component: <JewelleryStockHistoryReport /> },
 
   // Jewellery Purchase Return Report
-  { path: "/JewReport/JewPurchaseReturnReport", component: <JewelleryPurchaseRetunReport /> },
+  { path: "/jewreport/jewPurchasereturn-report", component: <JewelleryPurchaseRetunReport /> },
 
   // Jewellery Sale Report
-  { path: "/JewReport/JewSaleReport", component: <JewellerySaleReport /> },
+  { path: "/jewreport/jewsale-report", component: <JewellerySaleReport /> },
 
   // Jewellery Sale Return Report
-  { path: "/JewReport/JewSaleReturnReport", component: <JewSaleReturnReport /> },
+  { path: "/jewreport/jewsalereturn-report", component: <JewSaleReturnReport /> },
 
   // Jewellery MemoOut Report
-  { path: "/JewReport/JewMemoReport", component: <JewelleryMemooutReport /> },
+  { path: "/jewreport/jewmemo-report", component: <JewelleryMemooutReport /> },
 
   // Jewellery MemoIn Return Report
-  { path: "/JewReport/JewMemoinRetunRpt", component: <JewelleryMemoInReturnReport /> },
+  { path: "/jewreport/JewMemoIn-return-report", component: <JewelleryMemoInReturnReport /> },
 
-  // Jewellery MemoOut Return Report (MVC: jewreport/JewMemoOut-return-report)
+  // Jewellery MemoOut Return Report
   { path: "/jewreport/JewMemoOut-return-report", component: <JewelleryMemoOutReturnReporte /> },
 
   // Jewellery ConsignMent In Report
-  { path: "/JewReport/JewConsInReport", component: <JewelleryConsignMentInReport /> },
+  { path: "/jewreport/jewcons-in-report", component: <JewelleryConsignMentInReport /> },
 
 
   { path: "/data/import-pricing", component: <ImportPricing /> },
