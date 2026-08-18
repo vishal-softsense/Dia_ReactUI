@@ -481,7 +481,26 @@ import JewelleryMemoOutReturnReporte from "../pages/Jewellery/Jewellery Reports/
 // Jewellery ConsignMent In Report
 import JewelleryConsignMentInReport from "../pages/Jewellery/Jewellery Reports/JewelleryConsignMentInReport";
 
+const RootRoute = () => {
+  try {
+    const raw =
+      localStorage.getItem("authUser") || sessionStorage.getItem("authUser");
+    const authUser = raw ? JSON.parse(raw) : null;
+    const token =
+      authUser?.token ||
+      authUser?.accessToken ||
+      authUser?.data?.accessToken ||
+      null;
 
+    if (token) {
+      return <Navigate to="/welcome" replace />;
+    }
+  } catch (_) {
+    // Fall back to the public landing page if auth state can't be read.
+  }
+
+  return <OnePage />;
+};
 
 const authProtectedRoutes = [
   { path: "/user-list", component: <ListUser /> },
@@ -943,15 +962,14 @@ const authProtectedRoutes = [
 
   // this route should be at the end of all other routes
   // eslint-disable-next-line react/display-name
-  {
-    path: "/",
-    exact: true,
-    component: <Navigate to="/welcome" />,
-  },
   { path: "*", component: <Navigate to="/welcome" /> },
 ];
 
 const publicRoutes = [
+  // Default public entry
+  { path: "/", component: <RootRoute /> },
+  { path: "/landing", component: <OnePage /> },
+
   // Authentication Page
   { path: "/logout", component: <Logout /> },
   { path: "/login", component: <Login /> },
@@ -980,7 +998,6 @@ const publicRoutes = [
   { path: "/pages-maintenance", component: <Maintenance /> },
   { path: "/pages-coming-soon", component: <ComingSoon /> },
 
-  { path: "/landing", component: <OnePage /> },
   { path: "/nft-landing", component: <NFTLanding /> },
   { path: "/job-landing", component: <JobLanding /> },
 

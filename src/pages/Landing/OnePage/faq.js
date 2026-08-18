@@ -2,311 +2,185 @@ import React, { useState } from 'react';
 import { Col, Container, Row, Collapse } from 'reactstrap';
 import classnames from "classnames";
 
-const Faqs = () => {
+const faqSections = [
+    {
+        icon: "ri-question-line",
+        title: "General Questions",
+        id: "general",
+        items: [
+            {
+                question: "What is DiaJew SoftOnCloud?",
+                answer: "DiaJew SoftOnCloud is a diamond and jewellery ERP that helps you manage inventory, purchase, sales, and accounts for solitaires, jewellery, and parcels in one place.",
+            },
+            {
+                question: "Can I manage solitaires, jewellery, and parcels together?",
+                answer: "Yes. Dedicated modules cover polished diamonds, jewellery mounting, and parcel/rough stock with shared purchase, sales, and accounts workflows.",
+            },
+            {
+                question: "Does DiaJew support diamond grading masters?",
+                answer: "Yes. Maintain shape, color, size, clarity, lab, polish, symmetry, fluorescence, and jewellery category, metal, and purity masters.",
+            },
+            {
+                question: "Can I track memo and consignment stock?",
+                answer: "Yes. Track memo, consignment, aging, lot assortment, and stock movements so inventory stays accurate.",
+            },
+            {
+                question: "Is DiaJew available in multiple languages?",
+                answer: "Yes. The app supports multiple languages and light/dark themes so teams can work in their preferred setup.",
+            },
+        ],
+    },
+    {
+        icon: "ri-flow-chart",
+        title: "Workflow & Operations",
+        id: "workflow",
+        items: [
+            {
+                question: "How does the purchase workflow work?",
+                answer: "Create purchase orders, capture inward entries, and update stock with purchase analysis dashboards for suppliers and periods.",
+            },
+            {
+                question: "Can I create sales invoices and memos?",
+                answer: "Yes. Manage sales invoices, customer tracking, memo/sale reports, and monitor sales flow from dashboard analytics.",
+            },
+            {
+                question: "Which inventory actions are supported?",
+                answer: "Stock search, rate revise, consumption, kapan/lot handling, and real-time movement tracking across diamond and jewellery stock.",
+            },
+            {
+                question: "Can different teams use different modules?",
+                answer: "Yes. After login, users land on a welcome hub with Inventory, Purchase, Sales, and Accounts modules based on their access.",
+            },
+            {
+                question: "Does DiaJew support multi-company login?",
+                answer: "Yes. Sign in with Company ID, Username, and Password so each business unit stays separated securely.",
+            },
+        ],
+    },
+    {
+        icon: "ri-file-chart-line",
+        title: "Reports & Accounts",
+        id: "reports",
+        items: [
+            {
+                question: "Which financial reports are available?",
+                answer: "Access ledgers, outstanding, brokerage/commission/loan, trial balance, P&L, balance sheet, invoice ledger, and cash flow reports.",
+            },
+            {
+                question: "Can I analyze purchase and sales trends?",
+                answer: "Yes. Purchase, sale, stock, and month analysis dashboards help you review performance across custom periods.",
+            },
+            {
+                question: "Are stock register reports included?",
+                answer: "Yes. Solitaire and parcel stock register reports, plus jewellery stock and movement reports, are available in the reporting suite.",
+            },
+            {
+                question: "Can accounts and inventory stay in sync?",
+                answer: "Yes. Inventory movements, sales, and payments feed into accounts so financial summaries stay aligned with stock activity.",
+            },
+        ],
+    },
+    {
+        icon: "ri-shield-keyhole-line",
+        title: "Security & Access",
+        id: "security",
+        items: [
+            {
+                question: "Does DiaJew support role-based access?",
+                answer: "Yes. Menu-level permissions and role-based access control decide which modules and reports each user can open.",
+            },
+            {
+                question: "How does user sign-in work?",
+                answer: "Users sign in securely with company credentials. Admins can control registration and access as needed.",
+            },
+            {
+                question: "Is my business data secure?",
+                answer: "DiaJew SoftOnCloud is built with security and privacy in mind, including account controls, permissions, and session management.",
+            },
+            {
+                question: "Can I use DiaJew from anywhere?",
+                answer: "Yes. Access your inventory, sales, and accounts from any modern browser with your SoftOnCloud credentials.",
+            },
+        ],
+    },
+];
 
-    const [col1, setcol1] = useState(true);
-    const [col2, setcol2] = useState(false);
-    const [col3, setcol3] = useState(false);
-    const [col4, setcol4] = useState(false);
+const FaqAccordion = ({ sectionId, items }) => {
+    const [openIndex, setOpenIndex] = useState(-1);
 
-    const [col9, setcol5] = useState(false);
-    const [col10, setcol6] = useState(true);
-    const [col11, setcol7] = useState(false);
-    const [col12, setcol8] = useState(false);
-
-    const t_col1 = () => {
-        setcol1(!col1);
-        setcol2(false);
-        setcol3(false);
-        setcol4(false);
-
-    };
-
-    const t_col2 = () => {
-        setcol2(!col2);
-        setcol1(false);
-        setcol3(false);
-        setcol4(false);
-
-    };
-
-    const t_col3 = () => {
-        setcol3(!col3);
-        setcol1(false);
-        setcol2(false);
-        setcol4(false);
-
-    };
-
-    const t_col4 = () => {
-        setcol4(!col4);
-        setcol1(false);
-        setcol2(false);
-        setcol3(false);
-    };
-
-    const t_col5 = () => {
-        setcol5(!col9);
-        setcol6(false);
-        setcol7(false);
-        setcol8(false);
-
-    };
-
-    const t_col6 = () => {
-        setcol6(!col10);
-        setcol7(false);
-        setcol8(false);
-        setcol5(false);
-
-    };
-
-    const t_col7 = () => {
-        setcol7(!col11);
-        setcol5(false);
-        setcol6(false);
-        setcol8(false);
-
-    };
-
-    const t_col8 = () => {
-        setcol8(!col12);
-        setcol5(false);
-        setcol6(false);
-        setcol7(false);
+    const toggle = (index) => {
+        setOpenIndex(openIndex === index ? -1 : index);
     };
 
     return (
+        <div
+            className="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
+            id={`${sectionId}-accordion`}
+        >
+            {items.map((item, index) => (
+                <div className="accordion-item" key={item.question}>
+                    <h2 className="accordion-header" id={`${sectionId}-heading-${index}`}>
+                        <button
+                            className={classnames("accordion-button", "fw-medium", {
+                                collapsed: openIndex !== index,
+                            })}
+                            type="button"
+                            onClick={() => toggle(index)}
+                            style={{ cursor: "pointer" }}
+                        >
+                            {item.question}
+                        </button>
+                    </h2>
+                    <Collapse isOpen={openIndex === index} className="accordion-collapse">
+                        <div className="accordion-body ff-secondary">{item.answer}</div>
+                    </Collapse>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const Faqs = () => {
+    return (
         <React.Fragment>
-            <section className="section">
+            <section className="section" id="faqs">
                 <Container>
                     <Row className="justify-content-center">
                         <Col lg={8}>
                             <div className="text-center mb-5">
                                 <h3 className="mb-3 fw-semibold">Frequently Asked Questions</h3>
-                                <p className="text-muted mb-4 ff-secondary">If you can not find answer to your question in our FAQ, you can
-                                    always contact us or email us. We will answer you shortly!</p>
+                                <p className="text-muted mb-4 ff-secondary">
+                                    If you can not find answer to your question in our FAQ, you can
+                                    always contact us or email us. We will answer you shortly!
+                                </p>
 
-                                <div className="hstack gap-2 justify-content-center">
-                                    <button type="button" className="btn btn-primary btn-label rounded-pill me-1"><i className="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Email Us</button>
-                                    <button type="button" className="btn btn-info btn-label rounded-pill"><i className="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Send Us Tweet</button>
+                                <div className="hstack flex-wrap gap-2 justify-content-center">
+                                    <a
+                                        href="mailto:noreply@softoncloud.com"
+                                        className="btn btn-success rounded-pill"
+                                    >
+                                        <i className="ri-mail-line align-middle me-2"></i>
+                                        Email Us
+                                    </a>
                                 </div>
                             </div>
                         </Col>
                     </Row>
 
                     <Row className="g-lg-5 g-4">
-                        <Col lg={6}>
-                            <div className="d-flex align-items-center mb-2">
-                                <div className="flex-shrink-0 me-1">
-                                    <i className="ri-question-line fs-24 align-middle text-success me-1"></i>
+                        {faqSections.map((section) => (
+                            <Col lg={6} key={section.id}>
+                                <div className="d-flex align-items-center mb-2">
+                                    <div className="flex-shrink-0 me-1">
+                                        <i className={`${section.icon} fs-24 align-middle text-success me-1`}></i>
+                                    </div>
+                                    <div className="flex-grow-1">
+                                        <h5 className="mb-0 fw-semibold">{section.title}</h5>
+                                    </div>
                                 </div>
-                                <div className="flex-grow-1">
-                                    <h5 className="mb-0 fw-semibold">General Questions</h5>
-                                </div>
-                            </div>
-                            <div className="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
-                                id="genques-accordion">
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="genques-headingOne">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col1 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col1}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            What is the purpose of using themes ?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col1} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            A theme is a set of colors, fonts, effects, and more that can be applied to your entire presentation to give it a
-                                            consistent, professional look. You've already been using a theme, even if you didn't know it: the default Office theme,
-                                            which consists.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="genques-headingTwo">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col2 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col2}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            Can a theme have more than one theme?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col2} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            A story can have as many themes as the reader can identify based on recurring patterns and parallels within the story
-                                            itself. In looking at ways to separate themes into a hierarchy, we might find it useful to follow the example of a
-                                            single book.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="genques-headingThree">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col3 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col3}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            What are theme features?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col3} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            Theme features is a set of specific functionality that may be enabled by theme authors. Themes must register each
-                                            individual Theme Feature that the author wishes to support. Theme support functions should be called in the theme's
-                                            functions.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="genques-headingFour">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col4 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col4}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            What is simple theme?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col4} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            Simple is a free WordPress theme, by Themify, built exactly what it is named for: simplicity. Immediately upgrade the
-                                            quality of your WordPress site with the simple theme To use the built-in Chrome theme editor.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                            </div>
-                        </Col>
-
-                        <Col lg={6}>
-                            <div className="d-flex align-items-center mb-2">
-                                <div className="flex-shrink-0 me-1">
-                                    <i className="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
-                                </div>
-                                <div className="flex-grow-1">
-                                    <h5 className="mb-0 fw-semibold">Privacy &amp; Security</h5>
-                                </div>
-                            </div>
-
-                            <div className="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
-                                id="privacy-accordion">
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="privacy-headingOne">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col9 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col5}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            Does Word have night mode?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col9} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            You can run Microsoft Word in dark mode, which uses a dark color palette to help reduce eye strain in low light
-                                            settings. You can choose to make the document white or black using the Switch Modes button in the ribbon's View tab.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="privacy-headingTwo">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col10 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col6}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            Is theme an opinion?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col10} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            A theme is an opinion the author expresses on the subject, for instance, the author's dissatisfaction with the narrow
-                                            confines of French bourgeois marriage during that period theme is an idea that a writer repeats.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="privacy-headingThree">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col11 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col7}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            How do you develop a theme?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col11} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            A short story, novella, or novel presents a narrative to its reader. Perhaps that narrative involves mystery, terror,
-                                            romance, comedy, or all of the above. These works of fiction may also contain memorable characters, vivid
-                                            world-building, literary devices.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                                <div className="accordion-item">
-                                    <h2 className="accordion-header" id="privacy-headingFour">
-                                        <button
-                                            className={classnames(
-                                                "accordion-button",
-                                                "fw-medium",
-                                                { collapsed: !col12 }
-                                            )}
-                                            type="button"
-                                            onClick={t_col8}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            Do stories need themes?
-                                        </button>
-                                    </h2>
-                                    <Collapse isOpen={col12} className="accordion-collapse">
-                                        <div className="accordion-body ff-secondary">
-                                            A story can have as many themes as the reader can identify based on recurring patterns and parallels within the story
-                                            itself. In looking at ways to separate themes into a hierarchy, we might find it useful to follow the example of a
-                                            single book.
-                                        </div>
-                                    </Collapse>
-                                </div>
-                            </div>
-
-                            {/* <!--end accordion--> */}
-                        </Col>
+                                <FaqAccordion sectionId={section.id} items={section.items} />
+                            </Col>
+                        ))}
                     </Row>
                 </Container>
             </section>

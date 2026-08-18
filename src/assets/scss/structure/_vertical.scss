@@ -285,6 +285,53 @@
     }
 }
 
+.brand-logo-expanded {
+    width: 100%;
+    max-width: 100%;
+    min-height: $header-height;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.55rem;
+}
+
+.brand-logo-icon {
+    display: block;
+    width: auto;
+    border-radius: 14px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.brand-logo-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1.05;
+    text-align: left;
+    margin-left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 12rem;
+    opacity: 1;
+    transition: opacity 0.05s ease 0.12s, max-width 0.1s ease 0.12s;
+}
+
+.brand-logo-title {
+    color: var(--#{$prefix}vertical-menu-item-color);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.brand-logo-subtitle {
+    color: var(--#{$prefix}vertical-menu-item-color);
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
 .logo-light {
     display: none;
 }
