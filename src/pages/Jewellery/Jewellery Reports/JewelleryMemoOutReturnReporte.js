@@ -318,9 +318,9 @@ const JewelleryMemoOutReturnReporte = () => {
                 <td key={cell.id}>
                   {column.columnDef.cell
                     ? flexRender(column.columnDef.cell, {
-                        ...cell.getContext(),
-                        row: { ...row, original: childRow }
-                      })
+                      ...cell.getContext(),
+                      row: { ...row, original: childRow }
+                    })
                     : dashText(childRow[column.columnDef.accessorKey])}
                 </td>
               );
@@ -598,7 +598,7 @@ const JewelleryMemoOutReturnReporte = () => {
                   data={groupedVisibleRows}
                   isGlobalFilter={true}
                   customPageSize={500}
-                  customPageSizes={[500, 1000, 1500, -1]}
+                  customPageSizes={[500, 1000, 1500]}
                   divClass="table-responsive table-card mb-3"
                   tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                   theadClass="table-light"

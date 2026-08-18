@@ -1008,3 +1008,26 @@ export const uploadImportLogo = image => {
   if (image) formData.append("image", image);
   return api.create(url.IMPORT_GRADING_UPLOAD_LOGO, formData, { headers: { "Content-Type": undefined } });
 };
+
+// Import Pricing (MVC: /data/import-pricing)
+export const getImportPricingPermission = () => api.get(url.IMPORT_PRICING_PERMISSION);
+
+export const importPricingFile = file => {
+  const formData = new FormData();
+  if (file) formData.append("ImportFile", file);
+  return api.create(url.IMPORT_PRICING_UPLOAD, formData, { headers: { "Content-Type": undefined } });
+};
+
+export const saveImportPricing = payload => api.create(url.IMPORT_PRICING_SAVE, payload);
+
+// Get Lab Data (MVC: /data/getlabdata)
+export const getGetLabDataPermission = () => api.get(url.GET_LAB_DATA_PERMISSION);
+export const getLabDataFromList = payload => api.create(url.GET_LAB_DATA_FROM_LIST, payload);
+export const importLabCertFile = file => {
+  const formData = new FormData();
+  if (file) formData.append("ImportFile", file);
+  return api.create(url.GET_LAB_DATA_IMPORT_CERT, formData, { headers: { "Content-Type": undefined } });
+};
+export const getLabGiaData = payload => api.create(url.GET_LAB_DATA_GIA, payload);
+export const getLabIgiData = payload => api.create(url.GET_LAB_DATA_IGI, payload);
+export const printGetLabData = payload => api.create(url.GET_LAB_DATA_PRINT, payload);

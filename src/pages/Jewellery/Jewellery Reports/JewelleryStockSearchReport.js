@@ -11,7 +11,7 @@ import {
   Label,
   Row
 } from "reactstrap";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -20,6 +20,14 @@ import { api } from "../../../config";
 import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
 import { getAddMountingStockData, getAllLotNoList, getJewelleryStockIds, getJewelleryStockSearchDropdowns, getJewelleryStockSearchReport, getJewPurity, getSettingData } from "../../../helpers/fakebackend_helper";
 import { getReportCompanySettings, resolveCompanyLogoUrl } from "../../../helpers/reportCompanyDefaults";
+
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
 
 const TOTAL_COLS = 47;
 
@@ -517,12 +525,85 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
   );
 };
 
+const CustomOption = (props) => (
+  <components.Option {...props}>
+    <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
+      <input
+        type="checkbox"
+        className="form-check-input mt-0"
+        checked={props.isSelected}
+        onChange={() => null}
+        style={{ cursor: "pointer" }}
+      />
+      <span style={{ fontSize: "13px" }}>{props.label}</span>
+    </div>
+  </components.Option>
+);
+
+const CustomMenuList = (props) => {
+  const { selectProps } = props;
+  const { onSelectAll, isAllSelected, t } = selectProps;
+
+  return (
+    <components.MenuList {...props}>
+      <div
+        className="px-3 py-2 border-bottom d-flex align-items-center gap-2 select-all-row"
+        style={{
+          cursor: "pointer",
+          background: "var(--vz-tertiary-bg, #f8f9fa)",
+          borderColor: "var(--vz-border-color, #dee2e6)",
+        }}
+        onClick={onSelectAll}
+      >
+        <input
+          type="checkbox"
+          className="form-check-input"
+          checked={isAllSelected}
+          onChange={() => null}
+          style={{ cursor: "pointer" }}
+        />
+        <span
+          className="fw-semibold text-uppercase"
+          style={{ fontSize: "12px", color: "var(--vz-body-color, #495057)" }}
+        >
+          {t("SELECT ALL")}
+        </span>
+      </div>
+      {props.children}
+    </components.MenuList>
+  );
+};
+
+const CustomValueContainer = ({ children, ...props }) => {
+  const { selectProps } = props;
+  const numSelected = selectProps.value ? selectProps.value.length : 0;
+  const showSelectedText = numSelected > 0 && !selectProps.menuIsOpen;
+
+  return (
+    <components.ValueContainer {...props}>
+      {showSelectedText && (
+        <div
+          className="position-absolute"
+          style={{
+            color: "var(--vz-body-color, #495057)",
+            fontSize: "13px",
+            left: "10px",
+            pointerEvents: "none",
+          }}
+        >
+          {numSelected} Selected
+        </div>
+      )}
+      {children}
+    </components.ValueContainer>
+  );
+};
+
 const JewelleryStockSearchReport = () => {
   const { t } = useTranslation();
   const { toDate, getDates } = useSettingReportDates();
   const reportRef = useRef(null);
   const printLock = useRef(false);
-  const lotSearchTimer = useRef(null);
 
   const [showReport, setShowReport] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -543,7 +624,11 @@ const JewelleryStockSearchReport = () => {
   });
   const [purityOptions, setPurityOptions] = useState([]);
   const [lotNoOptions, setLotNoOptions] = useState([]);
+  const [loadingLots, setLoadingLots] = useState(false);
+  const [lotSearchValue, setLotSearchValue] = useState("");
   const [stockIdOptions, setStockIdOptions] = useState([]);
+  const [loadingStockIds, setLoadingStockIds] = useState(false);
+  const [stockSearchValue, setStockSearchValue] = useState("");
   const [printType, setPrintType] = useState("JewelleryStockList Print");
 
   const [filters, setFilters] = useState({
@@ -631,6 +716,7 @@ const JewelleryStockSearchReport = () => {
   }, []);
 
   const loadLotOptions = useCallback(async (searchText = "") => {
+    setLoadingLots(true);
     try {
       const res = await getAllLotNoList(searchText || "", "");
       const list = Array.isArray(res) ? res : res?.data ?? res?.Data ?? [];
@@ -645,32 +731,36 @@ const JewelleryStockSearchReport = () => {
       );
     } catch {
       setLotNoOptions([]);
+    } finally {
+      setLoadingLots(false);
     }
   }, []);
 
   const loadStockIdOptions = useCallback(async (searchText = "") => {
+    setLoadingStockIds(true);
     try {
       const res = await getJewelleryStockIds(searchText || "");
       const list = Array.isArray(res) ? res : res?.data ?? res?.Data ?? [];
-      const mapped = (Array.isArray(list) ? list : [])
-        .map((item) => {
-          const val = String(getItemField(item, "Name", "name", "ID", "id") || "").trim().toUpperCase();
-          return val ? { value: val, label: val } : null;
-        })
-        .filter(Boolean);
-
-      setStockIdOptions((prev) => {
-        if (!searchText) return mapped;
-        const merged = [...prev];
-        mapped.forEach((opt) => {
-          if (!merged.some((x) => x.value === opt.value)) merged.push(opt);
-        });
-        return merged;
-      });
+      setStockIdOptions(
+        (Array.isArray(list) ? list : [])
+          .map((item) => {
+            const val = String(getItemField(item, "Name", "name", "ID", "id") || "").trim();
+            const label = String(
+              getItemField(item, "TextName", "textName", "Name", "name", "ID", "id") || val
+            ).trim().toUpperCase();
+            return val ? { value: val, label: label || val.toUpperCase() } : null;
+          })
+          .filter(Boolean)
+      );
     } catch {
-      /* ignore */
+      setStockIdOptions([]);
+    } finally {
+      setLoadingStockIds(false);
     }
   }, []);
+
+  const debouncedLoadLotOptions = useMemo(() => debounce(loadLotOptions, 300), [loadLotOptions]);
+  const debouncedLoadStockIdOptions = useMemo(() => debounce(loadStockIdOptions, 300), [loadStockIdOptions]);
 
   useEffect(() => {
     loadLotOptions("");
@@ -680,9 +770,6 @@ const JewelleryStockSearchReport = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    if (name === "stockId") {
-      loadStockIdOptions(value);
-    }
   };
 
   const handleNativeSelect = (name, value) => {
@@ -712,17 +799,74 @@ const JewelleryStockSearchReport = () => {
     }));
   };
 
-  const handleStockIdsSelect = (selected) => {
-    const values = selected ? selected.map((o) => o.value) : [];
-    setFilters((prev) => ({ ...prev, stockId: values.join("\n") }));
+  const selectedLotValues = useMemo(() => {
+    return filters.jewLotNo
+      ? filters.jewLotNo.split("\n").map((v) => v.trim()).filter(Boolean)
+      : [];
+  }, [filters.jewLotNo]);
+
+  const lotSelectValue = useMemo(() => {
+    return selectedLotValues.map((val) => {
+      const match = lotNoOptions.find((o) => o.value === val);
+      return match || { value: val, label: String(val).toUpperCase() };
+    });
+  }, [lotNoOptions, selectedLotValues]);
+
+  const isAllLotSelected = useMemo(() => {
+    if (lotNoOptions.length === 0) return false;
+    return lotNoOptions.every((option) => selectedLotValues.includes(option.value));
+  }, [lotNoOptions, selectedLotValues]);
+
+  const handleSelectAllLots = () => {
+    if (isAllLotSelected) {
+      const currentOptionValues = lotNoOptions.map((o) => o.value);
+      const updated = selectedLotValues.filter((v) => !currentOptionValues.includes(v));
+      setFilters((prev) => ({ ...prev, jewLotNo: updated.join("\n") }));
+    } else {
+      const currentOptionValues = lotNoOptions.map((o) => o.value);
+      const union = Array.from(new Set([...selectedLotValues, ...currentOptionValues]));
+      setFilters((prev) => ({ ...prev, jewLotNo: union.join("\n") }));
+    }
   };
 
-  const handleLotInputChange = (inputValue, { action }) => {
-    if (action === "input-change") {
-      if (lotSearchTimer.current) clearTimeout(lotSearchTimer.current);
-      lotSearchTimer.current = setTimeout(() => loadLotOptions(inputValue || ""), 300);
+  const handleLotDropdownChange = (selectedOptions) => {
+    const values = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
+    setFilters((prev) => ({ ...prev, jewLotNo: values.join("\n") }));
+  };
+
+  const selectedStockIds = useMemo(() => {
+    return filters.stockId
+      ? filters.stockId.split("\n").map((v) => v.trim()).filter(Boolean)
+      : [];
+  }, [filters.stockId]);
+
+  const stockSelectValue = useMemo(() => {
+    return selectedStockIds.map((val) => {
+      const match = stockIdOptions.find((o) => o.value === val);
+      return match || { value: val, label: String(val).toUpperCase() };
+    });
+  }, [stockIdOptions, selectedStockIds]);
+
+  const isAllStockSelected = useMemo(() => {
+    if (stockIdOptions.length === 0) return false;
+    return stockIdOptions.every((option) => selectedStockIds.includes(option.value));
+  }, [stockIdOptions, selectedStockIds]);
+
+  const handleSelectAllStockIds = () => {
+    if (isAllStockSelected) {
+      const currentOptionValues = stockIdOptions.map((o) => o.value);
+      const updated = selectedStockIds.filter((v) => !currentOptionValues.includes(v));
+      setFilters((prev) => ({ ...prev, stockId: updated.join("\n") }));
+    } else {
+      const currentOptionValues = stockIdOptions.map((o) => o.value);
+      const union = Array.from(new Set([...selectedStockIds, ...currentOptionValues]));
+      setFilters((prev) => ({ ...prev, stockId: union.join("\n") }));
     }
-    return inputValue;
+  };
+
+  const handleStockIdDropdownChange = (selectedOptions) => {
+    const values = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
+    setFilters((prev) => ({ ...prev, stockId: values.join("\n") }));
   };
 
   const buildPayload = () => ({
@@ -796,6 +940,10 @@ const JewelleryStockSearchReport = () => {
       stockId: ""
     });
     setPurityOptions([]);
+    setLotSearchValue("");
+    setStockSearchValue("");
+    loadLotOptions("");
+    loadStockIdOptions("");
     setReportData([]);
     setStockCount(0);
     setShowReport(false);
@@ -1904,10 +2052,6 @@ ${hideCss} { display: none; }
 
   document.title = `${t("Jewellery Stock Search")} | ${t("Reports")}`;
 
-  const selectedStockIds = filters.stockId
-    ? filters.stockId.split(/[\n,]+/).map((x) => x.trim().toUpperCase()).filter(Boolean)
-    : [];
-
   const fieldLabel = (text) => (
     <Label className="fw-medium mb-1">{t(text)}</Label>
   );
@@ -2087,15 +2231,37 @@ ${hideCss} { display: none; }
                         <FormGroup className="mb-0">
                           {fieldLabel("LotNo")}
                           <Select
-                            isClearable
-                            isSearchable
-                            placeholder="Lot No"
+                            isMulti
+                            name="showLotNo"
                             options={lotNoOptions}
-                            value={lotNoOptions.find((o) => o.value === filters.jewLotNo) || null}
-                            onInputChange={handleLotInputChange}
-                            onChange={(opt) => handleNativeSelect("jewLotNo", opt?.value || "")}
+                            value={lotSelectValue}
+                            onChange={handleLotDropdownChange}
+                            inputValue={lotSearchValue}
+                            onInputChange={(newValue, actionMeta) => {
+                              if (actionMeta.action === "input-change") {
+                                setLotSearchValue(newValue);
+                                debouncedLoadLotOptions(newValue);
+                              } else if (actionMeta.action === "menu-close") {
+                                setLotSearchValue("");
+                                debouncedLoadLotOptions("");
+                              }
+                            }}
+                            placeholder={t("Lot No")}
+                            isLoading={loadingLots}
+                            classNamePrefix="react-select"
+                            closeMenuOnSelect={false}
+                            components={{
+                              Option: CustomOption,
+                              MenuList: CustomMenuList,
+                              MultiValue: () => null,
+                              ValueContainer: CustomValueContainer
+                            }}
+                            isAllSelected={isAllLotSelected}
+                            onSelectAll={handleSelectAllLots}
+                            t={t}
+                            isSearchable={true}
+                            hideSelectedOptions={false}
                             styles={selectStyles}
-                            classNamePrefix="jew-select"
                           />
                         </FormGroup>
                       </Col>
@@ -2162,12 +2328,36 @@ ${hideCss} { display: none; }
                       <Label className="fw-medium mb-1">{t("Show StockID")}</Label>
                       <Select
                         isMulti
-                        placeholder="Select StockID"
+                        name="showStockId"
                         options={stockIdOptions}
-                        value={stockIdOptions.filter((o) => selectedStockIds.includes(o.value))}
-                        onChange={handleStockIdsSelect}
+                        value={stockSelectValue}
+                        onChange={handleStockIdDropdownChange}
+                        inputValue={stockSearchValue}
+                        onInputChange={(newValue, actionMeta) => {
+                          if (actionMeta.action === "input-change") {
+                            setStockSearchValue(newValue);
+                            debouncedLoadStockIdOptions(newValue);
+                          } else if (actionMeta.action === "menu-close") {
+                            setStockSearchValue("");
+                            debouncedLoadStockIdOptions("");
+                          }
+                        }}
+                        placeholder={t("Select StockID")}
+                        isLoading={loadingStockIds}
+                        classNamePrefix="react-select"
+                        closeMenuOnSelect={false}
+                        components={{
+                          Option: CustomOption,
+                          MenuList: CustomMenuList,
+                          MultiValue: () => null,
+                          ValueContainer: CustomValueContainer
+                        }}
+                        isAllSelected={isAllStockSelected}
+                        onSelectAll={handleSelectAllStockIds}
+                        t={t}
+                        isSearchable={true}
+                        hideSelectedOptions={false}
                         styles={selectStyles}
-                        classNamePrefix="jew-select"
                       />
                     </FormGroup>
                   </Col>

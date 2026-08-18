@@ -481,6 +481,8 @@ import JewelleryMemoOutReturnReporte from "../pages/Jewellery/Jewellery Reports/
 // Jewellery ConsignMent In Report
 import JewelleryConsignMentInReport from "../pages/Jewellery/Jewellery Reports/JewelleryConsignMentInReport";
 
+import ImportPricing from "../pages/Reports/Utility/ImportPricing";
+import GetLabData from "../pages/Reports/Utility/GetLabData";
 const RootRoute = () => {
   try {
     const raw =
@@ -742,6 +744,9 @@ const authProtectedRoutes = [
   // Jewellery ConsignMent In Report
   { path: "/JewReport/JewConsInReport", component: <JewelleryConsignMentInReport /> },
 
+
+  { path: "/data/import-pricing", component: <ImportPricing /> },
+  { path: "/data/getlabdata", component: <GetLabData /> },
 
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
   { path: "/dashboard-crm", component: <DashboardCrm /> },

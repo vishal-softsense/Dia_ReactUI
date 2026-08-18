@@ -33,6 +33,11 @@ axios.interceptors.response.use(
     switch (status) {
       case 500:
         message = "Internal Server Error";
+        if (typeof error.response?.data === "string" && error.response.data.trim()) {
+          message = error.response.data;
+        } else {
+          message = error.response?.data?.Data || error.response?.data?.data || error.response?.data?.message || error.response?.data?.Message || "Internal Server Error";
+        }
         break;
       case 401:
         message = error.response?.data?.message || error.response?.data?.Message || "Invalid credentials";

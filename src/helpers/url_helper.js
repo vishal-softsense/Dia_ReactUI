@@ -841,3 +841,16 @@ export const JEWELLERY_CONSIGN_IN_DROPDOWNS = "/api/JewelleryConsignMentInReport
 export const JEWELLERY_STOCK_HISTORY_REPORT = "/api/JewelleryStockHistoryReport/jewstock-register-report-datatable";
 export const JEWELLERY_STOCK_HISTORY_DROPDOWNS = "/api/JewelleryStockHistoryReport/dropdowns";
 export const JEWELLERY_STOCK_HISTORY_STOCK_IDS = "/api/JewelleryStockHistoryReport/stock-ids";
+
+// Import Pricing (MVC: /data/import-pricing)
+export const IMPORT_PRICING_PERMISSION = "/api/ImportPricing/import-pricing";
+export const IMPORT_PRICING_UPLOAD = "/api/ImportPricing/import-pricing";
+export const IMPORT_PRICING_SAVE = "/api/ImportPricing/save-price";
+
+// Get Lab Data (MVC: /data/getlabdata)
+export const GET_LAB_DATA_PERMISSION = "/api/GetLabData/getlabdata";
+export const GET_LAB_DATA_FROM_LIST = "/api/GetLabData/get-item-from-list";
+export const GET_LAB_DATA_IMPORT_CERT = "/api/GetLabData/import-cert";
+export const GET_LAB_DATA_GIA = "/api/GetLabData/get-gia-data";
+export const GET_LAB_DATA_IGI = "/api/GetLabData/get-igi-data";
+export const GET_LAB_DATA_PRINT = "/api/GetLabData/getlabdataprint";
