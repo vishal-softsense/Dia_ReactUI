@@ -1,0 +1,7 @@
+# Keep this folder so Excel import templates can be placed here.
+# Copy these files into this folder:
+# GIAResultFormat.xlsx, IGIResult.xlsx, IGI_New.xlsx, HRDResult.xlsx, HRD_New.xlsx,
+# Grader.xlsx, DiaSense.xlsx, ImportImageFormat.xlsx, ParcelStockData.xlsx,
+# SolitaireStockData.xlsx, AccountData.xlsx, PurchaseFormat.xlsx,
+# PurchaseTransaction.xlsx, JewelleryStockUploadFinal.xlsx, JewDiamondData.xlsx,
+# updateaskingpurchaseratedata.xlsx

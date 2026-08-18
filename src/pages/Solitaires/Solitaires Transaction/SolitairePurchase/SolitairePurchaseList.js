@@ -434,7 +434,7 @@ const SolitairePurchaseList = () => {
           </ModalFooter>
         </Modal>
 
-        <ToastContainer closeButton={false} limit={1} />
+        <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>
   );

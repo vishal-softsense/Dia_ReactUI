@@ -128,3 +128,393 @@ div[class*="-input"] input {
   color: var(--vz-body-color, #495057) !important;
 }
 
+/* Import Grading (Reports > Utility) */
+.import-grading-topbar {
+  background: linear-gradient(180deg, rgba(64, 81, 137, 0.10), rgba(64, 81, 137, 0.04)) !important;
+  border-color: rgba(64, 81, 137, 0.16) !important;
+  overflow: hidden;
+  border-radius: 14px !important;
+}
+
+.import-grading-hero-copy {
+  max-width: 620px;
+  font-size: 13px;
+}
+
+.import-grading-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(64, 81, 137, 0.12);
+  color: var(--vz-body-color, #495057);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.import-grading-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vz-primary, #405189);
+  box-shadow: 0 0 0 4px rgba(64, 81, 137, 0.12);
+}
+
+.import-grading-card {
+  border-radius: 16px !important;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 247, 251, 0.98)) !important;
+  border: 1px solid rgba(64, 81, 137, 0.10) !important;
+  box-shadow: 0 6px 18px rgba(33, 37, 41, 0.04) !important;
+  min-width: 0;
+}
+
+.import-grading-card-header {
+  background: linear-gradient(180deg, rgba(64, 81, 137, 0.14), rgba(64, 81, 137, 0.06)) !important;
+  border-bottom: 1px solid rgba(64, 81, 137, 0.14) !important;
+  padding: 0.9rem 1rem 0.85rem !important;
+}
+
+.import-grading-card-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(64, 81, 137, 0.10);
+  color: var(--vz-primary, #405189);
+  flex: 0 0 auto;
+}
+
+.import-grading-card-subtitle {
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.import-grading-compact-card {
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 81, 137, 0.08) !important;
+  box-shadow: none !important;
+}
+
+.import-grading-update-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.import-grading-action {
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 81, 137, 0.14) !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+  padding: 11px 13px !important;
+}
+
+.import-grading-action:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #ffffff !important;
+  border-color: rgba(64, 81, 137, 0.26) !important;
+  box-shadow: 0 10px 24px rgba(64, 81, 137, 0.08) !important;
+}
+
+.import-grading-action:disabled {
+  opacity: 0.65 !important;
+}
+
+.import-grading-action-main {
+  width: 100%;
+  min-width: 0;
+}
+
+.import-grading-action-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(64, 81, 137, 0.08);
+  border: 1px solid rgba(64, 81, 137, 0.10);
+  flex: 0 0 auto;
+  color: var(--vz-primary, #405189);
+}
+
+.import-grading-action-label {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--vz-heading-color, #212529) !important;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.import-grading-action-meta {
+  font-size: 10px;
+  color: var(--vz-secondary-color, #878a99) !important;
+  margin-top: 2px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.import-grading-action-compact {
+  min-height: 66px;
+}
+
+.import-grading-action-arrow {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(64, 81, 137, 0.08);
+  color: var(--vz-primary, #405189);
+  flex: 0 0 auto;
+}
+
+.import-grading-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(64, 81, 137, 0.03), rgba(255, 255, 255, 0.98));
+  border: 1px dashed rgba(64, 81, 137, 0.16);
+}
+
+.import-grading-switch-note {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.import-grading-logo-panel {
+  border-radius: 12px;
+  border: 1px solid rgba(64, 81, 137, 0.12);
+  background: #ffffff;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+@media (max-width: 767.98px) {
+  .import-grading-hero-status {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .import-grading-switch {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .import-grading-card {
+    min-height: auto !important;
+  }
+
+  .import-grading-card-header {
+    padding: 0.8rem 0.85rem !important;
+  }
+
+  .import-grading-card-subtitle {
+    font-size: 11px;
+  }
+
+  .import-grading-action {
+    padding: 10px 11px !important;
+  }
+
+  .import-grading-action-label {
+    font-size: 11.5px;
+  }
+
+  .import-grading-action-meta {
+    font-size: 9.5px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .import-grading-topbar {
+    gap: 10px !important;
+    padding: 0.85rem !important;
+  }
+
+  .import-grading-hero-copy {
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  .import-grading-update-stack {
+    gap: 8px;
+  }
+
+  .import-grading-action-compact {
+    min-height: 60px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .import-grading-card-header {
+    padding: 0.7rem 0.75rem !important;
+  }
+
+  .import-grading-card-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .import-grading-card-subtitle {
+    font-size: 10px;
+  }
+
+  .import-grading-action {
+    border-radius: 10px !important;
+    padding: 9px 10px !important;
+  }
+
+  .import-grading-action-main {
+    gap: 8px !important;
+  }
+
+  .import-grading-action-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .import-grading-action-label {
+    font-size: 11px;
+  }
+
+  .import-grading-action-meta {
+    font-size: 9px;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .import-grading-logo-panel {
+    padding: 8px 9px;
+  }
+
+  .import-grading-logo-panel .btn {
+    margin-top: 10px !important;
+  }
+}
+
+/* Import Grading dark theme tuning */
+[data-bs-theme="dark"] .import-grading-topbar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008)) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-hero-copy {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-hero-status {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+[data-bs-theme="dark"] .import-grading-status-dot {
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.14);
+}
+
+[data-bs-theme="dark"] .import-grading-card {
+  background: linear-gradient(180deg, #171a21, #12151b) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.40) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-card-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-card-header h5 {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+[data-bs-theme="dark"] .import-grading-card-subtitle {
+  color: rgba(255, 255, 255, 0.64) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-card-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-bs-theme="dark"] .import-grading-action {
+  background: #1b1f28 !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-action:hover:not(:disabled) {
+  background: #202531 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-action-icon {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.11);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-bs-theme="dark"] .import-grading-action-label {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-action-meta {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-action-arrow {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-bs-theme="dark"] .import-grading-switch {
+  background: #1b1f28;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-bs-theme="dark"] .import-grading-switch .text-primary {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-switch-note {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-logo-panel {
+  background: #1b1f28;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-bs-theme="dark"] .import-grading-logo-panel .form-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-logo-panel input[type="file"] {
+  background-color: #141922 !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-bs-theme="dark"] .import-grading-logo-panel input[type="file"]::file-selector-button {
+  background: #252b36;
+  color: rgba(255, 255, 255, 0.90);
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+}
+

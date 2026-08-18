@@ -994,8 +994,10 @@ export const updateSolitaireItemData = payload => postImportGradingForm(url.IMPO
 export const updateAccountData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_ACCOUNT, payload);
 export const uploadPurchaseData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE, payload);
 export const uploadPurchaseDetailsData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS, payload);
-export const importSaleData = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_SALE, payload);
-export const uploadJewStockData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_STOCK, payload);
+// Disabled: Import Sale commented in MVC UI
+// export const importSaleData = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_SALE, payload);
+// Disabled: legacy UploadJewData() commented in MVC UI
+// export const uploadJewStockData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_STOCK, payload);
 export const uploadJewStockDiamondData = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEW_DIAMOND, payload);
 export const uploadJewelleryFull = payload => postImportGradingForm(url.IMPORT_GRADING_UPLOAD_JEWELLERY_FULL, payload);
 export const importAskingRate = payload => postImportGradingForm(url.IMPORT_GRADING_IMPORT_ASKING_RATE, payload);

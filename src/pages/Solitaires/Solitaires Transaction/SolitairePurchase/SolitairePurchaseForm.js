@@ -50,11 +50,16 @@ const toLocalDateStr = (val) => {
 const getVal = (row, ...keys) => {
   if (!row) return "";
   for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
-    const camel = key.charAt(0).toLowerCase() + key.slice(1);
-    const pascal = key.charAt(0).toUpperCase() + key.slice(1);
-    if (row[camel] !== undefined && row[camel] !== null && row[camel] !== "") return row[camel];
-    if (row[pascal] !== undefined && row[pascal] !== null && row[pascal] !== "") return row[pascal];
+    const variants = [
+      key,
+      key.charAt(0).toLowerCase() + key.slice(1),
+      key.charAt(0).toUpperCase() + key.slice(1),
+      key.toLowerCase(),
+      key.toUpperCase()
+    ];
+    for (const k of variants) {
+      if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
+    }
   }
   return "";
 };
@@ -64,7 +69,13 @@ const getNumVal = (row, ...keys) => {
   if (!row) return 0;
   let zero = null;
   for (const key of keys) {
-    const variants = [key, key.charAt(0).toLowerCase() + key.slice(1), key.charAt(0).toUpperCase() + key.slice(1)];
+    const variants = [
+      key,
+      key.charAt(0).toLowerCase() + key.slice(1),
+      key.charAt(0).toUpperCase() + key.slice(1),
+      key.toLowerCase(),
+      key.toUpperCase()
+    ];
     for (const k of variants) {
       if (row[k] === undefined || row[k] === null || row[k] === "") continue;
       const n = parseFloat(row[k]);
@@ -1300,347 +1311,347 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
 
           <Row className="align-items-start g-3 mb-3">
             <Col xs={12}>
-          <Card className="shadow-sm border-0 rounded-3 mb-0">
-            <CardHeader className="bg-transparent border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
-              <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
-                <i className="ri-shopping-bag-3-line fs-20" />
-                {title}
-              </h5>
-              <div className="d-flex gap-2 flex-wrap">
-                {isEdit && header.invNo && (
-                  <Button
-                    color="soft-info"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        `/purchase/PurCurStatusPrintInv?InvNo=${encodeURIComponent(header.invNo)}`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    <i className="ri-file-list-3-line me-1" />
-                    {t("Current Status Invoice")}
-                  </Button>
-                )}
-                {!readOnly && (
-                  <Button color="soft-success" size="sm" onClick={() => setExcelOpen(true)}>
-                    <i className="ri-file-excel-2-line me-1" />
-                    {t("Import Excel")}
-                  </Button>
-                )}
-                <Link to="/purchase/purchase-list" className="btn btn-soft-secondary btn-sm">
-                  {t("Back")}
-                </Link>
-                {!readOnly && (
-                  <Button color="primary" size="sm" disabled={saving} onClick={handleSubmit}>
-                    {saving ? t("Saving...") : t("Submit")}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardBody className="pb-2">
-              <fieldset disabled={readOnly} className="border-0 m-0 p-0" style={{ minWidth: 0 }}>
-              <Row className="g-2">
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Date")}</Label>
-                    <Input
-                      type="date"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.trnDate}
-                      onChange={(e) => setHeaderField("trnDate", e.target.value)}
-                      readOnly={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Invoice Number")}</Label>
-                    <Input
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.invNo}
-                      readOnly={isEdit || readOnly}
-                      onChange={(e) => setHeaderField("invNo", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Bill No")}</Label>
-                    <Input
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.billNo}
-                      onChange={(e) => setHeaderField("billNo", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Type")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={typeOpts}
-                      value={typeOpts.find((o) => String(o.value) === String(header.invType)) || null}
-                      onChange={(o) => setHeaderField("invType", o?.value || "")}
-                      placeholder={t("Type")}
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("SubType")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={subTypeOpts}
-                      value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || null}
-                      onChange={(o) => setHeaderField("subType", o?.value || "")}
-                      placeholder={t("SubType")}
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Category")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={categoryOpts}
-                      value={categoryOpts.find((o) => String(o.value) === String(header.category)) || null}
-                      onChange={(o) => setHeaderField("category", o?.value || "")}
-                      placeholder={t("Category")}
-                      isClearable
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-
-                <Col md={3} sm={6}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">
-                      {t("Party")}
-                      {!readOnly && (
-                        <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                          {t("Add Account/Group")}
-                        </Link>
-                      )}
-                    </Label>
-                    <Select
-                      styles={customStyles}
-                      options={partyOpts}
-                      value={party}
-                      onChange={setParty}
-                      onInputChange={(v, meta) => {
-                        if (meta.action === "input-change") setPartyInput(v);
-                      }}
-                      isLoading={partyLoading}
-                      placeholder={t("Search Party...")}
-                      isClearable
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={1} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Due Days")}</Label>
-                    <Input
-                      type="number"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.dueDays}
-                      onChange={(e) => setHeaderField("dueDays", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Due Date")}</Label>
-                    <Input
-                      type="date"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.dueDate}
-                      onChange={(e) => setHeaderField("dueDate", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Currency")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={currencyOpts}
-                      value={currencyOpts.find((o) => o.value === String(header.curCode)) || null}
-                      onChange={async (o) => {
-                        const code = o?.value || "";
-                        setHeaderField("curCode", code);
-                        await applyCurrencyRates(code);
-                      }}
-                      placeholder={t("Currency")}
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("INR Rate")}</Label>
-                    <Input
-                      type="number"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.baseRate}
-                      onChange={(e) => setHeaderField("baseRate", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={4}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("USD Rate")}</Label>
-                    <Input
-                      type="number"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.sBaseRate}
-                      onChange={(e) => setHeaderField("sBaseRate", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-
-                <Col md={3} sm={6}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Comm Agent")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={commOpts}
-                      value={commission}
-                      onChange={setCommission}
-                      onInputChange={(v, meta) => {
-                        if (meta.action === "input-change") setCommInput(v);
-                      }}
-                      isLoading={commLoading}
-                      placeholder={t("Search...")}
-                      isClearable
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={1} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Com%")}</Label>
-                    <Input
-                      type="number"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.adatPer}
-                      onChange={(e) => setHeaderField("adatPer", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Com Amount")}</Label>
-                    <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
-                  </FormGroup>
-                </Col>
-                <Col md={3} sm={6}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Broker")}</Label>
-                    <Select
-                      styles={customStyles}
-                      options={brokerOpts}
-                      value={broker}
-                      onChange={setBroker}
-                      onInputChange={(v, meta) => {
-                        if (meta.action === "input-change") setBrokerInput(v);
-                      }}
-                      isLoading={brokerLoading}
-                      placeholder={t("Search...")}
-                      isClearable
-                      isDisabled={readOnly}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={1} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Bro%")}</Label>
-                    <Input
-                      type="number"
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.brokerPer}
-                      onChange={(e) => setHeaderField("brokerPer", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={2} sm={3}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Bro Amount")}</Label>
-                    <Input className="form-control-sm" style={fieldH} value={fmt(summary.broDisplay)} readOnly />
-                  </FormGroup>
-                </Col>
-
-                <Col md={4} sm={6}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Description")}</Label>
-                    <Input
-                      className="form-control-sm"
-                      style={fieldH}
-                      value={header.description}
-                      onChange={(e) => setHeaderField("description", e.target.value)}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md={3} sm={6}>
-                  <FormGroup className="mb-2">
-                    <Label className="form-label mb-1">{t("Consignment No")}</Label>
-                    <div className="d-flex gap-1">
-                      <Input
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={header.consignmentNo}
-                        onChange={(e) => setHeaderField("consignmentNo", e.target.value)}
-                      />
-                      <Button color="soft-primary" size="sm" style={fieldH} onClick={viewConsignment}>
-                        {t("View")}
+              <Card className="shadow-sm border-0 rounded-3 mb-0">
+                <CardHeader className="bg-transparent border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                    <i className="ri-shopping-bag-3-line fs-20" />
+                    {title}
+                  </h5>
+                  <div className="d-flex gap-2 flex-wrap">
+                    {isEdit && header.invNo && (
+                      <Button
+                        color="soft-info"
+                        size="sm"
+                        onClick={() =>
+                          window.open(
+                            `/purchase/PurCurStatusPrintInv?InvNo=${encodeURIComponent(header.invNo)}`,
+                            "_blank"
+                          )
+                        }
+                      >
+                        <i className="ri-file-list-3-line me-1" />
+                        {t("Current Status Invoice")}
                       </Button>
-                    </div>
-                  </FormGroup>
-                </Col>
-                <Col xs={12} md={5} className="d-flex align-items-center gap-3 mb-2 flex-wrap pt-1">
-                  <div className="form-check form-check-md mb-0 d-flex align-items-center gap-2">
-                    <Input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="chkGrading"
-                      checked={!!header.chkGrading}
-                      onChange={(e) => setHeaderField("chkGrading", e.target.checked)}
-                      style={{ width: 18, height: 18, marginTop: 0 }}
-                    />
-                    <Label className="form-check-label mb-0" htmlFor="chkGrading" style={{ fontSize: 13 }}>
-                      {t("Save Grading")}
-                    </Label>
+                    )}
+                    {!readOnly && (
+                      <Button color="soft-success" size="sm" onClick={() => setExcelOpen(true)}>
+                        <i className="ri-file-excel-2-line me-1" />
+                        {t("Import Excel")}
+                      </Button>
+                    )}
+                    <Link to="/purchase/purchase-list" className="btn btn-soft-secondary btn-sm">
+                      {t("Back")}
+                    </Link>
+                    {!readOnly && (
+                      <Button color="primary" size="sm" disabled={saving} onClick={handleSubmit}>
+                        {saving ? t("Saving...") : t("Submit")}
+                      </Button>
+                    )}
                   </div>
-                  <div className="form-check form-check-md mb-0 d-flex align-items-center gap-2">
-                    <Input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="chkoldpur"
-                      checked={!!header.chkoldpur}
-                      onChange={(e) => setHeaderField("chkoldpur", e.target.checked)}
-                      style={{ width: 18, height: 18, marginTop: 0 }}
-                    />
-                    <Label className="form-check-label mb-0" htmlFor="chkoldpur" style={{ fontSize: 13 }}>
-                      {t("Purchase of Last Year")}
-                    </Label>
-                  </div>
-                </Col>
-              </Row>
-              </fieldset>
-            </CardBody>
-          </Card>
+                </CardHeader>
+                <CardBody className="pb-2">
+                  <fieldset disabled={readOnly} className="border-0 m-0 p-0" style={{ minWidth: 0 }}>
+                    <Row className="g-2">
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Date")}</Label>
+                          <Input
+                            type="date"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.trnDate}
+                            onChange={(e) => setHeaderField("trnDate", e.target.value)}
+                            readOnly={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Invoice Number")}</Label>
+                          <Input
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.invNo}
+                            readOnly={isEdit || readOnly}
+                            onChange={(e) => setHeaderField("invNo", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Bill No")}</Label>
+                          <Input
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.billNo}
+                            onChange={(e) => setHeaderField("billNo", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Type")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={typeOpts}
+                            value={typeOpts.find((o) => String(o.value) === String(header.invType)) || null}
+                            onChange={(o) => setHeaderField("invType", o?.value || "")}
+                            placeholder={t("Type")}
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("SubType")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={subTypeOpts}
+                            value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || null}
+                            onChange={(o) => setHeaderField("subType", o?.value || "")}
+                            placeholder={t("SubType")}
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Category")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={categoryOpts}
+                            value={categoryOpts.find((o) => String(o.value) === String(header.category)) || null}
+                            onChange={(o) => setHeaderField("category", o?.value || "")}
+                            placeholder={t("Category")}
+                            isClearable
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+
+                      <Col md={3} sm={6}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">
+                            {t("Party")}
+                            {!readOnly && (
+                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
+                                {t("Add Account/Group")}
+                              </Link>
+                            )}
+                          </Label>
+                          <Select
+                            styles={customStyles}
+                            options={partyOpts}
+                            value={party}
+                            onChange={setParty}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setPartyInput(v);
+                            }}
+                            isLoading={partyLoading}
+                            placeholder={t("Search Party...")}
+                            isClearable
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={1} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Due Days")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.dueDays}
+                            onChange={(e) => setHeaderField("dueDays", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Due Date")}</Label>
+                          <Input
+                            type="date"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.dueDate}
+                            onChange={(e) => setHeaderField("dueDate", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Currency")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={currencyOpts}
+                            value={currencyOpts.find((o) => o.value === String(header.curCode)) || null}
+                            onChange={async (o) => {
+                              const code = o?.value || "";
+                              setHeaderField("curCode", code);
+                              await applyCurrencyRates(code);
+                            }}
+                            placeholder={t("Currency")}
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("INR Rate")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.baseRate}
+                            onChange={(e) => setHeaderField("baseRate", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("USD Rate")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.sBaseRate}
+                            onChange={(e) => setHeaderField("sBaseRate", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+
+                      <Col md={3} sm={6}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Comm Agent")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={commOpts}
+                            value={commission}
+                            onChange={setCommission}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setCommInput(v);
+                            }}
+                            isLoading={commLoading}
+                            placeholder={t("Search...")}
+                            isClearable
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={1} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Com%")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.adatPer}
+                            onChange={(e) => setHeaderField("adatPer", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Com Amount")}</Label>
+                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                        </FormGroup>
+                      </Col>
+                      <Col md={3} sm={6}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Broker")}</Label>
+                          <Select
+                            styles={customStyles}
+                            options={brokerOpts}
+                            value={broker}
+                            onChange={setBroker}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setBrokerInput(v);
+                            }}
+                            isLoading={brokerLoading}
+                            placeholder={t("Search...")}
+                            isClearable
+                            isDisabled={readOnly}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={1} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Bro%")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.brokerPer}
+                            onChange={(e) => setHeaderField("brokerPer", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={3}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Bro Amount")}</Label>
+                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.broDisplay)} readOnly />
+                        </FormGroup>
+                      </Col>
+
+                      <Col md={4} sm={6}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Description")}</Label>
+                          <Input
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={header.description}
+                            onChange={(e) => setHeaderField("description", e.target.value)}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md={3} sm={6}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">{t("Consignment No")}</Label>
+                          <div className="d-flex gap-1">
+                            <Input
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={header.consignmentNo}
+                              onChange={(e) => setHeaderField("consignmentNo", e.target.value)}
+                            />
+                            <Button color="soft-primary" size="sm" style={fieldH} onClick={viewConsignment}>
+                              {t("View")}
+                            </Button>
+                          </div>
+                        </FormGroup>
+                      </Col>
+                      <Col xs={12} md={5} className="d-flex align-items-center gap-3 mb-2 flex-wrap pt-1">
+                        <div className="form-check form-check-md mb-0 d-flex align-items-center gap-2">
+                          <Input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="chkGrading"
+                            checked={!!header.chkGrading}
+                            onChange={(e) => setHeaderField("chkGrading", e.target.checked)}
+                            style={{ width: 18, height: 18, marginTop: 0 }}
+                          />
+                          <Label className="form-check-label mb-0" htmlFor="chkGrading" style={{ fontSize: 13 }}>
+                            {t("Save Grading")}
+                          </Label>
+                        </div>
+                        <div className="form-check form-check-md mb-0 d-flex align-items-center gap-2">
+                          <Input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="chkoldpur"
+                            checked={!!header.chkoldpur}
+                            onChange={(e) => setHeaderField("chkoldpur", e.target.checked)}
+                            style={{ width: 18, height: 18, marginTop: 0 }}
+                          />
+                          <Label className="form-check-label mb-0" htmlFor="chkoldpur" style={{ fontSize: 13 }}>
+                            {t("Purchase of Last Year")}
+                          </Label>
+                        </div>
+                      </Col>
+                    </Row>
+                  </fieldset>
+                </CardBody>
+              </Card>
             </Col>
 
           </Row>
@@ -1653,205 +1664,205 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                 </CardHeader>
                 <CardBody>
                   {!readOnly && (
-                  <Row className="g-2 align-items-end">
-                    <Col xs={12} sm={6} md={2}>
-                      <Label className="form-label mb-1">
-                        {t("Lot Number")}
-                        <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
-                          {t("Add Item")}
-                        </Link>
-                      </Label>
-                      <CreatableSelect
-                        styles={customStyles}
-                        options={lotOpts}
-                        value={lotSel}
-                        onChange={(o) => {
-                          setLotSel(o);
-                          onEntryChange("lotNo", o?.value || "");
-                          if (o?.value) fillFromLot(o.value);
-                        }}
-                        onInputChange={(v, meta) => {
-                          if (meta.action === "input-change") setLotInput(v);
-                        }}
-                        isLoading={lotLoading}
-                        placeholder={t("Lot...")}
-                        isClearable
-                      />
-                    </Col>
-                    <Col xs={12} sm={6} md={2}>
-                      <Label className="form-label mb-1">{t("Item Name")}</Label>
-                      <Input
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.itemName}
-                        onChange={(e) => onEntryChange("itemName", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Weight")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.weight}
-                        onChange={(e) => onEntryChange("weight", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Pcs")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.pcs}
-                        onChange={(e) => onEntryChange("pcs", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("MRP")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.mrp}
-                        onChange={(e) => onEntryChange("mrp", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Back")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.back}
-                        onChange={(e) => onEntryChange("back", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Rate")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.rate}
-                        onChange={(e) => onEntryChange("rate", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Less1")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.less1}
-                        onChange={(e) => onEntryChange("less1", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Less2")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.less2}
-                        onChange={(e) => onEntryChange("less2", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={1}>
-                      <Label className="form-label mb-1">{t("Less3")}</Label>
-                      <Input
-                        type="number"
-                        className="form-control-sm"
-                        style={fieldH}
-                        value={entry.less3}
-                        onChange={(e) => onEntryChange("less3", e.target.value)}
-                      />
-                    </Col>
-                    <Col xs={6} sm={4} md={2}>
-                      <Label className="form-label mb-1">{t("Amount")}</Label>
-                      <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
-                    </Col>
-                    <Col xs={12} sm={4} md={2}>
-                      <Button color="primary" size="sm" className="w-100" style={fieldH} onClick={handleAddItem}>
-                        {editIndex >= 0 ? t("Update Item") : t("Add Item")}
-                      </Button>
-                    </Col>
-                  </Row>
+                    <Row className="g-2 align-items-end">
+                      <Col xs={12} sm={6} md={2}>
+                        <Label className="form-label mb-1">
+                          {t("Lot Number")}
+                          <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
+                            {t("Add Item")}
+                          </Link>
+                        </Label>
+                        <CreatableSelect
+                          styles={customStyles}
+                          options={lotOpts}
+                          value={lotSel}
+                          onChange={(o) => {
+                            setLotSel(o);
+                            onEntryChange("lotNo", o?.value || "");
+                            if (o?.value) fillFromLot(o.value);
+                          }}
+                          onInputChange={(v, meta) => {
+                            if (meta.action === "input-change") setLotInput(v);
+                          }}
+                          isLoading={lotLoading}
+                          placeholder={t("Lot...")}
+                          isClearable
+                        />
+                      </Col>
+                      <Col xs={12} sm={6} md={2}>
+                        <Label className="form-label mb-1">{t("Item Name")}</Label>
+                        <Input
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.itemName}
+                          onChange={(e) => onEntryChange("itemName", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Weight")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.weight}
+                          onChange={(e) => onEntryChange("weight", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Pcs")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.pcs}
+                          onChange={(e) => onEntryChange("pcs", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("MRP")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.mrp}
+                          onChange={(e) => onEntryChange("mrp", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Back")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.back}
+                          onChange={(e) => onEntryChange("back", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Rate")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.rate}
+                          onChange={(e) => onEntryChange("rate", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Less1")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.less1}
+                          onChange={(e) => onEntryChange("less1", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Less2")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.less2}
+                          onChange={(e) => onEntryChange("less2", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("Less3")}</Label>
+                        <Input
+                          type="number"
+                          className="form-control-sm"
+                          style={fieldH}
+                          value={entry.less3}
+                          onChange={(e) => onEntryChange("less3", e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={6} sm={4} md={2}>
+                        <Label className="form-label mb-1">{t("Amount")}</Label>
+                        <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
+                      </Col>
+                      <Col xs={12} sm={4} md={2}>
+                        <Button color="primary" size="sm" className="w-100" style={fieldH} onClick={handleAddItem}>
+                          {editIndex >= 0 ? t("Update Item") : t("Add Item")}
+                        </Button>
+                      </Col>
+                    </Row>
                   )}
 
                   {items.length > 0 && (
-                  <div className="table-responsive table-card mt-3 mb-0" style={{ overflowX: "auto" }}>
-                    <Table className="table table-bordered table-hover table-sm align-middle mb-0" style={{ minWidth: 4800 }}>
-                      <thead className="table-light">
-                        <tr>
-                          <th style={{ minWidth: 70 }}>{t("Action")}</th>
-                          {PURCHASE_ITEM_COLUMNS.map((col) => (
-                            <th
-                              key={col.key}
-                              className={col.align === "end" ? "text-end" : ""}
-                              style={{ whiteSpace: "nowrap" }}
-                            >
-                              {t(col.label)}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(
-                          items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
-                              <td>
-                                {!readOnly ? (
-                                  <div className="d-flex gap-1">
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-primary btn-sm p-1"
-                                      onClick={() => handleEditRow(idx)}
-                                    >
-                                      <i className="ri-pencil-line" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-danger btn-sm p-1"
-                                      onClick={() => handleDeleteRow(idx)}
-                                    >
-                                      <i className="ri-delete-bin-line" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
-                              </td>
-                              {PURCHASE_ITEM_COLUMNS.map((col) => (
+                    <div className="table-responsive table-card mt-3 mb-0" style={{ overflowX: "auto" }}>
+                      <Table className="table table-bordered table-hover table-sm align-middle mb-0" style={{ minWidth: 4800 }}>
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{ minWidth: 70 }}>{t("Action")}</th>
+                            {PURCHASE_ITEM_COLUMNS.map((col) => (
+                              <th
+                                key={col.key}
+                                className={col.align === "end" ? "text-end" : ""}
+                                style={{ whiteSpace: "nowrap" }}
+                              >
+                                {t(col.label)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(
+                            items.map((r, idx) => (
+                              <tr key={`${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
+                                <td>
+                                  {!readOnly ? (
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-primary btn-sm p-1"
+                                        onClick={() => handleEditRow(idx)}
+                                      >
+                                        <i className="ri-pencil-line" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-danger btn-sm p-1"
+                                        onClick={() => handleDeleteRow(idx)}
+                                      >
+                                        <i className="ri-delete-bin-line" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted">-</span>
+                                  )}
+                                </td>
+                                {PURCHASE_ITEM_COLUMNS.map((col) => (
+                                  <td
+                                    key={col.key}
+                                    className={col.align === "end" ? "text-end" : ""}
+                                    style={{ whiteSpace: "nowrap" }}
+                                  >
+                                    {renderItemCell(r, col)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                        {items.length > 0 && (
+                          <tfoot className="table-light fw-semibold">
+                            <tr>
+                              <td colSpan={3}>{t("Total")}</td>
+                              {PURCHASE_ITEM_COLUMNS.slice(2).map((col) => (
                                 <td
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
-                                  style={{ whiteSpace: "nowrap" }}
                                 >
-                                  {renderItemCell(r, col)}
+                                  {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
                                 </td>
                               ))}
                             </tr>
-                          ))
+                          </tfoot>
                         )}
-                      </tbody>
-                      {items.length > 0 && (
-                        <tfoot className="table-light fw-semibold">
-                          <tr>
-                            <td colSpan={2}>{t("Total")}</td>
-                            {PURCHASE_ITEM_COLUMNS.slice(2).map((col) => (
-                              <td
-                                key={col.key}
-                                className={col.align === "end" ? "text-end" : ""}
-                              >
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
-                              </td>
-                            ))}
-                          </tr>
-                        </tfoot>
-                      )}
-                    </Table>
-                  </div>
+                      </Table>
+                    </div>
                   )}
                 </CardBody>
               </Card>
@@ -1878,7 +1889,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       <strong>{summary.netAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between mb-2">
-                      <span className="text-muted">{t("M. Currency Net")}</span>
+                      <span className="text-muted">{t("M. Currency Net Amount")}</span>
                       <strong>{summary.netMAmount}</strong>
                     </div>
                     <Row className="g-1 mb-2">
@@ -1927,15 +1938,15 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                     </Row>
                     <hr className="mb-2" />
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span>{t("Final M Amount")}</span>
-                      <strong className="text-primary text-end">{summary.finalMAmount}</strong>
+                      <span className="text-primary fw-semibold small">{t("INR FINAL AMOUNT")}</span>
+                      <strong className="text-end">{summary.finalMAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span>{t("Final S Amount")}</span>
+                      <span className="text-primary fw-semibold small">{t("USD FINAL AMOUNT")}</span>
                       <strong className="text-end">{summary.finalSAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between gap-2">
-                      <span>{t("Final Pay/Rec")}</span>
+                      <span className="text-primary fw-semibold small">{t("TRANSACTION FINAL AMOUNT")}</span>
                       <strong className="text-end">{summary.finalMPayRecAmount}</strong>
                     </div>
                   </fieldset>
@@ -2026,11 +2037,11 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                               prev.map((x, i) =>
                                 i === idx
                                   ? {
-                                      ...x,
-                                      purchase,
-                                      rtn: Math.max(0, toNum(x.cts) - purchase),
-                                      balCts: Math.max(0, toNum(x.cts) - purchase)
-                                    }
+                                    ...x,
+                                    purchase,
+                                    rtn: Math.max(0, toNum(x.cts) - purchase),
+                                    balCts: Math.max(0, toNum(x.cts) - purchase)
+                                  }
                                   : x
                               )
                             );
@@ -2064,10 +2075,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                               prev.map((x, i) =>
                                 i === idx
                                   ? {
-                                      ...x,
-                                      back,
-                                      rate: fmt(((100 + back) * toNum(x.mrp)) / 100)
-                                    }
+                                    ...x,
+                                    back,
+                                    rate: fmt(((100 + back) * toNum(x.mrp)) / 100)
+                                  }
                                   : x
                               )
                             );
@@ -2103,7 +2114,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
           </ModalFooter>
         </Modal>
 
-        <ToastContainer closeButton={false} limit={1} />
+        <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>
   );

@@ -792,8 +792,10 @@ export const IMPORT_GRADING_UPDATE_SOLITAIRE = "/api/ImportGrading/update-solita
 export const IMPORT_GRADING_UPDATE_ACCOUNT = "/api/ImportGrading/update-accountdata";
 export const IMPORT_GRADING_UPLOAD_PURCHASE = "/api/ImportGrading/upload-purchasedata";
 export const IMPORT_GRADING_UPLOAD_PURCHASE_DETAILS = "/api/ImportGrading/upload-purchasedetails";
-export const IMPORT_GRADING_IMPORT_SALE = "/api/ImportGrading/import-sale-data";
-export const IMPORT_GRADING_UPLOAD_JEW_STOCK = "/api/ImportGrading/upload-jewstockdata";
+// Disabled: Import Sale commented in MVC UI
+// export const IMPORT_GRADING_IMPORT_SALE = "/api/ImportGrading/import-sale-data";
+// Disabled: legacy UploadJewData() commented in MVC UI
+// export const IMPORT_GRADING_UPLOAD_JEW_STOCK = "/api/ImportGrading/upload-jewstockdata";
 export const IMPORT_GRADING_UPLOAD_JEW_DIAMOND = "/api/ImportGrading/upload-jewstockdiamonddetailsdata";
 export const IMPORT_GRADING_UPDATE_SIZE_ID = "/api/ImportGrading/update-SizeId";
 export const IMPORT_GRADING_DELETE_RECORDS = "/api/ImportGrading/delete-deletedrecords";
