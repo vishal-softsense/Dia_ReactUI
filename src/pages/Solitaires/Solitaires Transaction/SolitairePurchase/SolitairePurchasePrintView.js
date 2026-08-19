@@ -330,6 +330,12 @@ const SolitairePurchasePrintView = () => {
               display: none !important;
             }
           }
+          @media (max-width: 767px) {
+            .purchase-print-sheet {
+              overflow-x: auto !important;
+              display: block !important;
+            }
+          }
         `}</style>
         <ToastContainer autoClose={2000} />
       </div>

@@ -34,6 +34,11 @@ import {
   getSolitairePurchaseLotDetail,
   getSolitairePurchasePageData
 } from "../../../../helpers/fakebackend_helper";
+import {
+  getCachedReportCompany,
+  getReportCompanySettings,
+  REPORT_COMPANY_SETTINGS_EVENT
+} from "../../../../helpers/reportCompanyDefaults";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -423,6 +428,22 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [consignOpen, setConsignOpen] = useState(false);
   const [consignRows, setConsignRows] = useState([]);
 
+  const [masterSymbol, setMasterSymbol] = useState("INR");
+  const [stockSymbol, setStockSymbol] = useState("USD");
+
+  useEffect(() => {
+    const loadSymbols = async () => {
+      const company = await getReportCompanySettings({ forceRefresh: false });
+      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
+      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+    };
+    loadSymbols();
+    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
+    return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
+  }, []);
+
   const [header, setHeader] = useState({
     code: 0,
     trnDate: todayIso(),
@@ -586,11 +607,12 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       const subs = mapBasicWithNameAsValue(d.SubType || d.subType);
       const cats = mapBasicWithNameAsValue(d.Category || d.category);
       const curs = mapBasic(d.CurrencyList || d.currencyList);
+      const defaultCurrencyCode = d.DefaultCurrencyCode || d.defaultCurrencyCode || "";
       setTypeOpts(types);
       setSubTypeOpts(subs);
       setCategoryOpts(cats);
       setCurrencyOpts(curs);
-      return { types, subs, cats, curs };
+      return { types, subs, cats, curs, defaultCurrencyCode };
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load page data."));
@@ -667,6 +689,11 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       });
 
       setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+
+      const loadedCurCode = String(getVal(h, "CurCode") || "");
+      if (loadedCurCode) {
+        await applyCurrencyRates(loadedCurCode);
+      }
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load purchase detail."));
@@ -677,17 +704,21 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     (async () => {
       setLoading(true);
       const page = await loadPageData();
-      if (isEdit) await loadDetail(page);
-      else if (page?.curs?.length) {
-        const first = page.curs[0];
+      if (isEdit) {
+        await loadDetail(page);
+      } else if (page?.curs?.length) {
+        const defaultCur = page.defaultCurrencyCode
+          ? page.curs.find((c) => String(c.value) === String(page.defaultCurrencyCode))
+          : null;
+        const selectedCur = defaultCur || page.curs[0];
         setHeader((prev) => ({
           ...prev,
           invType: page.types[0]?.value || "",
           subType: page.subs[0]?.value || "",
           category: page.cats[0]?.value || "",
-          curCode: first.value
+          curCode: selectedCur.value
         }));
-        await applyCurrencyRates(first.value);
+        await applyCurrencyRates(selectedCur.value);
       }
       setLoading(false);
     })();
@@ -909,7 +940,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       mOp === "/"
         ? (mCurAmount + taxTotal + roundAmount) * baseRate
         : (mCurAmount + taxTotal + roundAmount) / baseRate;
-    let finalSAmount = sOp === "/" ? receivableAmount / stockCurRate : receivableAmount * stockCurRate;
+
+    let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
       comDisplay: Math.round(comDisplay * 100) / 100,
@@ -924,7 +956,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       finalSAmount: fix(finalSAmount),
       finalMPayRecAmount: fix(receivableAmount)
     };
-  }, [totals.totAmount, header, mOp, sOp]);
+  }, [totals.totAmount, header, mOp, sOp, masterSymbol, stockSymbol, currencyOpts]);
 
   useEffect(() => {
     setHeader((prev) => ({
@@ -1497,7 +1529,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{t("INR Rate")}</Label>
+                          <Label className="form-label mb-1">{masterSymbol} Rate</Label>
                           <Input
                             type="number"
                             className="form-control-sm"
@@ -1509,7 +1541,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{t("USD Rate")}</Label>
+                          <Label className="form-label mb-1">{stockSymbol} Rate</Label>
                           <Input
                             type="number"
                             className="form-control-sm"
@@ -1938,11 +1970,11 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                     </Row>
                     <hr className="mb-2" />
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span className="text-primary fw-semibold small">{t("INR FINAL AMOUNT")}</span>
+                      <span className="text-primary fw-semibold small">{masterSymbol} FINAL AMOUNT</span>
                       <strong className="text-end">{summary.finalMAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span className="text-primary fw-semibold small">{t("USD FINAL AMOUNT")}</span>
+                      <span className="text-primary fw-semibold small">{stockSymbol} FINAL AMOUNT</span>
                       <strong className="text-end">{summary.finalSAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between gap-2">

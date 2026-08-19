@@ -362,8 +362,10 @@ const SolitairePurchaseList = () => {
       },
       {
         header: t("Payment Status"),
-        id: "PaymentStatus",
-        enableColumnFilter: false,
+        accessorKey: "Status",
+        accessorFn: (row) => getVal(row, "Status"),
+        enableColumnFilter: true,
+        filterFn: customStringFilterFn,
         cell: ({ row }) => statusBadge(getVal(row.original, "Status"), getVal(row.original, "per"))
       }
     ],
@@ -408,6 +410,7 @@ const SolitairePurchaseList = () => {
                   isGlobalFilter
                   isPagination
                   customPageSize={500}
+                  customPageSizes={[500, 1000, 1500]}
                   SearchPlaceholder={t("Search...")}
                   divClass="table-responsive table-card mb-0"
                   tableClass="table table-bordered table-hover table-sm align-middle mb-0"

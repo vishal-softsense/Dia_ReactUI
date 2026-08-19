@@ -417,6 +417,12 @@ const SolitairePurchaseCurStatus = () => {
               display: none !important;
             }
           }
+          @media (max-width: 767px) {
+            .purchase-curstatus-sheet {
+              overflow-x: auto !important;
+              display: block !important;
+            }
+          }
         `}</style>
         <ToastContainer autoClose={2000} />
       </div>
