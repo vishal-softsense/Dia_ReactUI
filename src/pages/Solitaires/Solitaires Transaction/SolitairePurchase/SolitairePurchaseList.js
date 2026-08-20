@@ -10,7 +10,6 @@ import {
   Modal,
   ModalBody,
   ModalFooter,
-  ModalHeader,
   Row
 } from "reactstrap";
 import { toast, ToastContainer } from "react-toastify";
@@ -422,19 +421,46 @@ const SolitairePurchaseList = () => {
         </Container>
 
         <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
-          <ModalHeader toggle={() => setDeleteModal(false)}>{t("Delete Purchase")}</ModalHeader>
-          <ModalBody>
-            {t("Are you sure you want to delete invoice")}{" "}
-            <strong>{deleteTarget?.inv}</strong>?
+          <div className="modal-header justify-content-between align-items-center py-3 px-4" style={{ backgroundColor: "rgb(238, 94, 70)", borderBottom: "none" }}>
+            <h5 className="modal-title m-0 fw-medium" style={{ color: "#212529" }}>{t("Confirm Delete")}</h5>
+            <button type="button" className="btn-close" onClick={() => setDeleteModal(false)} aria-label="Close"></button>
+          </div>
+          <ModalBody className="py-4">
+            <div className="text-center">
+              <lord-icon
+                src="https://cdn.lordicon.com/gsqxdxog.json"
+                trigger="loop"
+                colors="primary:#f7b84b,secondary:#f06548"
+                style={{ width: "100px", height: "100px" }}
+              ></lord-icon>
+              <div className="mt-4 pt-2 mx-4 mx-sm-5">
+                <h3 className="fw-bold mb-3" style={{ color: "#495057" }}>{t("Are You Sure ??")}</h3>
+                <p className="text-muted mb-4 fs-16 lh-base">
+                  {t("Selected record will be Removed !!")}
+                  <br />
+                  <strong>{t("Invoice No")} :</strong> {deleteTarget?.inv}
+                </p>
+              </div>
+            </div>
+            <div className="d-flex gap-3 justify-content-center mt-4 mb-2">
+              <button
+                type="button"
+                className="btn text-white px-4 py-2 fw-medium"
+                style={{ backgroundColor: "#405189", borderColor: "#405189", minWidth: "130px" }}
+                onClick={confirmDelete}
+              >
+                {t("Yes, remove it")}
+              </button>
+              <button
+                type="button"
+                className="btn text-white px-4 py-2 fw-medium"
+                style={{ backgroundColor: "rgb(238, 94, 70)", borderColor: "rgb(238, 94, 70)", minWidth: "130px" }}
+                onClick={() => setDeleteModal(false)}
+              >
+                {t("Cancel")}
+              </button>
+            </div>
           </ModalBody>
-          <ModalFooter>
-            <Button color="light" onClick={() => setDeleteModal(false)}>
-              {t("Cancel")}
-            </Button>
-            <Button color="danger" onClick={confirmDelete}>
-              {t("Delete")}
-            </Button>
-          </ModalFooter>
         </Modal>
 
         <ToastContainer autoClose={2000} />

@@ -398,6 +398,9 @@ import SolitairePurchaseAdd from "../pages/Solitaires/Solitaires Transaction/Sol
 import SolitairePurchaseEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseEdit";
 import SolitairePurchasePrintView from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchasePrintView";
 import SolitairePurchaseCurStatus from "../pages/Solitaires/Solitaires Transaction/SolitairePurchase/SolitairePurchaseCurStatus";
+import SolitairePurchaseReturnList from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnList";
+import SolitairePurchaseReturnAdd from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnAdd";
+import SolitairePurchaseReturnEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnEdit";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
@@ -637,6 +640,12 @@ const authProtectedRoutes = [
   { path: "/purchase/printinvview", component: <SolitairePurchasePrintView /> },
   { path: "/purchase/PurCurStatusPrintInv", component: <SolitairePurchaseCurStatus /> },
   { path: "/purchase/purcurstatusprintinv", component: <SolitairePurchaseCurStatus /> },
+
+  // Solitaire Purchase Return entry (MVC: /purchasereturn/*)
+  { path: "/purchasereturn/purchasereturn-list", component: <SolitairePurchaseReturnList /> },
+  { path: "/purchasereturn/add-purchasereturn", component: <SolitairePurchaseReturnAdd /> },
+  { path: "/purchasereturn/edit-purchasereturn", component: <SolitairePurchaseReturnEdit /> },
+
   { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)

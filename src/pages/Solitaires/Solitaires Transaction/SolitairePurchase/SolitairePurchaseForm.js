@@ -483,10 +483,12 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       control: (p, s) => ({
         ...p,
         backgroundColor: s.isDisabled
-          ? "var(--vz-input-disabled-bg, #eff2f7)"
+          ? "var(--vz-input-disabled-bg, var(--vz-secondary-bg, #eff2f7))"
           : "var(--vz-secondary-bg, #fff)",
         borderColor: "var(--vz-border-color, #ced4da)",
-        color: "var(--vz-body-color, #495057)",
+        color: s.isDisabled
+          ? "var(--vz-secondary-color, #878a99)"
+          : "var(--vz-body-color, #495057)",
         minHeight: "31px",
         height: "31px",
         opacity: s.isDisabled ? 0.85 : 1
@@ -510,7 +512,13 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         ":active": { backgroundColor: "#3b5de7" }
       }),
       placeholder: (p) => ({ ...p, color: "var(--vz-secondary-color, #878a99)", fontSize: "11px" }),
-      singleValue: (p) => ({ ...p, fontSize: "12px", color: "var(--vz-body-color, #495057)" })
+      singleValue: (p, s) => ({
+        ...p,
+        fontSize: "12px",
+        color: s.isDisabled
+          ? "var(--vz-secondary-color, #878a99)"
+          : "var(--vz-body-color, #495057)"
+      })
     }),
     []
   );
@@ -557,10 +565,14 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   }, [brokerInput, searchAccounts]);
 
   useEffect(() => {
+    if (!lotInput || lotInput.trim().length < 2) {
+      setLotOpts([]);
+      return;
+    }
     const tmr = setTimeout(async () => {
       setLotLoading(true);
       try {
-        const res = await getSolitaireLots(lotInput || "");
+        const res = await getSolitaireLots(lotInput);
         const raw = Array.isArray(res) ? res : res?.data || res?.Data || [];
         setLotOpts(
           raw.map((item) => ({
@@ -714,7 +726,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         setHeader((prev) => ({
           ...prev,
           invType: page.types[0]?.value || "",
-          subType: page.subs[0]?.value || "",
+          subType: "",
           category: page.cats[0]?.value || "",
           curCode: selectedCur.value
         }));
