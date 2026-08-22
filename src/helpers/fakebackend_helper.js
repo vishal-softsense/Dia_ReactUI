@@ -1041,3 +1041,43 @@ export const importLabCertFile = file => {
 export const getLabGiaData = payload => api.create(url.GET_LAB_DATA_GIA, payload);
 export const getLabIgiData = payload => api.create(url.GET_LAB_DATA_IGI, payload);
 export const printGetLabData = payload => api.create(url.GET_LAB_DATA_PRINT, payload);
+
+// Convert Excel Utility (MVC: /dashbord/uploadexcel)
+export const getConvertExcelUtilityPermission = () => api.get(url.CONVERT_EXCEL_UTILITY_PERMISSION);
+export const uploadConvertExcelFile = file => {
+  const formData = new FormData();
+  if (file) formData.append("file", file);
+  return api.create(url.CONVERT_EXCEL_UTILITY_UPLOAD, formData, { headers: { "Content-Type": undefined } });
+};
+
+// Stock Telly (MVC: /data/stocktellydata)
+export const getStockTellyPermission = () => api.get(url.STOCK_TELLY_PERMISSION);
+export const getStockTellyReport = payload => api.create(url.STOCK_TELLY_FILTER, payload);
+export const importStockTellyFile = file => {
+  const formData = new FormData();
+  if (file) formData.append("ImportFile", file);
+  return api.create(url.STOCK_TELLY_IMPORT, formData, { headers: { "Content-Type": undefined } });
+};
+export const saveStockTelly = payload => api.create(url.STOCK_TELLY_SAVE, payload);
+
+// Master Price Comparison (MVC: /data/MasterPriceComparison)
+export const getMasterPriceComparisonPermission = () => api.get(url.MASTER_PRICE_COMPARISON_PERMISSION);
+export const getMasterPriceComparisonReport = payload => api.create(url.MASTER_PRICE_COMPARISON_LIST, payload);
+
+// Stock Price Comparison (MVC: /data/StockPriceComparison)
+export const getStockPriceComparisonPermission = () => api.get(url.STOCK_PRICE_COMPARISON_PERMISSION);
+export const getStockPriceComparisonReport = payload => api.create(url.STOCK_PRICE_COMPARISON_LIST, payload);
+
+// Missing Stock (MVC: /data/MissingStock)
+export const getMissingStockPermission = () => api.get(url.MISSING_STOCK_PERMISSION);
+export const getMissingStockReport = payload => api.create(url.MISSING_STOCK_SEARCH, payload);
+
+// Stock Transfer (MVC: /Stock/Stock-transfer-list)
+export const getStockTransferList = () => api.get(url.STOCK_TRANSFER_LIST);
+export const getStockTransferAddPermission = () => api.get(url.STOCK_TRANSFER_ADD_PERMISSION);
+export const saveStockTransfer = payload => api.create(url.STOCK_TRANSFER_SAVE, payload);
+export const deleteStockTransfer = id => api.create(`${url.STOCK_TRANSFER_DELETE}?ID=${encodeURIComponent(id)}`, {});
+export const getStockTransferLotDetails = lotNo =>
+  api.get(`${url.STOCK_TRANSFER_LOT_DETAILS}?LotNo=${encodeURIComponent(lotNo || "")}`);
+export const getStockTransferLotNoList = searchby =>
+  api.get(`${url.STOCK_TRANSFER_LOTNO_LIST}?searchby=${encodeURIComponent(searchby || "")}`);

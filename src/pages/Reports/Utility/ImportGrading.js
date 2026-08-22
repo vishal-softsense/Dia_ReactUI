@@ -44,7 +44,7 @@ const MvcSwalConfirm = ({ open, title, text, confirmText, cancelText, onConfirm,
         <ModalBody className="p-4 text-center">
             <div className="mx-auto mb-3 d-flex align-items-center justify-content-center" style={{ width: 80, height: 80, borderRadius: "50%", border: "4px solid #f7b84b", color: "#f7b84b", fontSize: 48, fontWeight: 600, lineHeight: 1 }} aria-hidden="true">!</div>
             <h2 className="fw-semibold mb-2" style={{ fontSize: 22, color: "#495057" }}>{title}</h2>
-            <p className="text-muted mb-4 fs-16">{text}</p>
+            <div className="text-muted mb-4 fs-15 text-break">{text}</div>
             <div className="d-flex gap-2 justify-content-center flex-wrap">
                 <button type="button" className="btn btn-primary" onClick={onConfirm}>{confirmText}</button>
                 <button type="button" className="btn btn-danger" onClick={onCancel}>{cancelText}</button>
@@ -303,7 +303,15 @@ const ImportGrading = () => {
     const confirmMessage =
         confirmModal.type === "updateSizeId"
             ? t("Update SizeId !!")
-            : t("Delete Deleted Records in TabSalePur,TabSalePurTran,TabMultiGrading,TabRateRevise,TabItemMaster,TabPayRec,TabJV !!");
+            : (
+                <span>
+                    {t("Delete Deleted Records in")}
+                    <br />
+                    TabSalePur,TabSalePurTran,TabMultiGrading,TabRateRevise,
+                    <br />
+                    TabItemMaster,TabPayRec,TabJV !!
+                </span>
+            );
 
     const submitLogo = async (e) => {
         e.preventDefault();

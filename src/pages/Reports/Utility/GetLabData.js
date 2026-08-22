@@ -179,6 +179,8 @@ const GetLabData = () => {
     const [certRows, setCertRows] = useState([]);
     const [giaRows, setGiaRows] = useState([]);
     const [igiRows, setIgiRows] = useState([]);
+    const [showGiaTable, setShowGiaTable] = useState(false);
+    const [showIgiTable, setShowIgiTable] = useState(false);
     const [resultModal, setResultModal] = useState({
         open: false,
         type: "success",
@@ -242,6 +244,10 @@ const GetLabData = () => {
             const response = await getLabDataFromList({ LotNo: lotNo });
             if (response?.success === true || response?.Success === true) {
                 setCertRows(mapCertRows(response?.Data || response?.data || []));
+                setGiaRows([]);
+                setIgiRows([]);
+                setShowGiaTable(false);
+                setShowIgiTable(false);
             } else {
                 setResultModal({
                     open: true,
@@ -290,6 +296,10 @@ const GetLabData = () => {
             const response = await importLabCertFile(file);
             if (response?.success === true || response?.Success === true) {
                 setCertRows(mapCertRows(response?.Data || response?.data || []));
+                setGiaRows([]);
+                setIgiRows([]);
+                setShowGiaTable(false);
+                setShowIgiTable(false);
                 setImportModalOpen(false);
                 setFile(null);
                 setResultModal({
@@ -337,6 +347,7 @@ const GetLabData = () => {
             const response = await getLabGiaData(buildCertPayload());
             if (response?.success === true || response?.Success === true) {
                 setGiaRows(response?.Data || response?.data || []);
+                setShowGiaTable(true);
                 setResultModal({
                     open: true,
                     type: "success",
@@ -374,6 +385,7 @@ const GetLabData = () => {
             const response = await getLabIgiData(buildCertPayload());
             if (response?.success === true || response?.Success === true) {
                 setIgiRows(response?.Data || response?.data || []);
+                setShowIgiTable(true);
                 setResultModal({
                     open: true,
                     type: "success",
@@ -590,21 +602,25 @@ const GetLabData = () => {
                                     </Col>
                                 </Row>
 
-                                <div className="mt-4">
-                                    <ScrollTable
-                                        columns={GIA_COLUMNS}
-                                        rows={giaRows}
-                                        emptyText={t("No data imported yet.")}
-                                    />
-                                </div>
+                                {showGiaTable && (
+                                    <div className="mt-4">
+                                        <ScrollTable
+                                            columns={GIA_COLUMNS}
+                                            rows={giaRows}
+                                            emptyText={t("No data imported yet.")}
+                                        />
+                                    </div>
+                                )}
 
-                                <div className="mt-4">
-                                    <ScrollTable
-                                        columns={IGI_COLUMNS}
-                                        rows={igiRows}
-                                        emptyText={t("No data imported yet.")}
-                                    />
-                                </div>
+                                {showIgiTable && (
+                                    <div className="mt-4">
+                                        <ScrollTable
+                                            columns={IGI_COLUMNS}
+                                            rows={igiRows}
+                                            emptyText={t("No data imported yet.")}
+                                        />
+                                    </div>
+                                )}
                             </CardBody>
                         </Card>
                     )}

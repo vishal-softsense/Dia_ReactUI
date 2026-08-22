@@ -486,6 +486,14 @@ import JewelleryConsignMentInReport from "../pages/Jewellery/Jewellery Reports/J
 
 import ImportPricing from "../pages/Reports/Utility/ImportPricing";
 import GetLabData from "../pages/Reports/Utility/GetLabData";
+import ConvertExcelUtility from "../pages/Reports/Utility/ConvertExcelUtility";
+import StockTelly from "../pages/Reports/Utility/StockTelly";
+import MasterPriceComparison from "../pages/Reports/Utility/MasterPriceComparison";
+import StockPriceComparison from "../pages/Reports/Utility/StockPriceComparison";
+import MissingStock from "../pages/Reports/Utility/MissingStock";
+import StockTransfer from "../pages/Reports/Utility/StockTransfer";
+import AddStockTransfer from "../pages/Reports/Utility/AddStockTransfer";
+
 const RootRoute = () => {
   try {
     const raw =
@@ -589,6 +597,9 @@ const authProtectedRoutes = [
   { path: "/solitaire/stock-search", component: <SolitairesStockSearchReport /> },
   { path: "/Stock/stock-search", component: <SolitairesStockSearchReport /> },
   { path: "/stock/stock-search", component: <SolitairesStockSearchReport /> },
+  // MVC Stock Price Comparison / Chart drill → Stock/stock-search-result1
+  { path: "/Stock/stock-search-result1", component: <SolitairesStockSearchReport /> },
+  { path: "/stock/stock-search-result1", component: <SolitairesStockSearchReport /> },
   { path: "/StockSearch/StockSearch", component: <SolitairesStockSearchReport /> },
   { path: "/StockSearch", component: <SolitairesStockSearchReport /> },
   { path: "/stocksearch/stocksearch", component: <SolitairesStockSearchReport /> },
@@ -756,7 +767,29 @@ const authProtectedRoutes = [
 
   { path: "/data/import-pricing", component: <ImportPricing /> },
   { path: "/data/getlabdata", component: <GetLabData /> },
+{ path: "/dashbord/uploadexcel", component: <ConvertExcelUtility /> },
+  { path: "/dashbord/UploadExcel", component: <ConvertExcelUtility /> },
+  { path: "/dashboard/uploadexcel", component: <ConvertExcelUtility /> },
+  { path: "/dashboard/UploadExcel", component: <ConvertExcelUtility /> },
+  { path: "/data/convertexcelutility", component: <ConvertExcelUtility /> },
 
+
+  { path: "/data/stocktellydata", component: <StockTelly /> },
+
+  // Master Price Comparison (MVC: /data/MasterPriceComparison)
+  { path: "/data/MasterPriceComparison", component: <MasterPriceComparison /> },
+
+  // Stock Price Comparison (MVC: /data/StockPriceComparison)
+  { path: "/data/StockPriceComparison", component: <StockPriceComparison /> },
+
+  // Missing Stock (MVC: /data/MissingStock)
+  { path: "/data/MissingStock", component: <MissingStock /> },
+
+  // Stock Transfer (MVC: /Stock/Stock-transfer-list, /Stock/Stock-transfer)
+  { path: "/Stock/Stock-transfer-list", component: <StockTransfer /> },
+  { path: "/stock/Stock-transfer-list", component: <StockTransfer /> },
+  { path: "/Stock/Stock-transfer", component: <AddStockTransfer /> },
+  { path: "/stock/Stock-transfer", component: <AddStockTransfer /> },
   { path: "/dashboard-analytics", component: <DashboardAnalytics /> },
   { path: "/dashboard-crm", component: <DashboardCrm /> },
   { path: "/dashboard", component: <Dashboard /> },

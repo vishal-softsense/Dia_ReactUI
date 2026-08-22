@@ -786,8 +786,40 @@ export const INVOICE_LEDGER_REPORT_DATA = "/api/InvoiceLedgerReport/invoice-ledg
 
 // Download MRP (MVC: /data/downloadMRP)
 export const DOWNLOAD_MRP_PERMISSION = "/api/DownloadMRP/downloadMRP";
-export const DOWNLOAD_MRP = "/api/DownloadMRP/downloadMRP";
+//export const DOWNLOAD_MRP = "/api/DownloadMRP/downloadMRP";
 export const UPDATE_MRP = "/api/DownloadMRP/updateMRP";
+
+export const DOWNLOAD_MRP = "/api/DownloadMRP/downloadsMRP";
+
+// Convert Excel Utility (MVC: /dashbord/uploadexcel)
+export const CONVERT_EXCEL_UTILITY_PERMISSION = "/api/ConvertExcelUtility/uploadexcel";
+export const CONVERT_EXCEL_UTILITY_UPLOAD = "/api/ConvertExcelUtility/Upload";
+
+// Stock Telly (MVC: /data/stocktellydata)
+export const STOCK_TELLY_PERMISSION = "/api/StockTelly/stocktellydata";
+export const STOCK_TELLY_FILTER = "/api/StockTelly/stocktellyfilter";
+export const STOCK_TELLY_IMPORT = "/api/StockTelly/import-stelly";
+export const STOCK_TELLY_SAVE = "/api/StockTelly/Save-StockTelly";
+
+// Master Price Comparison (MVC: /data/MasterPriceComparison)
+export const MASTER_PRICE_COMPARISON_PERMISSION = "/api/MasterPriceComparison/MasterPriceComparison";
+export const MASTER_PRICE_COMPARISON_LIST = "/api/MasterPriceComparison/MasterPriceComparison-List";
+
+// Stock Price Comparison (MVC: /data/StockPriceComparison)
+export const STOCK_PRICE_COMPARISON_PERMISSION = "/api/StockPriceComparison/StockPriceComparison";
+export const STOCK_PRICE_COMPARISON_LIST = "/api/StockPriceComparison/StockPriceComparison-List";
+
+// Missing Stock (MVC: /data/MissingStock)
+export const MISSING_STOCK_PERMISSION = "/api/MissingStock/MissingStock";
+export const MISSING_STOCK_SEARCH = "/api/MissingStock/Missing-stock-search";
+
+// Stock Transfer (MVC: /Stock/Stock-transfer-list)
+export const STOCK_TRANSFER_LIST = "/api/StockTransfer/Stock-transfer-list";
+export const STOCK_TRANSFER_ADD_PERMISSION = "/api/StockTransfer/Stock-transfer";
+export const STOCK_TRANSFER_SAVE = "/api/StockTransfer/Save-Stock-transfer";
+export const STOCK_TRANSFER_DELETE = "/api/StockTransfer/Stock-transfer-delete";
+export const STOCK_TRANSFER_LOT_DETAILS = "/api/StockTransfer/Stock-transfer-stonedetails";
+export const STOCK_TRANSFER_LOTNO_LIST = "/api/StockTransfer/get-alllotno-list";
 
 // Import Grading (MVC: /data/importgrading)
 export const IMPORT_GRADING_PERMISSION = "/api/ImportGrading/importgrading";
@@ -854,7 +886,7 @@ export const JEWELLERY_STOCK_HISTORY_STOCK_IDS = "/api/JewelleryStockHistoryRepo
 
 // Import Pricing (MVC: /data/import-pricing)
 export const IMPORT_PRICING_PERMISSION = "/api/ImportPricing/import-pricing";
-export const IMPORT_PRICING_UPLOAD = "/api/ImportPricing/import-pricing";
+export const IMPORT_PRICING_UPLOAD = "/api/ImportPricing/imports-pricing";
 export const IMPORT_PRICING_SAVE = "/api/ImportPricing/save-price";
 
 // Get Lab Data (MVC: /data/getlabdata)

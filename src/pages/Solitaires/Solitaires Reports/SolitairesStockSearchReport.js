@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Container,
@@ -286,6 +286,7 @@ const SolitairesStockSearchReport = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
+  const dropdownsLoadedOnceRef = useRef(false);
 
   const [lotOptions, setLotOptions] = useState([]);
   const [loadingLots, setLoadingLots] = useState(false);
@@ -572,6 +573,7 @@ const SolitairesStockSearchReport = () => {
         toast.error("Error loading dropdown data.");
       }
       setLoadingDropdowns(false);
+      dropdownsLoadedOnceRef.current = true;
     };
 
     fetchDropdowns();
@@ -604,8 +606,62 @@ const SolitairesStockSearchReport = () => {
     toast.success("Filters cleared successfully.");
   };
 
-  const buildPayload = () => {
-    const payload = { ...filters };
+  const toFilterArray = (value) => {
+    if (value == null) return [];
+    if (Array.isArray(value)) return value.filter((v) => v !== null && v !== undefined && String(v).trim() !== "");
+    const text = String(value).trim();
+    return text ? [text] : [];
+  };
+
+  /** Maps MVC StockSearchJSON (PascalCase) into React filter keys — used by /Stock/stock-search-result1 AutoRun. */
+  const mapStockSearchJsonToFilters = (json = {}) => {
+    const mapped = {};
+    const shape = toFilterArray(json.Shape);
+    const color = toFilterArray(json.Color);
+    const clarity = toFilterArray(json.Clarity);
+    const size = toFilterArray(json.Size);
+    const lab = toFilterArray(json.LAB ?? json.Lab);
+    const fluorescence = toFilterArray(json.Fluorescence);
+    const proportion = toFilterArray(json.Proportion);
+    const polish = toFilterArray(json.Polish);
+    const symmetry = toFilterArray(json.Symmetry);
+    const milky = toFilterArray(json.Milky);
+    const luster = toFilterArray(json.Luster);
+    const natts = toFilterArray(json.Natts);
+    const shapeGroup = toFilterArray(json.ShapeGroup);
+    const colorGroup = toFilterArray(json.ColorGroup);
+    const lotNo = Array.isArray(json.LotNo) ? json.LotNo.join("\n") : (json.LotNo || "");
+
+    if (shape.length) mapped.shape = shape;
+    if (color.length) mapped.color = color;
+    if (clarity.length) mapped.clarity = clarity;
+    if (size.length) mapped.size = size;
+    if (lab.length) mapped.lab = lab;
+    if (fluorescence.length) mapped.fl = fluorescence;
+    if (proportion.length) mapped.prop = proportion;
+    if (polish.length) mapped.pol = polish;
+    if (symmetry.length) mapped.sym = symmetry;
+    if (milky.length) mapped.milky = milky;
+    if (luster.length) mapped.luster = luster;
+    if (natts.length) mapped.nts = natts;
+    if (shapeGroup.length) mapped.shapeGroup = shapeGroup;
+    if (colorGroup.length) mapped.colorGroup = colorGroup;
+    if (lotNo) mapped.lotNo = lotNo;
+
+    if (json.groupBy === "Shape" && json.Id) mapped.shape = [json.Id];
+    else if (json.groupBy === "Size" && json.Id) mapped.size = [json.Id];
+    else if (json.groupBy === "Color" && json.Id) mapped.color = [json.Id];
+    else if (json.groupBy === "Clarity" && json.Id) mapped.clarity = [json.Id];
+    else if (json.groupBy === "Prop" && json.Id) mapped.prop = [json.Id];
+    else if (json.groupBy === "Polish" && json.Id) mapped.pol = [json.Id];
+    else if (json.groupBy === "Symmetry" && json.Id) mapped.sym = [json.Id];
+    else if (json.groupBy === "FL" && json.Id) mapped.fl = [json.Id];
+
+    return mapped;
+  };
+
+  const buildPayload = (sourceFilters = filters) => {
+    const payload = { ...sourceFilters };
     if (Array.isArray(payload.date)) {
       payload.date = payload.date[0] ? formatLocalDate(new Date(payload.date[0])) : "";
     }
@@ -652,12 +708,23 @@ const SolitairesStockSearchReport = () => {
     return payload;
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (sourceFilters) => {
+    // Button onClick passes a SyntheticEvent — only treat plain filter objects as overrides
+    const overrideFilters =
+      sourceFilters &&
+      typeof sourceFilters === "object" &&
+      !sourceFilters.nativeEvent &&
+      (Object.prototype.hasOwnProperty.call(sourceFilters, "date") ||
+        Object.prototype.hasOwnProperty.call(sourceFilters, "shape") ||
+        Object.prototype.hasOwnProperty.call(sourceFilters, "lab"))
+        ? sourceFilters
+        : null;
+
     setLoading(true);
     setSelectedRows({});
     setHasSearched(true);
     try {
-      const payload = buildPayload();
+      const payload = buildPayload(overrideFilters || filters);
       const response = await getSolitaireStockSearchReport(payload);
       if (response.success || response.Success) {
         const data = response.data || response.Data || [];
@@ -672,6 +739,33 @@ const SolitairesStockSearchReport = () => {
     }
     setLoading(false);
   };
+
+  // MVC: /Stock/stock-search-result1 reads AutoRunReport + StockSearchJSON and runs report once
+  useEffect(() => {
+    if (loadingDropdowns || !dropdownsLoadedOnceRef.current) return;
+
+    try {
+      if (sessionStorage.getItem("AutoRunReport") !== "true") return;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("cert")) return;
+
+      const jsonStr = sessionStorage.getItem("StockSearchJSON");
+      sessionStorage.removeItem("AutoRunReport");
+      sessionStorage.removeItem("StockSearchJSON");
+      if (!jsonStr) return;
+
+      const json = JSON.parse(jsonStr);
+      const mapped = mapStockSearchJsonToFilters(json);
+      const nextFilters = { ...initialFilters, ...mapped, date: formatLocalDate(new Date()) };
+      setFilters(nextFilters);
+      handleSearch(nextFilters);
+    } catch (err) {
+      console.error("AutoRun StockSearchJSON failed:", err);
+      sessionStorage.removeItem("AutoRunReport");
+      sessionStorage.removeItem("StockSearchJSON");
+    }
+  }, [loadingDropdowns]);
 
   const handleSelectAll = (e) => {
     const checked = e.target.checked;
@@ -1421,7 +1515,7 @@ const SolitairesStockSearchReport = () => {
                   <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
                     {t("Email Stock List")}
                   </Button>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleSearch} disabled={loading}>
+                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleSearch()} disabled={loading}>
                     {loading ? t("Searching...") : t("Report")}
                   </Button>
                   <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
