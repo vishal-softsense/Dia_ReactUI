@@ -35,13 +35,8 @@ const Filter = ({
   // table
 }) => {
   const columnFilterValue = column.getFilterValue();
-  let placeholder = "";
-  const headerDef = column.columnDef.header;
-  if (typeof headerDef === "string") {
-    placeholder = headerDef;
-  } else if (typeof column.id === "string") {
-    placeholder = column.id;
-  }
+  const placeholder =
+    typeof column.columnDef.header === "string" ? column.columnDef.header : "";
 
   return (
     <>
@@ -50,12 +45,13 @@ const Filter = ({
         value={(columnFilterValue ?? '')}
         onChange={(value) => column.setFilterValue(value)}
         placeholder={placeholder}
-        className="form-control form-control-sm bg-white"
-        style={{ height: "26px", fontSize: "11px", padding: "2px 6px", borderRadius: "4px", width: "100%" }}
+        className="form-control form-control-sm mt-1"
+        style={{ height: "26px", fontSize: "11px", padding: "2px 8px" }}
         debounce={100}
         list={column.id + 'list'}
         id={`filter-${column.id}`}
       />
+      <div className="h-1" />
     </>
   );
 };
@@ -126,6 +122,8 @@ const TableContainer = ({
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
+
+
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: customPageSize || 10,
@@ -190,30 +188,30 @@ const TableContainer = ({
 
   return (
     <Fragment>
-      {isGlobalFilter && (
-        <div className="table-controls-wrapper border border-dashed border-start-0 border-end-0 py-2 px-3 mb-3 bg-light-subtle rounded-1">
-          <form onSubmit={(e) => e.preventDefault()} className="w-100">
-            <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+      {isGlobalFilter && <Row className="mb-3">
+        <CardBody className="border border-dashed border-end-0 border-start-0">
+          <form>
+            <Row className="align-items-center g-3">
               {isShowEntries && (
-                <div className="show-entries-section d-flex align-items-center">
-                  <span className="me-2 text-muted text-uppercase small fw-semibold">{t("SHOW")}</span>
-                  <select
-                    className="form-select form-select-sm w-auto"
-                    value={getState().pagination.pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    style={{ height: "34px", minWidth: "75px" }}
-                  >
-                    {(customPageSizes || [10, 25, 50, 100]).map(pageSize => (
-                      <option key={pageSize} value={pageSize}>
-                        {pageSize}
-                      </option>
-                    ))}
-                    <option value={999999}>{t("All")}</option>
-                  </select>
-                  <span className="ms-2 text-muted text-uppercase small fw-semibold">{t("ENTRIES")}</span>
-                </div>
+                <Col sm={12} md="auto">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2 text-muted text-uppercase">{t("Show")}</span>
+                    <select
+                      className="form-select form-select-sm w-auto"
+                      value={getState().pagination.pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                    >
+                      {(customPageSizes || [10, 25, 50, 100]).map(pageSize => (
+                        <option key={pageSize} value={pageSize}>
+                          {pageSize}
+                        </option>
+                      ))}
+                      <option value={999999}>{t("All")}</option>
+                    </select>
+                    <span className="ms-2 text-muted text-uppercase">{t("Entries")}</span>
+                  </div>
+                </Col>
               )}
-
               {isProductsFilter && (
                 <ProductsGlobalFilter />
               )}
@@ -248,167 +246,113 @@ const TableContainer = ({
                 <TaskListGlobalFilter />
               )}
 
-              <div className="search-box-section w-100 w-sm-auto ms-sm-auto">
-                <div className="search-box me-0 w-100 d-inline-block">
+              <Col sm={12} md className="d-flex justify-content-md-end mt-2 mt-md-0">
+                <div className="search-box me-2 d-inline-block">
                   <input
                     type="text"
-                    className="form-control form-control-sm search"
+                    className="form-control search"
                     value={globalFilter ?? ''}
                     onChange={e => setGlobalFilter(e.target.value)}
-                    placeholder={SearchPlaceholder || t("Search...")}
-                    style={{ height: "34px" }}
+                    placeholder={SearchPlaceholder || "Search..."}
                   />
-                  <i className="bx bx-search-alt search-icon" />
+                  <i className="bx bx-search-alt search-icon"></i>
                 </div>
-              </div>
-            </div>
+              </Col>
+            </Row>
           </form>
-        </div>
-      )}
+        </CardBody>
+      </Row>}
 
-      <div
-        className={divClass}
-        style={{
-          maxHeight: "calc(100vh - 280px)",
-          overflowY: "auto",
-          overflowX: "auto",
-          WebkitOverflowScrolling: "touch",
-          margin: 0,
-          width: "100%",
-          maxWidth: "100%"
-        }}
-      >
-        <Table hover className={tableClass} style={{ width: "100%", margin: 0 }}>
-          <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 10 }}>
+
+      <div className={divClass} style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto", overflowX: "auto" }}>
+        <Table hover className={tableClass}>
+          <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 2 }}>
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const minWidth = header.column.columnDef.minWidth || "auto";
-                  const width = header.column.columnDef.width || "auto";
-                  const colClass = header.column.columnDef.className || "";
-                  const isEnd = colClass.includes("text-end");
-                  const isCenter = colClass.includes("text-center");
-                  const flexJustify = isEnd ? "justify-content-end" : isCenter ? "justify-content-center" : "justify-content-between";
-
-                  return (
-                    <th
-                      key={header.id}
-                      className={`${thClass || ""} ${colClass}`.trim()}
-                      style={{
-                        whiteSpace: "nowrap",
-                        minWidth: minWidth,
-                        width: width,
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 10,
-                        backgroundColor: "#f8f9fa",
-                        boxShadow: "inset 0 -1px 0 #eff2f7",
-                        padding: "8px 10px",
-                        verticalAlign: "middle",
-                        ...header.column.columnDef.style
-                      }}
-                    >
-                      {header.isPlaceholder ? null : (
-                        <React.Fragment>
-                          <div
-                            className={`d-flex align-items-center ${flexJustify} ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            <span className="fw-semibold text-dark me-1">
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className={`${thClass || ""} ${header.column.columnDef.className || ""}`.trim()}>
+                    {header.isPlaceholder ? null : (
+                      <React.Fragment>
+                        <div
+                          className={`d-flex align-items-center ${header.column.getCanSort() ? 'cursor-pointer' : ''}`}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getCanSort() && (
+                            <span className="ms-2">
+                              {{
+                                asc: <i className="mdi mdi-chevron-up text-muted"></i>,
+                                desc: <i className="mdi mdi-chevron-down text-muted"></i>,
+                              }[header.column.getIsSorted()] ?? <i className="mdi mdi-unfold-more-horizontal text-muted"></i>}
                             </span>
-                            {header.column.getCanSort() && (
-                              <span className="ms-1 flex-shrink-0">
-                                {{
-                                  asc: <i className="mdi mdi-chevron-up text-primary fw-bold"></i>,
-                                  desc: <i className="mdi mdi-chevron-down text-primary fw-bold"></i>,
-                                }[header.column.getIsSorted()] ?? <i className="mdi mdi-unfold-more-horizontal text-muted"></i>}
-                              </span>
-                            )}
+                          )}
+                        </div>
+                        {header.column.getCanFilter() ? (
+                          <div className="mt-1">
+                            <Filter column={header.column} table={table} />
                           </div>
-                          {header.column.getCanFilter() ? (
-                            <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                              <Filter column={header.column} table={table} />
-                            </div>
-                          ) : null}
-                        </React.Fragment>
-                      )}
-                    </th>
-                  );
-                })}
+                        ) : null}
+                      </React.Fragment>
+                    )}
+                  </th>
+                ))}
               </tr>
             ))}
           </thead>
 
           <tbody>
-            {getRowModel().rows.length === 0 ? (
+              {getRowModel().rows.length === 0 ? (
               <tr>
                 <td colSpan={table.getVisibleLeafColumns().length} className="text-center py-5 text-muted fw-semibold fs-14">
                   {t("No Data Found")}
                 </td>
               </tr>
             ) : (
-              getRowModel().rows.map((row) => {
-                const customRowClass = getRowClass ? getRowClass(row) : "";
-                return (
-                  <Fragment key={row.id}>
-                    <tr className={`${trClass || ""} ${customRowClass}`.trim()}>
-                      {row.getVisibleCells().map((cell) => {
-                        const minWidth = cell.column.columnDef.minWidth || "auto";
-                        const width = cell.column.columnDef.width || "auto";
-                        const colClass = cell.column.columnDef.className || "";
-
-                        return (
-                          <td
-                            key={cell.id}
-                            className={colClass}
-                            style={{
-                              whiteSpace: "nowrap",
-                              minWidth: minWidth,
-                              width: width,
-                              verticalAlign: "middle",
-                              padding: "8px 10px",
-                              ...cell.column.columnDef.cellStyle
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    {(() => {
-                      if (!renderSubRows) return null;
-                      const subRows = renderSubRows(row);
-                      if (!subRows) return null;
+            getRowModel().rows.map((row) => {
+              const customRowClass = getRowClass ? getRowClass(row) : "";
+              return (
+                <Fragment key={row.id}>
+                  <tr className={`${trClass || ""} ${customRowClass}`.trim()}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id} className={cell.column.columnDef.className || ""}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {(() => {
+                    if (!renderSubRows) return null;
+                    const subRows = renderSubRows(row);
+                    if (!subRows) return null;
+                    
+                    return React.Children.map(subRows, (tr) => {
+                      if (!React.isValidElement(tr)) return tr;
                       
-                      return React.Children.map(subRows, (tr) => {
-                        if (!React.isValidElement(tr)) return tr;
-                        
-                        const newChildren = React.Children.map(tr.props.children, (td, idx) => {
-                          if (!React.isValidElement(td)) return td;
-                          const column = row.getVisibleCells()[idx]?.column;
-                          const colClassName = column?.columnDef?.className || "";
-                          if (colClassName) {
-                            return React.cloneElement(td, {
-                              className: `${td.props.className || ""} ${colClassName}`.trim()
-                            });
-                          }
-                          return td;
-                        });
-                        
-                        return React.cloneElement(tr, {}, newChildren);
+                      const newChildren = React.Children.map(tr.props.children, (td, idx) => {
+                        if (!React.isValidElement(td)) return td;
+                        const column = row.getVisibleCells()[idx]?.column;
+                        const colClassName = column?.columnDef?.className || "";
+                        if (colClassName) {
+                          return React.cloneElement(td, {
+                            className: `${td.props.className || ""} ${colClassName}`.trim()
+                          });
+                        }
+                        return td;
                       });
-                    })()}
-                  </Fragment>
-                );
-              })
-            )}
+                      
+                      return React.cloneElement(tr, {}, newChildren);
+                    });
+                  })()}
+                </Fragment>
+              );
+            }))}
           </tbody>
           {table.getFooterGroups() && table.getFooterGroups().some(group => group.headers.some(h => h.column.columnDef.footer)) && (
             <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
@@ -432,42 +376,42 @@ const TableContainer = ({
       </div>
 
       {isPagination && (
-        <div className="px-3 py-2 border-top bg-white">
-          <Row className="align-items-center mt-0 g-2 text-center text-sm-start me-sm-4">
-            <div className="col-sm">
-              <div className="text-muted small">
-                {t("Showing")} <span className="fw-semibold">
-                  {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
-                </span> {t("to")} <span className="fw-semibold">
-                  {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
-                </span> {t("of")} <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> {t("entries")}
-                {(() => {
-                  const childCount = table.getFilteredRowModel().rows.reduce((acc, row) => {
-                    const children = row.original?.childRecords || [];
-                    return acc + children.length;
-                  }, 0);
-                  return childCount > 0 ? ` (${childCount})` : "";
-                })()}
-              </div>
+        <div style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
+        <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
+          <div className="col-sm">
+            <div className="text-muted">
+              {t("Showing")} <span className="fw-semibold">
+                {table.getFilteredRowModel().rows.length === 0 ? 0 : (getState().pagination.pageIndex * getState().pagination.pageSize) + 1}
+              </span> {t("to")} <span className="fw-semibold">
+                {Math.min((getState().pagination.pageIndex + 1) * getState().pagination.pageSize, table.getFilteredRowModel().rows.length)}
+              </span> {t("of")} <span className="fw-semibold">{table.getFilteredRowModel().rows.length}</span> {t("entries")}
+              {(() => {
+                const childCount = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                  const children = row.original?.childRecords || [];
+                  return acc + children.length;
+                }, 0);
+                return childCount > 0 ? ` (${childCount})` : "";
+              })()}
             </div>
-            <div className="col-sm-auto me-4 me-sm-0">
-              <ul className="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
-                  <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>{t("Previous")}</Link>
-                </li>
-                {getVisiblePages().map((item, key) => (
-                  <React.Fragment key={key}>
-                    <li className={getState().pagination.pageIndex === item ? "page-item active" : "page-item"}>
-                      <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
-                    </li>
-                  </React.Fragment>
-                ))}
-                <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
-                  <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>{t("Next")}</Link>
-                </li>
-              </ul>
-            </div>
-          </Row>
+          </div>
+          <div className="col-sm-auto">
+            <ul className="pagination pagination-separated pagination-md justify-content-center justify-content-sm-start mb-0">
+              <li className={!getCanPreviousPage() ? "page-item disabled" : "page-item"}>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}>{t("Previous")}</Link>
+              </li>
+              {getVisiblePages().map((item, key) => (
+                <React.Fragment key={key}>
+                  <li className={getState().pagination.pageIndex === item ? "page-item active" : "page-item"}>
+                    <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
+                  </li>
+                </React.Fragment>
+              ))}
+              <li className={!getCanNextPage() ? "page-item disabled" : "page-item"}>
+                <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}>{t("Next")}</Link>
+              </li>
+            </ul>
+          </div>
+        </Row>
         </div>
       )}
     </Fragment>
