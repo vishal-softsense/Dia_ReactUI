@@ -620,6 +620,20 @@ export const addSolitairePurchaseSingleLot = (payload) => api.create(url.SOLITAI
 export const getSolitairePurchasePrintView = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_PRINT_VIEW}/${invNo}`);
 export const getSolitairePurchaseCurrentStatus = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_CURRENT_STATUS}/${invNo}`);
 
+// Mix Purchase (Parcel Transaction)
+export const getMixPurchaseList = () => api.get(url.MIX_PURCHASE_LIST);
+export const getMixPurchasePageData = () => api.get(url.MIX_PURCHASE_PAGE_DATA);
+export const getMixPurchaseDetail = (id) => api.get(`${url.MIX_PURCHASE_DETAIL}/${id}`);
+export const addMixPurchase = (data) => api.create(url.MIX_PURCHASE_ADD, data);
+export const editMixPurchase = (data) => api.create(url.MIX_PURCHASE_EDIT, data);
+export const deleteMixPurchase = (id) => api.create(url.MIX_PURCHASE_DELETE, { id });
+export const getMixPurchaseLotDetail = (lotNo) => api.create(url.MIX_PURCHASE_LOT_DETAIL, { lotNo });
+export const getMixPurchaseConsignment = (payload) => api.create(url.MIX_PURCHASE_CONSIGNMENT, payload);
+export const addMixPurchaseSingleLot = (payload) => api.create(url.MIX_PURCHASE_ADD_SINGLE_LOT, payload);
+export const getMixPurchasePrintView = (invNo) => api.get(`${url.MIX_PURCHASE_PRINT_VIEW}/${invNo}`);
+export const getMixPurchaseCurrentStatus = (invNo) => api.get(`${url.MIX_PURCHASE_CURRENT_STATUS}/${invNo}`);
+export const getMixPurchaseLots = (searchby) => api.get(`${url.MIX_PURCHASE_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+
 export const getSolitairePurchaseReturnList = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_LIST);
 export const getSolitairePurchaseReturnPageData = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_PAGE_DATA);
 export const getSolitairePurchaseReturnDetail = (id) => api.get(`${url.SOLITAIRE_PURCHASE_RETURN_DETAIL}/${id}`);
@@ -629,6 +643,21 @@ export const deleteSolitairePurchaseReturn = (id) => api.create(url.SOLITAIRE_PU
 export const getSolitairePurchaseReturnLotDetail = (lotNo) => api.create(url.SOLITAIRE_PURCHASE_RETURN_LOT_DETAIL, { lotNo });
 export const addSolitairePurchaseReturnSingleLot = (payload) => api.create(url.SOLITAIRE_PURCHASE_RETURN_ADD_SINGLE_LOT, payload);
 export const getSolitairePurchaseReturnItemFromList = (payload) => api.create(url.SOLITAIRE_PURCHASE_RETURN_GET_ITEM_FROM_LIST, payload);
+
+export const getJewelleryPurchaseList = () => api.get(url.JEWELLERY_PURCHASE_LIST);
+export const getJewelleryPurchasePageData = () => api.get(url.JEWELLERY_PURCHASE_PAGE_DATA);
+export const getJewelleryPurchaseDetail = (id) => api.get(`${url.JEWELLERY_PURCHASE_DETAIL}/${id}`);
+export const addJewelleryPurchase = (data) => api.create(url.JEWELLERY_PURCHASE_ADD, data);
+export const editJewelleryPurchase = (data) => api.create(url.JEWELLERY_PURCHASE_EDIT, data);
+export const deleteJewelleryPurchase = (id) => api.create(url.JEWELLERY_PURCHASE_DELETE, { id });
+export const getJewelleryPurchaseStockList = (searchby) =>
+  api.get(`${url.JEWELLERY_PURCHASE_STOCK_LIST}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+export const getJewelleryPurchaseLotDetail = (lotNo) => api.create(url.JEWELLERY_PURCHASE_LOT_DETAIL, { lotNo });
+export const addJewelleryPurchaseSingleLot = (payload) => api.create(url.JEWELLERY_PURCHASE_ADD_SINGLE_LOT, payload);
+export const getJewelleryPurchaseItemFromList = (payload) => api.create(url.JEWELLERY_PURCHASE_GET_ITEM_FROM_LIST, payload);
+export const getJewelleryPurchaseConsignment = (payload) => api.create(url.JEWELLERY_PURCHASE_CONSIGNMENT, payload);
+export const getJewelleryPurchasePrintView = (invNo) => api.get(`${url.JEWELLERY_PURCHASE_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getJewelleryPurchaseCurrentStatus = (invNo) => api.get(`${url.JEWELLERY_PURCHASE_CURRENT_STATUS}/${encodeURIComponent(invNo)}`);
 export const getSolitaireItemMasterDropdowns = () => api.get(url.GET_SOLITAIRE_ITEM_MASTER_DROPDOWNS);
 export const getSolitaireItemMasterDetail = id => api.get(`${url.GET_SOLITAIRE_ITEM_MASTER_DETAIL}/${id}`);
 export const checkSolitaireLotNoExists = lotNo => api.get(`${url.CHECK_SOLITAIRE_LOT_NO_EXISTS}?lotNo=${lotNo}`);

@@ -490,6 +490,20 @@ export const SOLITAIRE_PURCHASE_ADD_SINGLE_LOT = "/api/SolitairePurchase/add-sin
 export const SOLITAIRE_PURCHASE_PRINT_VIEW = "/api/SolitairePurchase/print-view"; // append /{invNo}
 export const SOLITAIRE_PURCHASE_CURRENT_STATUS = "/api/SolitairePurchase/current-status"; // append /{invNo}
 
+// Mix Purchase (Parcel Transaction entry) — MVC: /MixPurchase/Mix-PurchaseList
+export const MIX_PURCHASE_LIST = "/api/MixPurchase/list";
+export const MIX_PURCHASE_PAGE_DATA = "/api/MixPurchase/pagedata";
+export const MIX_PURCHASE_DETAIL = "/api/MixPurchase/detail"; // append /{id}
+export const MIX_PURCHASE_ADD = "/api/MixPurchase/add";
+export const MIX_PURCHASE_EDIT = "/api/MixPurchase/edit";
+export const MIX_PURCHASE_DELETE = "/api/MixPurchase/delete";
+export const MIX_PURCHASE_LOT_DETAIL = "/api/MixPurchase/lot-detail";
+export const MIX_PURCHASE_CONSIGNMENT = "/api/MixPurchase/consignment";
+export const MIX_PURCHASE_ADD_SINGLE_LOT = "/api/MixPurchase/add-single-lot";
+export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append /{id or invNo}
+export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
+export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
+
 export const SOLITAIRE_PURCHASE_RETURN_LIST = "/api/SolitairePurchaseReturn/list";
 export const SOLITAIRE_PURCHASE_RETURN_PAGE_DATA = "/api/SolitairePurchaseReturn/pagedata";
 export const SOLITAIRE_PURCHASE_RETURN_DETAIL = "/api/SolitairePurchaseReturn/detail"; // append /{id}
@@ -500,6 +514,20 @@ export const SOLITAIRE_PURCHASE_RETURN_LOT_DETAIL = "/api/SolitairePurchaseRetur
 export const SOLITAIRE_PURCHASE_RETURN_ADD_SINGLE_LOT = "/api/SolitairePurchaseReturn/add-single-lot";
 export const SOLITAIRE_PURCHASE_RETURN_GET_ITEM_FROM_LIST = "/api/SolitairePurchaseReturn/get-item-from-list";
 
+// Jewellery Purchase entry (MVC: /jewpurchase/*)
+export const JEWELLERY_PURCHASE_LIST = "/api/JewelleryPurchase/list";
+export const JEWELLERY_PURCHASE_PAGE_DATA = "/api/JewelleryPurchase/pagedata";
+export const JEWELLERY_PURCHASE_DETAIL = "/api/JewelleryPurchase/detail"; // append /{id}
+export const JEWELLERY_PURCHASE_ADD = "/api/JewelleryPurchase/add";
+export const JEWELLERY_PURCHASE_EDIT = "/api/JewelleryPurchase/edit";
+export const JEWELLERY_PURCHASE_DELETE = "/api/JewelleryPurchase/delete";
+export const JEWELLERY_PURCHASE_STOCK_LIST = "/api/JewelleryPurchase/stock-list"; // ?searchby=
+export const JEWELLERY_PURCHASE_LOT_DETAIL = "/api/JewelleryPurchase/lot-detail";
+export const JEWELLERY_PURCHASE_ADD_SINGLE_LOT = "/api/JewelleryPurchase/add-single-lot";
+export const JEWELLERY_PURCHASE_GET_ITEM_FROM_LIST = "/api/JewelleryPurchase/get-item-from-list";
+export const JEWELLERY_PURCHASE_CONSIGNMENT = "/api/JewelleryPurchase/consignment";
+export const JEWELLERY_PURCHASE_PRINT_VIEW = "/api/JewelleryPurchase/print-view"; // append /{invNo}
+export const JEWELLERY_PURCHASE_CURRENT_STATUS = "/api/JewelleryPurchase/current-status"; // append /{invNo}
 
 // Jew Stock Master (Mounting)
 export const GET_MOUNTING_STOCK_LIST = "/api/JewelleryStockMaster/mounting-stock";
