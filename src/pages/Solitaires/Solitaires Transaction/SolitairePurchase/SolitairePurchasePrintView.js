@@ -157,7 +157,7 @@ const SolitairePurchasePrintView = () => {
                     </div>
                   </td>
                   <td style={{ width: "35%", verticalAlign: "top" }}>
-                    <div style={{ fontWeight: "bold", fontSize: 20 }}>MEMO IN</div>
+                    <div style={{ fontWeight: "bold", fontSize: 20 }}>PURCHASE INVOICE</div>
                     <table style={{ width: "100%", fontSize: 12, marginTop: 8 }}>
                       <tbody>
                         <tr>
