@@ -97,12 +97,30 @@ const VerticalLayout = (props) => {
 
             // 2. Smart Route Matching (for Add/Edit pages)
             if (!matchingMenuItem) {
-                const potentialMatches = itemsArray.filter(x => 
-                    x.pathname && 
-                    x.pathname !== "/" && 
-                    x.pathname !== "/#" &&
-                    pathName.toLowerCase().startsWith(x.pathname.toLowerCase())
-                );
+                const getPathIdentifier = (url) => {
+                    if (!url || url === "/" || url === "/#") return "";
+                    const cleanUrl = url.toLowerCase().replace(/^\/|\/$/g, "");
+                    const segments = cleanUrl.split("/");
+                    return segments
+                        .map(seg => seg
+                            .replace(/[-_]?(list|add|edit|create|update|form|detail|view|print|rpt|report)[s]?[-_]?/g, "")
+                            .replace(/^(list|add|edit|create|update|form|detail|view|print|rpt|report)[s]?/g, "")
+                        )
+                        .filter(Boolean)
+                        .join("/");
+                };
+
+                const currentId = getPathIdentifier(pathName);
+                const potentialMatches = itemsArray.filter(x => {
+                    if (!x.pathname || x.pathname === "/" || x.pathname === "/#") return false;
+                    
+                    // Case 1: pathName starts with x.pathname
+                    if (pathName.toLowerCase().startsWith(x.pathname.toLowerCase())) return true;
+                    
+                    // Case 2: Cleaned path identifiers match
+                    const menuId = getPathIdentifier(x.pathname);
+                    return menuId && menuId === currentId;
+                });
                 
                 if (potentialMatches.length > 0) {
                     // Sort by length descending to get the most specific match

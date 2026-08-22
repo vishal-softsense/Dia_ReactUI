@@ -283,7 +283,7 @@ const mapItemFromApi = (r, idx) => ({
   color: getStrVal(r, "Color", "ColorId"),
   clarity: getStrVal(r, "Clarity", "ClarityId"),
   size: getStrVal(r, "Size", "SizeId"),
-  memoTransCode: getNumVal(r, "MemoTransCode"),
+  memoTransCode: getNumVal(r, "MemoTransCode") || getNumVal(r, "Code"),
   rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
   ...mapGradingFromSource(r)
 });
@@ -387,7 +387,9 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [searchParams] = useSearchParams();
   const isEdit = mode === "edit";
   const editId = searchParams.get("Id") || searchParams.get("id") || "";
-  const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
+  const urlMode = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase();
+  const isView = urlMode === "view";
+  const isConsignmentMode = urlMode === "consignment";
   const readOnly = isView;
 
   const [loading, setLoading] = useState(true);
@@ -427,6 +429,66 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [excelFile, setExcelFile] = useState(null);
   const [consignOpen, setConsignOpen] = useState(false);
   const [consignRows, setConsignRows] = useState([]);
+  const [consignSort, setConsignSort] = useState({ key: null, direction: 'asc' });
+
+  const handleConsignSort = (key) => {
+    setConsignSort((prev) => {
+      const direction = prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc';
+      return { key, direction };
+    });
+  };
+
+  const sortedConsignRows = useMemo(() => {
+    if (!consignSort.key) return consignRows;
+    const sorted = [...consignRows];
+    sorted.sort((a, b) => {
+      const aVal = a[consignSort.key];
+      const bVal = b[consignSort.key];
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return consignSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      const aStr = String(aVal || '').toLowerCase();
+      const bStr = String(bVal || '').toLowerCase();
+      if (aStr < bStr) return consignSort.direction === 'asc' ? -1 : 1;
+      if (aStr > bStr) return consignSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [consignRows, consignSort]);
+
+  const toggleSelectAllConsign = (checked) => {
+    setConsignRows((prev) => prev.map((x) => ({ ...x, selected: checked })));
+  };
+
+  const renderSortHeader = (key, label) => {
+    const isSorted = consignSort.key === key;
+    const isAsc = consignSort.direction === 'asc';
+    return (
+      <div 
+        onClick={() => handleConsignSort(key)} 
+        style={{ cursor: "pointer", userSelect: "none" }} 
+        className="d-inline-flex align-items-center"
+      >
+        <span>{label}</span>
+        <span 
+          style={{ 
+            display: "inline-flex", 
+            flexDirection: "column", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            fontSize: "8px", 
+            lineHeight: "0.8", 
+            marginLeft: "6px",
+            width: "10px"
+          }}
+        >
+          <span style={{ color: isSorted && isAsc ? "#405189" : "#c8c8c8" }}>▲</span>
+          <span style={{ color: isSorted && !isAsc ? "#405189" : "#c8c8c8", marginTop: "-2px" }}>▼</span>
+        </span>
+      </div>
+    );
+  };
+
 
   const [masterSymbol, setMasterSymbol] = useState("INR");
   const [stockSymbol, setStockSymbol] = useState("USD");
@@ -495,7 +557,12 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       }),
       valueContainer: (p) => ({ ...p, padding: "0 8px", height: "31px" }),
       indicatorsContainer: (p) => ({ ...p, height: "31px" }),
-      input: (p) => ({ ...p, margin: 0, padding: 0 }),
+      input: (p) => ({
+        ...p,
+        margin: 0,
+        padding: 0,
+        color: "var(--vz-body-color, #495057)"
+      }),
       menu: (p) => ({
         ...p,
         backgroundColor: "var(--vz-secondary-bg, #fff)",
@@ -575,10 +642,14 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         const res = await getSolitaireLots(lotInput);
         const raw = Array.isArray(res) ? res : res?.data || res?.Data || [];
         setLotOpts(
-          raw.map((item) => ({
-            value: item.name || item.Name || item.id || item.ID || "",
-            label: (item.text || item.TextName || item.name || item.Name || item.id || item.ID || "").toString().toUpperCase()
-          }))
+          raw.map((item) => {
+            const val = item.name || item.Name || item.id || item.ID || item.textName || item.TextName || "";
+            const lbl = item.textName || item.TextName || item.text || item.Name || item.name || item.id || item.ID || "";
+            return {
+              value: String(val),
+              label: String(lbl).toUpperCase()
+            };
+          })
         );
       } catch {
         /* ignore */
@@ -638,9 +709,9 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       return;
     }
     try {
-      const res = await getSolitairePurchaseDetail(editId);
+      const res = await getSolitairePurchaseDetail(editId, isConsignmentMode ? "consignment" : undefined);
       if (!(res?.success || res?.Success)) {
-        toast.error(res?.Data || res?.data || t("Purchase not found."));
+        toast.error(res?.Data || res?.data || (isConsignmentMode ? t("Consignment not found.") : t("Purchase not found.")));
         return;
       }
       const data = res.Data || res.data || {};
@@ -666,10 +737,12 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       const invTypeRaw = getVal(h, "InvType", "Type", "TypeId", "TypeName");
       const subTypeRaw = getVal(h, "SubType", "SubTypeId", "SubTypeName");
       const categoryRaw = getVal(h, "Category", "CategoryId", "CategoryName");
+      const memoInv = getVal(h, "InvNo");
       setHeader({
         code: toNum(getVal(h, "Code"), 0),
         trnDate: trn ? toLocalDateStr(trn) || todayIso() : todayIso(),
-        invNo: getVal(h, "InvNo"),
+        // New PUR invoice # is generated on save in consignment mode (MVC shows memo/blank)
+        invNo: isConsignmentMode ? "" : memoInv,
         billNo: getVal(h, "BillNo"),
         invType: resolveSelectValue(pageData?.types || typeOpts, invTypeRaw),
         subType: resolveSelectValue(pageData?.subs || subTypeOpts, subTypeRaw),
@@ -684,7 +757,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         brokerPer: toNum(getVal(h, "BrokerPer")),
         brokerAmount: toNum(getVal(h, "BrokerAmount")),
         description: getVal(h, "Description"),
-        consignmentNo: getVal(h, "ConsignmentNo"),
+        consignmentNo: isConsignmentMode ? memoInv : getVal(h, "ConsignmentNo"),
         chkGrading: !!(getVal(h, "chkGrading") === true || getVal(h, "chkGrading") === "true"),
         chkoldpur: !!(getVal(h, "chkoldpur") === true || getVal(h, "chkoldpur") === "true"),
         plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
@@ -1098,23 +1171,26 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         toast.warning(res?.Data || res?.data || t("No consignment Found"));
         return;
       }
-      const rows = (res.Data || res.data || []).map((r, i) => ({
-        key: i,
-        selected: false,
-        date: getVal(r, "Date"),
-        memoNo: getVal(r, "MemoNo"),
-        lotNo: getVal(r, "Lotno", "LotNo"),
-        itemName: getVal(r, "itemname", "ItemName"),
-        cts: toNum(getVal(r, "carats", "BalanceCts")),
-        purchase: toNum(getVal(r, "BalanceCts", "carats")),
-        rtn: 0,
-        balCts: toNum(getVal(r, "BalanceCts", "carats")),
-        mrp: toNum(getVal(r, "MRP")),
-        back: toNum(getVal(r, "Back")),
-        rate: toNum(getVal(r, "rate", "Rate")),
-        memoTransCode: toNum(getVal(r, "MemoTransCode")),
-        symbol: getVal(r, "Symbol")
-      }));
+      const rows = (res.Data || res.data || []).map((r, i) => {
+        const ctsVal = toNum(getVal(r, "carats", "BalanceCts"));
+        return {
+          key: i,
+          selected: true,
+          date: getVal(r, "Date"),
+          memoNo: getVal(r, "MemoNo"),
+          lotNo: getVal(r, "Lotno", "LotNo"),
+          itemName: getVal(r, "itemname", "ItemName"),
+          cts: ctsVal,
+          purchase: ctsVal,
+          rtn: toNum(getVal(r, "RtnCts")),
+          balCts: 0,
+          mrp: toNum(getVal(r, "MRP")),
+          back: toNum(getVal(r, "Back")),
+          rate: toNum(getVal(r, "rate", "Rate")),
+          memoTransCode: toNum(getVal(r, "MemoTransCode")),
+          symbol: getVal(r, "Symbol")
+        };
+      });
       setConsignRows(rows);
       setConsignOpen(true);
     } catch (err) {
@@ -1173,7 +1249,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     const salePur = {
       Code: toNum(header.code),
       TrnDate: header.trnDate,
-      Mode: "PUR",
+      Mode: isConsignmentMode ? "consignment" : "PUR",
       chkGrading: !!header.chkGrading,
       chkoldpur: !!header.chkoldpur,
       DueDays: toNum(header.dueDays),
@@ -1334,7 +1410,13 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     }
   };
 
-  const title = isView ? t("View Purchase") : isEdit ? t("Edit Purchase") : t("Add Purchase");
+  const title = isConsignmentMode
+    ? t("Consignment To Purchase")
+    : isView
+      ? t("View Purchase")
+      : isEdit
+        ? t("Edit Purchase")
+        : t("Add Purchase");
   document.title = `${title} | ${t("Admin")}`;
 
   if (loading) {
@@ -1351,7 +1433,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={title} pageTitle={t("Purchases")} />
+          <BreadCrumb title={title} pageTitle={isConsignmentMode ? t("Consignment In") : t("Purchases")} />
 
           <Row className="align-items-start g-3 mb-3">
             <Col xs={12}>
@@ -1362,7 +1444,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                     {title}
                   </h5>
                   <div className="d-flex gap-2 flex-wrap">
-                    {isEdit && header.invNo && (
+                    {isEdit && !isConsignmentMode && header.invNo && (
                       <Button
                         color="soft-info"
                         size="sm"
@@ -1383,7 +1465,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         {t("Import Excel")}
                       </Button>
                     )}
-                    <Link to="/purchase/purchase-list" className="btn btn-soft-secondary btn-sm">
+                    <Link
+                      to={isConsignmentMode ? "/consignment/consignment-list" : "/purchase/purchase-list"}
+                      className="btn btn-soft-secondary btn-sm"
+                    >
                       {t("Back")}
                     </Link>
                     {!readOnly && (
@@ -1413,10 +1498,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Invoice Number")}</Label>
                           <Input
-                            className="form-control-sm"
+                            className="form-control-sm custom-readonly-input"
                             style={fieldH}
                             value={header.invNo}
-                            readOnly={isEdit || readOnly}
+                            readOnly={true}
                             onChange={(e) => setHeaderField("invNo", e.target.value)}
                           />
                         </FormGroup>
@@ -1490,6 +1575,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                             onChange={setParty}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setPartyInput("");
+                                setPartyOpts([]);
+                              }
                             }}
                             isLoading={partyLoading}
                             placeholder={t("Search Party...")}
@@ -1515,9 +1604,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">{t("Due Date")}</Label>
                           <Input
                             type="date"
-                            className="form-control-sm"
+                            className="form-control-sm custom-readonly-input"
                             style={fieldH}
                             value={header.dueDate}
+                            readOnly={true}
                             onChange={(e) => setHeaderField("dueDate", e.target.value)}
                           />
                         </FormGroup>
@@ -1574,6 +1664,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                             onChange={setCommission}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setCommInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setCommInput("");
+                                setCommOpts([]);
+                              }
                             }}
                             isLoading={commLoading}
                             placeholder={t("Search...")}
@@ -1610,6 +1704,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                             onChange={setBroker}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setBrokerInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setBrokerInput("");
+                                setBrokerOpts([]);
+                              }
                             }}
                             isLoading={brokerLoading}
                             placeholder={t("Search...")}
@@ -1727,6 +1825,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                           }}
                           onInputChange={(v, meta) => {
                             if (meta.action === "input-change") setLotInput(v);
+                            else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                              setLotInput("");
+                              setLotOpts([]);
+                            }
                           }}
                           isLoading={lotLoading}
                           placeholder={t("Lot...")}
@@ -2031,26 +2133,34 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         <Modal isOpen={consignOpen} toggle={() => setConsignOpen(false)} size="xl" centered>
           <ModalHeader toggle={() => setConsignOpen(false)}>{t("Consignment")}</ModalHeader>
           <ModalBody>
-            <div className="table-responsive">
-              <Table className="table table-bordered table-sm align-middle mb-0">
-                <thead className="table-light">
+            <div className="table-responsive" style={{ maxHeight: "calc(100vh - 260px)", overflow: "auto" }}>
+              <Table className="table table-bordered table-sm align-middle mb-0 text-nowrap" style={{ fontSize: "11px" }}>
+                <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                   <tr>
-                    <th />
-                    <th>{t("Date")}</th>
-                    <th>{t("MemoNo")}</th>
-                    <th>{t("LotNo")}</th>
-                    <th>{t("Item")}</th>
-                    <th className="text-end">{t("Cts")}</th>
-                    <th className="text-end">{t("Purchase")}</th>
-                    <th className="text-end">{t("Return")}</th>
-                    <th className="text-end">{t("BalCts")}</th>
-                    <th className="text-end">{t("MRP")}</th>
-                    <th className="text-end">{t("Back")}</th>
-                    <th className="text-end">{t("Rate")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>
+                      <Input
+                        type="checkbox"
+                        checked={consignRows.length > 0 && consignRows.every((r) => r.selected)}
+                        onChange={(e) => toggleSelectAllConsign(e.target.checked)}
+                      />
+                    </th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("date", t("Date"))}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("memoNo", t("Consignment No"))}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("lotNo", t("LotNo"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("cts", t("Cts"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("purchase", t("Purchase"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("rtn", t("Return"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("balCts", t("BalCts"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("mrp", t("MRP"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("back", t("Back"))}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("rate", t("Rate"))}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("symbol", t("Cur"))}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("memoTransCode", t("MemoTrnCode"))}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{renderSortHeader("itemName", t("ItemName"))}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {consignRows.map((r, idx) => (
+                  {sortedConsignRows.map((r) => (
                     <tr key={r.key}>
                       <td>
                         <Input
@@ -2059,7 +2169,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                           onChange={(e) => {
                             const checked = e.target.checked;
                             setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, selected: checked } : x))
+                              prev.map((x) => (x.key === r.key ? { ...x, selected: checked } : x))
                             );
                           }}
                         />
@@ -2067,25 +2177,38 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       <td>{r.date}</td>
                       <td>{r.memoNo}</td>
                       <td>{r.lotNo}</td>
-                      <td>{r.itemName}</td>
                       <td className="text-end">{fmt(r.cts, 3)}</td>
                       <td>
                         <Input
                           type="number"
                           className="form-control-sm"
-                          style={{ height: 32 }}
+                          style={{ height: 28, width: "65px", padding: "1px 5px", fontSize: "11px" }}
                           value={r.purchase}
                           onChange={(e) => {
                             const purchase = toNum(e.target.value);
+                            if (purchase > toNum(r.cts)) {
+                              toast.warning(t("PurCts should not be greater than TotalCts"));
+                              setConsignRows((prev) =>
+                                prev.map((x) =>
+                                  x.key === r.key
+                                    ? {
+                                        ...x,
+                                        purchase: 0,
+                                        balCts: toNum(x.cts)
+                                      }
+                                    : x
+                                )
+                              );
+                              return;
+                            }
                             setConsignRows((prev) =>
-                              prev.map((x, i) =>
-                                i === idx
+                              prev.map((x) =>
+                                x.key === r.key
                                   ? {
-                                    ...x,
-                                    purchase,
-                                    rtn: Math.max(0, toNum(x.cts) - purchase),
-                                    balCts: Math.max(0, toNum(x.cts) - purchase)
-                                  }
+                                      ...x,
+                                      purchase,
+                                      balCts: toNum(x.cts) - purchase
+                                    }
                                   : x
                               )
                             );
@@ -2098,11 +2221,11 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <Input
                           type="number"
                           className="form-control-sm"
-                          style={{ height: 32 }}
+                          style={{ height: 28, width: "70px", padding: "1px 5px", fontSize: "11px" }}
                           value={r.mrp}
                           onChange={(e) =>
                             setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, mrp: e.target.value } : x))
+                              prev.map((x) => (x.key === r.key ? { ...x, mrp: e.target.value } : x))
                             )
                           }
                         />
@@ -2111,18 +2234,18 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <Input
                           type="number"
                           className="form-control-sm"
-                          style={{ height: 32 }}
+                          style={{ height: 28, width: "55px", padding: "1px 5px", fontSize: "11px" }}
                           value={r.back}
                           onChange={(e) => {
                             const back = toNum(e.target.value);
                             setConsignRows((prev) =>
-                              prev.map((x, i) =>
-                                i === idx
+                              prev.map((x) =>
+                                x.key === r.key
                                   ? {
-                                    ...x,
-                                    back,
-                                    rate: fmt(((100 + back) * toNum(x.mrp)) / 100)
-                                  }
+                                      ...x,
+                                      back,
+                                      rate: fmt(((100 + back) * toNum(x.mrp)) / 100)
+                                    }
                                   : x
                               )
                             );
@@ -2133,15 +2256,27 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <Input
                           type="number"
                           className="form-control-sm"
-                          style={{ height: 32 }}
+                          style={{ height: 28, width: "70px", padding: "1px 5px", fontSize: "11px" }}
                           value={r.rate}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const rate = toNum(e.target.value);
                             setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, rate: e.target.value } : x))
-                            )
-                          }
+                              prev.map((x) =>
+                                x.key === r.key
+                                  ? {
+                                      ...x,
+                                      rate,
+                                      back: toNum(x.mrp) !== 0 ? parseFloat((((rate * 100) / toNum(x.mrp)) - 100).toFixed(2)) : 0
+                                    }
+                                  : x
+                              )
+                            );
+                          }}
                         />
                       </td>
+                      <td>{r.symbol}</td>
+                      <td>{r.memoTransCode}</td>
+                      <td>{r.itemName}</td>
                     </tr>
                   ))}
                 </tbody>

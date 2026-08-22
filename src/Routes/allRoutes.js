@@ -401,6 +401,20 @@ import SolitairePurchaseCurStatus from "../pages/Solitaires/Solitaires Transacti
 import SolitairePurchaseReturnList from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnList";
 import SolitairePurchaseReturnAdd from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnAdd";
 import SolitairePurchaseReturnEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnEdit";
+import SolitaireConsignmentInList from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInList";
+import SolitaireConsignmentInAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInAdd";
+import SolitaireConsignmentInEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInEdit";
+import SolitaireConsignmentInPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInPrintView";
+import MixPurchaseList from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseList";
+import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseAdd";
+import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
+import MixPurchasePrintView from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchasePrintView";
+import MixPurchaseCurStatus from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseCurStatus";
+import JewPurchaseList from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseList";
+import JewPurchaseAdd from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseAdd";
+import JewPurchaseEdit from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseEdit";
+import JewPurchasePrintView from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchasePrintView";
+import JewPurchaseCurStatus from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseCurStatus";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
@@ -657,6 +671,21 @@ const authProtectedRoutes = [
   { path: "/purchasereturn/add-purchasereturn", component: <SolitairePurchaseReturnAdd /> },
   { path: "/purchasereturn/edit-purchasereturn", component: <SolitairePurchaseReturnEdit /> },
 
+  // Solitaire Consignment In entry (MVC: /consignment/*)
+  { path: "/consignment/consignment-list", component: <SolitaireConsignmentInList /> },
+  { path: "/consignment/add-consignment", component: <SolitaireConsignmentInAdd /> },
+  { path: "/consignment/edit-consignment", component: <SolitaireConsignmentInEdit /> },
+  { path: "/consignment/printinvview", component: <SolitaireConsignmentInPrintView /> },
+
+  // Jewellery Purchase entry (MVC: /jewpurchase/*)
+  { path: "/jewpurchase/jew-purchase-list", component: <JewPurchaseList /> },
+  { path: "/jewpurchase/add-jew-purchase", component: <JewPurchaseAdd /> },
+  { path: "/jewpurchase/edit-jew-purchase", component: <JewPurchaseEdit /> },
+  { path: "/jewpurchase/Jewprintinv", component: <JewPurchasePrintView /> },
+  { path: "/jewpurchase/jewprintinv", component: <JewPurchasePrintView /> },
+  { path: "/jewpurchase/JewPurCurStatusPrintInv", component: <JewPurchaseCurStatus /> },
+  { path: "/jewpurchase/jewpurcurstatusprintinv", component: <JewPurchaseCurStatus /> },
+
   { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },
   // Solitaire Lot Assortment Report (MVC: /report/lotAssortment-report)
@@ -714,6 +743,13 @@ const authProtectedRoutes = [
 
   // Mix Purchase Report (MVC: /mixreport/MixPurchase-Report)
   { path: "/mixreport/MixPurchase-Report", component: <MixPurchaseReport /> },
+
+  // Mix Purchase entry (MVC: MixPurchase/Mix-PurchaseList)
+  { path: "/MixPurchase/Mix-PurchaseList", component: <MixPurchaseList /> },
+  { path: "/mix-purchase/Add-MixPurchase", component: <MixPurchaseAdd /> },
+  { path: "/mix-purchase/edit-mixpur", component: <MixPurchaseEdit /> },
+  { path: "/Mix_Pur/MixPurPrintInv", component: <MixPurchasePrintView /> },
+  { path: "/Mix_Pur/MixPurCurStatusPrintInv", component: <MixPurchaseCurStatus /> },
 
   // Mix Purchase Return Report (MVC: /mixreport/GeneralPur-Return-report)
   { path: "/mixreport/GeneralPur-Return-report", component: <MixPurRtnReport /> },
