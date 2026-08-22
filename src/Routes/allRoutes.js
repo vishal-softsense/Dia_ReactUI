@@ -401,6 +401,10 @@ import SolitairePurchaseCurStatus from "../pages/Solitaires/Solitaires Transacti
 import SolitairePurchaseReturnList from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnList";
 import SolitairePurchaseReturnAdd from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnAdd";
 import SolitairePurchaseReturnEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePurchaseReturn/SolitairePurchaseReturnEdit";
+import SolitaireConsignmentInList from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInList";
+import SolitaireConsignmentInAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInAdd";
+import SolitaireConsignmentInEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInEdit";
+import SolitaireConsignmentInPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInPrintView";
 import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/SolitaireKapanSummaryReport";
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
@@ -645,6 +649,12 @@ const authProtectedRoutes = [
   { path: "/purchasereturn/purchasereturn-list", component: <SolitairePurchaseReturnList /> },
   { path: "/purchasereturn/add-purchasereturn", component: <SolitairePurchaseReturnAdd /> },
   { path: "/purchasereturn/edit-purchasereturn", component: <SolitairePurchaseReturnEdit /> },
+
+  // Solitaire Consignment In entry (MVC: /consignment/*)
+  { path: "/consignment/consignment-list", component: <SolitaireConsignmentInList /> },
+  { path: "/consignment/add-consignment", component: <SolitaireConsignmentInAdd /> },
+  { path: "/consignment/edit-consignment", component: <SolitaireConsignmentInEdit /> },
+  { path: "/consignment/printinvview", component: <SolitaireConsignmentInPrintView /> },
 
   { path: "/report/FastMoving-report", component: <SolitaireFastMovingReport /> },
   { path: "/report/kapan-summary-report", component: <SolitaireKapanSummaryReport /> },

@@ -518,3 +518,15 @@ div[class*="-input"] input {
   border-right: 1px solid rgba(255, 255, 255, 0.14);
 }
 
+/* Custom styling for readonly input fields to stand out in both light and dark themes */
+.custom-readonly-input {
+  background-color: #eff2f7 !important;
+  color: #495057 !important;
+}
+
+[data-bs-theme="dark"] .custom-readonly-input,
+[data-layout-mode="dark"] .custom-readonly-input {
+  background-color: #32383e !important;
+  color: #def2ff !important;
+}
+

@@ -242,10 +242,10 @@ const SolitairePurchaseList = () => {
               <button
                 type="button"
                 className="btn btn-soft-primary btn-sm p-1"
-                title={t("View")}
+                title={t("Print")}
                 onClick={() => navigate(`/purchase/printinvview?InvNo=${encodeURIComponent(inv)}`)}
               >
-                <i className="ri-eye-line" />
+                <i className="ri-printer-line" />
               </button>
               <button
                 type="button"

@@ -500,6 +500,16 @@ export const SOLITAIRE_PURCHASE_RETURN_LOT_DETAIL = "/api/SolitairePurchaseRetur
 export const SOLITAIRE_PURCHASE_RETURN_ADD_SINGLE_LOT = "/api/SolitairePurchaseReturn/add-single-lot";
 export const SOLITAIRE_PURCHASE_RETURN_GET_ITEM_FROM_LIST = "/api/SolitairePurchaseReturn/get-item-from-list";
 
+export const SOLITAIRE_CONSIGNMENT_IN_LIST = "/api/SolitaireConsignmentIn/list";
+export const SOLITAIRE_CONSIGNMENT_IN_PAGE_DATA = "/api/SolitaireConsignmentIn/pagedata";
+export const SOLITAIRE_CONSIGNMENT_IN_DETAIL = "/api/SolitaireConsignmentIn/detail"; // append /{id}
+export const SOLITAIRE_CONSIGNMENT_IN_ADD = "/api/SolitaireConsignmentIn/add";
+export const SOLITAIRE_CONSIGNMENT_IN_EDIT = "/api/SolitaireConsignmentIn/edit";
+export const SOLITAIRE_CONSIGNMENT_IN_DELETE = "/api/SolitaireConsignmentIn/delete";
+export const SOLITAIRE_CONSIGNMENT_IN_LOT_DETAIL = "/api/SolitaireConsignmentIn/lot-detail";
+export const SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT = "/api/SolitaireConsignmentIn/add-single-lot";
+export const SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW = "/api/SolitaireConsignmentIn/print-view"; // append /{invNo}
+
 
 // Jew Stock Master (Mounting)
 export const GET_MOUNTING_STOCK_LIST = "/api/JewelleryStockMaster/mounting-stock";

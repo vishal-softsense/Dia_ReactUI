@@ -290,7 +290,12 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       }),
       valueContainer: (p) => ({ ...p, padding: "0 8px", height: "31px" }),
       indicatorsContainer: (p) => ({ ...p, height: "31px" }),
-      input: (p) => ({ ...p, margin: 0, padding: 0 }),
+      input: (p) => ({
+        ...p,
+        margin: 0,
+        padding: 0,
+        color: "var(--vz-body-color, #495057)"
+      }),
       menu: (p) => ({
         ...p,
         backgroundColor: "var(--vz-secondary-bg, #fff)",
@@ -381,10 +386,14 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
         const res = await getSolitaireLots(lotInput);
         const raw = Array.isArray(res) ? res : res?.data || res?.Data || [];
         setLotOpts(
-          raw.map((item) => ({
-            value: item.name || item.Name || item.id || item.ID || "",
-            label: (item.text || item.TextName || item.name || item.Name || item.id || item.ID || "").toString().toUpperCase()
-          }))
+          raw.map((item) => {
+            const val = item.name || item.Name || item.id || item.ID || item.textName || item.TextName || "";
+            const lbl = item.textName || item.TextName || item.text || item.Name || item.name || item.id || item.ID || "";
+            return {
+              value: String(val),
+              label: String(lbl).toUpperCase()
+            };
+          })
         );
       } catch {
         /* ignore */
@@ -914,7 +923,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Invoice Number")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={header.invNo} readOnly={isEdit || readOnly} onChange={(e) => setHeaderField("invNo", e.target.value)} />
+                          <Input className="form-control-sm custom-readonly-input" style={fieldH} value={header.invNo} readOnly={true} onChange={(e) => setHeaderField("invNo", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
@@ -952,7 +961,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -964,7 +973,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Due Date")}</Label>
-                          <Input type="date" className="form-control-sm" style={fieldH} value={header.dueDate} onChange={(e) => setHeaderField("dueDate", e.target.value)} />
+                          <Input type="date" className="form-control-sm custom-readonly-input" style={fieldH} value={header.dueDate} readOnly={true} onChange={(e) => setHeaderField("dueDate", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
@@ -989,7 +998,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={3} sm={6}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Comm Agent")}</Label>
-                          <Select styles={customStyles} options={commOpts} value={commission} onChange={setCommission} onInputChange={(v, meta) => { if (meta.action === "input-change") setCommInput(v); }} isLoading={commLoading} placeholder={t("Search...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={commOpts} value={commission} onChange={setCommission} onInputChange={(v, meta) => { if (meta.action === "input-change") setCommInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setCommInput(""); setCommOpts([]); } }} isLoading={commLoading} placeholder={t("Search...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1007,7 +1016,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={3} sm={6}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Broker")}</Label>
-                          <Select styles={customStyles} options={brokerOpts} value={broker} onChange={setBroker} onInputChange={(v, meta) => { if (meta.action === "input-change") setBrokerInput(v); }} isLoading={brokerLoading} placeholder={t("Search...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={brokerOpts} value={broker} onChange={setBroker} onInputChange={(v, meta) => { if (meta.action === "input-change") setBrokerInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setBrokerInput(""); setBrokerOpts([]); } }} isLoading={brokerLoading} placeholder={t("Search...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1056,7 +1065,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                             onEntryChange("lotNo", o?.value || "");
                             if (o?.value) fillFromLot(o.value);
                           }}
-                          onInputChange={(v, meta) => { if (meta.action === "input-change") setLotInput(v); }}
+                          onInputChange={(v, meta) => { if (meta.action === "input-change") setLotInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setLotInput(""); setLotOpts([]); } }}
                           isLoading={lotLoading}
                           placeholder={t("Lot...")}
                           isClearable

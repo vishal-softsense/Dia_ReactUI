@@ -610,7 +610,8 @@ export const getSolitaireItemMasters = (filter) => api.get(url.GET_SOLITAIRE_ITE
 // Solitaire Purchase entry
 export const getSolitairePurchaseList = () => api.get(url.SOLITAIRE_PURCHASE_LIST);
 export const getSolitairePurchasePageData = () => api.get(url.SOLITAIRE_PURCHASE_PAGE_DATA);
-export const getSolitairePurchaseDetail = (id) => api.get(`${url.SOLITAIRE_PURCHASE_DETAIL}/${id}`);
+export const getSolitairePurchaseDetail = (id, mode) =>
+  api.get(`${url.SOLITAIRE_PURCHASE_DETAIL}/${id}${mode ? `?mode=${encodeURIComponent(mode)}` : ""}`);
 export const addSolitairePurchase = (data) => api.create(url.SOLITAIRE_PURCHASE_ADD, data);
 export const editSolitairePurchase = (data) => api.create(url.SOLITAIRE_PURCHASE_EDIT, data);
 export const deleteSolitairePurchase = (id) => api.create(url.SOLITAIRE_PURCHASE_DELETE, { id });
@@ -629,6 +630,17 @@ export const deleteSolitairePurchaseReturn = (id) => api.create(url.SOLITAIRE_PU
 export const getSolitairePurchaseReturnLotDetail = (lotNo) => api.create(url.SOLITAIRE_PURCHASE_RETURN_LOT_DETAIL, { lotNo });
 export const addSolitairePurchaseReturnSingleLot = (payload) => api.create(url.SOLITAIRE_PURCHASE_RETURN_ADD_SINGLE_LOT, payload);
 export const getSolitairePurchaseReturnItemFromList = (payload) => api.create(url.SOLITAIRE_PURCHASE_RETURN_GET_ITEM_FROM_LIST, payload);
+
+export const getSolitaireConsignmentInList = () => api.get(url.SOLITAIRE_CONSIGNMENT_IN_LIST);
+export const getSolitaireConsignmentInPageData = () => api.get(url.SOLITAIRE_CONSIGNMENT_IN_PAGE_DATA);
+export const getSolitaireConsignmentInDetail = (id) => api.get(`${url.SOLITAIRE_CONSIGNMENT_IN_DETAIL}/${id}`);
+export const addSolitaireConsignmentIn = (data) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_ADD, data);
+export const editSolitaireConsignmentIn = (data) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_EDIT, data);
+export const deleteSolitaireConsignmentIn = (id) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_DELETE, { id });
+export const getSolitaireConsignmentInLotDetail = (lotNo) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_LOT_DETAIL, { lotNo });
+export const addSolitaireConsignmentInSingleLot = (payload) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT, payload);
+export const getSolitaireConsignmentInPrintView = (invNo) => api.get(`${url.SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW}/${invNo}`);
+
 export const getSolitaireItemMasterDropdowns = () => api.get(url.GET_SOLITAIRE_ITEM_MASTER_DROPDOWNS);
 export const getSolitaireItemMasterDetail = id => api.get(`${url.GET_SOLITAIRE_ITEM_MASTER_DETAIL}/${id}`);
 export const checkSolitaireLotNoExists = lotNo => api.get(`${url.CHECK_SOLITAIRE_LOT_NO_EXISTS}?lotNo=${lotNo}`);
