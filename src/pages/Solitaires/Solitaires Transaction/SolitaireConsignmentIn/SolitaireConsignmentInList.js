@@ -188,10 +188,30 @@ const SolitaireConsignmentInList = () => {
     if (!result?.success) toast.error(t("Failed to generate Excel file."));
   };
 
+  const memoOpenBadgeStyle = {
+    color: "#FF5B5C",
+    backgroundColor: "#FFDEDE",
+    padding: "0.34rem 1.11rem",
+    borderRadius: "2rem",
+    fontSize: "0.8rem",
+    fontWeight: 400,
+    display: "inline-block"
+  };
+
+  const memoCloseBadgeStyle = {
+    color: "#39DA8A",
+    backgroundColor: "#D2FFE8",
+    padding: "0.34rem 1.11rem",
+    borderRadius: "2rem",
+    fontSize: "0.8rem",
+    fontWeight: 400,
+    display: "inline-block"
+  };
+
   const statusBadge = (status) => {
     const s = String(status || "").trim().toUpperCase();
-    if (s === "OPEN") return <span className="badge bg-success-subtle text-success">{t("OPEN")}</span>;
-    if (s === "CLOSE" || s === "CLOSED") return <span className="badge bg-danger-subtle text-danger">{t("CLOSE")}</span>;
+    if (s === "OPEN") return <span style={memoOpenBadgeStyle}>{t("OPEN")}</span>;
+    if (s === "CLOSE" || s === "CLOSED") return <span style={memoCloseBadgeStyle}>{t("CLOSE")}</span>;
     if (s === "PAID") return <span className="badge bg-success-subtle text-success">{t("Fully Paid")}</span>;
     if (s === "UNPAID") return <span className="badge bg-danger-subtle text-danger">{t("UNPAID")}</span>;
     if (!s) return <span className="text-muted">-</span>;
@@ -202,16 +222,11 @@ const SolitaireConsignmentInList = () => {
     const inv = getInvNo(row);
     const code = getVal(row, "code");
     const s = String(getVal(row, "Status") || "").trim().toUpperCase();
-    const cls =
-      s === "OPEN" || s === "PAID"
-        ? "bg-success-subtle text-success"
-        : s === "CLOSE" || s === "CLOSED" || s === "UNPAID"
-          ? "bg-danger-subtle text-danger"
-          : "bg-warning-subtle text-warning";
+    const style = s === "OPEN" ? memoOpenBadgeStyle : memoCloseBadgeStyle;
     return (
       <Link
         to={`/consignment/edit-consignment?Id=${code}&Mode=view`}
-        className={`badge rounded-pill ${cls} text-decoration-none`}
+        style={{ ...style, textDecoration: "none" }}
         title={t("View")}
       >
         {inv || "-"}

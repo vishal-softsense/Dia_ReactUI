@@ -655,6 +655,20 @@ export const getSolitaireConsignmentInLotDetail = (lotNo) => api.create(url.SOLI
 export const addSolitaireConsignmentInSingleLot = (payload) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT, payload);
 export const getSolitaireConsignmentInPrintView = (invNo) => api.get(`${url.SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW}/${invNo}`);
 
+export const getSolitaireMemoOutList = () => api.get(url.SOLITAIRE_MEMO_OUT_LIST);
+export const getSolitaireMemoOutPageData = () => api.get(url.SOLITAIRE_MEMO_OUT_PAGE_DATA);
+export const getSolitaireMemoOutDetail = (id) => api.get(`${url.SOLITAIRE_MEMO_OUT_DETAIL}/${id}`);
+export const addSolitaireMemoOut = (data) => api.create(url.SOLITAIRE_MEMO_OUT_ADD, data);
+export const editSolitaireMemoOut = (data) => api.create(url.SOLITAIRE_MEMO_OUT_EDIT, data);
+export const deleteSolitaireMemoOut = (id) => api.create(url.SOLITAIRE_MEMO_OUT_DELETE, { id });
+export const getSolitaireMemoOutLotDetail = (payload) => api.create(url.SOLITAIRE_MEMO_OUT_LOT_DETAIL, payload);
+export const addSolitaireMemoOutSingleLot = (payload) => api.create(url.SOLITAIRE_MEMO_OUT_ADD_SINGLE_LOT, payload);
+export const getSolitaireMemoOutItemFromList = (payload) => api.create(url.SOLITAIRE_MEMO_OUT_GET_ITEM_FROM_LIST, payload);
+export const refreshSolitaireMemoOutBack = (payload) => api.create(url.SOLITAIRE_MEMO_OUT_REFRESH_BACK, payload);
+export const getSolitaireMemoOutPrintView = (invNo) => api.get(`${url.SOLITAIRE_MEMO_OUT_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getSolitaireMemoOutShipVia = (searchby) =>
+  api.get(`${url.SOLITAIRE_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
+
 
 export const getJewelleryPurchaseList = () => api.get(url.JEWELLERY_PURCHASE_LIST);
 export const getJewelleryPurchasePageData = () => api.get(url.JEWELLERY_PURCHASE_PAGE_DATA);

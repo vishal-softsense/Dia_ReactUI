@@ -341,6 +341,7 @@ import ShadeMasterList from "../pages/Masters/ParameterMaster/GradingMaster/Shad
 // Settings Master
 import SettingMasterList from "../pages/Masters/SettingMaster/SettingMasterList";
 import PrintFormatList from "../pages/Masters/SettingMaster/PrintFormatList";
+import PrintFormatPreview from "../pages/Masters/SettingMaster/PrintFormatPreview";
 import ColumnAbbreviationsList from "../pages/Masters/SettingMaster/ColumnAbbreviationsList";
 import Sync from "../pages/Masters/SyncMaster/Sync";
 
@@ -405,6 +406,10 @@ import SolitaireConsignmentInList from "../pages/Solitaires/Solitaires Transacti
 import SolitaireConsignmentInAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInAdd";
 import SolitaireConsignmentInEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInEdit";
 import SolitaireConsignmentInPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInPrintView";
+import SolitaireMemoOutList from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutList";
+import SolitaireMemoOutAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutAdd";
+import SolitaireMemoOutEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutEdit";
+import SolitaireMemoOutPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutPrintView";
 import MixPurchaseList from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseList";
 import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseAdd";
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
@@ -579,6 +584,7 @@ const authProtectedRoutes = [
   { path: "/company-settings", component: <SettingMasterList /> },
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
+  { path: "/PrintFormat/preview", component: <PrintFormatPreview /> },
   { path: "/ColumnAbbreviations/ColumnAbbreviations", component: <ColumnAbbreviationsList /> },
   { path: "/masters/sync-master", component: <Sync /> },
 
@@ -676,6 +682,12 @@ const authProtectedRoutes = [
   { path: "/consignment/add-consignment", component: <SolitaireConsignmentInAdd /> },
   { path: "/consignment/edit-consignment", component: <SolitaireConsignmentInEdit /> },
   { path: "/consignment/printinvview", component: <SolitaireConsignmentInPrintView /> },
+
+  // Solitaire Memo Out entry (MVC: /memo/*)
+  { path: "/memo/memo-list", component: <SolitaireMemoOutList /> },
+  { path: "/memo/add-memo", component: <SolitaireMemoOutAdd /> },
+  { path: "/memo/edit-memo", component: <SolitaireMemoOutEdit /> },
+  { path: "/memo/printinvview", component: <SolitaireMemoOutPrintView /> },
 
   // Jewellery Purchase entry (MVC: /jewpurchase/*)
   { path: "/jewpurchase/jew-purchase-list", component: <JewPurchaseList /> },

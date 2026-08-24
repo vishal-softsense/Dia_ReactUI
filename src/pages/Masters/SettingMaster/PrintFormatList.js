@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Input, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
-import { getPrintFormatData, updatePrintFormat, getInvoiceFormatSetting, printPreview } from "../../../helpers/fakebackend_helper";
+import { getPrintFormatData, updatePrintFormat, getInvoiceFormatSetting } from "../../../helpers/fakebackend_helper";
+import { refreshReportCompanySettings } from "../../../helpers/reportCompanyDefaults";
 import { toast, ToastContainer } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +18,6 @@ const PrintFormatList = () => {
     const [selectedPrintSetting, setSelectedPrintSetting] = useState(null);
     const [printConditions, setPrintConditions] = useState("");
     const [selectedPrintFormat, setSelectedPrintFormat] = useState("");
-    const [previewLoading, setPreviewLoading] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -81,6 +81,11 @@ const PrintFormatList = () => {
                 toast.success(response.data || response.Data || "Print format updated successfully");
                 setPrintModal(false);
                 loadData();
+                try {
+                    await refreshReportCompanySettings();
+                } catch {
+                    /* cache refresh is best-effort; next print still force-loads */
+                }
             } else {
                 toast.error(response.data || response.Data || "Failed to save print format");
             }
@@ -89,23 +94,14 @@ const PrintFormatList = () => {
         }
     };
 
-    const handlePrintPreview = async () => {
-        setPreviewLoading(true);
-        try {
-            const payload = {
-                Name: selectedPrintSetting.Name,
-                Value: selectedPrintFormat
-            };
-            const response = await printPreview(payload);
-            if ((response.success || response.Success) && response.path) {
-                window.open(response.path, "_blank");
-            } else {
-                toast.error("Failed to generate preview path");
-            }
-        } catch (error) {
-            toast.error("Error generating print preview");
+    const handlePrintPreview = () => {
+        const name = selectedPrintSetting?.Name || selectedPrintSetting?.name || "";
+        if (!name || !selectedPrintFormat) {
+            toast.error("Select a print format first");
+            return;
         }
-        setPreviewLoading(false);
+        const qs = `setting=${encodeURIComponent(name)}&format=${encodeURIComponent(selectedPrintFormat)}`;
+        window.open(`/PrintFormat/preview?${qs}`, "_blank");
     };
 
     const filteredPrintFormats = useMemo(() => {
@@ -261,9 +257,9 @@ const PrintFormatList = () => {
                                     <Button 
                                         color="info" 
                                         onClick={handlePrintPreview} 
-                                        disabled={previewLoading || !selectedPrintFormat}
+                                        disabled={!selectedPrintFormat}
                                     >
-                                        {previewLoading ? <Spinner size="sm" /> : <i className="ri-eye-line align-middle me-1"></i>} Preview Print
+                                        {<i className="ri-eye-line align-middle me-1"></i>} Preview Print
                                     </Button>
                                 )}
                             </div>

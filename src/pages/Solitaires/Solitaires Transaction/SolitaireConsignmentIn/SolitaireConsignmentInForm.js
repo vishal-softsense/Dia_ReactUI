@@ -990,19 +990,23 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     if (lines.length < 2) return [];
     const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
     const idx = (names) => headers.findIndex((h) => names.includes(h));
-    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #"]);
+    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #", "stoneid"]);
     const iName = idx(["itemname", "item name", "description", "item"]);
-    const iWt = idx(["weight", "carat", "cts", "wt"]);
+    const iWt = idx(["weight", "carat", "cts", "wt", "carats"]);
     const iPcs = idx(["pcs", "qty", "quantity"]);
     const iMrp = idx(["mrp"]);
     const iBack = idx(["back", "purchaseback", "discount"]);
-    const iRate = idx(["rate", "purchaserate", "price"]);
+    const iRate = idx(["rate", "purchaserate", "price", "purprice", "pur price"]);
     const iL1 = idx(["less1"]);
     const iL2 = idx(["less2"]);
     const iL3 = idx(["less3"]);
     const iShape = idx(["shape"]);
     const iColor = idx(["color"]);
     const iClarity = idx(["clarity"]);
+    const iCut = idx(["cut"]);
+    const iPolish = idx(["polish"]);
+    const iSymmetry = idx(["symmetry"]);
+    const iFl = idx(["fl", "fluorescence"]);
 
     const cell = (cols, i) => (i >= 0 ? (cols[i] || "").replace(/^"|"$/g, "").trim() : "");
 
@@ -1013,9 +1017,12 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       const less1 = toNum(cell(cols, iL1));
       const less2 = toNum(cell(cols, iL2));
       const less3 = toNum(cell(cols, iL3));
+      const shape = cell(cols, iShape);
+      const color = cell(cols, iColor);
+      const clarity = cell(cols, iClarity);
       return {
         lotNo: cell(cols, iLot),
-        itemName: cell(cols, iName),
+        itemName: cell(cols, iName) || `${shape} ${color} ${clarity}`.trim(),
         weight,
         pcs: toNum(cell(cols, iPcs), 1),
         mrp: toNum(cell(cols, iMrp)),
@@ -1025,13 +1032,14 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
         less2,
         less3,
         amount: calcItemAmount(weight, rate, less1, less2, less3),
-        shape: cell(cols, iShape),
-        color: cell(cols, iColor),
-        clarity: cell(cols, iClarity),
+        shape,
+        color,
+        clarity,
         size: "",
-        polish: "",
-        symmetry: "",
-        fl: "",
+        polish: cell(cols, iPolish),
+        symmetry: cell(cols, iSymmetry),
+        fl: cell(cols, iFl),
+        cut: cell(cols, iCut),
         lab: "",
         certificateNo: "",
         memoTransCode: 0,
@@ -1075,16 +1083,12 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   };
 
   const downloadTemplate = () => {
-    const csv =
-      "LotNo,ItemName,Weight,Pcs,MRP,Back,Rate,Less1,Less2,Less3,Shape,Color,Clarity\n" +
-      "SAMPLE-001,ROUND D VS1,1.000,1,5000,-10,4500,0,0,0,ROUND,D,VS1\n";
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "SolitaireConsignmentInTemplate.csv";
+    a.href = (process.env.PUBLIC_URL || "") + "/excelfolder/DiaSense.xlsx";
+    a.download = "DiaSense.xlsx";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
   };
 
   const buildPayload = () => {

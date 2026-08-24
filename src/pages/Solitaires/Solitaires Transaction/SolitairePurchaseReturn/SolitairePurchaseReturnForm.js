@@ -11,6 +11,8 @@ import {
   FormGroup,
   Input,
   Label,
+  Modal,
+  ModalBody,
   Row,
   Table
 } from "reactstrap";
@@ -201,6 +203,71 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
+const WarningModal = ({ open, title, message, confirmText, onClose }) => {
+  return (
+    <Modal isOpen={open} toggle={onClose} centered={true} contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
+      <ModalBody className="py-4 px-5 text-center">
+        <div className="mt-2">
+          <div className="d-flex justify-content-center align-items-center mb-4">
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                border: "4px solid #f27474",
+              }}
+            >
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 10L30 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M30 10L10 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>
+            {title || "Warning!"}
+          </h3>
+          <p className="text-muted mb-4 fs-14" style={{ lineHeight: "1.6" }}>
+            {message}
+          </p>
+          <div className="d-flex justify-content-center">
+            <button
+              type="button"
+              className="btn px-4 py-2 fw-semibold text-white"
+              style={{
+                backgroundColor: "#13d17c",
+                borderColor: "#13d17c",
+                fontSize: "15px",
+                borderRadius: "5px",
+                minWidth: "90px",
+              }}
+              onClick={onClose}
+            >
+              {confirmText || "OK"}
+            </button>
+          </div>
+        </div>
+      </ModalBody>
+    </Modal>
+  );
+};
+
 const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -243,6 +310,9 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
   const [items, setItems] = useState([]);
   const [entry, setEntry] = useState(emptyItem());
   const [bulkLotNos, setBulkLotNos] = useState("");
+  const [warningModal, setWarningModal] = useState({ open: false, message: "" });
+  const showWarning = useCallback((message) => setWarningModal({ open: true, message }), []);
+  const closeWarning = useCallback(() => setWarningModal({ open: false, message: "" }), []);
 
   const [masterSymbol, setMasterSymbol] = useState("INR");
   const [stockSymbol, setStockSymbol] = useState("USD");
@@ -598,9 +668,9 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
     const back = toNum(entry.back);
     const mrp = toNum(entry.mrp);
 
-    if (!lotNo) return toast.warning(t("Lot Number is required."));
-    if (weight <= 0) return toast.warning(t("Carat or Rate can not be 0"));
-    if (mrp === 0 && rate === 0) return toast.warning(t("Carat or Rate can not be 0"));
+    if (!lotNo) return showWarning(t("Lot Number is required."));
+    if (weight <= 0) return showWarning(t("Carat or Rate can not be 0"));
+    if (mrp === 0 && rate === 0) return showWarning(t("Carat or Rate can not be 0"));
 
     let purchaseBack = back;
     if (rate !== 0 && mrp !== 0) purchaseBack = (rate * 100) / mrp - 100;
@@ -1258,6 +1328,13 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
             </Col>
           </Row>
         </Container>
+        <WarningModal
+          open={warningModal.open}
+          title={t("Warning!")}
+          message={warningModal.message}
+          confirmText={t("OK")}
+          onClose={closeWarning}
+        />
         <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>

@@ -1,0 +1,116 @@
+const sampleItems = [
+  {
+    Lotno: "S-1001",
+    lotNo: "S-1001",
+    ItemName: "ROUND 1.02 D VS1 EX EX EX NONE GIA",
+    Description: "ROUND 1.02 D VS1",
+    Pcs: 1,
+    Qty: 1,
+    Carats: 1.02,
+    weight: 1.02,
+    Rate: 5200,
+    Amount: 5304,
+    MasterCurrencyAmount: 5304,
+    ShapeId: "RBC",
+    ColorId: "D",
+    ClarityId: "VS1",
+    PropId: "EX",
+    PolishId: "EX",
+    SymId: "EX",
+    FLId: "NON",
+    CertId: "GIA",
+    CertificateNo: "1234567890",
+    Back: "2.00",
+    Rap: 5400,
+    MRP: 5400,
+    PMRPDown: 2.00,
+    MemoNo: "M-501",
+    ReturnCarats: 0,
+    IssueCarats: 0
+  },
+  {
+    Lotno: "S-1002",
+    lotNo: "S-1002",
+    ItemName: "PRINCESS 0.71 F VVS2 VG EX VG FNT GIA",
+    Description: "PRINCESS 0.71 F VVS2",
+    Pcs: 1,
+    Qty: 1,
+    Carats: 0.71,
+    weight: 0.71,
+    Rate: 3100,
+    Amount: 2201,
+    MasterCurrencyAmount: 2201,
+    ShapeId: "PR",
+    ColorId: "F",
+    ClarityId: "VVS2",
+    PropId: "VG",
+    PolishId: "EX",
+    SymId: "VG",
+    FLId: "FNT",
+    CertId: "GIA",
+    CertificateNo: "2345678901",
+    Back: "0.00",
+    ReturnCarats: 0,
+    IssueCarats: 0
+  },
+  {
+    Lotno: "S-1003",
+    lotNo: "S-1003",
+    ItemName: "OVAL 1.51 G VS2 EX EX EX NONE IGI",
+    Description: "OVAL 1.51 G VS2",
+    Pcs: 1,
+    Qty: 1,
+    Carats: 1.51,
+    weight: 1.51,
+    Rate: 4100,
+    Amount: 6191,
+    MasterCurrencyAmount: 6191,
+    ShapeId: "OV",
+    ColorId: "G",
+    ClarityId: "VS2",
+    PropId: "EX",
+    PolishId: "EX",
+    SymId: "EX",
+    FLId: "NON",
+    CertId: "IGI",
+    CertificateNo: "3456789012",
+    Back: "1.50",
+    ReturnCarats: 0,
+    IssueCarats: 0
+  }
+];
+
+export function getPrintFormatSample(moduleKey) {
+  const header = {
+    InvNo: "SAMPLE-001",
+    invNo: "SAMPLE-001",
+    BillNo: "B-101",
+    TrnDate: new Date().toISOString(),
+    trnDate: new Date().toISOString(),
+    DueDays: 30,
+    PartyName: "Sample Buyer LLC",
+    partyName: "Sample Buyer LLC",
+    BrokerName: "DIRECT",
+    AddressLine1: "1200 Diamond Plaza",
+    AddressLine2: "Suite 400",
+    AddressLine3: "New York, NY 10001",
+    ShipVia: "FedEx",
+    Tracking: "TRACK-SAMPLE",
+    SalesPersons: "Sample Sales",
+    Attendee: "John Sample",
+    PlusMinusAmount: 0,
+    BaseRate: 1,
+    FinalAmount: 13696,
+    Information: "Sample goods delivered for examination and inspection only. This is a preview using sample records."
+  };
+
+  const items = sampleItems;
+  const totals = {
+    qty: 3,
+    wt: 3.24,
+    amount: 13696,
+    masterAmount: 13696
+  };
+
+  return { data: header, items, totals, moduleKey };
+}

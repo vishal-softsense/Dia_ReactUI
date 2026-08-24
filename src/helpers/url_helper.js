@@ -524,6 +524,19 @@ export const SOLITAIRE_CONSIGNMENT_IN_LOT_DETAIL = "/api/SolitaireConsignmentIn/
 export const SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT = "/api/SolitaireConsignmentIn/add-single-lot";
 export const SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW = "/api/SolitaireConsignmentIn/print-view"; // append /{invNo}
 
+export const SOLITAIRE_MEMO_OUT_LIST = "/api/SolitaireMemoOut/list";
+export const SOLITAIRE_MEMO_OUT_PAGE_DATA = "/api/SolitaireMemoOut/pagedata";
+export const SOLITAIRE_MEMO_OUT_DETAIL = "/api/SolitaireMemoOut/detail"; // append /{id}
+export const SOLITAIRE_MEMO_OUT_ADD = "/api/SolitaireMemoOut/add";
+export const SOLITAIRE_MEMO_OUT_EDIT = "/api/SolitaireMemoOut/edit";
+export const SOLITAIRE_MEMO_OUT_DELETE = "/api/SolitaireMemoOut/delete";
+export const SOLITAIRE_MEMO_OUT_LOT_DETAIL = "/api/SolitaireMemoOut/lot-detail";
+export const SOLITAIRE_MEMO_OUT_ADD_SINGLE_LOT = "/api/SolitaireMemoOut/add-single-lot";
+export const SOLITAIRE_MEMO_OUT_GET_ITEM_FROM_LIST = "/api/SolitaireMemoOut/get-item-from-list";
+export const SOLITAIRE_MEMO_OUT_REFRESH_BACK = "/api/SolitaireMemoOut/refresh-back";
+export const SOLITAIRE_MEMO_OUT_PRINT_VIEW = "/api/SolitaireMemoOut/print-view"; // append /{invNo}
+export const SOLITAIRE_MEMO_OUT_SHIP_VIA = "/api/SolitaireMemoOut/ship-via"; // ?searchby=
+
 // Jewellery Purchase entry (MVC: /jewpurchase/*)
 export const JEWELLERY_PURCHASE_LIST = "/api/JewelleryPurchase/list";
 export const JEWELLERY_PURCHASE_PAGE_DATA = "/api/JewelleryPurchase/pagedata";
