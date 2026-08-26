@@ -164,6 +164,12 @@ $pricing-aside-bg: $white;
         }
     }
 
+    .pricing-page-gst {
+        font-size: 13px;
+        color: $dark;
+        margin-top: -0.5rem;
+    }
+
     .pricing-page-toggle {
         @media (max-width: 767.98px) {
             width: 100%;
@@ -337,6 +343,14 @@ $pricing-aside-bg: $white;
         font-size: 11px;
         color: $pricing-text-muted;
         margin-top: 0.25rem;
+    }
+
+    &__gst-rate {
+        font-size: 12px;
+        font-weight: 700;
+        color: $dark;
+        margin-top: 0.15rem;
+        letter-spacing: 0.02em;
     }
 
     &__cta {

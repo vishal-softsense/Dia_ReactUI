@@ -97,6 +97,56 @@ const getStrVal = (row, ...keys) => {
   return v == null ? "" : String(v);
 };
 
+const extractLotList = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (Array.isArray(res.Data)) return res.Data;
+  if (Array.isArray(res.data?.data)) return res.data.data;
+  if (Array.isArray(res.data?.Data)) return res.data.Data;
+  if (Array.isArray(res.Data?.data)) return res.Data.data;
+  if (Array.isArray(res.Data?.Data)) return res.Data.Data;
+  if (Array.isArray(res.data?.$values)) return res.data.$values;
+  if (Array.isArray(res.Data?.$values)) return res.Data.$values;
+  if (Array.isArray(res.$values)) return res.$values;
+  return [];
+};
+
+const mapMixLotOptions = (res) =>
+  extractLotList(res)
+    .map((item) => {
+      if (item == null) return null;
+      if (typeof item === "string" || typeof item === "number") {
+        const str = String(item).trim();
+        return str ? { value: str, label: str } : null;
+      }
+      const value = String(
+        item.name ??
+          item.Name ??
+          item.lotNo ??
+          item.LotNo ??
+          item.id ??
+          item.ID ??
+          item.value ??
+          ""
+      ).trim();
+      const label = String(
+        item.text ??
+          item.Text ??
+          item.textName ??
+          item.TextName ??
+          item.Name ??
+          item.name ??
+          item.LotNo ??
+          item.lotNo ??
+          item.label ??
+          value
+      ).trim();
+      if (!value && !label) return null;
+      return { value: value || label, label: label || value };
+    })
+    .filter(Boolean);
+
 const toNum = (v, d = 0) => {
   const n = parseFloat(v);
   return Number.isFinite(n) ? n : d;
@@ -261,7 +311,7 @@ const emptyItem = () => ({
   stoneType: "",
   rmk: "",
   memoTransCode: 0,
-  rtnCarats: 0
+  rtnCarats: "0"
 });
 
 const renderItemCell = (row, col) => {
@@ -310,6 +360,52 @@ const calcItemAmount = (weight, rate, less1, less2, less3, pcs = 1, stockType = 
   if (l2 !== 0) amount = (amount * (100 + l2)) / 100;
   if (l3 !== 0) amount = (amount * (100 + l3)) / 100;
   return Math.round(amount * 100) / 100;
+};
+
+/** Round helper for calculated entry fields (keep typed field as-entered). */
+const roundN = (n, d) => {
+  if (!Number.isFinite(n)) return "0";
+  const f = 10 ** d;
+  return String(Math.round(n * f) / f);
+};
+
+/**
+ * MVC MixPurchase.js rejection / selection sync:
+ * IssueCarats -> Selection = Issue - Rejection
+ * RejeP      -> Rejection = Issue * RejeP / 100 ; Selection = Issue - Rejection
+ * Rejection  -> RejeP = Rejection * 100 / Issue ; Selection = Issue - Rejection
+ * Selection  -> RejeP = 100 - (100 * Selection / Issue) ; Rejection = Issue * RejeP / 100
+ * (back = RejeP / PurchaseBack, rtnCarats = Rejection, weight = SelectionCarat)
+ */
+const syncRejectionFields = (next, changedKey) => {
+  const issueCarats = toNum(next.issueCarats);
+  const rejPRaw = toNum(next.back);
+  const rejectionRaw = toNum(next.rtnCarats);
+  const selectionRaw = toNum(next.weight);
+
+  let rejP = rejPRaw;
+  let rejection = rejectionRaw;
+  let selectionCarats = selectionRaw;
+
+  if (changedKey === "issueCarats") {
+    selectionCarats = issueCarats - rejectionRaw;
+  } else if (changedKey === "back") {
+    rejection = (issueCarats * rejPRaw) / 100;
+    selectionCarats = issueCarats - rejection;
+  } else if (changedKey === "rtnCarats") {
+    rejP = issueCarats !== 0 ? (rejectionRaw * 100) / issueCarats : 0;
+    selectionCarats = issueCarats - rejectionRaw;
+  } else if (changedKey === "weight") {
+    rejP = issueCarats !== 0 ? 100 - (100 * selectionRaw) / issueCarats : 0;
+    rejection = (issueCarats * rejP) / 100;
+  }
+
+  return {
+    ...next,
+    back: changedKey === "back" ? next.back : roundN(rejP, 2),
+    rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : roundN(rejection, 3),
+    weight: changedKey === "weight" ? next.weight : roundN(selectionCarats, 3)
+  };
 };
 
 const mapBasic = (list = []) =>
@@ -390,6 +486,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   const [excelFile, setExcelFile] = useState(null);
   const [consignOpen, setConsignOpen] = useState(false);
   const [consignRows, setConsignRows] = useState([]);
+  const [consignLotFilter, setConsignLotFilter] = useState("");
+  const [consignSearch, setConsignSearch] = useState("");
 
   const [masterSymbol, setMasterSymbol] = useState("INR");
   const [stockSymbol, setStockSymbol] = useState("USD");
@@ -528,7 +626,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   }, [brokerInput, searchAccounts]);
 
   useEffect(() => {
-    if (!lotInput || lotInput.trim().length < 2) {
+    if (!lotInput || lotInput.trim().length < 1) {
       setLotOpts([]);
       return;
     }
@@ -536,19 +634,14 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       setLotLoading(true);
       try {
         const res = await getMixPurchaseLots(lotInput);
-        const raw = Array.isArray(res) ? res : res?.data || res?.Data || [];
-        setLotOpts(
-          raw.map((item) => ({
-            value: item.name || item.Name || item.id || item.ID || "",
-            label: (item.text || item.TextName || item.name || item.Name || item.id || item.ID || "").toString().toUpperCase()
-          }))
-        );
-      } catch {
-        /* ignore */
+        const opts = mapMixLotOptions(res);
+        setLotOpts(opts);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLotLoading(false);
       }
-    }, 300);
+    }, 250);
     return () => clearTimeout(tmr);
   }, [lotInput]);
 
@@ -721,34 +814,51 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const recalcEntryAmount = (next) => {
-    const amount = calcItemAmount(next.weight, next.rate, next.less1, next.less2, next.less3);
+    // MVC: Amount = SelectionCarat * Rate (+ Less1/2/3); Jewellery uses Pcs * Rate
+    const amount = calcItemAmount(
+      next.weight,
+      next.rate,
+      next.less1,
+      next.less2,
+      next.less3,
+      next.pcs,
+      next.stockType
+    );
     return { ...next, amount: fmt(amount) };
   };
 
   const onEntryChange = (key, value) => {
     setEntry((prev) => {
       let next = { ...prev, [key]: value };
-      const bRate = toNum(header.baseRate, 1) || 1;
-      if (key === "mrp" || key === "back") {
-        const mrp = toNum(key === "mrp" ? value : next.mrp);
-        const back = toNum(key === "back" ? value : next.back);
-        next.rate = fmt(((100 + back) * mrp) / 100);
-        next.sRate = next.rate ? fmt(toNum(next.rate) / bRate, 2) : "";
+      // Stock currency rate for $Rate (MVC Calculate uses SBaseRate)
+      const sRateBase = toNum(header.sBaseRate, 1) || toNum(header.baseRate, 1) || 1;
+
+      // MVC: IssueCarats / RejeP / Rejection / SelectionCarat linked calculations
+      if (["issueCarats", "back", "rtnCarats", "weight"].includes(key)) {
+        next = syncRejectionFields(next, key);
       }
+
+      // MVC Calculate(): Rate -> $Rate = Rate / SBaseRate; Amount from Selection * Rate
+      // Do NOT overwrite Reje% (back) from MRP — back is Rejection %, not discount.
       if (key === "rate") {
-        const mrp = toNum(next.mrp);
         const rate = toNum(value);
-        if (mrp !== 0) next.back = fmt((rate / mrp) * 100 - 100);
-        next.sRate = rate ? fmt(rate / bRate, 2) : "";
+        next.sRate = rate ? fmt(rate / sRateBase, 2) : "";
       }
       if (key === "sRate") {
         const sRate = toNum(value);
-        const rate = sRate * bRate;
+        const rate = sRate * sRateBase;
         next.rate = rate ? fmt(rate, 2) : "";
-        const mrp = toNum(next.mrp);
-        if (mrp !== 0) next.back = fmt((rate / mrp) * 100 - 100);
       }
-      return recalcEntryAmount(next);
+
+      if (
+        ["issueCarats", "back", "rtnCarats", "weight", "rate", "sRate", "pcs", "less1", "less2", "less3"].includes(
+          key
+        )
+      ) {
+        next = recalcEntryAmount(next);
+      }
+
+      return next;
     });
   };
 
@@ -764,17 +874,10 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       const lot = Array.isArray(rows) ? rows[0] : rows;
       if (!lot) return;
 
-      const mrp = getNumVal(lot, "PurchaseMRP", "MRP");
-      const back = getNumVal(lot, "PurchaseBack", "Back");
       const weight = getNumVal(lot, "Carats", "Weight");
-      const issueCarats = getNumVal(lot, "IssueCarats") || weight;
+      const issueCarats = weight;
       const pcs = getNumVal(lot, "Pcs") || 1;
-      let rate = getNumVal(lot, "PurchaseRate", "Rate");
-      if (rate === 0 && issueCarats !== 0 && back !== 0) {
-        rate = Math.round(((100 + back) * issueCarats) / 100 * 10000) / 10000;
-      }
-      const bRate = toNum(header.baseRate, 1) || 1;
-      const sRate = rate ? fmt(rate / bRate, 2) : "";
+      const rate = 0;
 
       setEntry((prev) =>
         recalcEntryAmount({
@@ -784,10 +887,10 @@ const MixPurchaseForm = ({ mode = "add" }) => {
           weight,
           issueCarats,
           pcs,
-          mrp,
-          back,
+          mrp: getNumVal(lot, "PurchaseMRP", "MRP"),
+          back: "0",
           rate,
-          sRate,
+          sRate: "",
           less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
           less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
           less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
@@ -798,7 +901,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
           sieve: getStrVal(lot, "Sieve", "SieveId"),
           stockType: getStrVal(lot, "StockType") || "Diamond",
           memoTransCode: 0,
-          rtnCarats: 0
+          rtnCarats: "0"
         })
       );
     } catch (err) {
@@ -813,12 +916,14 @@ const MixPurchaseForm = ({ mode = "add" }) => {
     const rate = toNum(entry.rate);
     const back = toNum(entry.back);
     const mrp = toNum(entry.mrp);
+    const issueCarats = toNum(entry.issueCarats) || weight;
+    const rtnCarats = toNum(entry.rtnCarats);
 
     if (!lotNo) {
       toast.warning(t("Lot Number is required."));
       return;
     }
-    if (weight <= 0) {
+    if (weight <= 0 && String(entry.stockType || "").toLowerCase() !== "jewellery") {
       toast.warning(t("Carat is invalid."));
       return;
     }
@@ -827,9 +932,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       return;
     }
 
-    let purchaseBack = back;
-    const issueCarats = toNum(entry.issueCarats) || weight;
-    if (rate !== 0 && issueCarats !== 0) purchaseBack = (rate * 100) / issueCarats - 100;
+    // MVC AddItem: PurchaseBack = RejeP; Weight = SelectionCarat; ReturnCarats = Reje
     const amount = calcItemAmount(weight, rate, entry.less1, entry.less2, entry.less3, entry.pcs, entry.stockType);
 
     const row = {
@@ -840,7 +943,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       issueCarats: Math.round(issueCarats * 1000) / 1000,
       pcs: toNum(entry.pcs, 1),
       mrp,
-      back: Math.round(purchaseBack * 100) / 100,
+      back: Math.round(back * 100) / 100,
       rate,
       less1: toNum(entry.less1),
       less2: toNum(entry.less2),
@@ -849,7 +952,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       sieve: entry.sieve || "",
       stockType: entry.stockType || "Diamond",
       memoTransCode: toNum(entry.memoTransCode),
-      rtnCarats: toNum(entry.rtnCarats)
+      rtnCarats: Math.round(rtnCarats * 1000) / 1000
     };
 
     setItems((prev) => {
@@ -1079,43 +1182,142 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   };
 
   const viewConsignment = async () => {
-    if (!party?.value && !header.consignmentNo) {
+    // MVC ViewConsignment: PartyCode + MemoNo (Consignment No)
+    const partyCode = String(party?.value ?? "").trim();
+    const memoNo = String(header.consignmentNo ?? "").trim();
+    if (!partyCode && !memoNo) {
       toast.warning(t("Select Party or enter Consignment No."));
       return;
     }
     try {
       const res = await getMixPurchaseConsignment({
-        partyCode: party?.value || "",
-        memoNo: header.consignmentNo || ""
+        PartyCode: partyCode,
+        MemoNo: memoNo
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("No consignment Found"));
         return;
       }
-      const rows = (res.Data || res.data || []).map((r, i) => ({
-        key: i,
-        selected: false,
-        date: getVal(r, "Date"),
-        memoNo: getVal(r, "MemoNo"),
-        lotNo: getVal(r, "Lotno", "LotNo"),
-        itemName: getVal(r, "itemname", "ItemName"),
-        cts: toNum(getVal(r, "carats", "BalanceCts")),
-        purchase: toNum(getVal(r, "BalanceCts", "carats")),
-        rtn: 0,
-        balCts: toNum(getVal(r, "BalanceCts", "carats")),
-        mrp: toNum(getVal(r, "MRP")),
-        back: toNum(getVal(r, "Back")),
-        rate: toNum(getVal(r, "rate", "Rate")),
-        memoTransCode: toNum(getVal(r, "MemoTransCode")),
-        symbol: getVal(r, "Symbol")
-      }));
+      const rawList = extractLotList(res.Data ?? res.data ?? res);
+      if (!rawList.length) {
+        toast.warning(t("No consignment Found"));
+        return;
+      }
+      // MVC FillConToPurTable: Cts=carats, Purchase=carats, Rtn=RtnCts, BalCts=BalanceCts
+      const rows = rawList.map((r, i) => {
+        const cts = getNumVal(r, "carats", "Carats", "Cts", "cts", "Weight", "weight");
+        const purchase = cts;
+        const rtn = getNumVal(r, "RtnCts", "rtnCts", "Rtn", "rtn");
+        const balFromApi = getVal(r, "BalanceCts", "balanceCts", "BalCts", "balCts");
+        const balCts =
+          balFromApi !== "" && balFromApi != null
+            ? toNum(balFromApi)
+            : Math.max(0, cts - purchase);
+        const rawDate = getVal(r, "Date", "date", "TrnDate", "trnDate");
+        const formattedDate =
+          toLocalDateStr(rawDate) ||
+          (typeof rawDate === "string" ? rawDate.split("T")[0] : "") ||
+          String(rawDate || "");
+        return {
+          key: i,
+          selected: true,
+          date: formattedDate,
+          memoNo: getStrVal(r, "MemoNo", "memoNo", "InvNo", "invNo", "BillNo", "billNo"),
+          lotNo: getStrVal(r, "Lotno", "lotno", "LotNo", "lotNo"),
+          itemName: getStrVal(r, "itemname", "ItemName", "itemName"),
+          cts,
+          purchase,
+          originalPurchase: purchase,
+          rtn,
+          balCts,
+          rate: getNumVal(r, "rate", "Rate"),
+          mrp: getNumVal(r, "MRP", "mrp", "Mrp"),
+          back: getNumVal(r, "Back", "back"),
+          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode"),
+          symbol: getStrVal(r, "Symbol", "symbol", "Cur", "cur"),
+          stockType: getStrVal(r, "StockType", "stockType") || "Diamond"
+        };
+      });
+      setConsignLotFilter("");
+      setConsignSearch("");
       setConsignRows(rows);
       setConsignOpen(true);
     } catch (err) {
       console.error(err);
-      toast.error(t("Failed to load consignment."));
+      const msg =
+        typeof err === "string"
+          ? err
+          : err?.message || err?.Data || err?.data || t("Failed to load consignment.");
+      toast.error(msg);
     }
   };
+
+  /** MVC CtsCal: BalCts = Cts - Purchase (min 0); warn if Purchase > Cts */
+  const updateConsignPurchase = (idx, purchaseRaw) => {
+    setConsignRows((prev) =>
+      prev.map((x, i) => {
+        if (i !== idx) return x;
+        const purchase = toNum(purchaseRaw);
+        const total = toNum(x.cts);
+        if (purchase > total) {
+          toast.warning(t("PurCts should not be greater than TotalCts"));
+        }
+        let balance = total - purchase;
+        if (balance < 0) balance = 0;
+        return { ...x, purchase: purchaseRaw, balCts: Math.round(balance * 1000) / 1000 };
+      })
+    );
+  };
+
+  /** MVC btnCheckLot: filter/select by entered lot nos; unmatched purchase=0 */
+  const showCheckLotNo = () => {
+    const lotFilterList = consignLotFilter
+      .split(/\r?\n/)
+      .map((x) => x.trim().toUpperCase())
+      .filter(Boolean);
+
+    setConsignRows((prev) =>
+      prev.map((x) => {
+        const lotNo = String(x.lotNo || "").trim().toUpperCase();
+        if (!lotFilterList.length) {
+          return x;
+        }
+        if (lotFilterList.includes(lotNo)) {
+          const purchase = toNum(x.originalPurchase);
+          const bal = Math.max(0, toNum(x.cts) - purchase);
+          return {
+            ...x,
+            selected: true,
+            purchase,
+            balCts: Math.round(bal * 1000) / 1000
+          };
+        }
+        return {
+          ...x,
+          selected: false,
+          purchase: 0,
+          balCts: Math.round(toNum(x.cts) * 1000) / 1000
+        };
+      })
+    );
+  };
+
+  const toggleConsignSelectAll = (checked) => {
+    setConsignRows((prev) => prev.map((x) => ({ ...x, selected: checked })));
+  };
+
+  const filteredConsignRows = useMemo(() => {
+    const q = consignSearch.trim().toLowerCase();
+    if (!q) return consignRows.map((r, idx) => ({ ...r, _idx: idx }));
+    return consignRows
+      .map((r, idx) => ({ ...r, _idx: idx }))
+      .filter((r) => {
+        const hay = [r.date, r.memoNo, r.lotNo, r.itemName, r.symbol, r.stockType, r.memoTransCode]
+          .map((v) => String(v ?? "").toLowerCase())
+          .join(" ");
+        return hay.includes(q);
+      });
+  }, [consignRows, consignSearch]);
 
   const consignToPurchase = () => {
     const selected = consignRows.filter((r) => r.selected && toNum(r.purchase) > 0);
@@ -1127,29 +1329,30 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       const next = [...prev];
       selected.forEach((r) => {
         const lotNo = r.lotNo;
+        // MVC MixConsignmentToMixPurchase: IssueCarats = Weight = Purchase; Rate = PurchaseRate
         const weight = toNum(r.purchase);
         const rate = toNum(r.rate);
         const row = {
+          ...emptyItem(),
           lotNo,
           itemName: r.itemName,
           weight,
+          issueCarats: weight,
           pcs: 1,
           mrp: toNum(r.mrp),
-          back: toNum(r.back),
+          back: 0,
           rate,
+          sRate: "",
           less1: 0,
           less2: 0,
           less3: 0,
-          amount: calcItemAmount(weight, rate, 0, 0, 0),
+          amount: calcItemAmount(weight, rate, 0, 0, 0, 1, r.stockType || "Diamond"),
           shape: "",
           color: "",
           clarity: "",
           size: "",
-          polish: "",
-          symmetry: "",
-          fl: "",
-          lab: "",
-          certificateNo: "",
+          sieve: "",
+          stockType: r.stockType || "Diamond",
           memoTransCode: toNum(r.memoTransCode),
           rtnCarats: toNum(r.rtn)
         };
@@ -1898,6 +2101,15 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                               isLoading={lotLoading}
                               placeholder={t("Lot No")}
                               isClearable
+                              isSearchable
+                              filterOption={null}
+                              noOptionsMessage={({ inputValue }) =>
+                                lotLoading
+                                  ? t("Searching...")
+                                  : (inputValue || "").trim()
+                                  ? t("No matching lot numbers")
+                                  : t("Type to search lot numbers")
+                              }
                             />
                           </FormGroup>
                         </Col>
@@ -2250,130 +2462,128 @@ const MixPurchaseForm = ({ mode = "add" }) => {
         </Modal>
 
         <Modal isOpen={consignOpen} toggle={() => setConsignOpen(false)} size="xl" centered>
-          <ModalHeader toggle={() => setConsignOpen(false)}>{t("Consignment")}</ModalHeader>
+          <ModalHeader toggle={() => setConsignOpen(false)}>{t("MixConsignment To MixPurchase")}</ModalHeader>
           <ModalBody>
-            <div className="table-responsive">
-              <Table className="table table-bordered table-sm align-middle mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th />
-                    <th>{t("Date")}</th>
-                    <th>{t("MemoNo")}</th>
-                    <th>{t("LotNo")}</th>
-                    <th>{t("Item")}</th>
-                    <th className="text-end">{t("Cts")}</th>
-                    <th className="text-end">{t("Mix Purchase")}</th>
-                    <th className="text-end">{t("Return")}</th>
-                    <th className="text-end">{t("BalCts")}</th>
-                    <th className="text-end">{t("MRP")}</th>
-                    <th className="text-end">{t("Back")}</th>
-                    <th className="text-end">{t("Rate")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {consignRows.map((r, idx) => (
-                    <tr key={r.key}>
-                      <td>
-                        <Input
-                          type="checkbox"
-                          checked={!!r.selected}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, selected: checked } : x))
-                            );
-                          }}
-                        />
-                      </td>
-                      <td>{r.date}</td>
-                      <td>{r.memoNo}</td>
-                      <td>{r.lotNo}</td>
-                      <td>{r.itemName}</td>
-                      <td className="text-end">{fmt(r.cts, 3)}</td>
-                      <td>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={{ height: 32 }}
-                          value={r.purchase}
-                          onChange={(e) => {
-                            const purchase = toNum(e.target.value);
-                            setConsignRows((prev) =>
-                              prev.map((x, i) =>
-                                i === idx
-                                  ? {
-                                    ...x,
-                                    purchase,
-                                    rtn: Math.max(0, toNum(x.cts) - purchase),
-                                    balCts: Math.max(0, toNum(x.cts) - purchase)
-                                  }
-                                  : x
-                              )
-                            );
-                          }}
-                        />
-                      </td>
-                      <td className="text-end">{fmt(r.rtn, 3)}</td>
-                      <td className="text-end">{fmt(r.balCts, 3)}</td>
-                      <td>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={{ height: 32 }}
-                          value={r.mrp}
-                          onChange={(e) =>
-                            setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, mrp: e.target.value } : x))
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={{ height: 32 }}
-                          value={r.back}
-                          onChange={(e) => {
-                            const back = toNum(e.target.value);
-                            setConsignRows((prev) =>
-                              prev.map((x, i) =>
-                                i === idx
-                                  ? {
-                                    ...x,
-                                    back,
-                                    rate: fmt(((100 + back) * toNum(x.mrp)) / 100)
-                                  }
-                                  : x
-                              )
-                            );
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={{ height: 32 }}
-                          value={r.rate}
-                          onChange={(e) =>
-                            setConsignRows((prev) =>
-                              prev.map((x, i) => (i === idx ? { ...x, rate: e.target.value } : x))
-                            )
-                          }
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
+            <Row className="g-3">
+              <Col md={10}>
+                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                  <div className="text-muted small">
+                    {t("Showing")} {filteredConsignRows.length} {t("of")} {consignRows.length} {t("entries")}
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <Input
+                      type="text"
+                      className="form-control form-control-sm"
+                      style={{ maxWidth: 200 }}
+                      placeholder={t("SEARCH:")}
+                      value={consignSearch}
+                      onChange={(e) => setConsignSearch(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="table-responsive" style={{ maxHeight: "52vh", overflow: "auto" }}>
+                  <Table className="table table-bordered table-sm align-middle mb-0" style={{ minWidth: 1050 }}>
+                    <thead className="table-light align-middle text-nowrap">
+                      <tr>
+                        <th style={{ width: 36, whiteSpace: "nowrap" }}>
+                          <Input
+                            type="checkbox"
+                            checked={consignRows.length > 0 && consignRows.every((r) => r.selected)}
+                            onChange={(e) => toggleConsignSelectAll(e.target.checked)}
+                          />
+                        </th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("Date")}</th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("Consignment No")}</th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("LotNo")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Cts")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Purchase")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Return")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("BalCts")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Rate")}</th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("Cur")}</th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("MemoTrnCode")}</th>
+                        <th style={{ whiteSpace: "nowrap" }}>{t("ItemName")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="align-middle text-nowrap">
+                      {filteredConsignRows.map((r) => (
+                        <tr key={r.key}>
+                          <td>
+                            <Input
+                              type="checkbox"
+                              checked={!!r.selected}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setConsignRows((prev) =>
+                                  prev.map((x, i) => (i === r._idx ? { ...x, selected: checked } : x))
+                                );
+                              }}
+                            />
+                          </td>
+                          <td>{r.date}</td>
+                          <td>{r.memoNo}</td>
+                          <td>{r.lotNo}</td>
+                          <td className="text-end">{fmt(r.cts, 2)}</td>
+                          <td>
+                            <Input
+                              type="number"
+                              className="form-control-sm text-end"
+                              style={{ height: 28, minWidth: 75 }}
+                              value={r.purchase}
+                              onChange={(e) => updateConsignPurchase(r._idx, e.target.value)}
+                            />
+                          </td>
+                          <td className="text-end">{fmt(r.rtn, 2)}</td>
+                          <td className="text-end">{fmt(r.balCts, 3)}</td>
+                          <td>
+                            <Input
+                              type="number"
+                              className="form-control-sm text-end"
+                              style={{ height: 28, minWidth: 85 }}
+                              value={r.rate}
+                              onChange={(e) =>
+                                setConsignRows((prev) =>
+                                  prev.map((x, i) => (i === r._idx ? { ...x, rate: e.target.value } : x))
+                                )
+                              }
+                            />
+                          </td>
+                          <td>{r.symbol}</td>
+                          <td>{r.memoTransCode}</td>
+                          <td>{r.itemName}</td>
+                        </tr>
+                      ))}
+                      {!filteredConsignRows.length && (
+                        <tr>
+                          <td colSpan={12} className="text-center text-muted py-3">
+                            {t("No records")}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Col>
+              <Col md={2}>
+                <Label className="form-label fw-bold small">{t("Enter Lot No")}</Label>
+                <Input
+                  type="textarea"
+                  rows={8}
+                  placeholder={t("Enter Lot No")}
+                  value={consignLotFilter}
+                  onChange={(e) => setConsignLotFilter(e.target.value)}
+                />
+                <Button color="primary" size="sm" className="w-100 mt-2" onClick={showCheckLotNo}>
+                  {t("Show Check LotNo")}
+                </Button>
+              </Col>
+            </Row>
           </ModalBody>
-          <ModalFooter>
-            <Button color="light" onClick={() => setConsignOpen(false)}>
+          <ModalFooter className="py-2">
+            <Button color="light" size="sm" onClick={() => setConsignOpen(false)}>
               {t("Close")}
             </Button>
-            <Button color="primary" onClick={consignToPurchase}>
+            <Button color="primary" size="sm" onClick={consignToPurchase}>
               {t("MixConsignment To MixPurchase")}
             </Button>
           </ModalFooter>

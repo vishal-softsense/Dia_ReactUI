@@ -424,6 +424,11 @@ import SolitaireKapanSummaryReport from "../pages/Solitaires/Solitaires Reports/
 import SolitaireLotAssortmentReport from "../pages/Solitaires/Solitaires Reports/SolitaireLotAssortmentReport";
 import SolitaireFastMovingReport from "../pages/Solitaires/Solitaires Reports/SolitaireFastMovingReport";
 
+import MixPurchaseReturnList from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnList";
+import MixPurchaseReturnAdd from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnAdd";
+import MixPurchaseReturnEdit from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnEdit";
+import MixPurchaseReturnPrintView from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnPrintView";
+
 
 // Parcel Stock Search Report
 import ParcelStockSearchReport from "../pages/Parcel/Parcel Reports/ParcelStockSearchReport";
@@ -762,6 +767,12 @@ const authProtectedRoutes = [
   { path: "/mix-purchase/edit-mixpur", component: <MixPurchaseEdit /> },
   { path: "/Mix_Pur/MixPurPrintInv", component: <MixPurchasePrintView /> },
   { path: "/Mix_Pur/MixPurCurStatusPrintInv", component: <MixPurchaseCurStatus /> },
+
+  // Mix Purchase Return (MVC: MixPurchaseReturn/mixpurchasereturnlist)
+  { path: "/MixPurchaseReturn/mixpurchasereturnlist", component: <MixPurchaseReturnList /> },
+  { path: "/MixPurchaseReturn/add-MixPurchaseReturnView", component: <MixPurchaseReturnAdd /> },
+  { path: "/MixPurchaseReturn/edit-mixpurchasertndata", component: <MixPurchaseReturnEdit /> },
+  { path: "/MixPurchaseReturn/MixPurRtnPrintInv", component: <MixPurchaseReturnPrintView /> },
 
   // Mix Purchase Return Report (MVC: /mixreport/GeneralPur-Return-report)
   { path: "/mixreport/GeneralPur-Return-report", component: <MixPurRtnReport /> },

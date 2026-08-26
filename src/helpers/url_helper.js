@@ -504,6 +504,19 @@ export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append 
 export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
 export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
 
+// Mix Purchase Return (Parcel Transaction entry) — MVC: /MixPurchaseReturn/mixpurchasereturnlist
+export const MIX_PURCHASE_RETURN_LIST = "/api/MixPurchaseReturn/list";
+export const MIX_PURCHASE_RETURN_PAGE_DATA = "/api/MixPurchaseReturn/pagedata";
+export const MIX_PURCHASE_RETURN_DETAIL = "/api/MixPurchaseReturn/detail"; // append /{id}
+export const MIX_PURCHASE_RETURN_ADD = "/api/MixPurchaseReturn/add";
+export const MIX_PURCHASE_RETURN_EDIT = "/api/MixPurchaseReturn/edit";
+export const MIX_PURCHASE_RETURN_DELETE = "/api/MixPurchaseReturn/delete";
+export const MIX_PURCHASE_RETURN_LOT_DETAIL = "/api/MixPurchaseReturn/lot-detail";
+export const MIX_PURCHASE_RETURN_ADD_SINGLE_LOT = "/api/MixPurchaseReturn/add-single-lot";
+export const MIX_PURCHASE_RETURN_GET_ITEM_FROM_LIST = "/api/MixPurchaseReturn/get-item-from-list";
+export const MIX_PURCHASE_RETURN_PRINT_VIEW = "/api/MixPurchaseReturn/print-view"; // append /{id or invNo}
+export const MIX_PURCHASE_RETURN_LOTS = "/api/MixPurchaseReturn/lots";
+
 export const SOLITAIRE_PURCHASE_RETURN_LIST = "/api/SolitairePurchaseReturn/list";
 export const SOLITAIRE_PURCHASE_RETURN_PAGE_DATA = "/api/SolitairePurchaseReturn/pagedata";
 export const SOLITAIRE_PURCHASE_RETURN_DETAIL = "/api/SolitairePurchaseReturn/detail"; // append /{id}

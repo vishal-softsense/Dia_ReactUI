@@ -9,7 +9,11 @@ export const GROUP_ORDER = [
   "Accounts",
   "Jewellery",
   "Additional",
+  "One Time Implementation Cost Per/Organization",
 ];
+
+export const IMPLEMENTATION_GROUP =
+  "One Time Implementation Cost Per/Organization";
 
 const GENERAL = "General";
 const PARCEL = "Parcel";
@@ -370,6 +374,7 @@ export const STATIC_PLANS = [
     currentPrice: 4999,
     maxUsers: 1,
     ctaLabel: "Get started",
+    implementationCost: 0,
     features: plan1Features,
   },
   {
@@ -387,6 +392,7 @@ export const STATIC_PLANS = [
     currentPrice: 29999,
     maxUsers: 1,
     ctaLabel: "Start my free trial",
+    implementationCost: 29999,
     features: plan2Features,
   },
   {
@@ -404,6 +410,7 @@ export const STATIC_PLANS = [
     currentPrice: 29999,
     maxUsers: 3,
     ctaLabel: "Start my free trial",
+    implementationCost: 29999,
     features: plan3Features,
   },
   {
@@ -421,6 +428,7 @@ export const STATIC_PLANS = [
     currentPrice: 59999,
     maxUsers: 5,
     ctaLabel: "Start my free trial",
+    implementationCost: 59999,
     features: plan4Features,
   },
   {
@@ -438,6 +446,7 @@ export const STATIC_PLANS = [
     currentPrice: 99999,
     maxUsers: 10,
     ctaLabel: "Start my free trial",
+    implementationCost: 99999,
     features: plan5Features,
   },
 ];

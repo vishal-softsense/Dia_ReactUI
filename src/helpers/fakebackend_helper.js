@@ -629,11 +629,35 @@ export const addMixPurchase = (data) => api.create(url.MIX_PURCHASE_ADD, data);
 export const editMixPurchase = (data) => api.create(url.MIX_PURCHASE_EDIT, data);
 export const deleteMixPurchase = (id) => api.create(url.MIX_PURCHASE_DELETE, { id });
 export const getMixPurchaseLotDetail = (lotNo) => api.create(url.MIX_PURCHASE_LOT_DETAIL, { lotNo });
-export const getMixPurchaseConsignment = (payload) => api.create(url.MIX_PURCHASE_CONSIGNMENT, payload);
+export const getMixPurchaseConsignment = (payload) =>
+  api.create(url.MIX_PURCHASE_CONSIGNMENT, {
+    // MVC ConToPurView: PartyCode + MemoNo only (do not send camelCase duplicates)
+    PartyCode: String(payload?.PartyCode ?? payload?.partyCode ?? "").trim(),
+    MemoNo: String(payload?.MemoNo ?? payload?.memoNo ?? "").trim()
+  });
 export const addMixPurchaseSingleLot = (payload) => api.create(url.MIX_PURCHASE_ADD_SINGLE_LOT, payload);
 export const getMixPurchasePrintView = (invNo) => api.get(`${url.MIX_PURCHASE_PRINT_VIEW}/${invNo}`);
 export const getMixPurchaseCurrentStatus = (invNo) => api.get(`${url.MIX_PURCHASE_CURRENT_STATUS}/${invNo}`);
-export const getMixPurchaseLots = (searchby) => api.get(`${url.MIX_PURCHASE_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+export const getMixPurchaseLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_PURCHASE_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
+
+
+export const getMixPurchaseReturnList = () => api.get(url.MIX_PURCHASE_RETURN_LIST);
+export const getMixPurchaseReturnPageData = () => api.get(url.MIX_PURCHASE_RETURN_PAGE_DATA);
+export const getMixPurchaseReturnDetail = (id) => api.get(`${url.MIX_PURCHASE_RETURN_DETAIL}/${id}`);
+export const addMixPurchaseReturn = (data) => api.create(url.MIX_PURCHASE_RETURN_ADD, data);
+export const editMixPurchaseReturn = (data) => api.create(url.MIX_PURCHASE_RETURN_EDIT, data);
+export const deleteMixPurchaseReturn = (id) => api.create(url.MIX_PURCHASE_RETURN_DELETE, { id });
+export const getMixPurchaseReturnLotDetail = (lotNo) => api.create(url.MIX_PURCHASE_RETURN_LOT_DETAIL, typeof lotNo === "object" ? lotNo : { lotNo, LotNo: lotNo });
+export const addMixPurchaseReturnSingleLot = (payload) => api.create(url.MIX_PURCHASE_RETURN_ADD_SINGLE_LOT, payload);
+export const getMixPurchaseReturnItemFromList = (payload) => api.create(url.MIX_PURCHASE_RETURN_GET_ITEM_FROM_LIST, payload);
+export const getMixPurchaseReturnPrintView = (invNo) => api.get(`${url.MIX_PURCHASE_RETURN_PRINT_VIEW}/${invNo}`);
+export const getMixPurchaseReturnLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_PURCHASE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
 
 export const getSolitairePurchaseReturnList = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_LIST);
 export const getSolitairePurchaseReturnPageData = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_PAGE_DATA);

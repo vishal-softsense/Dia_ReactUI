@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { GROUP_ORDER } from "./staticPricingData";
+import { GROUP_ORDER, IMPLEMENTATION_GROUP } from "./staticPricingData";
 
 const GROUP_ICONS = {
   General: "ri-settings-3-line",
@@ -9,6 +9,7 @@ const GROUP_ICONS = {
   Accounts: "ri-wallet-3-line",
   Jewellery: "ri-vip-diamond-line",
   Additional: "ri-add-box-line",
+  [IMPLEMENTATION_GROUP]: "ri-tools-line",
 };
 
 const PLAN_ICONS = {
@@ -115,6 +116,41 @@ const PricingComparisonTable = ({
         ordered.push({ name, rows: grouped[name] });
       }
     });
+
+    const implementationRows = (plans || [])
+      .map((plan) => {
+        const amount = plan.implementationCost;
+        if (amount == null) return null;
+        return {
+          planKey: plan.planProductId || plan.planId,
+          value: formatPrice(amount, plan.currency),
+        };
+      })
+      .filter(Boolean);
+
+    if (implementationRows.length) {
+      const withoutImpl = ordered.filter(
+        (group) => group.name !== IMPLEMENTATION_GROUP
+      );
+      withoutImpl.push({
+        name: IMPLEMENTATION_GROUP,
+        hideCommonExempt: true,
+        rows: [
+          {
+            key: "implementation-cost",
+            group: IMPLEMENTATION_GROUP,
+            text: IMPLEMENTATION_GROUP,
+            sortOrder: 99999,
+            isPriceRow: true,
+            byPlan: implementationRows.reduce((acc, row) => {
+              acc[row.planKey] = row.value;
+              return acc;
+            }, {}),
+          },
+        ],
+      });
+      return withoutImpl;
+    }
 
     return ordered;
   }, [plans]);
@@ -260,10 +296,11 @@ const PricingComparisonTable = ({
             </tr>
           </thead>
           <tbody>
-            {groupNames.map(({ name: groupName, rows }) => {
-              const filtered = hideCommon
-                ? rows.filter((row) => !isCommonFeature(row))
-                : rows;
+            {groupNames.map(({ name: groupName, rows, hideCommonExempt }) => {
+              const filtered =
+                hideCommon && !hideCommonExempt
+                  ? rows.filter((row) => !isCommonFeature(row))
+                  : rows;
               if (!filtered.length) return null;
               const expanded = isGroupExpanded(groupName);
 
@@ -308,7 +345,15 @@ const PricingComparisonTable = ({
                               ) : value === true ? (
                                 <i className="ri-checkbox-circle-fill pricing-compare__yes"></i>
                               ) : (
-                                <span className="pricing-compare__cell-text">{value}</span>
+                                <span
+                                  className={
+                                    row.isPriceRow
+                                      ? "pricing-compare__plan-price"
+                                      : "pricing-compare__cell-text"
+                                  }
+                                >
+                                  {value}
+                                </span>
                               )}
                             </td>
                           );

@@ -25,6 +25,9 @@ const PricingPage = () => {
               <BillingToggle value={billingCycle} onChange={setBillingCycle} />
             </div>
           </div>
+          <p className="pricing-page-gst mb-4">
+            All prices are exclusive of applicable GST.
+          </p>
 
           <ZohoPricingCards
             plans={displayPlans}
@@ -35,8 +38,11 @@ const PricingPage = () => {
           <div className="mt-5 pt-2 pricing-compare-section">
             <div className="text-center mb-4">
               <h4 className="fw-semibold mb-1">Plan Comparison</h4>
-              <p className="text-muted mb-0 ff-secondary">
+              <p className="text-muted mb-1 ff-secondary">
                 Simple, straightforward pricing — compare features across plans.
+              </p>
+              <p className="pricing-page-gst mb-0">
+                All prices are exclusive of applicable GST.
               </p>
             </div>
             <PricingComparisonTable

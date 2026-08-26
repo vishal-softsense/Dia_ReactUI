@@ -87,7 +87,12 @@ const ZohoPricingCards = ({
                       {formatPrice(price, plan.currency)}
                     </div>
                   )}
-                  {!isCustom && <div className="zoho-pricing__period">{periodText}</div>}
+                  {!isCustom && !(plan.isIncludedFree || price === 0) && (
+                    <div className="zoho-pricing__gst-rate">+ 18% GST</div>
+                  )}
+                  {!isCustom && (
+                    <div className="zoho-pricing__period">{periodText}</div>
+                  )}
                 </div>
 
                 <Link
