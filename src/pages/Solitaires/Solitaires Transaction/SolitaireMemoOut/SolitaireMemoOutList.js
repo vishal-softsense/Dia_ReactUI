@@ -40,8 +40,16 @@ const fmtDate = (value) => {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    .replace(/ /g, "\u00A0");
 };
+
+const dateCell = ({ getValue }) => (
+  <span className="text-nowrap" style={{ display: "inline-block", minWidth: "92px" }}>
+    {getValue()}
+  </span>
+);
 
 const fmtNum = (value, decimals = 2) => {
   const n = Number(value);
@@ -186,30 +194,10 @@ const SolitaireMemoOutList = () => {
     if (!result?.success) toast.error(t("Failed to generate Excel file."));
   };
 
-  const memoOpenBadgeStyle = {
-    color: "#FF5B5C",
-    backgroundColor: "#FFDEDE",
-    padding: "0.34rem 1.11rem",
-    borderRadius: "2rem",
-    fontSize: "0.8rem",
-    fontWeight: 400,
-    display: "inline-block"
-  };
-
-  const memoCloseBadgeStyle = {
-    color: "#39DA8A",
-    backgroundColor: "#D2FFE8",
-    padding: "0.34rem 1.11rem",
-    borderRadius: "2rem",
-    fontSize: "0.8rem",
-    fontWeight: 400,
-    display: "inline-block"
-  };
-
   const memoStatusBadge = (status) => {
     const s = String(status || "").trim().toUpperCase();
-    if (s === "OPEN") return <span style={memoOpenBadgeStyle}>{t("OPEN")}</span>;
-    if (s === "CLOSE") return <span style={memoCloseBadgeStyle}>{t("CLOSE")}</span>;
+    if (s === "OPEN") return <span className="txn-status-open">{t("OPEN")}</span>;
+    if (s === "CLOSE") return <span className="txn-status-close">{t("CLOSE")}</span>;
     return status || "-";
   };
 
@@ -217,11 +205,12 @@ const SolitaireMemoOutList = () => {
     const inv = getInvNo(row);
     const code = getVal(row, "code");
     const s = String(getVal(row, "Status") || "").trim().toUpperCase();
-    const style = s === "OPEN" ? memoOpenBadgeStyle : memoCloseBadgeStyle;
+    const cls = s === "OPEN" ? "txn-status-open" : "txn-status-close";
     return (
       <Link
         to={`/memo/edit-memo?Id=${code}&Mode=view`}
-        style={{ ...style, textDecoration: "none" }}
+        className={cls}
+        style={{ textDecoration: "none" }}
         title={t("View")}
       >
         {inv || "-"}
@@ -284,7 +273,8 @@ const SolitaireMemoOutList = () => {
         accessorKey: "Date",
         accessorFn: (row) => fmtDate(getVal(row, "Date")),
         enableColumnFilter: true,
-        filterFn: customStringFilterFn
+        filterFn: customStringFilterFn,
+        cell: dateCell
       },
       {
         header: t("Party"),
@@ -358,7 +348,8 @@ const SolitaireMemoOutList = () => {
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,
-        filterFn: customStringFilterFn
+        filterFn: customStringFilterFn,
+        cell: dateCell
       },
       {
         header: t("Status"),

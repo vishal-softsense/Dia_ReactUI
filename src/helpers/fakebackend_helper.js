@@ -655,6 +655,14 @@ export const getSolitaireConsignmentInLotDetail = (lotNo) => api.create(url.SOLI
 export const addSolitaireConsignmentInSingleLot = (payload) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT, payload);
 export const getSolitaireConsignmentInPrintView = (invNo) => api.get(`${url.SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW}/${invNo}`);
 
+export const getSolitaireConsignmentInReturnPageData = () => api.get(url.SOLITAIRE_CONSIGNMENT_IN_RETURN_PAGE_DATA);
+export const getSolitaireConsignmentInReturnList = (filter) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_RETURN_LIST, filter);
+export const returnSolitaireConsignmentInReturn = (data) => api.create(url.SOLITAIRE_CONSIGNMENT_IN_RETURN_SAVE, data);
+
+export const getSolitaireMemoReturnPageData = () => api.get(url.SOLITAIRE_MEMO_RETURN_PAGE_DATA);
+export const getSolitaireMemoReturnList = (filter) => api.create(url.SOLITAIRE_MEMO_RETURN_LIST, filter);
+export const returnSolitaireMemoReturn = (data) => api.create(url.SOLITAIRE_MEMO_RETURN_SAVE, data);
+
 export const getSolitaireMemoOutList = () => api.get(url.SOLITAIRE_MEMO_OUT_LIST);
 export const getSolitaireMemoOutPageData = () => api.get(url.SOLITAIRE_MEMO_OUT_PAGE_DATA);
 export const getSolitaireMemoOutDetail = (id) => api.get(`${url.SOLITAIRE_MEMO_OUT_DETAIL}/${id}`);
@@ -668,6 +676,37 @@ export const refreshSolitaireMemoOutBack = (payload) => api.create(url.SOLITAIRE
 export const getSolitaireMemoOutPrintView = (invNo) => api.get(`${url.SOLITAIRE_MEMO_OUT_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
 export const getSolitaireMemoOutShipVia = (searchby) =>
   api.get(`${url.SOLITAIRE_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
+
+export const getSolitaireSaleList = () => api.get(url.SOLITAIRE_SALE_LIST);
+export const getSolitaireSalePageData = () => api.get(url.SOLITAIRE_SALE_PAGE_DATA);
+export const getSolitaireSaleDetail = (id) => api.get(`${url.SOLITAIRE_SALE_DETAIL}/${id}`);
+export const addSolitaireSale = (data) => api.create(url.SOLITAIRE_SALE_ADD, data);
+export const editSolitaireSale = (data) => api.create(url.SOLITAIRE_SALE_EDIT, data);
+export const deleteSolitaireSale = (id) => api.create(url.SOLITAIRE_SALE_DELETE, { id });
+export const getSolitaireSaleLotDetail = (payload) => api.create(url.SOLITAIRE_SALE_LOT_DETAIL, payload);
+export const addSolitaireSaleSingleLot = (payload) => api.create(url.SOLITAIRE_SALE_ADD_SINGLE_LOT, payload);
+export const getSolitaireSaleItemFromList = (payload) => api.create(url.SOLITAIRE_SALE_GET_ITEM_FROM_LIST, payload);
+export const refreshSolitaireSaleBack = (payload) => api.create(url.SOLITAIRE_SALE_REFRESH_BACK, payload);
+export const getSolitaireSaleMemoToSale = (payload) => api.create(url.SOLITAIRE_SALE_MEMO_TO_SALE, payload);
+export const getSolitaireSalePrintView = (invNo) => api.get(`${url.SOLITAIRE_SALE_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getSolitaireSaleCurrentStatus = (invNo) => api.get(`${url.SOLITAIRE_SALE_CURRENT_STATUS}/${encodeURIComponent(invNo)}`);
+export const getSolitaireSaleShipVia = (searchby) =>
+  api.get(`${url.SOLITAIRE_SALE_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
+
+export const getSolitaireSaleReturnList = () => api.get(url.SOLITAIRE_SALE_RETURN_LIST);
+export const getSolitaireSaleReturnPageData = () => api.get(url.SOLITAIRE_SALE_RETURN_PAGE_DATA);
+export const getSolitaireSaleReturnDetail = (id) => api.get(`${url.SOLITAIRE_SALE_RETURN_DETAIL}/${id}`);
+export const addSolitaireSaleReturn = (data) => api.create(url.SOLITAIRE_SALE_RETURN_ADD, data);
+export const editSolitaireSaleReturn = (data) => api.create(url.SOLITAIRE_SALE_RETURN_EDIT, data);
+export const deleteSolitaireSaleReturn = (id) => api.create(url.SOLITAIRE_SALE_RETURN_DELETE, { id });
+export const getSolitaireSaleReturnLotDetail = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_LOT_DETAIL, payload);
+export const addSolitaireSaleReturnSingleLot = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_ADD_SINGLE_LOT, payload);
+export const getSolitaireSaleReturnItemFromList = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_GET_ITEM_FROM_LIST, payload);
+export const refreshSolitaireSaleReturnBack = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_REFRESH_BACK, payload);
+export const getSolitaireSaleReturnSaleToSaleReturn = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_SALE_TO_SALERETURN, payload);
+export const fillSolitaireSaleReturnSaleToSaleReturn = (payload) => api.create(url.SOLITAIRE_SALE_RETURN_FILL_SALE_TO_SALERETURN, payload);
+export const getSolitaireSaleReturnPrintView = (invNo) =>
+  api.get(`${url.SOLITAIRE_SALE_RETURN_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
 
 
 export const getJewelleryPurchaseList = () => api.get(url.JEWELLERY_PURCHASE_LIST);
@@ -1018,7 +1057,7 @@ export const getJewelleryConsignMentInReportDropdowns = () => api.get(url.JEWELL
 // Profit and Loss Report (MVC: /Account/TradingAccount)
 export const getProfitLossReportPermission = () => api.get(url.PROFIT_LOSS_REPORT_PERMISSION);
 export const getProfitLossReport = (filter, hideZeroBalance) =>
-    api.create(`${url.PROFIT_LOSS_REPORT_DATA}?value=${hideZeroBalance ? "true" : "false"}`, filter);
+  api.create(`${url.PROFIT_LOSS_REPORT_DATA}?value=${hideZeroBalance ? "true" : "false"}`, filter);
 
 // Trial Balance Sheet Report (MVC: /Account/TrialBalSheet)
 export const getTrialBalanceSheetReportPermission = () => api.get(url.TRIAL_BALANCE_SHEET_REPORT_PERMISSION);
@@ -1027,7 +1066,7 @@ export const getTrialBalanceSheetReport = (filter) => api.create(url.TRIAL_BALAN
 // Balance Sheet Report (MVC: /Account/BalanceSheet)
 export const getBalanceSheetReportPermission = () => api.get(url.BALANCE_SHEET_REPORT_PERMISSION);
 export const getBalanceSheetReport = (filter, hideZeroBalance) =>
-    api.create(`${url.BALANCE_SHEET_REPORT_DATA}?Value=${hideZeroBalance ? "true" : "false"}`, filter);
+  api.create(`${url.BALANCE_SHEET_REPORT_DATA}?Value=${hideZeroBalance ? "true" : "false"}`, filter);
 
 // Invoice Ledger Report (MVC: /report/invoice-ledger-report)
 export const getInvoiceLedgerReportPermission = () => api.get(url.INVOICE_LEDGER_REPORT_PERMISSION);

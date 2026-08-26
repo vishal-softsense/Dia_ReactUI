@@ -524,6 +524,14 @@ export const SOLITAIRE_CONSIGNMENT_IN_LOT_DETAIL = "/api/SolitaireConsignmentIn/
 export const SOLITAIRE_CONSIGNMENT_IN_ADD_SINGLE_LOT = "/api/SolitaireConsignmentIn/add-single-lot";
 export const SOLITAIRE_CONSIGNMENT_IN_PRINT_VIEW = "/api/SolitaireConsignmentIn/print-view"; // append /{invNo}
 
+export const SOLITAIRE_CONSIGNMENT_IN_RETURN_PAGE_DATA = "/api/SolitaireConsignmentInReturn/pagedata";
+export const SOLITAIRE_CONSIGNMENT_IN_RETURN_LIST = "/api/SolitaireConsignmentInReturn/list";
+export const SOLITAIRE_CONSIGNMENT_IN_RETURN_SAVE = "/api/SolitaireConsignmentInReturn/return";
+
+export const SOLITAIRE_MEMO_RETURN_PAGE_DATA = "/api/SolitaireMemoReturn/pagedata";
+export const SOLITAIRE_MEMO_RETURN_LIST = "/api/SolitaireMemoReturn/list";
+export const SOLITAIRE_MEMO_RETURN_SAVE = "/api/SolitaireMemoReturn/return";
+
 export const SOLITAIRE_MEMO_OUT_LIST = "/api/SolitaireMemoOut/list";
 export const SOLITAIRE_MEMO_OUT_PAGE_DATA = "/api/SolitaireMemoOut/pagedata";
 export const SOLITAIRE_MEMO_OUT_DETAIL = "/api/SolitaireMemoOut/detail"; // append /{id}
@@ -536,6 +544,35 @@ export const SOLITAIRE_MEMO_OUT_GET_ITEM_FROM_LIST = "/api/SolitaireMemoOut/get-
 export const SOLITAIRE_MEMO_OUT_REFRESH_BACK = "/api/SolitaireMemoOut/refresh-back";
 export const SOLITAIRE_MEMO_OUT_PRINT_VIEW = "/api/SolitaireMemoOut/print-view"; // append /{invNo}
 export const SOLITAIRE_MEMO_OUT_SHIP_VIA = "/api/SolitaireMemoOut/ship-via"; // ?searchby=
+
+export const SOLITAIRE_SALE_LIST = "/api/SolitaireSale/list";
+export const SOLITAIRE_SALE_PAGE_DATA = "/api/SolitaireSale/pagedata";
+export const SOLITAIRE_SALE_DETAIL = "/api/SolitaireSale/detail"; // append /{id}
+export const SOLITAIRE_SALE_ADD = "/api/SolitaireSale/add";
+export const SOLITAIRE_SALE_EDIT = "/api/SolitaireSale/edit";
+export const SOLITAIRE_SALE_DELETE = "/api/SolitaireSale/delete";
+export const SOLITAIRE_SALE_LOT_DETAIL = "/api/SolitaireSale/lot-detail";
+export const SOLITAIRE_SALE_ADD_SINGLE_LOT = "/api/SolitaireSale/add-single-lot";
+export const SOLITAIRE_SALE_GET_ITEM_FROM_LIST = "/api/SolitaireSale/get-item-from-list";
+export const SOLITAIRE_SALE_REFRESH_BACK = "/api/SolitaireSale/refresh-back";
+export const SOLITAIRE_SALE_MEMO_TO_SALE = "/api/SolitaireSale/memo-to-sale";
+export const SOLITAIRE_SALE_PRINT_VIEW = "/api/SolitaireSale/print-view"; // append /{invNo}
+export const SOLITAIRE_SALE_CURRENT_STATUS = "/api/SolitaireSale/current-status"; // append /{invNo}
+export const SOLITAIRE_SALE_SHIP_VIA = "/api/SolitaireSale/ship-via"; // ?searchby=
+
+export const SOLITAIRE_SALE_RETURN_LIST = "/api/SolitaireSaleReturn/list";
+export const SOLITAIRE_SALE_RETURN_PAGE_DATA = "/api/SolitaireSaleReturn/pagedata";
+export const SOLITAIRE_SALE_RETURN_DETAIL = "/api/SolitaireSaleReturn/detail"; // append /{id}
+export const SOLITAIRE_SALE_RETURN_ADD = "/api/SolitaireSaleReturn/add";
+export const SOLITAIRE_SALE_RETURN_EDIT = "/api/SolitaireSaleReturn/edit";
+export const SOLITAIRE_SALE_RETURN_DELETE = "/api/SolitaireSaleReturn/delete";
+export const SOLITAIRE_SALE_RETURN_LOT_DETAIL = "/api/SolitaireSaleReturn/lot-detail";
+export const SOLITAIRE_SALE_RETURN_ADD_SINGLE_LOT = "/api/SolitaireSaleReturn/add-single-lot";
+export const SOLITAIRE_SALE_RETURN_GET_ITEM_FROM_LIST = "/api/SolitaireSaleReturn/get-item-from-list";
+export const SOLITAIRE_SALE_RETURN_REFRESH_BACK = "/api/SolitaireSaleReturn/refresh-back";
+export const SOLITAIRE_SALE_RETURN_SALE_TO_SALERETURN = "/api/SolitaireSaleReturn/sale-to-salereturn";
+export const SOLITAIRE_SALE_RETURN_FILL_SALE_TO_SALERETURN = "/api/SolitaireSaleReturn/fill-sale-to-salereturn";
+export const SOLITAIRE_SALE_RETURN_PRINT_VIEW = "/api/SolitaireSaleReturn/print-view"; // append /{invNo}
 
 // Jewellery Purchase entry (MVC: /jewpurchase/*)
 export const JEWELLERY_PURCHASE_LIST = "/api/JewelleryPurchase/list";
