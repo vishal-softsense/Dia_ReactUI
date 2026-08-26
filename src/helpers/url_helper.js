@@ -504,6 +504,21 @@ export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append 
 export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
 export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
 
+// Mix Memo Out (Parcel Transaction) — MVC: /mixmemoform/mixmemoformlist
+export const MIX_MEMO_OUT_LIST = "/api/MixMemoOut/list";
+export const MIX_MEMO_OUT_PAGE_DATA = "/api/MixMemoOut/pagedata";
+export const MIX_MEMO_OUT_DETAIL = "/api/MixMemoOut/detail"; // append /{id}
+export const MIX_MEMO_OUT_ADD = "/api/MixMemoOut/add";
+export const MIX_MEMO_OUT_EDIT = "/api/MixMemoOut/edit";
+export const MIX_MEMO_OUT_DELETE = "/api/MixMemoOut/delete";
+export const MIX_MEMO_OUT_LOT_DETAIL = "/api/MixMemoOut/lot-detail";
+export const MIX_MEMO_OUT_ADD_SINGLE_LOT = "/api/MixMemoOut/add-single-lot";
+export const MIX_MEMO_OUT_GET_ITEM_FROM_LIST = "/api/MixMemoOut/get-item-from-list";
+export const MIX_MEMO_OUT_REFRESH_BACK = "/api/MixMemoOut/refresh-back";
+export const MIX_MEMO_OUT_PRINT_VIEW = "/api/MixMemoOut/print-view"; // append /{id or invNo}
+export const MIX_MEMO_OUT_SHIP_VIA = "/api/MixMemoOut/ship-via"; // ?searchby=
+export const MIX_MEMO_OUT_LOTS = "/api/MixMemoOut/lots"; // ?searchby= — MVC: /common/get-Mixno-list
+
 // Mix Purchase Return (Parcel Transaction entry) — MVC: /MixPurchaseReturn/mixpurchasereturnlist
 export const MIX_PURCHASE_RETURN_LIST = "/api/MixPurchaseReturn/list";
 export const MIX_PURCHASE_RETURN_PAGE_DATA = "/api/MixPurchaseReturn/pagedata";

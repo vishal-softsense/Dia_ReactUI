@@ -51,7 +51,7 @@ const MyCartDropdown = () => {
 
     return (
         <React.Fragment>
-            <Dropdown isOpen={isCartDropdown} toggle={toggleCartDropdown} className="topbar-head-dropdown ms-1 header-item">
+            {/* <Dropdown isOpen={isCartDropdown} toggle={toggleCartDropdown} className="topbar-head-dropdown ms-1 header-item">
                 <DropdownToggle type="button" tag="button" className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle">
                     <i className='bx bx-shopping-bag fs-22'></i>
                     <span
@@ -118,7 +118,7 @@ const MyCartDropdown = () => {
                         </Link>
                     </div>
                 </DropdownMenu>
-            </Dropdown>
+            </Dropdown> */}
         </React.Fragment>
     );
 };

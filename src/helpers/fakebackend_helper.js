@@ -659,6 +659,23 @@ export const getMixPurchaseReturnLots = (searchby) => {
   return api.get(`${url.MIX_PURCHASE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
 
+// Mix Memo Out (Parcel Transaction)
+export const getMixMemoOutList = () => api.get(url.MIX_MEMO_OUT_LIST);
+export const getMixMemoOutPageData = () => api.get(url.MIX_MEMO_OUT_PAGE_DATA);
+export const getMixMemoOutDetail = (id) => api.get(`${url.MIX_MEMO_OUT_DETAIL}/${id}`);
+export const addMixMemoOut = (data) => api.create(url.MIX_MEMO_OUT_ADD, data);
+export const editMixMemoOut = (data) => api.create(url.MIX_MEMO_OUT_EDIT, data);
+export const deleteMixMemoOut = (id) => api.create(url.MIX_MEMO_OUT_DELETE, { id });
+export const getMixMemoOutLotDetail = (payload) => api.create(url.MIX_MEMO_OUT_LOT_DETAIL, payload);
+export const addMixMemoOutSingleLot = (payload) => api.create(url.MIX_MEMO_OUT_ADD_SINGLE_LOT, payload);
+export const getMixMemoOutItemFromList = (payload) => api.create(url.MIX_MEMO_OUT_GET_ITEM_FROM_LIST, payload);
+export const refreshMixMemoOutBack = (payload) => api.create(url.MIX_MEMO_OUT_REFRESH_BACK, payload);
+export const getMixMemoOutPrintView = (invNo) => api.get(`${url.MIX_MEMO_OUT_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getMixMemoOutShipVia = (searchby) =>
+  api.get(`${url.MIX_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
+export const getMixMemoOutLots = (searchby) =>
+  api.get(`${url.MIX_MEMO_OUT_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+
 export const getSolitairePurchaseReturnList = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_LIST);
 export const getSolitairePurchaseReturnPageData = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_PAGE_DATA);
 export const getSolitairePurchaseReturnDetail = (id) => api.get(`${url.SOLITAIRE_PURCHASE_RETURN_DETAIL}/${id}`);
@@ -1104,11 +1121,15 @@ export const updateMRPInStock = () => api.create(url.UPDATE_MRP, {});
 // Import Grading (MVC: /data/importgrading)
 export const getImportGradingPermission = () => api.get(url.IMPORT_GRADING_PERMISSION);
 
-const postImportGradingForm = (endpoint, payload) => {
+const postImportGradingForm = (endpoint, payload, options = {}) => {
   const formData = new FormData();
   if (payload?.ImportFile) formData.append("ImportFile", payload.ImportFile);
   if (typeof payload?.ChkReplace === "boolean") formData.append("ChkReplace", payload.ChkReplace ? "true" : "false");
-  return api.create(endpoint, formData, { headers: { "Content-Type": undefined } });
+  return api.create(endpoint, formData, {
+    headers: { "Content-Type": undefined },
+    timeout: 600000,
+    ...options,
+  });
 };
 
 export const updateGiaData = payload => postImportGradingForm(url.IMPORT_GRADING_UPDATE_GIA, payload);

@@ -47,7 +47,7 @@ const AccGrpMasterList = () => {
         fetchAccGroups(searchText);
     };
 
-    const handleDeleteClick = (id,name) => {
+    const handleDeleteClick = (id, name) => {
         setItemToDelete(id);
         setAccGrpName(name);
         setDeleteModal(true);
@@ -78,16 +78,17 @@ const AccGrpMasterList = () => {
             return;
         }
 
-        const headers = ["Code", "Account/Group Name", "Under Group Name", "Account Type", "Currency", "Credit/Debit", "Opening Balance", "Country"];
+        const headers = ["Code", "Account/Group Name", "Under Group Name", "Account Type", "Currency", "Credit/Debit", "Opening Balance", "Country", "Sales Person"];
         const rows = accGroups.map((item) => [
             item.accGrpCode || item.AccGrpCode || "",
             item.accGrpName || item.AccGrpName || "",
             item.underGroupName || item.UnderGroupName || "",
             item.accountType || item.AccountType || "",
             item.currency || item.Currency || "",
-            item.oBalance || item.OBalance || 0,
             item.oDrCr || item.ODrCr || "",
-            item.country || item.Country || ""
+            item.oBalance ?? item.OBalance ?? "",
+            item.country || item.Country || "",
+            item.kam ?? item.KAM ?? ""
         ]);
 
         const result = await exportToExcel(headers, rows, "AccountGroups", "AccountGroupMasterList");
@@ -126,11 +127,11 @@ const AccGrpMasterList = () => {
                                     padding: "0"
                                 }}
                                 onClick={() =>
-    handleDeleteClick(
-        id,
-        cellProps.row.original.accGrpName || cellProps.row.original.AccGrpName
-    )
-}
+                                    handleDeleteClick(
+                                        id,
+                                        cellProps.row.original.accGrpName || cellProps.row.original.AccGrpName
+                                    )
+                                }
                                 title={t("Delete")}
                             >
                                 <i className="ri-delete-bin-fill" style={{ fontSize: "14px" }}></i>
@@ -185,6 +186,13 @@ const AccGrpMasterList = () => {
                 accessorKey: "country",
                 accessorFn: (row) => row.country || row.Country,
                 enableColumnFilter: true,
+            },
+            {
+                header: t("SalesPerson"),
+                accessorKey: "kam",
+                accessorFn: (row) => row.kam ?? row.KAM ?? "",
+                enableColumnFilter: true,
+                cell: (cellProps) => cellProps.getValue() ?? "",
             }
         ],
         [navigate, t]);
@@ -245,46 +253,46 @@ const AccGrpMasterList = () => {
             <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
                 <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
                 <ModalBody>
-    <div className="mt-2 text-center">
-        <lord-icon
-            src="https://cdn.lordicon.com/gsqxdxog.json"
-            trigger="loop"
-            colors="primary:#f7b84b,secondary:#f06548"
-            style={{ width: "100px", height: "100px" }}
-        ></lord-icon>
+                    <div className="mt-2 text-center">
+                        <lord-icon
+                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                            trigger="loop"
+                            colors="primary:#f7b84b,secondary:#f06548"
+                            style={{ width: "100px", height: "100px" }}
+                        ></lord-icon>
 
-        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h4>{t("Are you sure?")}</h4>
+                        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h4>{t("Are you sure?")}</h4>
 
-            <p className="text-muted mx-4 mb-1">
-                {t("Selected record will be removed !!")}
-            </p>
+                            <p className="text-muted mx-4 mb-1">
+                                {t("Selected record will be removed !!")}
+                            </p>
 
-            <p className="fw-semibold mb-0">
-                <span>{t("AccGrpName")} :</span> {accGrpName}
-            </p>
-        </div>
-    </div>
+                            <p className="fw-semibold mb-0">
+                                <span>{t("AccGrpName")} :</span> {accGrpName}
+                            </p>
+                        </div>
+                    </div>
 
-    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-        <button
-            type="button"
-            className="btn w-sm btn-light"
-            onClick={() => setDeleteModal(false)}
-        >
-            {t("Cancel")}
-        </button>
+                    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button
+                            type="button"
+                            className="btn w-sm btn-light"
+                            onClick={() => setDeleteModal(false)}
+                        >
+                            {t("Cancel")}
+                        </button>
 
-        <button
-            type="button"
-            className="btn w-sm btn-danger"
-            id="delete-record"
-            onClick={handleDeleteConfirm}
-        >
-            {t("Yes, Delete It!")}
-        </button>
-    </div>
-</ModalBody>
+                        <button
+                            type="button"
+                            className="btn w-sm btn-danger"
+                            id="delete-record"
+                            onClick={handleDeleteConfirm}
+                        >
+                            {t("Yes, Delete It!")}
+                        </button>
+                    </div>
+                </ModalBody>
             </Modal>
             <ToastContainer autoClose={2000} />
         </React.Fragment>

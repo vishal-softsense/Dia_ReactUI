@@ -426,6 +426,10 @@ import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPu
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
 import MixPurchasePrintView from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchasePrintView";
 import MixPurchaseCurStatus from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseCurStatus";
+import MixMemoOutList from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutList";
+import MixMemoOutAdd from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutAdd";
+import MixMemoOutEdit from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutEdit";
+import MixMemoOutPrintView from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutPrintView";
 import JewPurchaseList from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseList";
 import JewPurchaseAdd from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseAdd";
 import JewPurchaseEdit from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseEdit";
@@ -799,6 +803,12 @@ const authProtectedRoutes = [
   { path: "/mix-purchase/edit-mixpur", component: <MixPurchaseEdit /> },
   { path: "/Mix_Pur/MixPurPrintInv", component: <MixPurchasePrintView /> },
   { path: "/Mix_Pur/MixPurCurStatusPrintInv", component: <MixPurchaseCurStatus /> },
+
+  // Mix Memo Out entry (MVC: /mixmemoform/mixmemoformlist)
+  { path: "/mixmemoform/mixmemoformlist", component: <MixMemoOutList /> },
+  { path: "/mixmemoform/add-mixmemo", component: <MixMemoOutAdd /> },
+  { path: "/mix-memo/edit-mixmemo", component: <MixMemoOutEdit /> },
+  { path: "/mix-memo/MixMemoOutPrintInv", component: <MixMemoOutPrintView /> },
 
   // Mix Purchase Return (MVC: MixPurchaseReturn/mixpurchasereturnlist)
   { path: "/MixPurchaseReturn/mixpurchasereturnlist", component: <MixPurchaseReturnList /> },
