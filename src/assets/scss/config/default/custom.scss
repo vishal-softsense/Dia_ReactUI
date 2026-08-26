@@ -6,5 +6,269 @@ Contact: support@themesbrand.com
 File: Custom Css File
 */
 
+/* ------------------------------------------------------------------
+   Transaction pages – status badge contrast (light + dark)
+------------------------------------------------------------------- */
+.badge.bg-success-subtle,
+a.badge.bg-success-subtle {
+  color: #0f5132 !important;
+  background-color: #d1e7dd !important;
+}
 
+.badge.bg-danger-subtle,
+a.badge.bg-danger-subtle {
+  color: #842029 !important;
+  background-color: #f8d7da !important;
+}
 
+.badge.bg-warning-subtle,
+a.badge.bg-warning-subtle {
+  color: #664d03 !important;
+  background-color: #fff3cd !important;
+}
+
+.badge.bg-info-subtle,
+a.badge.bg-info-subtle {
+  color: #055160 !important;
+  background-color: #cff4fc !important;
+}
+
+.badge.bg-primary-subtle,
+a.badge.bg-primary-subtle {
+  color: #084298 !important;
+  background-color: #cfe2ff !important;
+}
+
+/* Memo / Consignment OPEN–CLOSE pill contrast helpers */
+.txn-status-open {
+  color: #b02a37 !important;
+  background-color: #f8d7da !important;
+  padding: 0.34rem 1.11rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.txn-status-close {
+  color: #0f5132 !important;
+  background-color: #d1e7dd !important;
+  padding: 0.34rem 1.11rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* ------------------------------------------------------------------
+   Dark theme visibility – headings, soft buttons, modals, tables
+------------------------------------------------------------------- */
+[data-bs-theme="dark"] {
+  /* Card / page titles using text-primary (Sale Return List, Memo Out, etc.) */
+  .page-content .card h5.text-primary,
+  .page-content .card .card-header h5.text-primary,
+  .page-content .card-body h5.text-primary {
+    color: #ffffff !important;
+  }
+
+  .page-content .card h5.text-primary i,
+  .page-content .card .card-header h5.text-primary i {
+    color: #7c9cff !important;
+  }
+
+  /* Soft buttons (View Invoices / View Memo / action icons) */
+  .btn-soft-primary {
+    --vz-btn-color: #ffffff !important;
+    --vz-btn-bg: rgba(64, 81, 137, 0.55) !important;
+    --vz-btn-border-color: rgba(124, 156, 255, 0.45) !important;
+    --vz-btn-hover-color: #ffffff !important;
+    --vz-btn-hover-bg: rgba(64, 81, 137, 0.8) !important;
+    --vz-btn-hover-border-color: rgba(124, 156, 255, 0.7) !important;
+    --vz-btn-active-color: #ffffff !important;
+    --vz-btn-active-bg: rgba(64, 81, 137, 0.9) !important;
+    color: #ffffff !important;
+    background-color: rgba(64, 81, 137, 0.55) !important;
+    border-color: rgba(124, 156, 255, 0.45) !important;
+  }
+
+  .btn-soft-success {
+    --vz-btn-color: #ffffff !important;
+    --vz-btn-bg: rgba(10, 179, 156, 0.35) !important;
+    --vz-btn-hover-color: #ffffff !important;
+    --vz-btn-hover-bg: rgba(10, 179, 156, 0.55) !important;
+    color: #ffffff !important;
+    background-color: rgba(10, 179, 156, 0.35) !important;
+  }
+
+  .btn-soft-danger {
+    --vz-btn-color: #ffffff !important;
+    --vz-btn-bg: rgba(240, 101, 72, 0.35) !important;
+    --vz-btn-hover-color: #ffffff !important;
+    --vz-btn-hover-bg: rgba(240, 101, 72, 0.55) !important;
+    color: #ffffff !important;
+    background-color: rgba(240, 101, 72, 0.35) !important;
+  }
+
+  .btn-soft-secondary {
+    --vz-btn-color: #ffffff !important;
+    --vz-btn-bg: rgba(255, 255, 255, 0.1) !important;
+    --vz-btn-hover-color: #ffffff !important;
+    --vz-btn-hover-bg: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .btn-soft-info {
+    --vz-btn-color: #ffffff !important;
+    --vz-btn-bg: rgba(41, 156, 219, 0.35) !important;
+    --vz-btn-hover-color: #ffffff !important;
+    --vz-btn-hover-bg: rgba(41, 156, 219, 0.55) !important;
+    color: #ffffff !important;
+    background-color: rgba(41, 156, 219, 0.35) !important;
+  }
+
+  /* Status / invoice pills – keep light pill + dark text for readability */
+  .badge.bg-success-subtle,
+  a.badge.bg-success-subtle {
+    color: #0a3622 !important;
+    background-color: #a3cfbb !important;
+  }
+
+  .badge.bg-danger-subtle,
+  a.badge.bg-danger-subtle {
+    color: #58151c !important;
+    background-color: #f1aeb5 !important;
+  }
+
+  .badge.bg-warning-subtle,
+  a.badge.bg-warning-subtle {
+    color: #432404 !important;
+    background-color: #ffe69c !important;
+  }
+
+  .badge.bg-info-subtle,
+  a.badge.bg-info-subtle {
+    color: #032830 !important;
+    background-color: #9eeaf9 !important;
+  }
+
+  .badge.bg-primary-subtle,
+  a.badge.bg-primary-subtle {
+    color: #052c65 !important;
+    background-color: #9ec5fe !important;
+  }
+
+  .txn-status-open {
+    color: #58151c !important;
+    background-color: #f1aeb5 !important;
+  }
+
+  .txn-status-close {
+    color: #0a3622 !important;
+    background-color: #a3cfbb !important;
+  }
+
+  /* Modal table headers (Sale To SaleReturn / Memo To Sale) */
+  .modal .table thead.table-light,
+  .modal .table thead.table-light th,
+  .modal .table > thead.table-light > tr > th {
+    background-color: #2a2f3a !important;
+    color: #e9ecef !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .modal .table thead.table-light th *,
+  .modal .table thead.table-light .form-check-input {
+    color: #e9ecef !important;
+  }
+
+  /* Modal Close / light buttons */
+  .modal-footer .btn-light,
+  .modal .btn-light {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  .modal-footer .btn-light:hover,
+  .modal .btn-light:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+  }
+
+  /* Column filter inputs under table headers */
+  .table thead .form-control,
+  .table thead input[type="text"],
+  .table thead input:not([type="checkbox"]) {
+    color: var(--vz-body-color, #e9ecef) !important;
+    background-color: var(--vz-input-bg, #212529) !important;
+    border-color: var(--vz-border-color, #32383e) !important;
+  }
+
+  .table thead .form-control::placeholder,
+  .table thead input::placeholder {
+    color: rgba(255, 255, 255, 0.45) !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Transaction item-entry grid – prevents label overwrite, wraps cleanly
+------------------------------------------------------------------- */
+.txn-item-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem 0.6rem;
+  align-items: end;
+}
+
+.txn-item-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.txn-item-field .form-label {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 0.25rem;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txn-item-field--wide {
+  grid-column: span 2;
+  min-width: 140px;
+}
+
+.txn-item-field--btn {
+  grid-column: span 2;
+  min-width: 120px;
+}
+
+.txn-item-field .form-control,
+.txn-item-field .form-control-sm {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+  .txn-item-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .txn-item-field--wide,
+  .txn-item-field--btn {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1400px) {
+  .txn-item-entry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  }
+}

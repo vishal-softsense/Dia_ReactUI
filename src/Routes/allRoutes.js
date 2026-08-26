@@ -406,10 +406,21 @@ import SolitaireConsignmentInList from "../pages/Solitaires/Solitaires Transacti
 import SolitaireConsignmentInAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInAdd";
 import SolitaireConsignmentInEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInEdit";
 import SolitaireConsignmentInPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentIn/SolitaireConsignmentInPrintView";
+import SolitaireConsignmentInReturn from "../pages/Solitaires/Solitaires Transaction/SolitaireConsignmentInReturn/SolitaireConsignmentInReturn";
+import SolitaireMemoReturn from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoReturn/SolitaireMemoReturn";
 import SolitaireMemoOutList from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutList";
 import SolitaireMemoOutAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutAdd";
 import SolitaireMemoOutEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutEdit";
 import SolitaireMemoOutPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutPrintView";
+import SolitaireSaleList from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleList";
+import SolitaireSaleAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleAdd";
+import SolitaireSaleEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleEdit";
+import SolitaireSalePrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSalePrintView";
+import SolitaireSaleCurStatus from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleCurStatus";
+import SolitaireSaleReturnList from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnList";
+import SolitaireSaleReturnAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnAdd";
+import SolitaireSaleReturnEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnEdit";
+import SolitaireSaleReturnPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnPrintView";
 import MixPurchaseList from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseList";
 import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseAdd";
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
@@ -596,12 +607,12 @@ const authProtectedRoutes = [
   { path: "/parcel/add-ParcelItemMaster", component: <ParcelItemMasterAdd /> },
   { path: "/parcel/Edit-ParcelItemMaster", component: <ParcelItemMasterEdit /> },
 
-   // Solitaire Item Master
+  // Solitaire Item Master
   { path: "/item/list-item", component: <SolitaireItemMasterList /> },
   { path: "/masters/add-solitaire-item-master", component: <SolitaireItemMasterAdd /> },
   { path: "/masters/edit-solitaire-item-master", component: <SolitaireItemMasterEdit /> },
 
-  
+
 
   { path: "/account/list-accountgroup", component: <AccGrpMasterList /> },
   { path: "/account/add-accountgroup", component: <AccGrpMasterAdd /> },
@@ -630,7 +641,7 @@ const authProtectedRoutes = [
   { path: "/stocksearch", component: <SolitairesStockSearchReport /> },
   { path: "/solitaire/stock-search-report", component: <SolitairesStockSearchReport /> },
   { path: "/stock/stock-search-report", component: <SolitairesStockSearchReport /> },
-  
+
   // Solitaire Admin Stock Report
   { path: "/admin/admin-stock", component: <SolitaireAdminStockReport /> },
   { path: "/admin/admin-stock-report", component: <SolitaireAdminStockReport /> },
@@ -687,11 +698,32 @@ const authProtectedRoutes = [
   { path: "/consignment/edit-consignment", component: <SolitaireConsignmentInEdit /> },
   { path: "/consignment/printinvview", component: <SolitaireConsignmentInPrintView /> },
 
+  // Solitaire Consignment In Return entry (MVC: /Consignment/add-Consignment-return)
+  { path: "/consignment/add-consignment-return", component: <SolitaireConsignmentInReturn /> },
+  { path: "/Consignment/add-Consignment-return", component: <SolitaireConsignmentInReturn /> },
+
+  // Solitaire Memo Return entry (MVC: /memo/add-memo-return)
+  { path: "/memo/add-memo-return", component: <SolitaireMemoReturn /> },
+
   // Solitaire Memo Out entry (MVC: /memo/*)
   { path: "/memo/memo-list", component: <SolitaireMemoOutList /> },
   { path: "/memo/add-memo", component: <SolitaireMemoOutAdd /> },
   { path: "/memo/edit-memo", component: <SolitaireMemoOutEdit /> },
   { path: "/memo/printinvview", component: <SolitaireMemoOutPrintView /> },
+
+  // Solitaire Sale entry (MVC: /sale/*)
+  { path: "/sale/sale-list", component: <SolitaireSaleList /> },
+  { path: "/sale/add-sale", component: <SolitaireSaleAdd /> },
+  { path: "/sale/edit-sale", component: <SolitaireSaleEdit /> },
+  { path: "/sale/printinvview", component: <SolitaireSalePrintView /> },
+  { path: "/sale/SaleCurStatusPrintInv", component: <SolitaireSaleCurStatus /> },
+  { path: "/sale/salecurstatusprintinv", component: <SolitaireSaleCurStatus /> },
+
+  // Solitaire Sale Return entry (MVC: /salereturn/*)
+  { path: "/salereturn/salereturn-list", component: <SolitaireSaleReturnList /> },
+  { path: "/salereturn/add-salereturn", component: <SolitaireSaleReturnAdd /> },
+  { path: "/salereturn/edit-salereturn", component: <SolitaireSaleReturnEdit /> },
+  { path: "/salereturn/printinvview", component: <SolitaireSaleReturnPrintView /> },
 
   // Jewellery Purchase entry (MVC: /jewpurchase/*)
   { path: "/jewpurchase/jew-purchase-list", component: <JewPurchaseList /> },
@@ -753,7 +785,7 @@ const authProtectedRoutes = [
   { path: "/data/downloadMRP", component: <DownloadMRP /> },
   { path: "/data/importgrading", component: <ImportGrading /> },
 
-// Parcel Stock Register Report
+  // Parcel Stock Register Report
   { path: "/report/parcelstock-register-report", component: <ParcelStockRegisterReport /> },
 
 
@@ -794,8 +826,8 @@ const authProtectedRoutes = [
   // Mix Consignment Return Report (MVC: /mixreport/MixConsignment-Return-report)
   { path: "/mixreport/MixConsignment-Return-report", component: <MixConsignmentInRtnReport /> },
 
-  
-// Jewellery Purchase Report
+
+  // Jewellery Purchase Report
   { path: "/jewreport/Purchase-Report", component: <JewelleryPurchaseReport /> },
 
   // Jewellery Stock History Report
@@ -825,7 +857,7 @@ const authProtectedRoutes = [
 
   { path: "/data/import-pricing", component: <ImportPricing /> },
   { path: "/data/getlabdata", component: <GetLabData /> },
-{ path: "/dashbord/uploadexcel", component: <ConvertExcelUtility /> },
+  { path: "/dashbord/uploadexcel", component: <ConvertExcelUtility /> },
   { path: "/dashbord/UploadExcel", component: <ConvertExcelUtility /> },
   { path: "/dashboard/uploadexcel", component: <ConvertExcelUtility /> },
   { path: "/dashboard/UploadExcel", component: <ConvertExcelUtility /> },
@@ -1059,7 +1091,7 @@ const authProtectedRoutes = [
   { path: "/apps-job-categories", component: <JobCategories /> },
 
 
-  
+
 
 
   //User Profile

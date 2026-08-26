@@ -712,7 +712,6 @@ const JewPurchaseForm = ({ mode = "add" }) => {
       setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Items loaded."));
-      setBulkLotNos("");
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load items."));

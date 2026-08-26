@@ -43,8 +43,16 @@ const fmtDate = (value) => {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    .replace(/ /g, "\u00A0");
 };
+
+const dateCell = ({ getValue }) => (
+  <span className="text-nowrap" style={{ display: "inline-block", minWidth: "92px" }}>
+    {getValue()}
+  </span>
+);
 
 const fmtNum = (value, decimals = 2) => {
   const n = Number(value);
@@ -283,7 +291,8 @@ const SolitairePurchaseList = () => {
         accessorKey: "Date",
         accessorFn: (row) => fmtDate(getVal(row, "Date")),
         enableColumnFilter: true,
-        filterFn: customStringFilterFn
+        filterFn: customStringFilterFn,
+        cell: dateCell
       },
       {
         header: t("Party"),
@@ -357,7 +366,8 @@ const SolitairePurchaseList = () => {
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,
-        filterFn: customStringFilterFn
+        filterFn: customStringFilterFn,
+        cell: dateCell
       },
       {
         header: t("Payment Status"),
