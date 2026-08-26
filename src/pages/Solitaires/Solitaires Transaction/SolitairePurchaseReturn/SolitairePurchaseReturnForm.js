@@ -778,7 +778,6 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       );
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Items loaded."));
-      setBulkLotNos("");
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load items."));
@@ -1274,7 +1273,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6}>
                         <Label className="form-label mb-1 small">{t("Amt")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={fmt(summary.cgstAmt)} readOnly />
+                        <Input className="form-control-sm custom-readonly-input" style={fieldH} value={fmt(summary.cgstAmt)} readOnly />
                       </Col>
                       <Col xs={6}>
                         <Label className="form-label mb-1 small">SGST%</Label>
@@ -1282,7 +1281,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6}>
                         <Label className="form-label mb-1 small">{t("Amt")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={fmt(summary.sgstAmt)} readOnly />
+                        <Input className="form-control-sm custom-readonly-input" style={fieldH} value={fmt(summary.sgstAmt)} readOnly />
                       </Col>
                       <Col xs={6}>
                         <Label className="form-label mb-1 small">IGST%</Label>
@@ -1290,7 +1289,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6}>
                         <Label className="form-label mb-1 small">{t("Amt")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={fmt(summary.igstAmt)} readOnly />
+                        <Input className="form-control-sm custom-readonly-input" style={fieldH} value={fmt(summary.igstAmt)} readOnly />
                       </Col>
                     </Row>
                     <hr className="mb-2" />
