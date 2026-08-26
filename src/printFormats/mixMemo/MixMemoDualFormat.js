@@ -4,7 +4,7 @@ import { fmt, fmtDate, getVal, paginateFixed } from "../shared/printUtils";
 const border = "1px solid #A2A1A1";
 const thGray = { background: "#ccc", border, padding: 3, textAlign: "center", fontWeight: "bold" };
 
-const MixMemoDualFormat = ({ data, items, totals, company, logoUrl }) => {
+const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentStatus }) => {
   const pages = paginateFixed(items, 10);
   const plusMinus = (Number(getVal(data, "PlusMinusAmount", "plusMinusAmount")) || 0) *
     (Number(getVal(data, "BaseRate", "baseRate")) || 0);
@@ -164,8 +164,8 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl }) => {
         const isLastPage = pageIdx === pages.length - 1;
         return (
           <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
-            {renderCopy("OFFICE COPY", pageItems, pageIdx, isLastPage)}
-            {renderCopy("CUSTOMER COPY", pageItems, pageIdx, isLastPage)}
+            {renderCopy(isCurrentStatus ? "OFFICE COPY - CURRENT STATUS" : "OFFICE COPY", pageItems, pageIdx, isLastPage)}
+            {renderCopy(isCurrentStatus ? "CUSTOMER COPY - CURRENT STATUS" : "CUSTOMER COPY", pageItems, pageIdx, isLastPage)}
           </div>
         );
       })}

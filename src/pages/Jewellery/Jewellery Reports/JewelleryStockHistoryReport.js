@@ -205,7 +205,7 @@ const JewelleryStockHistoryReport = () => {
   const [reportRows, setReportRows] = useState([]);
 
   // Transaction types checkboxes selection
-  const [selectedTypesTrn, setSelectedTypesTrn] = useState(["PUR", "SALE", "STKTRN"]);
+  const [selectedTypesTrn, setSelectedTypesTrn] = useState(["MEMOIN","PUR","MEMOOUT", "SALE", "STKTRN"]);
   const [trnDropdownOpen, setTrnDropdownOpen] = useState(false);
   const trnDropdownRef = useRef(null);
 

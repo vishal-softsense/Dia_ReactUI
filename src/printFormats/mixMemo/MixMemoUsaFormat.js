@@ -5,7 +5,7 @@ const th = { background: "#BFBFBF", border: "1px solid #000", padding: "6px 0", 
 const td = { border: "1px solid #000", padding: "0 6px", textAlign: "center", height: 24 };
 const addressBox = { border: "1px solid #000", borderRadius: 12, padding: "8px 15px 12px 10px", height: 150 };
 
-const MixMemoUsaFormat = ({ data, items, totals, company, logoUrl }) => {
+const MixMemoUsaFormat = ({ data, items, totals, company, logoUrl, isCurrentStatus }) => {
   const pages = paginateVariable(items, { single: 24, first: 24, middle: 24, last: 24 });
   const conditions = company.saleConditions || company.memoConditions || FALLBACK_MEMO_CONDITIONS;
   const information = company.information || getVal(data, "Information") || "";
@@ -34,6 +34,9 @@ const MixMemoUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                   </td>
                   <td style={{ width: "32%", verticalAlign: "top" }}>
                     <div style={{ fontWeight: "bold", fontSize: 24, paddingTop: 5 }}>GENERAL MEMO</div>
+                    {isCurrentStatus ? (
+                      <div style={{ fontWeight: "bold", fontSize: 13, color: "#555", marginTop: 2 }}>CURRENT STATUS</div>
+                    ) : null}
                     <table style={{ width: "100%", fontSize: 13, marginTop: 10 }}>
                       <tbody>
                         <tr><td style={{ width: "40%" }}><b>Date :</b></td><td>{fmtDateSlash(getVal(data, "TrnDate", "trnDate"))}</td></tr>
@@ -94,9 +97,9 @@ const MixMemoUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                 {pageItems.map((item, idx) => (
                   <tr key={idx} style={{ fontSize: 11 }}>
                     <td style={td}>{srNo++}</td>
-                    <td style={{ ...td, textAlign: "left", paddingLeft: 15 }}>{getVal(item, "Lotno", "lotNo")}</td>
+                    <td style={{ ...td, textAlign: "left", paddingLeft: 15 }}>{getVal(item, "Lotno", "lotNo", "StockNo", "stockNo")}</td>
                     <td style={{ ...td, textAlign: "right" }}>{getVal(item, "Pcs", "pcs")}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Carats", "carats"), 2)}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}</td>
                     <td style={{ ...td, textAlign: "left" }}>{getVal(item, "ItemName", "itemName")}</td>
                     <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
                     <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "MasterCurrencyAmount", "Amount", "amount"), 2)}</td>

@@ -87,6 +87,7 @@ const MountingStockList = () => {
 
         const headers = [
             "Stock ID",
+            "JewelleryPcs",
             "Jewellery Category",
             "Metal Type",
             "Purity",
@@ -98,6 +99,7 @@ const MountingStockList = () => {
 
         const rows = mountingStock.map((item) => [
             item.stock_ID || item.Stock_ID || "",
+            item.pcs ?? item.Pcs ?? 0,
             item.mountCategory || item.MountCategory || item.designName || "",
             item.metalType || item.MetalType || "",
             item.purity || item.Purity || "",
@@ -155,6 +157,12 @@ const MountingStockList = () => {
                 header: t("StockID"),
                 accessorKey: "stock_ID",
                 accessorFn: (row) => row.stock_ID || row.Stock_ID,
+                enableColumnFilter: true,
+            },
+            {
+                header: t("JewelleryPcs"),
+                accessorKey: "pcs",
+                accessorFn: (row) => row.pcs ?? row.Pcs ?? 0,
                 enableColumnFilter: true,
             },
             {
