@@ -426,6 +426,16 @@ import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPu
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
 import MixPurchasePrintView from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchasePrintView";
 import MixPurchaseCurStatus from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseCurStatus";
+import MixConsignmentList from "../pages/Parcel/Parcel Transaction/MixConsignment/MixConsignmentList";
+import MixConsignmentAdd from "../pages/Parcel/Parcel Transaction/MixConsignment/MixConsignmentAdd";
+import MixConsignmentReturn from "../pages/Parcel/Parcel Transaction/MixConsignmentReturn/MixConsignmentReturn";
+import MixConsignmentEdit from "../pages/Parcel/Parcel Transaction/MixConsignment/MixConsignmentEdit";
+import MixConsignmentPrintView from "../pages/Parcel/Parcel Transaction/MixConsignment/MixConsignmentPrintView";
+import MixSaleList from "../pages/Parcel/Parcel Transaction/MixSale/MixSaleList";
+import MixSaleAdd from "../pages/Parcel/Parcel Transaction/MixSale/MixSaleAdd";
+import MixSaleEdit from "../pages/Parcel/Parcel Transaction/MixSale/MixSaleEdit";
+import MixSalePrintView from "../pages/Parcel/Parcel Transaction/MixSale/MixSalePrintView";
+import MixSaleCurStatus from "../pages/Parcel/Parcel Transaction/MixSale/MixSaleCurStatus";
 import MixMemoOutList from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutList";
 import MixMemoOutAdd from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutAdd";
 import MixMemoOutEdit from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutEdit";
@@ -809,6 +819,26 @@ const authProtectedRoutes = [
   { path: "/mix-purchase/edit-mixpur", component: <MixPurchaseEdit /> },
   { path: "/Mix_Pur/MixPurPrintInv", component: <MixPurchasePrintView /> },
   { path: "/Mix_Pur/MixPurCurStatusPrintInv", component: <MixPurchaseCurStatus /> },
+
+  // Mix Consignment entry (MVC: /mixconsignmentform/mixconsignmentformlist)
+  { path: "/mixconsignmentform/mixconsignmentformlist", component: <MixConsignmentList /> },
+  { path: "/MixConsignment/add-MixConsignment", component: <MixConsignmentAdd /> },
+  { path: "/MixConsignment/edit-MixConsignment", component: <MixConsignmentEdit /> },
+  { path: "/MixConsignment/MixConsignmentPrintInv", component: <MixConsignmentPrintView /> },
+
+  // Mix Consignment Return (MVC: /MixConsignment/add-mix-Consignment-return)
+  { path: "/MixConsignment/add-mix-Consignment-return", component: <MixConsignmentReturn /> },
+  { path: "/mixconsignment/add-mix-Consignment-return", component: <MixConsignmentReturn /> },
+
+  // Mix Sale / MixForm entry (MVC: /mixform/mixformlist — sidebar General Sale)
+  { path: "/mixform/mixformlist", component: <MixSaleList /> },
+  { path: "/mixform/add-mixdata", component: <MixSaleAdd /> },
+  { path: "/mix/edit-mixdata", component: <MixSaleEdit /> },
+  { path: "/MixSale/edit-MixSale", component: <MixSaleEdit /> },
+  { path: "/MixSale/MixSalePrintInv", component: <MixSalePrintView /> },
+  { path: "/mixsale/MixSalePrintInv", component: <MixSalePrintView /> },
+  { path: "/MixSale/MixSaleCurStatusPrintInv", component: <MixSaleCurStatus /> },
+  { path: "/mixsale/MixSaleCurStatusPrintInv", component: <MixSaleCurStatus /> },
 
   // Mix Memo Out entry (MVC: /mixmemoform/mixmemoformlist)
   { path: "/mixmemoform/mixmemoformlist", component: <MixMemoOutList /> },
