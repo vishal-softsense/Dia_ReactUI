@@ -718,6 +718,24 @@ export const getSolitaireMemoOutPrintView = (invNo) => api.get(`${url.SOLITAIRE_
 export const getSolitaireMemoOutShipVia = (searchby) =>
   api.get(`${url.SOLITAIRE_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
 
+export const getSolitairePartyHoldList = () => api.get(url.SOLITAIRE_PARTY_HOLD_LIST);
+export const getSolitairePartyHoldPageData = () => api.get(url.SOLITAIRE_PARTY_HOLD_PAGE_DATA);
+export const getSolitairePartyHoldDetail = (id) => api.get(`${url.SOLITAIRE_PARTY_HOLD_DETAIL}/${id}`);
+export const addSolitairePartyHold = (data) => api.create(url.SOLITAIRE_PARTY_HOLD_ADD, data);
+export const editSolitairePartyHold = (data) => api.create(url.SOLITAIRE_PARTY_HOLD_EDIT, data);
+export const deleteSolitairePartyHold = (id) => api.create(url.SOLITAIRE_PARTY_HOLD_DELETE, { id });
+export const getSolitairePartyHoldLotDetail = (payload) => api.create(url.SOLITAIRE_PARTY_HOLD_LOT_DETAIL, payload);
+export const addSolitairePartyHoldSingleLot = (payload) => api.create(url.SOLITAIRE_PARTY_HOLD_ADD_SINGLE_LOT, payload);
+export const getSolitairePartyHoldItemFromList = (payload) => api.create(url.SOLITAIRE_PARTY_HOLD_GET_ITEM_FROM_LIST, payload);
+export const refreshSolitairePartyHoldBack = (payload) => api.create(url.SOLITAIRE_PARTY_HOLD_REFRESH_BACK, payload);
+export const getSolitairePartyHoldPrintView = (invNo) => api.get(`${url.SOLITAIRE_PARTY_HOLD_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getSolitairePartyHoldShipVia = (searchby) =>
+  api.get(`${url.SOLITAIRE_PARTY_HOLD_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
+
+export const getSolitairePartyHoldReturnPageData = () => api.get(url.SOLITAIRE_PARTY_HOLD_RETURN_PAGE_DATA);
+export const getSolitairePartyHoldReturnList = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_RETURN_LIST, filter);
+export const returnSolitairePartyHoldReturn = (data) => api.create(url.SOLITAIRE_PARTY_HOLD_RETURN_SAVE, data);
+
 export const getSolitaireSaleList = () => api.get(url.SOLITAIRE_SALE_LIST);
 export const getSolitaireSalePageData = () => api.get(url.SOLITAIRE_SALE_PAGE_DATA);
 export const getSolitaireSaleDetail = (id) => api.get(`${url.SOLITAIRE_SALE_DETAIL}/${id}`);
@@ -903,6 +921,10 @@ export const getSolitaireMemoOutDropdowns = () => api.get(url.SOLITAIRE_MEMO_OUT
 // Solitaire Party Hold Report
 export const getSolitairePartyHoldReport = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_REPORT, filter);
 export const getSolitairePartyHoldDropdowns = () => api.get(url.SOLITAIRE_PARTY_HOLD_DROPDOWNS);
+
+// Solitaire Hold/Unhold Report
+export const getSolitaireHoldUnholdReport = (filter) => api.create(url.SOLITAIRE_HOLD_UNHOLD_REPORT, filter);
+export const postSolitaireHoldUnholdAction = (payload) => api.create(url.SOLITAIRE_HOLD_UNHOLD_ACTION, payload);
 
 // Solitaire Aging Report
 export const getSolitaireAgingReport = (filter) => api.create(url.SOLITAIRE_AGING_REPORT, filter);

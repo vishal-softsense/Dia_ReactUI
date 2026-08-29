@@ -2,9 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 //import logo
-import logoSm from "../assets/images/logo-sm.png";
-import logoDark from "../assets/images/Dialogo-dark.png";
-import logoLight from "../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../Components/constants/brandLogo";
 
 //Import Components
 import VerticalLayout from "./VerticalLayouts";
@@ -13,6 +11,16 @@ import { Container } from "reactstrap";
 import HorizontalLayout from "./HorizontalLayout";
 
 const Sidebar = ({ layoutType }) => {
+
+  const renderExpandedLogo = () => (
+    <span className="brand-logo-expanded">
+      <img src={logoSm} alt="DiaJewSoft" className="brand-logo-icon" />
+      <span className="brand-logo-text">
+        <span className="brand-logo-title">DiaJewSoft</span>
+        <span className="brand-logo-subtitle">SoftOnCloud</span>
+      </span>
+    </span>
+  );
 
   useEffect(() => {
     var verticalOverlay = document.getElementsByClassName("vertical-overlay");
@@ -40,19 +48,19 @@ const Sidebar = ({ layoutType }) => {
         <div className="navbar-brand-box">
           <Link to="/" className="logo logo-dark">
             <span className="logo-sm">
-              <img src={logoSm} alt="" height="22" />
+              <img src={logoSm} alt="DiaJewSoft" className="brand-logo-icon-sm" />
             </span>
             <span className="logo-lg">
-              <img src={logoDark} alt="" height="60" />
+              {renderExpandedLogo()}
             </span>
           </Link>
 
           <Link to="/" className="logo logo-light">
             <span className="logo-sm">
-              <img src={logoSm} alt="" height="22" />
+              <img src={logoSm} alt="DiaJewSoft" className="brand-logo-icon-sm" />
             </span>
             <span className="logo-lg">
-              <img src={logoLight} alt="" height="60" />
+              {renderExpandedLogo()}
             </span>
           </Link>
           <button

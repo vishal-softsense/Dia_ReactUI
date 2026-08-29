@@ -5,8 +5,7 @@ import Scrollspy from "react-scrollspy";
 
 
 //import Images
-import logodark from "../../../assets/images/Dialogo-dark.png";
-import logolight from "../../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 const Navbar = () => {
     const [navClass, setnavClass] = useState("");
@@ -71,8 +70,13 @@ const Navbar = () => {
             <nav className={"navbar navbar-expand-lg navbar-landing fixed-top " + navClass} id="navbar">
                 <Container>
                     <Link className="navbar-brand" to="/index">
-                        <img src={logodark} className="card-logo card-logo-dark" alt="logo dark" height="17" />
-                        <img src={logolight} className="card-logo card-logo-light" alt="logo light" height="17" />
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                            <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "8px" }} />
+                            <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1 }}>
+                                <span style={{ fontSize: "1rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                <span style={{ fontSize: "0.7rem", fontWeight: 500, opacity: 0.75 }}>SoftOnCloud</span>
+                            </span>
+                        </span>
                     </Link>
 
                     <button className="navbar-toggler py-0 fs-20 text-body" onClick={toggle} type="button" data-bs-toggle="collapse"

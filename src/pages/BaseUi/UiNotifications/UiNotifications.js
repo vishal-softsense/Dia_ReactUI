@@ -11,7 +11,7 @@ import BreadCrumb from '../../../Components/Common/BreadCrumb';
 import PreviewCardHeader from '../../../Components/Common/PreviewCardHeader';
 
 // Import Images
-import logosm from "../../../assets/images/logo-sm.png";
+import { APP_LOGO as logosm } from "../../../Components/constants/brandLogo";
 
 import { BootstrapToastsExample, ToastPlacementExample, BorderIconExample, ToastifyExample } from './UiNotificationsCode';
 

@@ -192,8 +192,9 @@
 
 .navbar-brand-box {
     padding: 0 1.3rem;
-    text-align: center;
+    text-align: left;
     transition: all .1s ease-out;
+    overflow: hidden;
 
     @media (max-width: 767.98px) {
         display: none;
@@ -285,6 +286,15 @@
     }
 }
 
+.brand-logo-icon-sm {
+    display: block;
+    height: 36px;
+    width: 36px;
+    border-radius: 10px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
 .brand-logo-expanded {
     width: 100%;
     max-width: 100%;
@@ -297,8 +307,9 @@
 
 .brand-logo-icon {
     display: block;
-    width: auto;
-    border-radius: 14px;
+    height: 40px;
+    width: 40px;
+    border-radius: 12px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -313,23 +324,30 @@
     margin-left: 0;
     white-space: nowrap;
     overflow: hidden;
-    max-width: 12rem;
+    min-width: 0;
+    max-width: calc(100% - 3rem);
     opacity: 1;
     transition: opacity 0.05s ease 0.12s, max-width 0.1s ease 0.12s;
 }
 
 .brand-logo-title {
     color: var(--#{$prefix}vertical-menu-item-color);
-    font-size: 2rem;
+    font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .brand-logo-subtitle {
     color: var(--#{$prefix}vertical-menu-item-color);
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 500;
     opacity: 0.8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .logo-light {
@@ -370,7 +388,71 @@
         display: none;
     }
 
+    &[data-sidebar-size="lg"],
+    &[data-sidebar-size=""] {
+        .navbar-brand-box {
+            text-align: left;
+            padding: 0 1.3rem;
+
+            .logo {
+                line-height: 1;
+            }
+
+            .brand-logo-expanded {
+                justify-content: flex-start;
+                align-items: center;
+                gap: 0.6rem;
+                min-height: $header-height;
+                padding: 0;
+            }
+
+            .brand-logo-icon {
+                height: 50px;
+                width: 50px;
+                border-radius: 15px;
+                flex-shrink: 0;
+            }
+
+            .brand-logo-text {
+                align-items: flex-start;
+                justify-content: center;
+                text-align: left;
+                line-height: 1.1;
+                max-width: calc(100% - 3.5rem);
+            }
+
+            .brand-logo-title {
+                font-size: 1.85rem;
+                font-weight: 700;
+                line-height: 1.05;
+                letter-spacing: 0;
+            }
+
+            .brand-logo-subtitle {
+                font-size: 0.95rem;
+                font-weight: 500;
+                line-height: 1.1;
+                opacity: 0.85;
+                margin-top: 0.05rem;
+            }
+        }
+    }
+
     &[data-sidebar-size="sm-hover"] {
+
+        .navbar-brand-box {
+            text-align: center;
+            padding: 0.5rem 0.4rem;
+            overflow: hidden;
+
+            .btn-vertical-sm-hover {
+                display: none;
+            }
+        }
+
+        .logo {
+            line-height: 1;
+        }
 
         .main-content {
             margin-left: var(--#{$prefix}vertical-menu-width-sm);
@@ -509,6 +591,8 @@
                 }
 
                 .logo {
+                    line-height: $header-height;
+
                     span.logo-lg {
                         display: inline-block;
                     }
@@ -544,6 +628,8 @@
     &[data-sidebar-size="sm-hover-active"] {
         .navbar-brand-box {
             text-align: left;
+            padding: 0 1.3rem;
+            overflow: hidden;
         }
 
         .topnav-hamburger {
@@ -552,6 +638,68 @@
 
         .btn-vertical-sm-hover {
             display: inline-block;
+        }
+
+        .navbar-menu {
+            width: var(--#{$prefix}vertical-menu-width) !important;
+
+            .navbar-nav {
+                .badge {
+                    display: inline-block;
+                }
+
+                .menu-title {
+                    text-align: left;
+
+                    span {
+                        display: inline-block;
+                    }
+
+                    i {
+                        display: none;
+                    }
+                }
+
+                .nav-link {
+                    display: flex;
+                    text-align: left;
+                    padding: $vertical-menu-item-padding-y $vertical-menu-item-padding-x;
+
+                    span {
+                        display: inline-block;
+                    }
+
+                    i {
+                        font-size: 18px;
+                        min-width: $vertical-menu-item-icon-width;
+                    }
+
+                    svg {
+                        margin-right: 0.665rem;
+                    }
+
+                    &:after,
+                    &:before {
+                        display: block;
+                    }
+                }
+
+                .menu-dropdown {
+                    display: block;
+                }
+            }
+        }
+
+        .logo {
+            line-height: $header-height;
+
+            span.logo-lg {
+                display: inline-block;
+            }
+
+            span.logo-sm {
+                display: none;
+            }
         }
     }
 
@@ -570,14 +718,22 @@
 
         .navbar-brand-box {
             position: fixed;
-            padding: 0;
+            padding: 0.5rem 0.4rem;
             width: var(--#{$prefix}vertical-menu-width-sm);
             z-index: 1;
             top: 0;
             background-color: var(--#{$prefix}vertical-menu-bg);
+            text-align: center;
+            overflow: hidden;
+
+            .btn-vertical-sm-hover {
+                display: none;
+            }
         }
 
         .logo {
+            line-height: 1;
+
             span.logo-lg {
                 display: none;
             }
@@ -740,6 +896,25 @@
 
         .navbar-brand-box {
             width: var(--#{$prefix}vertical-menu-width-md);
+            text-align: center;
+            padding: 0.5rem 0.4rem;
+            overflow: hidden;
+
+            .btn-vertical-sm-hover {
+                display: none;
+            }
+        }
+
+        .logo {
+            line-height: 1;
+
+            span.logo-lg {
+                display: none;
+            }
+
+            span.logo-sm {
+                display: inline-block;
+            }
         }
 
         // Side menu

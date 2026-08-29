@@ -387,6 +387,7 @@ import SolitaireSaleReport from "../pages/Solitaires/Solitaires Reports/Solitair
 import SolitaireSalePerformanceReport from "../pages/Solitaires/Solitaires Reports/SolitaireSalePerformanceReport";
 import SolitaireConsumptionReport from "../pages/Solitaires/Solitaires Reports/SolitaireConsumptionReport";
 import SolitairePartyHoldReport from "../pages/Solitaires/Solitaires Reports/SolitairePartyHoldReport";
+import SolitaireHoldUnholdReport from "../pages/Solitaires/Solitaires Transaction/SolitaireHoldUnholdReport/SolitaireHoldUnholdReport";
 import SolitaireAgingReport from "../pages/Solitaires/Solitaires Reports/SolitaireAgingReport";
 
 import OutstandingReport from "../pages/Reports/Payable Receivables/OutstandingReport";
@@ -412,6 +413,11 @@ import SolitaireMemoOutList from "../pages/Solitaires/Solitaires Transaction/Sol
 import SolitaireMemoOutAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutAdd";
 import SolitaireMemoOutEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutEdit";
 import SolitaireMemoOutPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireMemoOut/SolitaireMemoOutPrintView";
+import SolitairePartyHoldList from "../pages/Solitaires/Solitaires Transaction/SolitairePartyHold/SolitairePartyHoldList";
+import SolitairePartyHoldAdd from "../pages/Solitaires/Solitaires Transaction/SolitairePartyHold/SolitairePartyHoldAdd";
+import SolitairePartyHoldEdit from "../pages/Solitaires/Solitaires Transaction/SolitairePartyHold/SolitairePartyHoldEdit";
+import SolitairePartyHoldPrintView from "../pages/Solitaires/Solitaires Transaction/SolitairePartyHold/SolitairePartyHoldPrintView";
+import SolitairePartyHoldReturn from "../pages/Solitaires/Solitaires Transaction/SolitairePartyHoldReturn/SolitairePartyHoldReturn";
 import SolitaireSaleList from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleList";
 import SolitaireSaleAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleAdd";
 import SolitaireSaleEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireSale/SolitaireSaleEdit";
@@ -665,6 +671,9 @@ const authProtectedRoutes = [
   { path: "/report/memo-report", component: <SolitaireMemoOutReport /> },
   { path: "/report/PartyHold-report", component: <SolitairePartyHoldReport /> },
   { path: "/report/partyhold-report", component: <SolitairePartyHoldReport /> },
+  // Solitaire Hold/Unhold Report (MVC: /report/Hold-Unhold-report)
+  { path: "/report/Hold-Unhold-report", component: <SolitaireHoldUnholdReport /> },
+  { path: "/report/hold-unhold-report", component: <SolitaireHoldUnholdReport /> },
   // Solitaire Aging Report (MVC: /report/aging-report)
   { path: "/report/aging-report", component: <SolitaireAgingReport /> },
   { path: "/report/Aging-Report", component: <SolitaireAgingReport /> },
@@ -715,6 +724,16 @@ const authProtectedRoutes = [
   { path: "/memo/add-memo", component: <SolitaireMemoOutAdd /> },
   { path: "/memo/edit-memo", component: <SolitaireMemoOutEdit /> },
   { path: "/memo/printinvview", component: <SolitaireMemoOutPrintView /> },
+
+  // Solitaire Party Hold entry (MVC: /PartyHold/*)
+  { path: "/PartyHold/PartyHold-list", component: <SolitairePartyHoldList /> },
+  { path: "/PartyHold/add-PartyHold", component: <SolitairePartyHoldAdd /> },
+  { path: "/PartyHold/edit-PartyHold", component: <SolitairePartyHoldEdit /> },
+  { path: "/PartyHold/printinvview", component: <SolitairePartyHoldPrintView /> },
+
+  // Solitaire Party Hold Return entry (MVC: /Partyholdrtn/add-Partyhold-return)
+  { path: "/Partyholdrtn/add-Partyhold-return", component: <SolitairePartyHoldReturn /> },
+  { path: "/partyholdrtn/add-partyhold-return", component: <SolitairePartyHoldReturn /> },
 
   // Solitaire Sale entry (MVC: /sale/*)
   { path: "/sale/sale-list", component: <SolitaireSaleList /> },

@@ -5,7 +5,7 @@ import ParticlesAuth from "../ParticlesAuth";
 
 
 //import images
-import logoLight from "../../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 
 const BasicSignIn = () => {
@@ -20,7 +20,13 @@ document.title="Basic SignIn | Velzon - React Admin & Dashboard Template";
                                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                                     <div>
                                         <Link to="/" className="d-inline-block auth-logo">
-                                            <img src={logoLight} alt="" height="20" />
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
+                                                <img src={logoSm} alt="DiaJewSoft" height="28" style={{ borderRadius: "8px" }} />
+                                                <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1, textAlign: "left" }}>
+                                                    <span style={{ color: "#fff", fontSize: "1rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                                    <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.65rem", fontWeight: 500 }}>SoftOnCloud</span>
+                                                </span>
+                                            </span>
                                         </Link>
                                     </div>
                                     <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>

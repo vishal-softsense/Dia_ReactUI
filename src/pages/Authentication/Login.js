@@ -14,7 +14,7 @@ import { useFormik } from "formik";
 // actions
 import { loginUser, socialLogin, resetLoginFlag } from "../../slices/thunks";
 
-import logoLight from "../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../Components/constants/brandLogo";
 import { createSelector } from 'reselect';
 //import images
 
@@ -118,9 +118,13 @@ const Login = (props) => {
                                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                                     <div>
                                         <Link to="/" className="d-inline-block auth-logo">
-                                            <img src={logoLight} alt="" height="60" />
-                                            {/* <h2 style={{ color: 'white', fontweight: 'bold' }}>DiaJewSoft</h2> */}
-                                            {/* <img src={`../../assets/images/Dialogo-light.png`} alt="DiaJewSoft Logo" height="120" /> */}
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem" }}>
+                                                <img src={logoSm} alt="DiaJewSoft" height="50" style={{ borderRadius: "12px" }} />
+                                                <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1, textAlign: "left" }}>
+                                                    <span style={{ color: "#fff", fontSize: "1.5rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                                    <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", fontWeight: 500 }}>SoftOnCloud</span>
+                                                </span>
+                                            </span>
                                         </Link>
                                     </div>
                                     {/* <p className="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p> */}

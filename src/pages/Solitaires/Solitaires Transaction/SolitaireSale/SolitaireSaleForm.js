@@ -1275,6 +1275,11 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       </Table>
                     </div>
                   )}
+                  {items.length > 0 && (
+                    <div className="mt-2 text-muted small">
+                      {t("Showing")} 1 {t("to")} {items.length} {t("of")} {items.length} {t("entries")}
+                    </div>
+                  )}
                 </CardBody>
               </Card>
             </Col>

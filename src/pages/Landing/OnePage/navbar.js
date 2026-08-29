@@ -3,9 +3,7 @@ import { Collapse, Container, NavbarToggler, NavLink } from "reactstrap";
 import Scrollspy from "react-scrollspy";
 import { Link } from "react-router-dom";
 
-import diajewLogo from "../../../assets/images/diajew-logo.png";
-
-const logoAlt = "DiaJew SoftOnCloud logo";
+import { APP_LOGO as logoSm, APP_LOGO_ALT as logoAlt } from "../../../Components/constants/brandLogo";
 
 const Navbar = () => {
     const [isOpenMenu, setisOpenMenu] = useState(false);
@@ -64,9 +62,9 @@ const Navbar = () => {
                 <Container>
                     <Link className="navbar-brand landing-brand" to="/">
                         <span className="brand-logo-expanded">
-                            <img src={diajewLogo} alt={logoAlt} className="brand-logo-icon" width="36" height="36" />
+                            <img src={logoSm} alt={logoAlt} className="brand-logo-icon" width="36" height="36" style={{ borderRadius: "12px" }} />
                             <span className="brand-logo-text">
-                                <span className="brand-logo-title">DiaJew</span>
+                                <span className="brand-logo-title">DiaJewSoft</span>
                                 <span className="brand-logo-subtitle">SoftOnCloud</span>
                             </span>
                         </span>

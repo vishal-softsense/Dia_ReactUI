@@ -8,6 +8,34 @@
         width: $twocolumn-menu-width;
         left: $twocolumn-menu-iconview-width;
 
+        .navbar-brand-box {
+            overflow: hidden;
+            padding: 0 0.85rem;
+
+            .brand-logo-expanded {
+                min-height: auto;
+                gap: 0.45rem;
+            }
+
+            .brand-logo-icon {
+                height: 34px;
+                width: 34px;
+                border-radius: 10px;
+            }
+
+            .brand-logo-title {
+                font-size: 1.05rem;
+            }
+
+            .brand-logo-subtitle {
+                font-size: 0.68rem;
+            }
+
+            .brand-logo-text {
+                max-width: calc(100% - 2.5rem);
+            }
+        }
+
         .menu-link {
             letter-spacing: .05em;
             cursor: default;
@@ -100,6 +128,18 @@
         position: absolute;
         padding: 0;
         text-align: center;
+
+        .logo {
+            display: block;
+            line-height: 1;
+            padding: 0.75rem 0.4rem 0.5rem;
+
+            .brand-logo-icon-sm {
+                height: 34px;
+                width: 34px;
+                border-radius: 10px;
+            }
+        }
 
         li {
             position: relative;

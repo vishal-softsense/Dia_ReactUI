@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { Dropdown, DropdownMenu, DropdownToggle, Form } from 'reactstrap';
 
 //import images
-import logoSm from "../assets/images/logo-sm.png";
-import logoDark from "../assets/images/Dialogo-dark.png";
-import logoLight from "../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../Components/constants/brandLogo";
 
 //import Components
 import SearchOption from '../Components/Common/SearchOption';
@@ -83,19 +81,31 @@ const Header = ({ onChangeLayoutMode, layoutModeType, headerClass }) => {
                             <div className="navbar-brand-box horizontal-logo">
                                 <Link to="/" className="logo logo-dark">
                                     <span className="logo-sm">
-                                        <img src={logoSm} alt="" height="22" />
+                                        <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "10px" }} />
                                     </span>
                                     <span className="logo-lg">
-                                        <img src={logoDark} alt="" height="60" />
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                                            <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "10px" }} />
+                                            <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1 }}>
+                                                <span style={{ fontSize: "1rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                                <span style={{ fontSize: "0.7rem", fontWeight: 500, opacity: 0.8 }}>SoftOnCloud</span>
+                                            </span>
+                                        </span>
                                     </span>
                                 </Link>
 
                                 <Link to="/" className="logo logo-light">
                                     <span className="logo-sm">
-                                        <img src={logoSm} alt="" height="22" />
+                                        <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "10px" }} />
                                     </span>
                                     <span className="logo-lg">
-                                        <img src={logoLight} alt="" height="60" />
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                                            <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "10px" }} />
+                                            <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1 }}>
+                                                <span style={{ color: "#fff", fontSize: "1rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                                <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.7rem", fontWeight: 500 }}>SoftOnCloud</span>
+                                            </span>
+                                        </span>
                                     </span>
                                 </Link>
                             </div>

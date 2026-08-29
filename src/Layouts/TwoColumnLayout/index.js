@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { Collapse, Container } from 'reactstrap';
 import withRouter from '../../Components/Common/withRouter';
 
-import logoSm from "../../assets/images/logo-sm.png";
+import { APP_LOGO as logoSm } from "../../Components/constants/brandLogo";
 //i18n
 import { withTranslation } from "react-i18next";
 
@@ -150,8 +150,8 @@ const TwoColumnLayout = (props) => {
                     <Container fluid>
                         <div id="two-column-menu">
                             <SimpleBar className="twocolumn-iconview">
-                                <Link to="#" className="logo">
-                                    <img src={logoSm} alt="" height="22" />
+                                <Link to="/" className="logo">
+                                    <img src={logoSm} alt="DiaJewSoft" className="brand-logo-icon-sm" />
                                 </Link>
                                 {(navData || []).map((item, key) => (
                                     <React.Fragment key={key}>

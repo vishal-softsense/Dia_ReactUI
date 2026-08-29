@@ -33,7 +33,7 @@ import avatar6 from "../../../assets/images/users/avatar-6.jpg";
 import avatar7 from "../../../assets/images/users/avatar-7.jpg";
 import avatar8 from "../../../assets/images/users/avatar-8.jpg";
 
-import spinner1 from "../../../assets/images/logo-sm.png";
+import { APP_LOGO as spinner1 } from "../../../Components/constants/brandLogo";
 
 const UiCards = () => {
     const breakpointColumnsObj = {

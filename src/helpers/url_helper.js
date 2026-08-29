@@ -573,6 +573,23 @@ export const SOLITAIRE_MEMO_OUT_REFRESH_BACK = "/api/SolitaireMemoOut/refresh-ba
 export const SOLITAIRE_MEMO_OUT_PRINT_VIEW = "/api/SolitaireMemoOut/print-view"; // append /{invNo}
 export const SOLITAIRE_MEMO_OUT_SHIP_VIA = "/api/SolitaireMemoOut/ship-via"; // ?searchby=
 
+export const SOLITAIRE_PARTY_HOLD_LIST = "/api/SolitairePartyHold/list";
+export const SOLITAIRE_PARTY_HOLD_PAGE_DATA = "/api/SolitairePartyHold/pagedata";
+export const SOLITAIRE_PARTY_HOLD_DETAIL = "/api/SolitairePartyHold/detail"; // append /{id}
+export const SOLITAIRE_PARTY_HOLD_ADD = "/api/SolitairePartyHold/add";
+export const SOLITAIRE_PARTY_HOLD_EDIT = "/api/SolitairePartyHold/edit";
+export const SOLITAIRE_PARTY_HOLD_DELETE = "/api/SolitairePartyHold/delete";
+export const SOLITAIRE_PARTY_HOLD_LOT_DETAIL = "/api/SolitairePartyHold/lot-detail";
+export const SOLITAIRE_PARTY_HOLD_ADD_SINGLE_LOT = "/api/SolitairePartyHold/add-single-lot";
+export const SOLITAIRE_PARTY_HOLD_GET_ITEM_FROM_LIST = "/api/SolitairePartyHold/get-item-from-list";
+export const SOLITAIRE_PARTY_HOLD_REFRESH_BACK = "/api/SolitairePartyHold/refresh-back";
+export const SOLITAIRE_PARTY_HOLD_PRINT_VIEW = "/api/SolitairePartyHold/print-view"; // append /{invNo}
+export const SOLITAIRE_PARTY_HOLD_SHIP_VIA = "/api/SolitairePartyHold/ship-via"; // ?searchby=
+
+export const SOLITAIRE_PARTY_HOLD_RETURN_PAGE_DATA = "/api/SolitairePartyHoldReturn/pagedata";
+export const SOLITAIRE_PARTY_HOLD_RETURN_LIST = "/api/SolitairePartyHoldReturn/list";
+export const SOLITAIRE_PARTY_HOLD_RETURN_SAVE = "/api/SolitairePartyHoldReturn/return";
+
 export const SOLITAIRE_SALE_LIST = "/api/SolitaireSale/list";
 export const SOLITAIRE_SALE_PAGE_DATA = "/api/SolitaireSale/pagedata";
 export const SOLITAIRE_SALE_DETAIL = "/api/SolitaireSale/detail"; // append /{id}
@@ -736,6 +753,10 @@ export const SOLITAIRE_MEMO_OUT_DROPDOWNS = "/api/SolitaireMemoOutReport/dropdow
 // Solitaire Party Hold Report
 export const SOLITAIRE_PARTY_HOLD_REPORT = "/api/SolitairePartyHoldReport/search";
 export const SOLITAIRE_PARTY_HOLD_DROPDOWNS = "/api/SolitairePartyHoldReport/dropdowns";
+
+// Solitaire Hold/Unhold Report
+export const SOLITAIRE_HOLD_UNHOLD_REPORT = "/api/SolitaireHoldUnholdReport/search";
+export const SOLITAIRE_HOLD_UNHOLD_ACTION = "/api/SolitaireHoldUnholdReport/hold-restore";
 
 // Solitaire Aging Report
 export const SOLITAIRE_AGING_REPORT = "/api/SolitaireAgingReport/search";

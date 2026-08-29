@@ -5,7 +5,7 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Link } from "react-router-dom";
 
 // Import Images
-import logoLight from "../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../Components/constants/brandLogo";
 
 const AuthSlider = () => {
     return (
@@ -17,7 +17,13 @@ const AuthSlider = () => {
                     <div className="position-relative h-100 d-flex flex-column">
                         <div className="mb-4">
                             <Link to="/dashboard" className="d-block">
-                                <img src={logoLight} alt="" height="18" />
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                                    <img src={logoSm} alt="DiaJewSoft" height="24" style={{ borderRadius: "6px" }} />
+                                    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1 }}>
+                                        <span style={{ color: "#fff", fontSize: "0.9rem", fontWeight: 700 }}>DiaJewSoft</span>
+                                        <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.6rem", fontWeight: 500 }}>SoftOnCloud</span>
+                                    </span>
+                                </span>
                             </Link>
                         </div>
                         <div className="mt-auto">

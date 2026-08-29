@@ -123,6 +123,8 @@ const SolitairePurchaseCurStatus = () => {
   const tdStyle = {
     borderLeft: border,
     borderRight: border,
+    borderTop: "none",
+    borderBottom: "none",
     padding: "7px 6px",
     fontSize: 11,
     verticalAlign: "top"
@@ -165,7 +167,10 @@ const SolitairePurchaseCurStatus = () => {
               borderRadius: 8,
               width: "100%",
               maxWidth: 960,
-              margin: "0 auto"
+              margin: "0 auto",
+              position: "relative",
+              minHeight: 1190,
+              paddingBottom: 70
             }}
           >
             <table style={{ width: "100%", marginBottom: 18, tableLayout: "fixed" }}>
@@ -332,49 +337,97 @@ const SolitairePurchaseCurStatus = () => {
                   );
                 })}
                 <tr>
-                  <td colSpan={5} style={{ border: "none", paddingTop: 10 }} />
+                  <td
+                    colSpan={8}
+                    style={{
+                      borderTop: "2px solid #666",
+                      borderBottom: "none",
+                      borderLeft: "none",
+                      borderRight: "none",
+                      padding: 0,
+                      height: 1,
+                      lineHeight: 0,
+                      fontSize: 0
+                    }}
+                  >
+                    &nbsp;
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={5} style={{ border: "none", padding: "10px 6px", height: 33 }}>
+                    &nbsp;
+                  </td>
                   <td
                     colSpan={2}
                     style={{
-                      borderTop: "2px solid #666",
+                      border: "none",
                       textAlign: "right",
                       padding: "10px 6px",
                       fontWeight: "bold",
-                      fontSize: 12
+                      fontSize: 12,
+                      height: 33
                     }}
                   >
                     Invoice Balance
                   </td>
                   <td
                     style={{
-                      borderTop: "2px solid #666",
+                      border: "none",
                       textAlign: "right",
                       padding: "10px 6px",
                       fontWeight: "bold",
                       fontSize: 12,
-                      whiteSpace: "nowrap"
+                      whiteSpace: "nowrap",
+                      height: 33
                     }}
                   >
                     {fmtMoney(balance)}
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    colSpan={8}
+                    style={{
+                      borderTop: "2px solid #666",
+                      borderBottom: "none",
+                      borderLeft: "none",
+                      borderRight: "none",
+                      padding: 0,
+                      height: 1,
+                      lineHeight: 0,
+                      fontSize: 0
+                    }}
+                  >
+                    &nbsp;
                   </td>
                 </tr>
               </tbody>
             </table>
 
             <div
+              className="footer-section"
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: 22,
-                fontSize: 11,
-                gap: 16,
-                flexWrap: "wrap"
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                width: "100%",
+                fontSize: 12,
+                padding: "5px 16px 8px"
               }}
             >
-              <span>{company.companyFooter || "Powered by SoftOnCloud"}</span>
-              <span>Page 1 of 1</span>
-              <span>Printed on {fmtDate(new Date())}</span>
+              <table style={{ width: "100%" }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: "33%", textAlign: "left" }}>
+                      {company.companyFooter || "Powered by SoftOnCloud"}
+                    </td>
+                    <td style={{ width: "33%", textAlign: "center" }}>Page 1 of 1</td>
+                    <td style={{ width: "34%", textAlign: "right" }}>
+                      Printed on {fmtDate(new Date())}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </Container>
@@ -399,12 +452,22 @@ const SolitairePurchaseCurStatus = () => {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              padding: 0 !important;
-              border: none !important;
+              padding: 16px 16px 70px 16px !important;
+              min-height: 100vh !important;
+              border: 1px solid #000 !important;
               border-radius: 0 !important;
               box-shadow: none !important;
               background: #fff !important;
               color: #000 !important;
+              box-sizing: border-box !important;
+            }
+            #purchase-curstatus-print-area .footer-section {
+              position: absolute !important;
+              bottom: 0 !important;
+              left: 0 !important;
+              width: 100% !important;
+              padding: 5px 16px 8px !important;
+              box-sizing: border-box !important;
             }
             .d-print-none,
             .navbar-menu,

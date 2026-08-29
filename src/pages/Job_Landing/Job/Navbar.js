@@ -7,8 +7,7 @@ import {
   NavbarToggler,
   NavLink,
 } from "reactstrap";
-import LogoDark from "../../../assets/images/Dialogo-dark.png";
-import LogoLight from "../../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 const Navbar = () => {
   const [isOpenMenu, setisOpenMenu] = useState(false);
   const [navClass, setnavClass] = useState("");
@@ -67,18 +66,13 @@ const Navbar = () => {
       >
         <Container fluid className="custom-container">
           <Link className="navbar-brand" to="/index">
-            <img
-              src={LogoDark}
-              className="card-logo card-logo-dark"
-              alt="logo dark"
-              height="17"
-            />
-            <img
-              src={LogoLight}
-              className="card-logo card-logo-light"
-              alt="logo light"
-              height="17"
-            />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "8px" }} />
+              <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.1 }}>
+                <span className="text-body fw-bold" style={{ fontSize: "1rem" }}>DiaJewSoft</span>
+                <span className="text-muted" style={{ fontSize: "0.7rem", fontWeight: 500 }}>SoftOnCloud</span>
+              </span>
+            </span>
           </Link>
           <NavbarToggler
             onClick={toggle}

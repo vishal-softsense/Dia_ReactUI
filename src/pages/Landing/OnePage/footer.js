@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Col, Container, Input, Row } from 'reactstrap';
 
-import diajewLogo from "../../../assets/images/diajew-logo.png";
+import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 const productLinks = [
     { label: "Inventory", to: "/landing#features" },
@@ -66,14 +66,15 @@ const Footer = () => {
                             <Link to="/landing" className="landing-footer-brand text-decoration-none">
                                 <span className="landing-footer-brand-logo">
                                     <img
-                                        src={diajewLogo}
-                                        alt="DiaJew SoftOnCloud"
+                                        src={logoSm}
+                                        alt="DiaJewSoft SoftOnCloud"
                                         className="brand-logo-icon landing-footer-logo-img"
                                         width="36"
                                         height="36"
+                                        style={{ borderRadius: "12px" }}
                                     />
                                     <span className="landing-footer-brand-text">
-                                        <span className="landing-footer-brand-title">DiaJew</span>
+                                        <span className="landing-footer-brand-title">DiaJewSoft</span>
                                         <span className="landing-footer-brand-subtitle">SoftOnCloud</span>
                                     </span>
                                 </span>

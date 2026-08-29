@@ -38,6 +38,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { parseExcelFile } from "../../../../helpers/excel_helper";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -985,10 +986,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     }));
   }, [summary.comDisplay, summary.broDisplay, summary.vatAmt, summary.cgstAmt, summary.sgstAmt, summary.igstAmt]);
 
-  const parseCsv = (text) => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
+  const mapImportRows = (headers, dataRows) => {
     const idx = (names) => headers.findIndex((h) => names.includes(h));
     const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #", "stoneid"]);
     const iName = idx(["itemname", "item name", "description", "item"]);
@@ -1008,10 +1006,9 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     const iSymmetry = idx(["symmetry"]);
     const iFl = idx(["fl", "fluorescence"]);
 
-    const cell = (cols, i) => (i >= 0 ? (cols[i] || "").replace(/^"|"$/g, "").trim() : "");
+    const cell = (cols, i) => (i >= 0 ? String(cols[i] ?? "").replace(/^"|"$/g, "").trim() : "");
 
-    return lines.slice(1).map((line) => {
-      const cols = line.split(",").map((c) => c.trim());
+    return dataRows.map((cols) => {
       const weight = toNum(cell(cols, iWt));
       const rate = toNum(cell(cols, iRate));
       const less1 = toNum(cell(cols, iL1));
@@ -1048,38 +1045,61 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     }).filter((r) => r.lotNo);
   };
 
-  const handleExcelAccept = () => {
+  const parseCsv = (text) => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
+    const dataRows = lines.slice(1).map((line) => line.split(",").map((c) => c.trim()));
+    return mapImportRows(headers, dataRows);
+  };
+
+  const applyImportedRows = (rows) => {
+    if (!rows.length) {
+      toast.warning(t("No valid rows found in file."));
+      return;
+    }
+    setItems((prev) => {
+      const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
+      rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
+      return Array.from(map.values());
+    });
+    toast.success(t("Excel Import Success!"));
+    setExcelOpen(false);
+    setExcelFile(null);
+  };
+
+  const handleExcelAccept = async () => {
     if (!excelFile) {
       toast.warning(t("Please select a file."));
       return;
     }
     const name = (excelFile.name || "").toLowerCase();
-    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-      toast.warning(t("XLSX not supported. Please upload CSV (SheetJS not installed)."));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const rows = parseCsv(String(e.target?.result || ""));
-        if (!rows.length) {
-          toast.warning(t("No valid rows found in CSV."));
+    try {
+      if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+        const parsed = await parseExcelFile(excelFile);
+        if (!parsed.success || !parsed.rows?.length) {
+          toast.error(parsed?.error?.message || t("Failed to parse Excel file."));
           return;
         }
-        setItems((prev) => {
-          const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
-          rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
-          return Array.from(map.values());
-        });
-        toast.success(t("Excel Import Success!"));
-        setExcelOpen(false);
-        setExcelFile(null);
-      } catch (err) {
-        console.error(err);
-        toast.error(t("Failed to parse CSV."));
+        const headers = (parsed.rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
+        const dataRows = parsed.rows.slice(1).map((row) => (row || []).map((c) => String(c ?? "").trim()));
+        applyImportedRows(mapImportRows(headers, dataRows));
+        return;
       }
-    };
-    reader.readAsText(excelFile);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          applyImportedRows(parseCsv(String(e.target?.result || "")));
+        } catch (err) {
+          console.error(err);
+          toast.error(t("Failed to parse CSV."));
+        }
+      };
+      reader.readAsText(excelFile);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to parse Excel file."));
+    }
   };
 
   const downloadTemplate = () => {
@@ -1812,6 +1832,11 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       </Table>
                     </div>
                   )}
+                  {items.length > 0 && (
+                    <div className="mt-2 text-muted small">
+                      {t("Showing")} 1 {t("to")} {items.length} {t("of")} {items.length} {t("entries")}
+                    </div>
+                  )}
                 </CardBody>
               </Card>
             </Col>
@@ -1919,7 +1944,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                 <i className="ri-download-2-line me-1" />
                 {t("Download")}
               </Button>
-              <div className="text-muted small mt-2">{t("CSV preferred (XLSX requires SheetJS).")}</div>
+              <div className="text-muted small mt-2">{t("Supports CSV and Excel (.xlsx / .xls).")}</div>
             </div>
           </ModalBody>
           <ModalFooter>

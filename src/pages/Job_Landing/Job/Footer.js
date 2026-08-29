@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Col, Container, Row } from "reactstrap";
-import LogoLight from "../../../assets/images/Dialogo-light.png";
+import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 const Footer = () => {
   return (
@@ -12,7 +12,13 @@ const Footer = () => {
             <Col className="col-lg-4 mt-4">
               <div>
                 <div>
-                  <img src={LogoLight} alt="logo light" height="17" />
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem" }}>
+                    <img src={logoSm} alt="DiaJewSoft" height="32" style={{ borderRadius: "8px" }} />
+                    <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.1 }}>
+                      <span style={{ color: "#fff", fontSize: "1.05rem", fontWeight: 700 }}>DiaJewSoft</span>
+                      <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.72rem", fontWeight: 500 }}>SoftOnCloud</span>
+                    </span>
+                  </span>
                 </div>
                 <div className="mt-4 fs-13">
                   <p>Premium Multipurpose Admin & Dashboard Template</p>

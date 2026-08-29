@@ -440,7 +440,6 @@ const SolitaireConsignmentInReturn = () => {
                           classNamePrefix="select2"
                           menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                           menuPosition="fixed"
-                          menuShouldBlockScroll
                         />
                       </FormGroup>
                     </Col>
