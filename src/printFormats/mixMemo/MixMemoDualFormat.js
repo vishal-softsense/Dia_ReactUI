@@ -1,5 +1,7 @@
 import React from "react";
 import { fmt, fmtDate, getVal, paginateFixed } from "../shared/printUtils";
+import deltaQr from "../../assets/images/print/deltaqr.png";
+import deltaInstaQr from "../../assets/images/print/delta.png";
 
 const border = "1px solid #A2A1A1";
 const thGray = { background: "#ccc", border, padding: 3, textAlign: "center", fontWeight: "bold" };
@@ -13,7 +15,7 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
   const renderCopy = (copyTitle, pageItems, pageIdx, isLastPage) => {
     let srNo = pageIdx * 10 + 1;
     return (
-      <div style={{ marginBottom: copyTitle === "OFFICE COPY" ? 70 : 0 }}>
+      <div style={{ marginBottom: copyTitle === "OFFICE COPY" || copyTitle === "OFFICE COPY - CURRENT STATUS" ? 70 : 0 }}>
         <table style={{ width: "100%", marginBottom: 8 }}>
           <tbody>
             <tr>
@@ -103,17 +105,24 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
           <tbody>
             {pageItems.map((item, idx) => {
               const ret = Number(getVal(item, "ReturnCarats", "returnCarats")) || 0;
-              const kept = Number(getVal(item, "IssueCarats", "issueCarats")) || 0;
+              const kept = Number(getVal(item, "IssueCarats", "issueCarats", "SpCarats", "spCarats")) || 0;
+              // Print API maps: Description, Qty, Weight (not ItemName/Pcs/Carats)
+              const description =
+                getVal(item, "Description", "description", "ItemName", "itemName", "StockNo", "stockNo", "LotNo", "lotNo") || "";
+              const pcs = getVal(item, "Qty", "qty", "Pcs", "pcs");
+              const carats = getVal(item, "Weight", "weight", "Carats", "carats");
+              const rate = getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate");
+              const amount = getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount");
               return (
                 <tr key={idx} style={{ height: 18, fontSize: 10 }}>
                   <td style={{ border, textAlign: "center" }}>{srNo++}</td>
-                  <td style={{ border, textAlign: "center" }}>{getVal(item, "ItemName", "itemName")}</td>
-                  <td style={{ border, textAlign: "center" }}>{getVal(item, "Pcs", "pcs")}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 10 }}>{fmt(getVal(item, "Carats"), 2)}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(getVal(item, "Rate"), 2)}</td>
+                  <td style={{ border, textAlign: "center" }}>{description}</td>
+                  <td style={{ border, textAlign: "center" }}>{pcs === "" || pcs == null ? "" : pcs}</td>
+                  <td style={{ border, textAlign: "right", paddingRight: 10 }}>{fmt(carats, 2)}</td>
+                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(rate, 2)}</td>
                   <td style={{ border, textAlign: "right", paddingRight: 3 }}>{ret ? fmt(ret, 2) : ""}</td>
                   <td style={{ border, textAlign: "right", paddingRight: 3 }}>{kept ? fmt(kept, 2) : ""}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(getVal(item, "MasterCurrencyAmount", "Amount"), 2)}</td>
+                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(amount, 2)}</td>
                 </tr>
               );
             })}
@@ -148,9 +157,15 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
         <table style={{ width: "100%", marginTop: 6 }}>
           <tbody>
             <tr>
-              <td style={{ width: "35%" }}></td>
-              <td style={{ width: "30%", textAlign: "center", color: "gray", fontSize: 9 }}>{company.companyFooter}</td>
-              <td style={{ width: "35%", textAlign: "right", fontWeight: "bold", fontSize: 14 }}>Signature &nbsp;&nbsp; ______________________</td>
+              <td style={{ width: "35%", verticalAlign: "bottom", textAlign: "left" }}>
+                {/* MVC MixMemoDualPrint: deltaqr.png + delta.png */}
+                <img src={deltaQr} alt="QR" style={{ height: 50, marginRight: 5 }} />
+                <img src={deltaInstaQr} alt="Insta QR" style={{ height: 50 }} />
+              </td>
+              <td style={{ width: "30%", textAlign: "center", color: "gray", fontSize: 9, verticalAlign: "middle" }}>{company.companyFooter}</td>
+              <td style={{ width: "35%", textAlign: "right", fontWeight: "bold", fontSize: 14, verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                Signature &nbsp;&nbsp; ______________________
+              </td>
             </tr>
           </tbody>
         </table>

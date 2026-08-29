@@ -430,6 +430,7 @@ import MixMemoOutList from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMem
 import MixMemoOutAdd from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutAdd";
 import MixMemoOutEdit from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutEdit";
 import MixMemoOutPrintView from "../pages/Parcel/Parcel Transaction/MixMemoOut/MixMemoOutPrintView";
+import MixMemoOutReturn from "../pages/Parcel/Parcel Transaction/MixMemoOutReturn/MixMemoOutReturn";
 import JewPurchaseList from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseList";
 import JewPurchaseAdd from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseAdd";
 import JewPurchaseEdit from "../pages/Jewellery/Jewellery Transaction/JewelleryPurchase/JewPurchaseEdit";
@@ -443,6 +444,11 @@ import MixPurchaseReturnList from "../pages/Parcel/Parcel Transaction/MixPurchas
 import MixPurchaseReturnAdd from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnAdd";
 import MixPurchaseReturnEdit from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnEdit";
 import MixPurchaseReturnPrintView from "../pages/Parcel/Parcel Transaction/MixPurchaseReturn/MixPurchaseReturnPrintView";
+
+import MixSaleReturnList from "../pages/Parcel/Parcel Transaction/MixSaleReturn/MixSaleReturnList";
+import MixSaleReturnAdd from "../pages/Parcel/Parcel Transaction/MixSaleReturn/MixSaleReturnAdd";
+import MixSaleReturnEdit from "../pages/Parcel/Parcel Transaction/MixSaleReturn/MixSaleReturnEdit";
+import MixSaleReturnPrintView from "../pages/Parcel/Parcel Transaction/MixSaleReturn/MixSaleReturnPrintView";
 
 
 // Parcel Stock Search Report
@@ -810,11 +816,20 @@ const authProtectedRoutes = [
   { path: "/mix-memo/edit-mixmemo", component: <MixMemoOutEdit /> },
   { path: "/mix-memo/MixMemoOutPrintInv", component: <MixMemoOutPrintView /> },
 
+  // Mix Memo Out Return (MVC: /mixmemoreturnform/add-mixmemoreturnformlist)
+  { path: "/mixmemoreturnform/add-mixmemoreturnformlist", component: <MixMemoOutReturn /> },
+
   // Mix Purchase Return (MVC: MixPurchaseReturn/mixpurchasereturnlist)
   { path: "/MixPurchaseReturn/mixpurchasereturnlist", component: <MixPurchaseReturnList /> },
   { path: "/MixPurchaseReturn/add-MixPurchaseReturnView", component: <MixPurchaseReturnAdd /> },
   { path: "/MixPurchaseReturn/edit-mixpurchasertndata", component: <MixPurchaseReturnEdit /> },
   { path: "/MixPurchaseReturn/MixPurRtnPrintInv", component: <MixPurchaseReturnPrintView /> },
+
+  // Mix Sale Return (MVC: MixSaleReturn/mixsalereturnlist)
+  { path: "/MixSaleReturn/mixsalereturnlist", component: <MixSaleReturnList /> },
+  { path: "/MixSaleReturn/add-mixsalereturnParcel", component: <MixSaleReturnAdd /> },
+  { path: "/MixSaleReturn/edit-mixsalereturnParcel", component: <MixSaleReturnEdit /> },
+  { path: "/MixSaleReturn/MixSaleRtnPrintInv", component: <MixSaleReturnPrintView /> },
 
   // Mix Purchase Return Report (MVC: /mixreport/GeneralPur-Return-report)
   { path: "/mixreport/GeneralPur-Return-report", component: <MixPurRtnReport /> },

@@ -81,9 +81,10 @@ const MixMemoOutPrintView = () => {
     let wt = 0;
     let amount = 0;
     items.forEach((it) => {
-      qty += Number(getVal(it, "Pcs", "pcs", "Qty", "qty")) || 0;
+      qty += Number(getVal(it, "Qty", "qty", "Pcs", "pcs")) || 0;
       wt += Number(getVal(it, "Weight", "weight", "Carats", "carats")) || 0;
-      amount += Number(getVal(it, "Amount", "amount")) || 0;
+      amount +=
+        Number(getVal(it, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount")) || 0;
     });
     return { qty, wt, amount };
   }, [items]);

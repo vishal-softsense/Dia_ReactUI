@@ -659,6 +659,24 @@ export const getMixPurchaseReturnLots = (searchby) => {
   return api.get(`${url.MIX_PURCHASE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
 
+// Mix Sale Return (Parcel Transaction)
+export const getMixSaleReturnList = () => api.get(url.MIX_SALE_RETURN_LIST);
+export const getMixSaleReturnPageData = () => api.get(url.MIX_SALE_RETURN_PAGE_DATA);
+export const getMixSaleReturnDetail = (id) => api.get(`${url.MIX_SALE_RETURN_DETAIL}/${id}`);
+export const addMixSaleReturn = (data) => api.create(url.MIX_SALE_RETURN_ADD, data);
+export const editMixSaleReturn = (data) => api.create(url.MIX_SALE_RETURN_EDIT, data);
+export const deleteMixSaleReturn = (id) => api.create(url.MIX_SALE_RETURN_DELETE, { id });
+export const getMixSaleReturnLotDetail = (lotNo) => api.create(url.MIX_SALE_RETURN_LOT_DETAIL, typeof lotNo === "object" ? lotNo : { lotNo, LotNo: lotNo });
+export const addMixSaleReturnSingleLot = (payload) => api.create(url.MIX_SALE_RETURN_ADD_SINGLE_LOT, payload);
+export const getMixSaleReturnItemFromList = (payload) => api.create(url.MIX_SALE_RETURN_GET_ITEM_FROM_LIST, payload);
+export const getMixSaleReturnPrintView = (invNo) => api.get(`${url.MIX_SALE_RETURN_PRINT_VIEW}/${invNo}`);
+export const getMixSaleReturnLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_SALE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
+export const getMixSaleReturnCSaleInvoices = (payload) => api.create(url.MIX_SALE_RETURN_CSALE_LOOKUP, payload);
+export const fillMixSaleReturnFromCSale = (payload) => api.create(url.MIX_SALE_RETURN_CSALE_FILL, payload);
+
 // Mix Memo Out (Parcel Transaction)
 export const getMixMemoOutList = () => api.get(url.MIX_MEMO_OUT_LIST);
 export const getMixMemoOutPageData = () => api.get(url.MIX_MEMO_OUT_PAGE_DATA);
@@ -675,6 +693,10 @@ export const getMixMemoOutShipVia = (searchby) =>
   api.get(`${url.MIX_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
 export const getMixMemoOutLots = (searchby) =>
   api.get(`${url.MIX_MEMO_OUT_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+
+export const getMixMemoOutReturnPageData = () => api.get(url.MIX_MEMO_OUT_RETURN_PAGE_DATA);
+export const getMixMemoOutReturnList = (filter) => api.create(url.MIX_MEMO_OUT_RETURN_LIST, filter);
+export const returnMixMemoOutReturn = (data) => api.create(url.MIX_MEMO_OUT_RETURN_SAVE, data);
 
 export const getSolitairePurchaseReturnList = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_LIST);
 export const getSolitairePurchaseReturnPageData = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_PAGE_DATA);
