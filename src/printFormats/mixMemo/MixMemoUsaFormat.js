@@ -98,10 +98,10 @@ const MixMemoUsaFormat = ({ data, items, totals, company, logoUrl, isCurrentStat
                   <tr key={idx} style={{ fontSize: 11 }}>
                     <td style={td}>{srNo++}</td>
                     <td style={{ ...td, textAlign: "left", paddingLeft: 15 }}>{getVal(item, "Lotno", "lotNo", "StockNo", "stockNo")}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{getVal(item, "Pcs", "pcs")}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}</td>
-                    <td style={{ ...td, textAlign: "left" }}>{getVal(item, "ItemName", "itemName")}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{getVal(item, "Qty", "qty", "Pcs", "pcs")}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}</td>
+                    <td style={{ ...td, textAlign: "left" }}>{getVal(item, "Description", "description", "ItemName", "itemName")}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}</td>
                     <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "MasterCurrencyAmount", "Amount", "amount"), 2)}</td>
                   </tr>
                 ))}

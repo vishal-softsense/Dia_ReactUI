@@ -643,6 +643,48 @@ export const getMixPurchaseLots = (searchby) => {
   return api.get(`${url.MIX_PURCHASE_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
 
+// Mix Sale / MixForm (CSALE)
+export const getMixSaleList = () => api.get(url.MIX_SALE_LIST);
+export const getMixSalePageData = () => api.get(url.MIX_SALE_PAGE_DATA);
+export const getMixSaleDetail = (id) => api.get(`${url.MIX_SALE_DETAIL}/${id}`);
+export const addMixSale = (data) => api.create(url.MIX_SALE_ADD, data);
+export const editMixSale = (data) => api.create(url.MIX_SALE_EDIT, data);
+export const deleteMixSale = (id) => api.create(url.MIX_SALE_DELETE, { id });
+export const getMixSaleLotDetail = (lotNo) => api.create(url.MIX_SALE_LOT_DETAIL, { lotNo });
+export const getMixSaleConsignment = (payload) =>
+  api.create(url.MIX_SALE_CONSIGNMENT, {
+    PartyCode: payload?.PartyCode ?? payload?.partyCode ?? "",
+    MemoNo: payload?.MemoNo ?? payload?.memoNo ?? ""
+  });
+export const getMixSaleMemoToSale = getMixSaleConsignment;
+export const addMixSaleSingleLot = (payload) => api.create(url.MIX_SALE_ADD_SINGLE_LOT, payload);
+export const getMixSalePrintView = (invNo) => api.get(`${url.MIX_SALE_PRINT_VIEW}/${invNo}`);
+export const getMixSaleCurrentStatus = (invNo) => api.get(`${url.MIX_SALE_CURRENT_STATUS}/${invNo}`);
+export const getMixSaleLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_SALE_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
+
+// Mix Consignment (Parcel Transaction)
+export const getMixConsignmentList = () => api.get(url.MIX_CONSIGNMENT_LIST);
+export const getMixConsignmentPageData = () => api.get(url.MIX_CONSIGNMENT_PAGE_DATA);
+export const getMixConsignmentDetail = (id) => api.get(`${url.MIX_CONSIGNMENT_DETAIL}/${id}`);
+export const addMixConsignment = (data) => api.create(url.MIX_CONSIGNMENT_ADD, data);
+export const editMixConsignment = (data) => api.create(url.MIX_CONSIGNMENT_EDIT, data);
+export const deleteMixConsignment = (id) => api.create(url.MIX_CONSIGNMENT_DELETE, { id });
+export const getMixConsignmentLotDetail = (lotNo) => api.create(url.MIX_CONSIGNMENT_LOT_DETAIL, { lotNo });
+export const addMixConsignmentSingleLot = (payload) => api.create(url.MIX_CONSIGNMENT_ADD_SINGLE_LOT, payload);
+export const getMixConsignmentPrintView = (invNo) => api.get(`${url.MIX_CONSIGNMENT_PRINT_VIEW}/${invNo}`);
+export const getMixConsignmentCurrentStatus = (invNo) => api.get(`${url.MIX_CONSIGNMENT_CURRENT_STATUS}/${invNo}`);
+export const getMixConsignmentLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_CONSIGNMENT_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
+
+// Mix Consignment Return (Parcel Transaction)
+export const getMixConsignmentReturnPageData = () => api.get(url.MIX_CONSIGNMENT_RETURN_PAGE_DATA);
+export const getMixConsignmentReturnList = (filter) => api.create(url.MIX_CONSIGNMENT_RETURN_LIST, filter);
+export const returnMixConsignmentReturn = (data) => api.create(url.MIX_CONSIGNMENT_RETURN_SAVE, data);
 
 export const getMixPurchaseReturnList = () => api.get(url.MIX_PURCHASE_RETURN_LIST);
 export const getMixPurchaseReturnPageData = () => api.get(url.MIX_PURCHASE_RETURN_PAGE_DATA);
@@ -658,6 +700,24 @@ export const getMixPurchaseReturnLots = (searchby) => {
   const s = encodeURIComponent(searchby || "");
   return api.get(`${url.MIX_PURCHASE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
+
+// Mix Sale Return (Parcel Transaction)
+export const getMixSaleReturnList = () => api.get(url.MIX_SALE_RETURN_LIST);
+export const getMixSaleReturnPageData = () => api.get(url.MIX_SALE_RETURN_PAGE_DATA);
+export const getMixSaleReturnDetail = (id) => api.get(`${url.MIX_SALE_RETURN_DETAIL}/${id}`);
+export const addMixSaleReturn = (data) => api.create(url.MIX_SALE_RETURN_ADD, data);
+export const editMixSaleReturn = (data) => api.create(url.MIX_SALE_RETURN_EDIT, data);
+export const deleteMixSaleReturn = (id) => api.create(url.MIX_SALE_RETURN_DELETE, { id });
+export const getMixSaleReturnLotDetail = (lotNo) => api.create(url.MIX_SALE_RETURN_LOT_DETAIL, typeof lotNo === "object" ? lotNo : { lotNo, LotNo: lotNo });
+export const addMixSaleReturnSingleLot = (payload) => api.create(url.MIX_SALE_RETURN_ADD_SINGLE_LOT, payload);
+export const getMixSaleReturnItemFromList = (payload) => api.create(url.MIX_SALE_RETURN_GET_ITEM_FROM_LIST, payload);
+export const getMixSaleReturnPrintView = (invNo) => api.get(`${url.MIX_SALE_RETURN_PRINT_VIEW}/${invNo}`);
+export const getMixSaleReturnLots = (searchby) => {
+  const s = encodeURIComponent(searchby || "");
+  return api.get(`${url.MIX_SALE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
+};
+export const getMixSaleReturnCSaleInvoices = (payload) => api.create(url.MIX_SALE_RETURN_CSALE_LOOKUP, payload);
+export const fillMixSaleReturnFromCSale = (payload) => api.create(url.MIX_SALE_RETURN_CSALE_FILL, payload);
 
 // Mix Memo Out (Parcel Transaction)
 export const getMixMemoOutList = () => api.get(url.MIX_MEMO_OUT_LIST);
@@ -675,6 +735,10 @@ export const getMixMemoOutShipVia = (searchby) =>
   api.get(`${url.MIX_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
 export const getMixMemoOutLots = (searchby) =>
   api.get(`${url.MIX_MEMO_OUT_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
+
+export const getMixMemoOutReturnPageData = () => api.get(url.MIX_MEMO_OUT_RETURN_PAGE_DATA);
+export const getMixMemoOutReturnList = (filter) => api.create(url.MIX_MEMO_OUT_RETURN_LIST, filter);
+export const returnMixMemoOutReturn = (data) => api.create(url.MIX_MEMO_OUT_RETURN_SAVE, data);
 
 export const getSolitairePurchaseReturnList = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_LIST);
 export const getSolitairePurchaseReturnPageData = () => api.get(url.SOLITAIRE_PURCHASE_RETURN_PAGE_DATA);
