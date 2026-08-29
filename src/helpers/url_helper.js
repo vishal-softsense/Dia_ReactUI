@@ -504,6 +504,38 @@ export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append 
 export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
 export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
 
+// Mix Sale / MixForm (Parcel Transaction) — MVC: /mixform/mixformlist, TrnType CSALE
+export const MIX_SALE_LIST = "/api/MixSale/list";
+export const MIX_SALE_PAGE_DATA = "/api/MixSale/pagedata";
+export const MIX_SALE_DETAIL = "/api/MixSale/detail"; // append /{id}
+export const MIX_SALE_ADD = "/api/MixSale/add";
+export const MIX_SALE_EDIT = "/api/MixSale/edit";
+export const MIX_SALE_DELETE = "/api/MixSale/delete";
+export const MIX_SALE_LOT_DETAIL = "/api/MixSale/lot-detail";
+export const MIX_SALE_CONSIGNMENT = "/api/MixSale/consignment";
+export const MIX_SALE_ADD_SINGLE_LOT = "/api/MixSale/add-single-lot";
+export const MIX_SALE_PRINT_VIEW = "/api/MixSale/print-view"; // append /{id or invNo}
+export const MIX_SALE_CURRENT_STATUS = "/api/MixSale/current-status"; // append /{id or invNo}
+export const MIX_SALE_LOTS = "/api/MixSale/lots";
+
+// Mix Consignment (Parcel Transaction entry) — MVC: /mixconsignmentform/mixconsignmentformlist
+export const MIX_CONSIGNMENT_LIST = "/api/MixConsignment/list";
+export const MIX_CONSIGNMENT_PAGE_DATA = "/api/MixConsignment/pagedata";
+export const MIX_CONSIGNMENT_DETAIL = "/api/MixConsignment/detail"; // append /{id}
+export const MIX_CONSIGNMENT_ADD = "/api/MixConsignment/add";
+export const MIX_CONSIGNMENT_EDIT = "/api/MixConsignment/edit";
+export const MIX_CONSIGNMENT_DELETE = "/api/MixConsignment/delete";
+export const MIX_CONSIGNMENT_LOT_DETAIL = "/api/MixConsignment/lot-detail";
+export const MIX_CONSIGNMENT_ADD_SINGLE_LOT = "/api/MixConsignment/add-single-lot";
+export const MIX_CONSIGNMENT_PRINT_VIEW = "/api/MixConsignment/print-view"; // append /{id or invNo}
+export const MIX_CONSIGNMENT_CURRENT_STATUS = "/api/MixConsignment/current-status"; // append /{id or invNo}
+export const MIX_CONSIGNMENT_LOTS = "/api/MixConsignment/lots";
+
+// Mix Consignment Return (Parcel Transaction) — MVC: /MixConsignment/add-mix-Consignment-return
+export const MIX_CONSIGNMENT_RETURN_PAGE_DATA = "/api/MixConsignmentReturn/pagedata";
+export const MIX_CONSIGNMENT_RETURN_LIST = "/api/MixConsignmentReturn/list";
+export const MIX_CONSIGNMENT_RETURN_SAVE = "/api/MixConsignmentReturn/return";
+
 // Mix Memo Out (Parcel Transaction) — MVC: /mixmemoform/mixmemoformlist
 export const MIX_MEMO_OUT_LIST = "/api/MixMemoOut/list";
 export const MIX_MEMO_OUT_PAGE_DATA = "/api/MixMemoOut/pagedata";
