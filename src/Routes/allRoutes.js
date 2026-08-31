@@ -427,6 +427,12 @@ import SolitaireSaleReturnList from "../pages/Solitaires/Solitaires Transaction/
 import SolitaireSaleReturnAdd from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnAdd";
 import SolitaireSaleReturnEdit from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnEdit";
 import SolitaireSaleReturnPrintView from "../pages/Solitaires/Solitaires Transaction/SolitaireSaleReturn/SolitaireSaleReturnPrintView";
+import LoanGivenList from "../pages/FinancialTransaction/Loan/LoanGiven/LoanGivenList";
+import LoanGivenAdd from "../pages/FinancialTransaction/Loan/LoanGiven/LoanGivenAdd";
+import LoanGivenEdit from "../pages/FinancialTransaction/Loan/LoanGiven/LoanGivenEdit";
+import LoanTakenList from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenList";
+import LoanTakenAdd from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenAdd";
+import LoanTakenEdit from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenEdit";
 import MixPurchaseList from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseList";
 import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseAdd";
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
@@ -764,6 +770,14 @@ const authProtectedRoutes = [
   { path: "/salereturn/add-salereturn", component: <SolitaireSaleReturnAdd /> },
   { path: "/salereturn/edit-salereturn", component: <SolitaireSaleReturnEdit /> },
   { path: "/salereturn/printinvview", component: <SolitaireSaleReturnPrintView /> },
+
+  // Loan Given / Loan Taken entry (MVC: /loan/*)
+  { path: "/loan/loangiven-list", component: <LoanGivenList /> },
+  { path: "/loan/add-loangiven", component: <LoanGivenAdd /> },
+  { path: "/loan/edit-loangiven", component: <LoanGivenEdit /> },
+  { path: "/loan/loantaken-list", component: <LoanTakenList /> },
+  { path: "/loan/add-loantaken", component: <LoanTakenAdd /> },
+  { path: "/loan/edit-loantaken", component: <LoanTakenEdit /> },
 
   // Jewellery Purchase entry (MVC: /jewpurchase/*)
   { path: "/jewpurchase/jew-purchase-list", component: <JewPurchaseList /> },

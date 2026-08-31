@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PropTypes from "prop-types";
 import { Collapse, Container } from 'reactstrap';
 import withRouter from '../../Components/Common/withRouter';
+import { findMatchingMenuItem } from '../../helpers/sidebarRouteMatch';
 
 import { APP_LOGO as logoSm } from "../../Components/constants/brandLogo";
 //i18n
@@ -49,17 +50,15 @@ const TwoColumnLayout = (props) => {
         const items = ul.getElementsByTagName("a");
         let itemsArray = [...items]; // converts NodeList to Array
         removeActivation(itemsArray);
-        let matchingMenuItem = itemsArray.find((x) => {
-            return x.pathname === pathName;
-        });
-        
-        if (!matchingMenuItem) {
+        let matchingMenuItem = findMatchingMenuItem(itemsArray, pathName);
+
+        if (matchingMenuItem) {
+            sessionStorage.setItem("lastActiveMenuPath", matchingMenuItem.pathname);
+        } else {
             const lastActivePath = sessionStorage.getItem("lastActiveMenuPath");
             if (lastActivePath) {
                 matchingMenuItem = itemsArray.find((x) => x.pathname === lastActivePath);
             }
-        } else {
-            sessionStorage.setItem("lastActiveMenuPath", pathName);
         }
 
         if (matchingMenuItem) {

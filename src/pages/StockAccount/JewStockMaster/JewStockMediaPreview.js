@@ -33,30 +33,9 @@ function toBinarySrc(binary) {
   return "";
 }
 
-const mediaBtnStyle = (active, disabled = false) => ({
-  width: 58,
-  height: 58,
-  borderRadius: 8,
-  border: active ? "2px solid #5A8DEE" : "1px solid #dee2e6",
-  background: active ? "#e8f0fe" : "#f8f9fa",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: disabled ? "not-allowed" : "pointer",
-  color: disabled ? "#adb5bd" : "#5A8DEE",
-  fontSize: 9,
-  fontWeight: 700,
-  letterSpacing: 0.3,
-  padding: 4,
-  textDecoration: "none",
-  opacity: disabled ? 0.65 : 1,
-});
-
 /**
  * Image tab: Camera / Video / Certificate.
- * Shows media ONLY when the stock has user-set ImagePath / VideoPath / CertPath (or ImageBinary).
- * No placeholder/default image, video, or certificate.
+ * Shows media when ImagePath / VideoPath / CertPath / ImageBinary is set.
  */
 export default function JewStockMediaPreview({
   imagePath = "",
@@ -64,7 +43,7 @@ export default function JewStockMediaPreview({
   certPath = "",
   imageBinary = null,
 }) {
-  const [mediaView, setMediaView] = useState("image"); // image | video
+  const [mediaView, setMediaView] = useState("image");
   const [imgFailed, setImgFailed] = useState(false);
 
   const binarySrc = useMemo(() => toBinarySrc(imageBinary), [imageBinary]);
@@ -75,7 +54,6 @@ export default function JewStockMediaPreview({
 
   const videoSrc = useMemo(() => resolveJewMediaUrl(videoPath), [videoPath]);
 
-  // Prefer user Cert Path; if empty, use IGI verify (same as MVC certificate icon).
   const certHref = useMemo(() => {
     const fromStock = resolveJewMediaUrl(certPath);
     return fromStock || "https://www.igi.org/verify-your-report/";
@@ -92,13 +70,17 @@ export default function JewStockMediaPreview({
     </div>
   );
 
+  const mediaBtnClass = (active) =>
+    `btn btn-sm d-flex flex-column align-items-center justify-content-center ${active ? "btn-primary" : "btn-light"}`;
+
   return (
     <div>
       <div className="d-flex justify-content-center gap-2 mb-3">
         <button
           type="button"
           title="Camera"
-          style={mediaBtnStyle(mediaView === "image")}
+          className={mediaBtnClass(mediaView === "image")}
+          style={{ width: 58, height: 58 }}
           onClick={() => setMediaView("image")}
         >
           <i className="ri-camera-line" style={{ fontSize: 22, lineHeight: 1 }} />
@@ -106,21 +88,23 @@ export default function JewStockMediaPreview({
         <button
           type="button"
           title="Video"
-          style={mediaBtnStyle(mediaView === "video")}
+          className={mediaBtnClass(mediaView === "video")}
+          style={{ width: 58, height: 58 }}
           onClick={() => setMediaView("video")}
         >
           <i className="ri-video-fill" style={{ fontSize: 22, lineHeight: 1 }} />
-          <span style={{ marginTop: 2 }}>VIDEO</span>
+          <span style={{ marginTop: 2, fontSize: 9, fontWeight: 700 }}>VIDEO</span>
         </button>
         <a
           href={certHref}
           target="_blank"
           rel="noopener noreferrer"
           title={normalizeMediaPath(certPath) ? "Open certificate" : "Verify certificate (IGI)"}
-          style={mediaBtnStyle(false)}
+          className={mediaBtnClass(false)}
+          style={{ width: 58, height: 58, textDecoration: "none" }}
         >
           <i className="ri-file-paper-2-line" style={{ fontSize: 22, lineHeight: 1 }} />
-          <span style={{ marginTop: 2 }}>CERTIFICATE</span>
+          <span style={{ marginTop: 2, fontSize: 9, fontWeight: 700 }}>CERTIFICATE</span>
         </a>
       </div>
 
@@ -128,13 +112,13 @@ export default function JewStockMediaPreview({
         style={{
           width: "100%",
           aspectRatio: "1 / 1",
-          background: "#f1f3f5",
           borderRadius: 6,
           overflow: "hidden",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: "1px solid #e9ecef",
+          border: "1px solid var(--vz-border-color, #e9ecef)",
+          background: "var(--vz-tertiary-bg, #f1f3f5)",
         }}
       >
         {mediaView === "image" ? (

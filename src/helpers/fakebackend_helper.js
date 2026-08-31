@@ -796,6 +796,22 @@ export const getSolitairePartyHoldPrintView = (invNo) => api.get(`${url.SOLITAIR
 export const getSolitairePartyHoldShipVia = (searchby) =>
   api.get(`${url.SOLITAIRE_PARTY_HOLD_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
 
+// Loan Given
+export const getLoanGivenList = () => api.get(url.LOAN_GIVEN_LIST);
+export const getLoanGivenPageData = () => api.get(url.LOAN_GIVEN_PAGE_DATA);
+export const getLoanGivenDetail = (id) => api.get(`${url.LOAN_GIVEN_DETAIL}/${id}`);
+export const addLoanGiven = (data) => api.create(url.LOAN_GIVEN_ADD, data);
+export const editLoanGiven = (data) => api.create(url.LOAN_GIVEN_EDIT, data);
+export const deleteLoanGiven = (id) => api.create(url.LOAN_GIVEN_DELETE, { id });
+
+// Loan Taken
+export const getLoanTakenList = () => api.get(url.LOAN_TAKEN_LIST);
+export const getLoanTakenPageData = () => api.get(url.LOAN_TAKEN_PAGE_DATA);
+export const getLoanTakenDetail = (id) => api.get(`${url.LOAN_TAKEN_DETAIL}/${id}`);
+export const addLoanTaken = (data) => api.create(url.LOAN_TAKEN_ADD, data);
+export const editLoanTaken = (data) => api.create(url.LOAN_TAKEN_EDIT, data);
+export const deleteLoanTaken = (id) => api.create(url.LOAN_TAKEN_DELETE, { id });
+
 export const getSolitairePartyHoldReturnPageData = () => api.get(url.SOLITAIRE_PARTY_HOLD_RETURN_PAGE_DATA);
 export const getSolitairePartyHoldReturnList = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_RETURN_LIST, filter);
 export const returnSolitairePartyHoldReturn = (data) => api.create(url.SOLITAIRE_PARTY_HOLD_RETURN_SAVE, data);

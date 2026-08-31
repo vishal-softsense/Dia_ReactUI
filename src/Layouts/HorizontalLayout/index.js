@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Link } from 'react-router-dom';
 import { Col, Collapse, Row } from 'reactstrap';
 import withRouter from '../../Components/Common/withRouter';
+import { findMatchingMenuItem } from '../../helpers/sidebarRouteMatch';
 
 // Import Data
 import navdata from "../LayoutMenuData";
@@ -40,17 +41,15 @@ const HorizontalLayout = (props) => {
             const ul = document.getElementById("navbar-nav");
             const items = ul.getElementsByTagName("a");
             let itemsArray = [...items]; // converts NodeList to Array
-            let matchingMenuItem = itemsArray.find((x) => {
-                return x.pathname === pathName;
-            });
+            let matchingMenuItem = findMatchingMenuItem(itemsArray, pathName);
 
-            if (!matchingMenuItem) {
+            if (matchingMenuItem) {
+                sessionStorage.setItem("lastActiveMenuPath", matchingMenuItem.pathname);
+            } else {
                 const lastActivePath = sessionStorage.getItem("lastActiveMenuPath");
                 if (lastActivePath) {
                     matchingMenuItem = itemsArray.find((x) => x.pathname === lastActivePath);
                 }
-            } else {
-                sessionStorage.setItem("lastActiveMenuPath", pathName);
             }
 
             if (matchingMenuItem) {

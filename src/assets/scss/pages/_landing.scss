@@ -205,13 +205,21 @@ $landing-navy-muted: rgba($landing-navy-accent, 0.12);
 
         .navbar-brand.landing-brand {
             padding: 0;
-            max-width: calc(100% - 3.5rem);
+            max-width: none;
             min-width: 0;
+            flex-shrink: 0;
 
             .brand-logo-expanded {
                 min-height: auto;
                 min-width: 0;
-                max-width: 100%;
+                max-width: none;
+                flex-shrink: 0;
+            }
+
+            .brand-logo-text {
+                overflow: visible;
+                max-width: none;
+                flex-shrink: 0;
             }
 
             img.brand-logo-icon {
@@ -236,6 +244,10 @@ $landing-navy-muted: rgba($landing-navy-accent, 0.12);
         .brand-logo-title,
         .brand-logo-subtitle {
             color: $white;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+            max-width: none;
         }
 
         .brand-logo-title {

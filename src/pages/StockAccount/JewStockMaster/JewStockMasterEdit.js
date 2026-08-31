@@ -21,6 +21,13 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import JewStockMediaPreview from "./JewStockMediaPreview";
+import {
+  computeChargeTotals,
+  computeMakingCharges,
+  floorPurityRatio,
+  mapDiamondListToRows,
+  summarizeTableRows,
+} from "./jewStockFormUtils";
 
 const FieldRow = ({ label, children, wide = false }) => (
   <div className="row mb-2" style={{ alignItems: "center" }}>
@@ -132,8 +139,13 @@ export default function JewStockMasterEdit() {
   const [otherCharges, setOtherCharges] = useState("");
   const [hallmarkCharges, setHallmarkCharges] = useState("");
   const [totalMakingCharges, setTotalMakingCharges] = useState("");
+  const [costAmount, setCostAmount] = useState("");
   const [finalAmount, setFinalAmount] = useState("");
   const [askingRate, setAskingRate] = useState("");
+  const [originalMakingCharges, setOriginalMakingCharges] = useState("");
+  const [isManualAskingRate, setIsManualAskingRate] = useState(false);
+  const [otherPer, setOtherPer] = useState("0");
+  const [askingPer, setAskingPer] = useState("0");
   const [imagePath, setImagePath] = useState("");
   const [videoPath, setVideoPath] = useState("");
   const [certPath, setCertPath] = useState("");
@@ -237,6 +249,8 @@ export default function JewStockMasterEdit() {
         if (basis) {
           setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
         }
+        setOtherPer(data.OtherPer ?? data.otherPer ?? "0");
+        setAskingPer(data.AskingPer ?? data.askingPer ?? "0");
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -334,7 +348,7 @@ export default function JewStockMasterEdit() {
       setMetalPurity(data.purity || data.Purity || "");
       setPurityRatio(
         data.pureRatio != null || data.PureRatio != null
-          ? Number(data.pureRatio ?? data.PureRatio).toFixed(3)
+          ? floorPurityRatio(data.pureRatio ?? data.PureRatio)
           : ""
       );
       setGrossWeight(
@@ -359,7 +373,9 @@ export default function JewStockMasterEdit() {
       );
       setMakingType(data.makingType || data.MakingType || "");
       setMakingRate(data.makingRate ?? data.MakingRate ?? "");
-      setMakingCharges(data.makingCharges ?? data.MakingCharges ?? "");
+      const loadedMaking = data.makingCharges ?? data.MakingCharges ?? "";
+      setMakingCharges(loadedMaking);
+      setOriginalMakingCharges(String(loadedMaking || "0"));
       setSettingCharges(
         data.settingCharges != null || data.SettingCharges != null
           ? Number(data.settingCharges ?? data.SettingCharges).toFixed(2)
@@ -373,7 +389,9 @@ export default function JewStockMasterEdit() {
       setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
       setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
       setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
-      setFinalAmount(data.finalAmount ?? data.FinalAmount ?? "");
+      const loadedFinal = data.finalAmount ?? data.FinalAmount ?? "";
+      setFinalAmount(loadedFinal);
+      setCostAmount(data.costamount ?? data.CostAmount ?? data.costAmount ?? loadedFinal);
       setDiamondAmount(data.totalDiamondAmount ?? data.TotalDiamondAmount ?? "");
       setImagePath(data.imagePath || data.ImagePath || "");
       setVideoPath(data.videoPath || data.VideoPath || "");
@@ -381,7 +399,18 @@ export default function JewStockMasterEdit() {
       setDescription(data.description || data.Description || "");
       setCertNo(data.jewelleryCerNo || data.JewelleryCerNo || "");
       setTotalPcs(data.pcs ?? data.Pcs ?? "");
-      setAskingRate(data.askingRate ?? data.AskingRate ?? "");
+      const loadedAsking = data.askingRate ?? data.AskingRate ?? "";
+      const askingPct = parseFloat(askingPer) || 0;
+      const expectedAsking =
+        parseFloat(loadedFinal) +
+        Math.round(parseFloat(loadedFinal) * askingPct * 100) / 100;
+      if (loadedAsking && parseFloat(loadedAsking).toFixed(2) !== expectedAsking.toFixed(2)) {
+        setIsManualAskingRate(true);
+        setAskingRate(String(loadedAsking));
+      } else {
+        setIsManualAskingRate(false);
+        setAskingRate(String(loadedAsking || ""));
+      }
       setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
       setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
       setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
@@ -390,27 +419,13 @@ export default function JewStockMasterEdit() {
         loadPurity(data.metalType || data.MetalType);
       }
 
-      const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
-        id: idx + 1,
-        stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
-        stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
-        shape: item.shape || item.Shape || "",
-        size: item.size || item.Size || "",
-        sieve: item.sieve || item.Sieve || "",
-        color: item.color || item.Color || "",
-        clarity: item.clarity || item.Clarity || "",
-        pcs: item.pcs || item.Pcs || 0,
-        carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
-        rate: item.price || item.Price || item.rate || item.Rate || 0,
-        amount: item.amount || item.Amount || 0,
-        lab: item.lab || item.Lab || item.cert || item.Cert || "",
-      }));
-      setTableRows(rows);
+      const rows = mapDiamondListToRows(diamondList);
+      setTableRows((prev) => [...prev, ...rows]);
     } catch (err) {
       console.error(err);
       toast.error("Error fetching mounting details.");
     }
-  }, []);
+  }, [askingPer]);
 
   const handleUseMountingChange = (selectedId) => {
     setUseMounting(selectedId);
@@ -468,7 +483,9 @@ export default function JewStockMasterEdit() {
         setDiamondAmount(data.totalDiamondAmount || data.TotalDiamondAmount || "");
         setMakingType(data.makingType || data.MakingType || "");
         setMakingRate(data.makingRate || data.MakingRate || "");
-        setMakingCharges(data.makingCharges || data.MakingCharges || "");
+        const initMaking = data.makingCharges || data.MakingCharges || "";
+        setMakingCharges(initMaking);
+        setOriginalMakingCharges(String(initMaking || "0"));
         setSettingCharges(data.settingCharges || data.SettingCharges || "0.00");
         setHandlingCarat(data.handlingCarat || data.HandlingCarat || "");
         setHandlingCharges(data.handlingChargesPerCarat || data.HandlingChargesPerCarat || "");
@@ -477,8 +494,21 @@ export default function JewStockMasterEdit() {
         setOtherCharges(data.otherCharges || data.OtherCharges || "");
         setHallmarkCharges(data.hallmarkCharges || data.HallmarkCharges || "");
         setTotalMakingCharges(data.totalMakingCharges || data.TotalMakingCharges || "");
-        setFinalAmount(data.finalAmount || data.FinalAmount || "");
-        setAskingRate(data.askingRate || data.AskingRate || "");
+        const initFinal = data.finalAmount || data.FinalAmount || "";
+        setFinalAmount(initFinal);
+        setCostAmount(data.costamount ?? data.CostAmount ?? data.costAmount ?? initFinal);
+        const initAsking = data.askingRate || data.AskingRate || "";
+        const initAskingPct = parseFloat(askingPer) || 0;
+        const initExpectedAsking =
+          parseFloat(initFinal) +
+          Math.round(parseFloat(initFinal) * initAskingPct * 100) / 100;
+        if (initAsking && parseFloat(initAsking).toFixed(2) !== initExpectedAsking.toFixed(2)) {
+          setIsManualAskingRate(true);
+          setAskingRate(String(initAsking));
+        } else {
+          setIsManualAskingRate(false);
+          setAskingRate(String(initAsking || ""));
+        }
         setImagePath(data.imagePath || data.ImagePath || "");
         setVideoPath(data.videoPath || data.VideoPath || "");
         setCertPath(data.certPath || data.CertPath || "");
@@ -493,22 +523,7 @@ export default function JewStockMasterEdit() {
         setInitialMountingLoaded(true);
 
         // Populate table rows from diamond list
-        const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
-          id: idx + 1,
-          stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
-          stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
-          shape: item.shape || item.Shape || "",
-          size: item.size || item.Size || "",
-          sieve: item.sieve || item.Sieve || "",
-          color: item.color || item.Color || "",
-          clarity: item.clarity || item.Clarity || "",
-          pcs: item.pcs || item.Pcs || 0,
-          carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
-          rate: item.price || item.Price || item.rate || item.Rate || 0,
-          amount: item.amount || item.Amount || 0,
-          lab: item.lab || item.Lab || item.cert || item.Cert || "",
-        }));
-        setTableRows(rows);
+        setTableRows(mapDiamondListToRows(diamondList));
 
         // Load purity based on metal type
         if (data.metalType || data.MetalType) {
@@ -546,7 +561,7 @@ export default function JewStockMasterEdit() {
       const ratio = (resVal && typeof resVal === "object")
         ? (resVal.ratio ?? resVal.Ratio ?? resVal.PureRatio ?? resVal.pureRatio ?? "")
         : resVal;
-      setPurityRatio(ratio !== null && ratio !== undefined ? String(ratio) : "");
+      setPurityRatio(floorPurityRatio(ratio));
     } catch (error) {
       console.error("Failed to load ratio:", error);
     }
@@ -590,16 +605,10 @@ export default function JewStockMasterEdit() {
   }, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
-    const r = parseFloat(makingRate) || 0;
-    const gw = parseFloat(grossWeight) || 0;
-    const pc = parseFloat(totalPcs) || 1;
-    const ma = parseFloat(metalAmount) || 0;
-    let mc = 0;
-    if (makingType === "Per Gm") mc = r * gw;
-    else if (makingType === "Per Pcs") mc = r * pc;
-    else if (makingType === "Lumsum") mc = r;
-    else if (makingType === "Per%") mc = (ma * r) / 100;
-    setMakingCharges(mc.toFixed(2));
+    const mc = computeMakingCharges(makingType, makingRate, grossWeight, totalPcs, metalAmount);
+    const val = mc.toFixed(2);
+    setOriginalMakingCharges(val);
+    setMakingCharges(val);
   }, [makingType, makingRate, grossWeight, totalPcs, metalAmount]);
 
   useEffect(() => {
@@ -609,21 +618,40 @@ export default function JewStockMasterEdit() {
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
-    const sum =
-      (parseFloat(makingCharges) || 0) +
-      (parseFloat(settingCharges) || 0) +
-      (parseFloat(handlingAmount) || 0) +
-      (parseFloat(certificateCharges) || 0) +
-      (parseFloat(otherCharges) || 0) +
-      (parseFloat(hallmarkCharges) || 0);
-    setTotalMakingCharges(sum.toFixed(2));
-    const fa =
-      (parseFloat(metalAmount) || 0) +
-      (parseFloat(diamondAmount) || 0) +
-      (parseFloat(stoneAmount) || 0) + sum;
-    setFinalAmount(fa.toFixed(2));
-  }, [makingCharges, settingCharges, handlingAmount, certificateCharges,
-    otherCharges, hallmarkCharges, metalAmount, diamondAmount, stoneAmount]);
+    const totals = computeChargeTotals({
+      metalAmount,
+      originalMakingCharges,
+      handlingAmount,
+      certificateCharges,
+      hallmarkCharges,
+      settingCharges,
+      diamondAmount,
+      stoneAmount,
+      otherPer,
+      askingPer,
+      isManualAskingRate,
+      currentAskingRate: askingRate,
+    });
+    setCostAmount(totals.costAmount);
+    setOtherCharges(totals.otherCharges);
+    setTotalMakingCharges(totals.totalMakingCharges);
+    setFinalAmount(totals.finalAmount);
+    if (!isManualAskingRate) {
+      setAskingRate(totals.askingRate);
+    }
+  }, [
+    metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
+    hallmarkCharges, settingCharges, diamondAmount, stoneAmount, otherPer,
+    askingPer, isManualAskingRate,
+  ]);
+
+  useEffect(() => {
+    const summary = summarizeTableRows(tableRows);
+    setDiamondAmount(summary.diamondAmount);
+    setDiamondQty(summary.diamondQty);
+    setStoneAmount(summary.stoneAmount);
+    setStoneQty(summary.stoneQty);
+  }, [tableRows]);
 
   useEffect(() => {
     const c = parseFloat(carats) || 0;
@@ -631,29 +659,18 @@ export default function JewStockMasterEdit() {
     setAmount((c * r).toFixed(2));
   }, [carats, rate]);
 
-  useEffect(() => {
-    let diaAmt = 0;
-    let diaQty = 0;
-    let stnAmt = 0;
-    let stnQty = 0;
-
-    tableRows.forEach(row => {
-      const amt = parseFloat(row.amount) || 0;
-      const pc = parseInt(row.pcs) || 0;
-      if (row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond") {
-        diaAmt += amt;
-        diaQty += pc;
-      } else {
-        stnAmt += amt;
-        stnQty += pc;
-      }
-    });
-
-    setDiamondAmount(diaAmt.toFixed(2));
-    setDiamondQty(String(diaQty));
-    setStoneAmount(stnAmt.toFixed(2));
-    setStoneQty(String(stnQty));
-  }, [tableRows]);
+  const handleOtherChargesChange = (value) => {
+    setOtherCharges(value);
+    const cost = parseFloat(costAmount) || 0;
+    const other = parseFloat(value) || 0;
+    const finalCost = Math.round((cost + other) * 100) / 100;
+    setFinalAmount(finalCost.toFixed(2));
+    if (!isManualAskingRate) {
+      const askingPct = parseFloat(askingPer) || 0;
+      const autoAsking = finalCost + Math.round(finalCost * askingPct * 100) / 100;
+      setAskingRate(autoAsking.toFixed(2));
+    }
+  };
 
   // ─── Lot No autocomplete ───
   const debounceRef = useRef(null);
@@ -850,7 +867,7 @@ export default function JewStockMasterEdit() {
           TotalDiamondAmount: parseFloat(diamondAmount) || 0,
           TotalMetalAmount: parseFloat(metalAmount) || 0,
           ImagePath: imagePath,
-          ImageBinary: null,
+          ImageBinary: imageBinary,
           VideoPath: videoPath,
           CertPath: certPath,
           UseMounting: useMountingName,
@@ -876,7 +893,8 @@ export default function JewStockMasterEdit() {
           Description: description,
           Pcs: parseFloat(totalPcs) || 0,
           TotalDiamondCarat: parseFloat(totalDiaCarat) || 0,
-          TotalStoneCarat: parseFloat(totalStnCarat) || 0
+          TotalStoneCarat: parseFloat(totalStnCarat) || 0,
+          costamount: costAmount || finalAmount || "0"
         },
         Diamond: diamond,
         Setting: setting,
@@ -948,21 +966,10 @@ export default function JewStockMasterEdit() {
     });
   };
 
-  const inputStyle = {
-    padding: "6px 10px",
-    border: "1px solid #ced4da",
-    borderRadius: 4,
-    fontSize: 13,
-    width: "100%",
-  };
-  const selectStyle = { ...inputStyle };
-  const roStyle = { ...inputStyle, background: "#f8f9fa" };
-  const tabBtn = (active) => ({
-    padding: "6px 16px", borderRadius: 6, border: "none", cursor: "pointer",
-    fontWeight: 600, fontSize: 12, marginRight: 4, transition: "all .2s",
-    background: active ? "#5A8DEE" : "#f2f4f7",
-    color: active ? "#fff" : "#5A8DEE",
-  });
+  const inputCls = "form-control form-control-sm";
+  const selectCls = "form-select form-select-sm";
+  const roCls = "form-control form-control-sm custom-readonly-input";
+  const tabBtnClass = (active) => `btn btn-sm ${active ? "btn-primary" : "btn-light"}`;
 
   if (loading) {
     return (
@@ -1026,10 +1033,10 @@ export default function JewStockMasterEdit() {
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button type="button" style={tabBtn(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
+                    <button type="button" className={tabBtnClass(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
                       <i className="ri-bar-chart-line me-1"></i>Stock Details
                     </button>
-                    <button type="button" style={tabBtn(leftTab === "image")} onClick={() => setLeftTab("image")}>
+                    <button type="button" className={tabBtnClass(leftTab === "image")} onClick={() => setLeftTab("image")}>
                       <i className="ri-image-line me-1"></i>Image
                     </button>
                   </div>
@@ -1039,8 +1046,7 @@ export default function JewStockMasterEdit() {
                       <FieldRow label="Date">
                         <>
                           <input type="date"
-                            className={`form-control ${errors.trnDate ? "is-invalid" : ""}`}
-                            style={{ ...inputStyle, padding: "5px 8px" }}
+                            className={`${inputCls} ${errors.trnDate ? "is-invalid" : ""}`}
                             value={trnDate}
                             onChange={(e) => {
                               setTrnDate(e.target.value);
@@ -1056,8 +1062,7 @@ export default function JewStockMasterEdit() {
                       <FieldRow label="Stock ID">
                         <>
                           <input type="text"
-                            className={`form-control ${errors.stockID ? "is-invalid" : ""}`}
-                            style={{ ...inputStyle, padding: "5px 8px", background: "#f8f9fa" }}
+                            className={`${roCls} text-end ${errors.stockID ? "is-invalid" : ""}`}
                             value={stockID}
                             readOnly
                           />
@@ -1067,8 +1072,7 @@ export default function JewStockMasterEdit() {
                       <FieldRow label="Jewellery Category">
                         <>
                           <select
-                            className={`form-select ${errors.jewCategory ? "is-invalid" : ""}`}
-                            style={{ ...selectStyle, padding: "5px 8px" }}
+                            className={`${selectCls} ${errors.jewCategory ? "is-invalid" : ""}`}
                             value={jewCategory}
                             onChange={(e) => {
                               setJewCategory(e.target.value);
@@ -1089,7 +1093,7 @@ export default function JewStockMasterEdit() {
                       </FieldRow>
                       {showMountingSection && (
                         <FieldRow label="Use Mounting">
-                          <select style={selectStyle} value={useMounting} onChange={(e) => handleUseMountingChange(e.target.value)}>
+                          <select className={selectCls} value={useMounting} onChange={(e) => handleUseMountingChange(e.target.value)}>
                             <option value="">Select Mounting Stock</option>
                             {mountOpts.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1098,7 +1102,7 @@ export default function JewStockMasterEdit() {
                         </FieldRow>
                       )}
                       <FieldRow label="Category">
-                        <select style={selectStyle} value={category} onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
+                        <select className={selectCls} value={category} onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
                           <option value="">Select Category</option>
                           {categoryOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1106,7 +1110,7 @@ export default function JewStockMasterEdit() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Sub Category">
-                        <select style={selectStyle} value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
+                        <select className={selectCls} value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
                           <option value="">Select Sub Category</option>
                           {subCategoryOptionsForCategory.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1114,23 +1118,23 @@ export default function JewStockMasterEdit() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Jewellery Size">
-                        <input type="text" style={inputStyle} value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
+                        <input type="text" className={inputCls} value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Certificate">
-                        <select style={selectStyle} value={jewCert} onChange={(e) => setJewCert(e.target.value)}>
+                        <select className={selectCls} value={jewCert} onChange={(e) => setJewCert(e.target.value)}>
                           <option value="">Select Certificate</option>
                           <option value="IGI">IGI</option>
                           <option value="GIA">GIA</option>
                         </select>
                       </FieldRow>
                       <FieldRow label="Certificate No">
-                        <input type="text" style={inputStyle} value={certNo} onChange={(e) => setCertNo(e.target.value)} />
+                        <input type="text" className={inputCls} value={certNo} onChange={(e) => setCertNo(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Description">
-                        <input type="text" style={inputStyle} value={description} onChange={(e) => setDescription(e.target.value)} />
+                        <input type="text" className={inputCls} value={description} onChange={(e) => setDescription(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Pcs">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Pcs"
+                        <input type="text" className={`${inputCls} text-end`} placeholder="Pcs"
                           value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
                       </FieldRow>
                     </>
@@ -1153,10 +1157,10 @@ export default function JewStockMasterEdit() {
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button type="button" style={tabBtn(midTab === "metal")} onClick={() => setMidTab("metal")}>
+                    <button type="button" className={tabBtnClass(midTab === "metal")} onClick={() => setMidTab("metal")}>
                       <i className="ri-settings-3-line me-1"></i>Metal Details
                     </button>
-                    <button type="button" style={tabBtn(midTab === "images")} onClick={() => setMidTab("images")}>
+                    <button type="button" className={tabBtnClass(midTab === "images")} onClick={() => setMidTab("images")}>
                       <i className="ri-folder-image-line me-1"></i>Images Details
                     </button>
                   </div>
@@ -1164,7 +1168,7 @@ export default function JewStockMasterEdit() {
                   {midTab === "metal" && (
                     <>
                       <FieldRow label="Metal Type">
-                        <select style={selectStyle} value={metal} onChange={(e) => handleMetalChange(e.target.value)}>
+                        <select className={selectCls} value={metal} onChange={(e) => handleMetalChange(e.target.value)}>
                           <option value="">Select Metal Type</option>
                           {metalTypeOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1172,7 +1176,7 @@ export default function JewStockMasterEdit() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Color">
-                        <select style={selectStyle} value={color} onChange={(e) => setColor(e.target.value)}>
+                        <select className={selectCls} value={color} onChange={(e) => setColor(e.target.value)}>
                           <option value="">Select Color</option>
                           {colorOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1180,7 +1184,7 @@ export default function JewStockMasterEdit() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Purity">
-                        <select style={selectStyle} value={metalPurity} onChange={(e) => handlePurityChange(e.target.value)}>
+                        <select className={selectCls} value={metalPurity} onChange={(e) => handlePurityChange(e.target.value)}>
                           <option value="">Select Metal Purity</option>
                           {purityOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1188,30 +1192,30 @@ export default function JewStockMasterEdit() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Purity Ratio">
-                        <input type="text" style={roStyle} value={purityRatio} readOnly />
+                        <input type="text" className={roCls} value={purityRatio} readOnly />
                       </FieldRow>
                       <FieldRow label="Gross Weight">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
+                        <input type="text" className={`${inputCls} text-end`} value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Net Weight">
-                        <input type="text" style={{ ...roStyle, textAlign: "right" }} value={netWeight} readOnly />
+                        <input type="text" className={`${roCls} text-end`} value={netWeight} readOnly />
                       </FieldRow>
                       <FieldRow label="Metal Price/Gm">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
+                        <input type="text" className={`${inputCls} text-end`} value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Metal Amount">
-                        <input type="text" style={{ ...roStyle, textAlign: "right" }} value={metalAmount} readOnly />
+                        <input type="text" className={`${roCls} text-end`} value={metalAmount} readOnly />
                       </FieldRow>
                       <FieldRow label="Diamond">
                         <div className="d-flex gap-1">
-                          <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={diamondAmount} readOnly />
-                          <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={diamondQty} readOnly />
+                          <input type="text" className={`${roCls} text-end`} style={{ flex: 1 }} value={diamondAmount} readOnly />
+                          <input type="text" className={`${roCls} text-end`} style={{ width: 60 }} value={diamondQty} readOnly />
                         </div>
                       </FieldRow>
                       <FieldRow label="Stone">
                         <div className="d-flex gap-1">
-                          <input type="text" style={{ ...roStyle, flex: 1, textAlign: "right" }} value={stoneAmount} readOnly />
-                          <input type="text" style={{ ...roStyle, width: 60, textAlign: "right" }} value={stoneQty} readOnly />
+                          <input type="text" className={`${roCls} text-end`} style={{ flex: 1 }} value={stoneAmount} readOnly />
+                          <input type="text" className={`${roCls} text-end`} style={{ width: 60 }} value={stoneQty} readOnly />
                         </div>
                       </FieldRow>
                     </>
@@ -1220,15 +1224,15 @@ export default function JewStockMasterEdit() {
                   {midTab === "images" && (
                     <>
                       <FieldRow label="Image Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Image Path"
+                        <input type="text" className={inputCls} placeholder="Image Path"
                           value={imagePath} onChange={(e) => setImagePath(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Video Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Video Path"
+                        <input type="text" className={inputCls} placeholder="Video Path"
                           value={videoPath} onChange={(e) => setVideoPath(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Cert Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Cert Path"
+                        <input type="text" className={inputCls} placeholder="Cert Path"
                           value={certPath} onChange={(e) => setCertPath(e.target.value)} />
                       </FieldRow>
                     </>
@@ -1241,12 +1245,10 @@ export default function JewStockMasterEdit() {
             <Col xl={4} lg={4} md={4} className="d-flex flex-column">
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
-                  <h6 style={{ fontWeight: 600, color: "#5A8DEE", marginBottom: 16, fontSize: 14 }}>
-                    Charges Details
-                  </h6>
+                  <h6 className="fw-semibold text-primary mb-3">Charges Details</h6>
                   <FieldRow label="Making Type">
                     <div className="d-flex gap-1">
-                      <select style={{ ...selectStyle, flex: 1 }} value={makingType} onChange={(e) => setMakingType(e.target.value)}>
+                      <select className={selectCls} style={{ flex: 1 }} value={makingType} onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
                         {(settingTypeOptions.length > 0
                           ? settingTypeOptions
@@ -1261,41 +1263,46 @@ export default function JewStockMasterEdit() {
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
-                      <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }} value={makingRate} onChange={(e) => setMakingRate(e.target.value)} />
+                      <input type="number" className={`${inputCls} text-end`} style={{ width: 80 }} value={makingRate} onChange={(e) => setMakingRate(e.target.value)} />
                     </div>
                   </FieldRow>
                   <FieldRow label="Making Charges">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }} value={makingCharges} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={makingCharges} readOnly />
                   </FieldRow>
                   <FieldRow label="Setting Charges">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }} value={settingCharges} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={settingCharges} readOnly />
                   </FieldRow>
                   <FieldRow label="Handling Carat">
                     <div className="d-flex gap-1">
-                      <input type="number" style={{ ...inputStyle, flex: 1, textAlign: "right" }} value={handlingCarat} onChange={(e) => setHandlingCarat(e.target.value)} />
-                      <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }} value={handlingCharges} onChange={(e) => setHandlingCharges(e.target.value)} />
+                      <input type="number" className={`${inputCls} text-end`} style={{ flex: 1 }} value={handlingCarat} onChange={(e) => setHandlingCarat(e.target.value)} />
+                      <input type="number" className={`${inputCls} text-end`} style={{ width: 80 }} value={handlingCharges} onChange={(e) => setHandlingCharges(e.target.value)} />
                     </div>
                   </FieldRow>
                   <FieldRow label="Handling Amount">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }} value={handlingAmount} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={handlingAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Certificate Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }} value={certificateCharges} onChange={(e) => setCertificateCharges(e.target.value)} />
-                  </FieldRow>
-                  <FieldRow label="Other Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }} value={otherCharges} onChange={(e) => setOtherCharges(e.target.value)} />
+                    <input type="number" className={`${inputCls} text-end`} value={certificateCharges} onChange={(e) => setCertificateCharges(e.target.value)} />
                   </FieldRow>
                   <FieldRow label="Hallmark Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }} value={hallmarkCharges} onChange={(e) => setHallmarkCharges(e.target.value)} />
+                    <input type="number" className={`${inputCls} text-end`} value={hallmarkCharges} onChange={(e) => setHallmarkCharges(e.target.value)} />
                   </FieldRow>
-                  <FieldRow label="Total Making">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }} value={totalMakingCharges} readOnly />
+                  <FieldRow label="Total Making Charges">
+                    <input type="number" className={`${roCls} text-end`} value={totalMakingCharges} readOnly />
+                  </FieldRow>
+                  <FieldRow label="Cost Amount">
+                    <input type="number" className={`${roCls} text-end`} value={costAmount} readOnly />
+                  </FieldRow>
+                  <FieldRow label="Other Charges">
+                    <input type="number" className={`${inputCls} text-end`} value={otherCharges}
+                      onChange={(e) => handleOtherChargesChange(e.target.value)} />
                   </FieldRow>
                   <FieldRow label="Final Cost Amount">
-                    <input type="number" style={{ ...roStyle, textAlign: "right", background: "#e5edfc", fontWeight: 700 }} value={finalAmount} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={finalAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Asking Rate">
-                    <input type="text" style={{ ...inputStyle, textAlign: "right" }} value={askingRate} onChange={(e) => setAskingRate(e.target.value)} />
+                    <input type="text" className={`${inputCls} text-end`} value={askingRate}
+                      onChange={(e) => { setIsManualAskingRate(true); setAskingRate(e.target.value); }} />
                   </FieldRow>
                 </CardBody>
               </Card>
@@ -1316,7 +1323,7 @@ export default function JewStockMasterEdit() {
                         {/* Element Type */}
                         <div style={{ flex: "1 1 130px", minWidth: 130 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Element Type</label>
-                          <select style={selectStyle} value={elementType} onChange={(e) => setElementType(e.target.value)}>
+                          <select className={selectCls} value={elementType} onChange={(e) => setElementType(e.target.value)}>
                             <option value="">Select Type</option>
                             <option value="Natural Diamond">Natural Diamond</option>
                             <option value="Lab Grown Diamond">Lab Grown Diamond</option>
@@ -1329,19 +1336,21 @@ export default function JewStockMasterEdit() {
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
                             Lot No
                           </label>
-                          <input type="text" style={inputStyle} placeholder="Search Lot No…"
+                          <input type="text" className={inputCls} placeholder="Search Lot No…"
                             value={lotSearch}
                             onChange={(e) => { setLotSearch(e.target.value); searchLots(e.target.value); }} />
                           {lotOptions.length > 0 && (
-                            <div style={{
-                              position: "absolute", zIndex: 200, background: "#fff",
-                              border: "1px solid #ced4da", borderRadius: 4, width: "100%",
-                              maxHeight: 160, overflowY: "auto", boxShadow: "0 2px 8px rgba(0,0,0,.1)"
-                            }}>
+                            <div
+                              className="dropdown-menu show position-absolute w-100 shadow-sm"
+                              style={{ zIndex: 200, maxHeight: 160, overflowY: "auto" }}
+                            >
                               {lotOptions.map((o, idx) => (
-                                <div key={`${o.id}-${idx}`}
-                                  style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13 }}
-                                  onMouseDown={() => handleLotSelect(o.id, o.text)}>
+                                <div
+                                  key={`${o.id}-${idx}`}
+                                  className="dropdown-item"
+                                  role="button"
+                                  onMouseDown={() => handleLotSelect(o.id, o.text)}
+                                >
                                   {o.text}
                                 </div>
                               ))}
@@ -1352,7 +1361,7 @@ export default function JewStockMasterEdit() {
                         {/* Shape */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Shape</label>
-                          <select style={selectStyle} value={shape} onChange={(e) => setShape(e.target.value)}>
+                          <select className={selectCls} value={shape} onChange={(e) => setShape(e.target.value)}>
                             <option value="">Shape</option>
                             {shapeOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1363,7 +1372,7 @@ export default function JewStockMasterEdit() {
                         {/* Size */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Size</label>
-                          <select style={selectStyle} value={size} onChange={(e) => setSize(e.target.value)}>
+                          <select className={selectCls} value={size} onChange={(e) => setSize(e.target.value)}>
                             <option value="">Size</option>
                             {sizeOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1374,7 +1383,7 @@ export default function JewStockMasterEdit() {
                         {/* Sieve */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Sieve</label>
-                          <select style={selectStyle} value={sieve} onChange={(e) => setSieve(e.target.value)}>
+                          <select className={selectCls} value={sieve} onChange={(e) => setSieve(e.target.value)}>
                             <option value="">Sieve</option>
                             {sieveOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1385,7 +1394,7 @@ export default function JewStockMasterEdit() {
                         {/* Color */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Color</label>
-                          <select style={selectStyle} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
+                          <select className={selectCls} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
                             <option value="">Color</option>
                             {stoneColorOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1396,7 +1405,7 @@ export default function JewStockMasterEdit() {
                         {/* Clarity */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Clarity</label>
-                          <select style={selectStyle} value={clarity} onChange={(e) => setClarity(e.target.value)}>
+                          <select className={selectCls} value={clarity} onChange={(e) => setClarity(e.target.value)}>
                             <option value="">Clarity</option>
                             {clarityOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1413,7 +1422,8 @@ export default function JewStockMasterEdit() {
                         ].map(([lbl, val, setter, ro]) => (
                           <div key={lbl} style={{ flex: "1 1 80px", minWidth: 80 }}>
                             <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
-                            <input type="text" style={{ ...(ro ? roStyle : inputStyle), textAlign: "right" }}
+                            <input type="text"
+                              className={`${ro ? roCls : inputCls} text-end`}
                               placeholder={lbl} value={val} readOnly={ro}
                               onChange={ro ? undefined : (e) => setter(e.target.value)} />
                           </div>
@@ -1422,7 +1432,7 @@ export default function JewStockMasterEdit() {
                         {/* Lab — MVC: text input #JewLab */}
                         <div style={{ flex: "1 1 80px", minWidth: 80 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Lab</label>
-                          <input type="text" style={inputStyle} placeholder="Lab"
+                          <input type="text" className={inputCls} placeholder="Lab"
                             value={lab} onChange={(e) => setLab(e.target.value)} />
                         </div>
 

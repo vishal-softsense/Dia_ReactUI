@@ -8,8 +8,6 @@ import { getParcelItemMasters, deleteParcelItemMaster } from "../../../helpers/f
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from 'react-toastify';
 
-
-
 const ParcelItemMasterList = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -238,13 +236,14 @@ const ParcelItemMasterList = () => {
                                         <TableContainer
                                             columns={columns}
                                             data={parcelItems}
-                                            isGlobalFilter={true}
+                                            isGlobalFilter
+                                            isPagination
                                             customPageSize={500}
                                             customPageSizes={[500, 1000, 1500]}
-                                            divClass="table-responsive table-card mb-3"
-                                            tableClass="align-middle table-nowrap mb-0"
-                                            theadClass="table-light"
                                             SearchPlaceholder={t("Filter items...")}
+                                            divClass="table-responsive table-card mb-0"
+                                            tableClass="table table-bordered table-hover table-sm align-middle mb-0"
+                                            theadClass="table-light"
                                         />
                                     )}
                                 </CardBody>

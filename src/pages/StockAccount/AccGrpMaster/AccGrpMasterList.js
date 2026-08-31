@@ -233,13 +233,14 @@ const AccGrpMasterList = () => {
                                             columns={columns}
                                             data={accGroups}
                                             getRowId={(row) => row.accGrpCode}
-                                            isGlobalFilter={true}
+                                            isGlobalFilter
+                                            isPagination
                                             customPageSize={500}
                                             customPageSizes={[500, 1000, 1500]}
-                                            divClass="table-responsive table-card mb-3"
-                                            tableClass="align-middle table-nowrap mb-0"
-                                            theadClass="table-light"
                                             SearchPlaceholder={t("Filter account groups...")}
+                                            divClass="table-responsive table-card mb-0"
+                                            tableClass="table table-bordered table-hover table-sm align-middle mb-0"
+                                            theadClass="table-light"
                                         />
                                     )}
                                 </CardBody>

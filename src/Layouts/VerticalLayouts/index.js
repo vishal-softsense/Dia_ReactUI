@@ -9,6 +9,7 @@ import { withTranslation } from "react-i18next";
 import withRouter from "../../Components/Common/withRouter";
 import { useSelector } from "react-redux";
 import { createSelector } from 'reselect';
+import { findMatchingMenuItem } from "../../helpers/sidebarRouteMatch";
 
 const VerticalLayout = (props) => {
     const navData = navdata().props.children;
@@ -92,45 +93,12 @@ const VerticalLayout = (props) => {
             const items = ul.getElementsByTagName("a");
             let itemsArray = [...items]; // converts NodeList to Array
             
-            // 1. Exact Match
-            let matchingMenuItem = itemsArray.find((x) => x.pathname === pathName);
-
-            // 2. Smart Route Matching (for Add/Edit pages)
-            if (!matchingMenuItem) {
-                const getPathIdentifier = (url) => {
-                    if (!url || url === "/" || url === "/#") return "";
-                    const cleanUrl = url.toLowerCase().replace(/^\/|\/$/g, "");
-                    const segments = cleanUrl.split("/");
-                    return segments
-                        .map(seg => seg
-                            .replace(/[-_]?(list|add|edit|create|update|form|detail|view|print|rpt|report)[s]?[-_]?/g, "")
-                            .replace(/^(list|add|edit|create|update|form|detail|view|print|rpt|report)[s]?/g, "")
-                        )
-                        .filter(Boolean)
-                        .join("/");
-                };
-
-                const currentId = getPathIdentifier(pathName);
-                const potentialMatches = itemsArray.filter(x => {
-                    if (!x.pathname || x.pathname === "/" || x.pathname === "/#") return false;
-                    
-                    // Case 1: pathName starts with x.pathname
-                    if (pathName.toLowerCase().startsWith(x.pathname.toLowerCase())) return true;
-                    
-                    // Case 2: Cleaned path identifiers match
-                    const menuId = getPathIdentifier(x.pathname);
-                    return menuId && menuId === currentId;
-                });
-                
-                if (potentialMatches.length > 0) {
-                    // Sort by length descending to get the most specific match
-                    potentialMatches.sort((a, b) => b.pathname.length - a.pathname.length);
-                    matchingMenuItem = potentialMatches[0];
-                }
-            }
+            // 1. Exact match + smart route matching (add/edit/child pages)
+            let matchingMenuItem = findMatchingMenuItem(itemsArray, pathName);
 
             // 3. Apply State
             if (matchingMenuItem) {
+                sessionStorage.setItem("lastActiveMenuPath", matchingMenuItem.pathname);
                 // We found a match (either exact or parent base route). 
                 // Clear everything and open the correct menu perfectly.
                 removeActivation(itemsArray);

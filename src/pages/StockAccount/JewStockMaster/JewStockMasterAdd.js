@@ -23,6 +23,13 @@ import {
 import { exportToExcel } from "../../../helpers/excel_helper";
 import TableContainer from "../../../Components/Common/TableContainer";
 import JewStockMediaPreview from "./JewStockMediaPreview";
+import {
+  computeChargeTotals,
+  computeMakingCharges,
+  floorPurityRatio,
+  mapDiamondListToRows,
+  summarizeTableRows,
+} from "./jewStockFormUtils";
 
 /*
   ─────────────────────────────────────────────────────────────────────────
@@ -371,8 +378,13 @@ export default function AddMountingMaster() {
   const [otherCharges, setOtherCharges] = useState("");
   const [hallmarkCharges, setHallmarkCharges] = useState("");
   const [totalMakingCharges, setTotalMakingCharges] = useState("");
+  const [costAmount, setCostAmount] = useState("");
   const [finalAmount, setFinalAmount] = useState("");
   const [askingRate, setAskingRate] = useState("");
+  const [originalMakingCharges, setOriginalMakingCharges] = useState("");
+  const [isManualAskingRate, setIsManualAskingRate] = useState(false);
+  const [otherPer, setOtherPer] = useState("0");
+  const [askingPer, setAskingPer] = useState("0");
 
   // ── Row entry form ──
   const [elementType, setElementType] = useState("");
@@ -461,6 +473,10 @@ export default function AddMountingMaster() {
         if (basis) {
           setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
         }
+        const otherP = data.OtherPer ?? data.otherPer ?? "0";
+        const askingP = data.AskingPer ?? data.askingPer ?? "0";
+        setOtherPer(otherP || "0");
+        setAskingPer(askingP || "0");
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -528,7 +544,7 @@ export default function AddMountingMaster() {
           const ratio = (data && typeof data === "object")
             ? (data.Ratio ?? data.ratio ?? data.PureRatio ?? data.purityRatio ?? "")
             : data;
-          setPurityRatio(ratio !== null && ratio !== undefined ? String(ratio) : "");
+          setPurityRatio(floorPurityRatio(ratio));
         } else {
           toast.error(message || "Failed to load Purity Ratio.");
         }
@@ -591,16 +607,10 @@ export default function AddMountingMaster() {
   }, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
-    const r = parseFloat(makingRate) || 0;
-    const gw = parseFloat(grossWeight) || 0;
-    const pc = parseFloat(totalPcs) || 1;
-    const ma = parseFloat(metalAmount) || 0;
-    let mc = 0;
-    if (makingType === "Per Gm") mc = r * gw;
-    else if (makingType === "Per Pcs") mc = r * pc;
-    else if (makingType === "Lumsum") mc = r;
-    else if (makingType === "Per%") mc = (ma * r) / 100;
-    setMakingCharges(mc.toFixed(2));
+    const mc = computeMakingCharges(makingType, makingRate, grossWeight, totalPcs, metalAmount);
+    const val = mc.toFixed(2);
+    setOriginalMakingCharges(val);
+    setMakingCharges(val);
   }, [makingType, makingRate, grossWeight, totalPcs, metalAmount]);
 
   useEffect(() => {
@@ -610,27 +620,59 @@ export default function AddMountingMaster() {
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
-    const sum =
-      (parseFloat(makingCharges) || 0) +
-      (parseFloat(settingCharges) || 0) +
-      (parseFloat(handlingAmount) || 0) +
-      (parseFloat(certificateCharges) || 0) +
-      (parseFloat(otherCharges) || 0) +
-      (parseFloat(hallmarkCharges) || 0);
-    setTotalMakingCharges(sum.toFixed(2));
-    const fa =
-      (parseFloat(metalAmount) || 0) +
-      (parseFloat(diamondAmount) || 0) +
-      (parseFloat(stoneAmount) || 0) + sum;
-    setFinalAmount(fa.toFixed(2));
-  }, [makingCharges, settingCharges, handlingAmount, certificateCharges,
-    otherCharges, hallmarkCharges, metalAmount, diamondAmount, stoneAmount]);
+    const totals = computeChargeTotals({
+      metalAmount,
+      originalMakingCharges,
+      handlingAmount,
+      certificateCharges,
+      hallmarkCharges,
+      settingCharges,
+      diamondAmount,
+      stoneAmount,
+      otherPer,
+      askingPer,
+      isManualAskingRate,
+      currentAskingRate: askingRate,
+    });
+    setCostAmount(totals.costAmount);
+    setOtherCharges(totals.otherCharges);
+    setTotalMakingCharges(totals.totalMakingCharges);
+    setFinalAmount(totals.finalAmount);
+    if (!isManualAskingRate) {
+      setAskingRate(totals.askingRate);
+    }
+  }, [
+    metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
+    hallmarkCharges, settingCharges, diamondAmount, stoneAmount, otherPer,
+    askingPer, isManualAskingRate,
+  ]);
+
+  useEffect(() => {
+    const summary = summarizeTableRows(tableRows);
+    setDiamondAmount(summary.diamondAmount);
+    setDiamondQty(summary.diamondQty);
+    setStoneAmount(summary.stoneAmount);
+    setStoneQty(summary.stoneQty);
+  }, [tableRows]);
 
   useEffect(() => {
     const c = parseFloat(carats) || 0;
     const r = parseFloat(rate) || 0;
     setAmount((c * r).toFixed(2));
   }, [carats, rate]);
+
+  const handleOtherChargesChange = (value) => {
+    setOtherCharges(value);
+    const cost = parseFloat(costAmount) || 0;
+    const other = parseFloat(value) || 0;
+    const finalCost = Math.round((cost + other) * 100) / 100;
+    setFinalAmount(finalCost.toFixed(2));
+    if (!isManualAskingRate) {
+      const askingPct = parseFloat(askingPer) || 0;
+      const autoAsking = finalCost + Math.round(finalCost * askingPct * 100) / 100;
+      setAskingRate(autoAsking.toFixed(2));
+    }
+  };
 
   // ─── Load Mounting Stock options (dropdown) ───────────────────────────────
   // MVC: option value = ID (JewCode), text = Name; save uses selected text
@@ -722,7 +764,9 @@ export default function AddMountingMaster() {
       );
       setMakingType(data.makingType || data.MakingType || "");
       setMakingRate(data.makingRate ?? data.MakingRate ?? "");
-      setMakingCharges(data.makingCharges ?? data.MakingCharges ?? "");
+      const loadedMaking = data.makingCharges ?? data.MakingCharges ?? "";
+      setMakingCharges(loadedMaking);
+      setOriginalMakingCharges(String(loadedMaking || "0"));
       setSettingCharges(
         data.settingCharges != null || data.SettingCharges != null
           ? Number(data.settingCharges ?? data.SettingCharges).toFixed(2)
@@ -736,7 +780,9 @@ export default function AddMountingMaster() {
       setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
       setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
       setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
-      setFinalAmount(data.finalAmount ?? data.FinalAmount ?? "");
+      const loadedFinal = data.finalAmount ?? data.FinalAmount ?? "";
+      setFinalAmount(loadedFinal);
+      setCostAmount(data.costamount ?? data.CostAmount ?? data.costAmount ?? loadedFinal);
       setDiamondAmount(data.totalDiamondAmount ?? data.TotalDiamondAmount ?? "");
       setImagePath(data.imagePath || data.ImagePath || "");
       setVideoPath(data.videoPath || data.VideoPath || "");
@@ -744,32 +790,29 @@ export default function AddMountingMaster() {
       setDescription(data.description || data.Description || "");
       setCertNo(data.jewelleryCerNo || data.JewelleryCerNo || "");
       setTotalPcs(data.pcs ?? data.Pcs ?? "");
-      setAskingRate(data.askingRate ?? data.AskingRate ?? "");
+      const loadedAsking = data.askingRate ?? data.AskingRate ?? "";
+      const askingPct = parseFloat(askingPer) || 0;
+      const expectedAsking =
+        parseFloat(loadedFinal) +
+        Math.round(parseFloat(loadedFinal) * askingPct * 100) / 100;
+      if (loadedAsking && parseFloat(loadedAsking).toFixed(2) !== expectedAsking.toFixed(2)) {
+        setIsManualAskingRate(true);
+        setAskingRate(String(loadedAsking));
+      } else {
+        setIsManualAskingRate(false);
+        setAskingRate(String(loadedAsking || ""));
+      }
       setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
       setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
       setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
 
-      const rows = (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
-        id: idx + 1,
-        stockID: item.stockID || item.StockID || item.lotNo || item.LotNo || "",
-        stoneType: item.type || item.Type || item.category || item.Category || "Natural Diamond",
-        shape: item.shape || item.Shape || "",
-        size: item.size || item.Size || "",
-        sieve: item.sieve || item.Sieve || "",
-        color: item.color || item.Color || "",
-        clarity: item.clarity || item.Clarity || "",
-        pcs: item.pcs || item.Pcs || 0,
-        carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
-        rate: item.price || item.Price || item.rate || item.Rate || 0,
-        amount: item.amount || item.Amount || 0,
-        lab: item.lab || item.Lab || item.cert || item.Cert || "",
-      }));
-      setTableRows(rows);
+      const rows = mapDiamondListToRows(diamondList);
+      setTableRows((prev) => [...prev, ...rows]);
     } catch (err) {
       console.error(err);
       toast.error("Error fetching mounting details.");
     }
-  }, []);
+  }, [askingPer]);
 
   const handleUseMountingChange = (selectedId) => {
     setUseMounting(selectedId);
@@ -888,45 +931,15 @@ export default function AddMountingMaster() {
       id: editingRowId ?? Date.now(), stockID: lotNo, stoneType: elementType,
       shape, size, sieve, color: stoneColor, clarity, pcs, carats, rate, amount, lab
     };
-    const rowAmt = parseFloat(amount) || 0;
-    const rowPcs = parseFloat(pcs) || 0;
     if (editingRowId !== null) {
-      const oldRow = tableRows.find((r) => r.id === editingRowId);
-      const oldAmt = parseFloat(oldRow?.amount) || 0;
-      const oldPcs = parseFloat(oldRow?.pcs) || 0;
-      if (oldRow?.stoneType === "Natural Diamond" || oldRow?.stoneType === "Lab Grown Diamond") {
-        setDiamondAmount((p) => Math.max(0, (parseFloat(p) || 0) - oldAmt + rowAmt).toFixed(2));
-        setDiamondQty((p) => String(Math.max(0, (parseFloat(p) || 0) - oldPcs + rowPcs)));
-      } else {
-        setStoneAmount((p) => Math.max(0, (parseFloat(p) || 0) - oldAmt + rowAmt).toFixed(2));
-        setStoneQty((p) => String(Math.max(0, (parseFloat(p) || 0) - oldPcs + rowPcs)));
-      }
       setTableRows((p) => p.map((r) => r.id === editingRowId ? row : r));
     } else {
       setTableRows((p) => [...p, row]);
-      if (elementType === "Natural Diamond" || elementType === "Lab Grown Diamond") {
-        setDiamondAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
-        setDiamondQty((p) => String((parseFloat(p) || 0) + rowPcs));
-      } else {
-        setStoneAmount((p) => ((parseFloat(p) || 0) + rowAmt).toFixed(2));
-        setStoneQty((p) => String((parseFloat(p) || 0) + rowPcs));
-      }
     }
     clearEntryForm();
   };
 
   const removeRow = (id) => {
-    const row = tableRows.find((r) => r.id === id);
-    if (!row) return;
-    const amt = parseFloat(row.amount) || 0;
-    const pc = parseFloat(row.pcs) || 0;
-    if (row.stoneType === "Natural Diamond" || row.stoneType === "Lab Grown Diamond") {
-      setDiamondAmount((p) => Math.max(0, (parseFloat(p) || 0) - amt).toFixed(2));
-      setDiamondQty((p) => String(Math.max(0, (parseFloat(p) || 0) - pc)));
-    } else {
-      setStoneAmount((p) => Math.max(0, (parseFloat(p) || 0) - amt).toFixed(2));
-      setStoneQty((p) => String(Math.max(0, (parseFloat(p) || 0) - pc)));
-    }
     setTableRows((p) => p.filter((r) => r.id !== id));
     if (editingRowId === id) clearEntryForm();
   };
@@ -1048,7 +1061,8 @@ export default function AddMountingMaster() {
           Description: description,
           Pcs: parseFloat(totalPcs) || 0,
           TotalDiamondCarat: parseFloat(totalDiaCarat) || 0,
-          TotalStoneCarat: parseFloat(totalStnCarat) || 0
+          TotalStoneCarat: parseFloat(totalStnCarat) || 0,
+          costamount: costAmount || finalAmount || "0"
         },
         Diamond: diamond,
         Setting: setting,
@@ -1091,16 +1105,10 @@ export default function AddMountingMaster() {
   // RENDER
   // ════════════════════════════════════════════════════════════════════════════
 
-  // shared style helpers (inline, kept local to render)
-  const inputStyle = { fontSize: 13, fontWeight: 600, width: "100%", padding: "5px 8px", border: "1px solid #ced4da", borderRadius: 4 };
-  const selectStyle = { ...inputStyle };
-  const roStyle = { ...inputStyle, background: "#f8f9fa" };
-  const tabBtn = (active) => ({
-    padding: "6px 16px", borderRadius: 6, border: "none", cursor: "pointer",
-    fontWeight: 600, fontSize: 12, marginRight: 4, transition: "all .2s",
-    background: active ? "#5A8DEE" : "#f2f4f7",
-    color: active ? "#fff" : "#5A8DEE",
-  });
+  const inputCls = "form-control form-control-sm";
+  const selectCls = "form-select form-select-sm";
+  const roCls = "form-control form-control-sm custom-readonly-input";
+  const tabBtnClass = (active) => `btn btn-sm ${active ? "btn-primary" : "btn-light"}`;
 
   return (
     <React.Fragment>
@@ -1162,13 +1170,14 @@ export default function AddMountingMaster() {
                       <TableContainer
                         columns={listColumns}
                         data={mountingStock}
-                        isGlobalFilter={true}
+                        isGlobalFilter
+                        isPagination
                         customPageSize={500}
                         customPageSizes={[500, 1000, 1500]}
-                        divClass="table-responsive table-card mb-3"
-                        tableClass="align-middle table-nowrap mb-0"
-                        theadClass="table-light"
                         SearchPlaceholder={t("Filter items...")}
+                        divClass="table-responsive table-card mb-0"
+                        tableClass="table table-bordered table-hover table-sm align-middle mb-0"
+                        theadClass="table-light"
                       />
                     )}
                   </CardBody>
@@ -1188,10 +1197,10 @@ export default function AddMountingMaster() {
                 <CardBody>
                   {/* tabs */}
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button style={tabBtn(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
+                    <button className={tabBtnClass(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
                       <i className="ri-bar-chart-line me-1"></i>Stock Details
                     </button>
-                    <button style={tabBtn(leftTab === "image")} onClick={() => setLeftTab("image")}>
+                    <button className={tabBtnClass(leftTab === "image")} onClick={() => setLeftTab("image")}>
                       <i className="ri-image-line me-1"></i>Image
                     </button>
                   </div>
@@ -1199,14 +1208,14 @@ export default function AddMountingMaster() {
                   {leftTab === "stock" && (
                     <>
                       <FieldRow label="Date">
-                        <input type="date" style={inputStyle} value={trnDate}
+                        <input type="date" className={inputCls} value={trnDate}
                           onChange={(e) => handleDateChange(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Stock ID">
                         <>
                           <input type="text" 
-                            className={`form-control ${errors.stockID ? 'is-invalid' : ''}`}
-                            style={{...inputStyle, padding: "5px 8px"}} placeholder="Stock ID"
+                            className={`${inputCls} ${errors.stockID ? "is-invalid" : ""}`}
+                            placeholder="Stock ID"
                             value={stockID} 
                             onChange={(e) => {
                                 setStockID(e.target.value);
@@ -1220,7 +1229,7 @@ export default function AddMountingMaster() {
                         </>
                       </FieldRow>
                       <FieldRow label="Jewellery Category">
-                        <select style={selectStyle} value={jewCategory}
+                        <select className={selectCls} value={jewCategory}
                           onChange={(e) => setJewCategory(e.target.value)}>
                           <option value="">Select JewelleryCategory</option>
                           <option value="Finished Jewellery">Finished Jewellery</option>
@@ -1232,7 +1241,7 @@ export default function AddMountingMaster() {
 
                       {showMountingSection && (
                         <FieldRow label="Use Mounting">
-                          <select style={selectStyle} value={useMounting}
+                          <select className={selectCls} value={useMounting}
                             onChange={(e) => handleUseMountingChange(e.target.value)}>
                             <option value="">Select Lot No</option>
                             {mountOpts.map((o) => (
@@ -1243,7 +1252,7 @@ export default function AddMountingMaster() {
                       )}
 
                       <FieldRow label="Category">
-                        <select style={selectStyle} value={category}
+                        <select className={selectCls} value={category}
                           onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
                           <option value="">Select Category</option>
                           {categoryOptions.map((o) => (
@@ -1252,7 +1261,7 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Sub Category">
-                        <select style={selectStyle} value={subCategory}
+                        <select className={selectCls} value={subCategory}
                           onChange={(e) => setSubCategory(e.target.value)}>
                           <option value="">Select Sub Category</option>
                           {subCategoryOptionsForCategory.map((o) => (
@@ -1261,11 +1270,11 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Jewellery Size">
-                        <input type="text" style={inputStyle} placeholder="Size"
+                        <input type="text" className={inputCls} placeholder="Size"
                           value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Certificate">
-                        <select style={selectStyle} value={jewCert}
+                        <select className={selectCls} value={jewCert}
                           onChange={(e) => setJewCert(e.target.value)}>
                           <option value="">Select Certificate</option>
                           <option value="IGI">IGI</option>
@@ -1273,15 +1282,15 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Certificate No">
-                        <input type="text" style={inputStyle} placeholder="Certificate No"
+                        <input type="text" className={inputCls} placeholder="Certificate No"
                           value={certNo} onChange={(e) => setCertNo(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Description" wide>
-                        <input type="text" style={inputStyle} placeholder="Description"
+                        <input type="text" className={inputCls} placeholder="Description"
                           value={description} onChange={(e) => setDescription(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Pcs">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Pcs"
+                        <input type="text" className={`${inputCls} text-end`} placeholder="Pcs"
                           value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
                       </FieldRow>
                     </>
@@ -1303,10 +1312,10 @@ export default function AddMountingMaster() {
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button style={tabBtn(midTab === "metal")} onClick={() => setMidTab("metal")}>
+                    <button className={tabBtnClass(midTab === "metal")} onClick={() => setMidTab("metal")}>
                       <i className="ri-settings-3-line me-1"></i>Metal Details
                     </button>
-                    <button style={tabBtn(midTab === "images")} onClick={() => setMidTab("images")}>
+                    <button className={tabBtnClass(midTab === "images")} onClick={() => setMidTab("images")}>
                       <i className="ri-folder-image-line me-1"></i>Images Details
                     </button>
                   </div>
@@ -1314,7 +1323,7 @@ export default function AddMountingMaster() {
                   {midTab === "metal" && (
                     <>
                       <FieldRow label="Metal Type">
-                        <select style={selectStyle} value={metal}
+                        <select className={selectCls} value={metal}
                           onChange={(e) => setMetal(e.target.value)}>
                           <option value="">Select MetalType</option>
                           {metalTypeOptions.map((o) => (
@@ -1323,7 +1332,7 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Color">
-                        <select style={selectStyle} value={color}
+                        <select className={selectCls} value={color}
                           onChange={(e) => setColor(e.target.value)}>
                           <option value="">Select Color</option>
                           {colorOptions.map((o) => (
@@ -1332,7 +1341,7 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Purity">
-                        <select style={selectStyle} value={metalPurity} disabled={!metal || purityLoading}
+                        <select className={selectCls} value={metalPurity} disabled={!metal || purityLoading}
                           onChange={(e) => handlePurityChange(e.target.value)}>
                           <option value="">
                             {!metal ? "Select Metal Type first" : purityLoading ? "Loading…" : "Select Metal Purity"}
@@ -1343,38 +1352,38 @@ export default function AddMountingMaster() {
                         </select>
                       </FieldRow>
                       <FieldRow label="Purity Ratio">
-                        <input type="text" style={roStyle} placeholder="Pure Ratio"
+                        <input type="text" className={`${roCls} text-end`} placeholder="Pure Ratio"
                           value={purityRatio} readOnly />
                       </FieldRow>
                       <FieldRow label="Gross Weight">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Gross Weight"
+                        <input type="text" className={`${inputCls} text-end`} placeholder="Gross Weight"
                           value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Net Weight">
-                        <input type="text" style={{ ...roStyle, textAlign: "right" }}
+                        <input type="text" className={`${roCls} text-end`}
                           placeholder="Net Weight" value={netWeight} readOnly />
                       </FieldRow>
                       <FieldRow label="Metal Price/Gm">
-                        <input type="text" style={{ ...inputStyle, textAlign: "right" }} placeholder="Metal Price/Gm"
+                        <input type="text" className={`${inputCls} text-end`} placeholder="Metal Price/Gm"
                           value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Metal Amount">
-                        <input type="text" style={{ ...roStyle, textAlign: "right" }}
+                        <input type="text" className={`${roCls} text-end`}
                           placeholder="Metal Amount" value={metalAmount} readOnly />
                       </FieldRow>
                       <FieldRow label="Diamond">
                         <div className="d-flex gap-1">
-                          <input type="number" style={{ ...roStyle, textAlign: "right", flex: 1 }}
+                          <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
                             placeholder="Amt" value={diamondAmount} readOnly />
-                          <input type="number" style={{ ...roStyle, textAlign: "right", width: 80 }}
+                          <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
                             placeholder="Pcs" value={diamondQty} readOnly />
                         </div>
                       </FieldRow>
                       <FieldRow label="Stone">
                         <div className="d-flex gap-1">
-                          <input type="number" style={{ ...roStyle, textAlign: "right", flex: 1 }}
+                          <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
                             placeholder="Amt" value={stoneAmount} readOnly />
-                          <input type="number" style={{ ...roStyle, textAlign: "right", width: 80 }}
+                          <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
                             placeholder="Pcs" value={stoneQty} readOnly />
                         </div>
                       </FieldRow>
@@ -1384,15 +1393,15 @@ export default function AddMountingMaster() {
                   {midTab === "images" && (
                     <>
                       <FieldRow label="Image Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Image Path"
+                        <input type="text" className={inputCls} placeholder="Image Path"
                           value={imagePath} onChange={(e) => setImagePath(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Video Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Video Path"
+                        <input type="text" className={inputCls} placeholder="Video Path"
                           value={videoPath} onChange={(e) => setVideoPath(e.target.value)} />
                       </FieldRow>
                       <FieldRow label="Cert Path" wide>
-                        <input type="text" style={inputStyle} placeholder="Cert Path"
+                        <input type="text" className={inputCls} placeholder="Cert Path"
                           value={certPath} onChange={(e) => setCertPath(e.target.value)} />
                       </FieldRow>
                     </>
@@ -1406,18 +1415,12 @@ export default function AddMountingMaster() {
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <span style={{
-                      fontWeight: 600, fontSize: 13, color: "#5A8DEE",
-                      background: "#f2f4f7", padding: "6px 14px", borderRadius: 6
-                    }}>
-                      Charges Details
-                    </span>
-
+                    <span className="fw-semibold text-primary">Charges Details</span>
                   </div>
 
                   <FieldRow label="Making Type">
                     <div className="d-flex gap-1">
-                      <select style={{ ...selectStyle, flex: 1 }} value={makingType}
+                      <select className={selectCls} style={{ flex: 1 }} value={makingType}
                         onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
                         {(settingTypeOptions.length > 0
@@ -1433,61 +1436,58 @@ export default function AddMountingMaster() {
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
-                      <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }}
+                      <input type="number" className={`${inputCls} text-end`} style={{ width: 80 }}
                         placeholder="Making Rate" value={makingRate}
                         onChange={(e) => setMakingRate(e.target.value)} />
                     </div>
                   </FieldRow>
                   <FieldRow label="Making Charges">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }}
-                      value={makingCharges} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={makingCharges} readOnly />
                   </FieldRow>
                   <FieldRow label="Setting Charges">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }}
-                      value={settingCharges} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={settingCharges} readOnly />
                   </FieldRow>
                   <FieldRow label="Handling Carat">
                     <div className="d-flex gap-1">
-                      <input type="number" style={{ ...inputStyle, flex: 1, textAlign: "right" }}
+                      <input type="number" className={`${inputCls} text-end`} style={{ flex: 1 }}
                         placeholder="Handling Carat" value={handlingCarat}
                         onChange={(e) => setHandlingCarat(e.target.value)} />
-                      <input type="number" style={{ ...inputStyle, width: 80, textAlign: "right" }}
+                      <input type="number" className={`${inputCls} text-end`} style={{ width: 80 }}
                         placeholder="Handling Charges" value={handlingCharges}
                         onChange={(e) => setHandlingCharges(e.target.value)} />
                     </div>
                   </FieldRow>
                   <FieldRow label="Handling Amount">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }}
-                      value={handlingAmount} readOnly />
+                    <input type="number" className={`${roCls} text-end`} value={handlingAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Certificate Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }}
+                    <input type="number" className={`${inputCls} text-end`}
                       placeholder="Certificate Charges" value={certificateCharges}
                       onChange={(e) => setCertificateCharges(e.target.value)} />
                   </FieldRow>
-                  <FieldRow label="Other Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }}
-                      placeholder="Other Charges" value={otherCharges}
-                      onChange={(e) => setOtherCharges(e.target.value)} />
-                  </FieldRow>
                   <FieldRow label="Hallmark Charges">
-                    <input type="number" style={{ ...inputStyle, textAlign: "right" }}
+                    <input type="number" className={`${inputCls} text-end`}
                       placeholder="Hallmark Charges" value={hallmarkCharges}
                       onChange={(e) => setHallmarkCharges(e.target.value)} />
                   </FieldRow>
-                  <FieldRow label="Total Making">
-                    <input type="number" style={{ ...roStyle, textAlign: "right" }}
-                      value={totalMakingCharges} readOnly />
+                  <FieldRow label="Total Making Charges">
+                    <input type="number" className={`${roCls} text-end`} value={totalMakingCharges} readOnly />
+                  </FieldRow>
+                  <FieldRow label="Cost Amount">
+                    <input type="number" className={`${roCls} text-end`} value={costAmount} readOnly />
+                  </FieldRow>
+                  <FieldRow label="Other Charges">
+                    <input type="number" className={`${inputCls} text-end`} value={otherCharges}
+                      onChange={(e) => handleOtherChargesChange(e.target.value)} />
                   </FieldRow>
                   <FieldRow label="Final Cost Amount">
-                    <input type="number"
-                      style={{ ...roStyle, textAlign: "right", background: "#e5edfc", fontWeight: 700 }}
+                    <input type="number" className={`${roCls} text-end`}
                       value={finalAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Asking Rate">
-                    <input type="text" style={{ ...inputStyle, textAlign: "right" }}
+                    <input type="text" className={`${inputCls} text-end`}
                       placeholder="Asking Rate" value={askingRate}
-                      onChange={(e) => setAskingRate(e.target.value)} />
+                      onChange={(e) => { setIsManualAskingRate(true); setAskingRate(e.target.value); }} />
                   </FieldRow>
                 </CardBody>
               </Card>
@@ -1511,7 +1511,7 @@ export default function AddMountingMaster() {
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
                             Element Type
                           </label>
-                          <select style={selectStyle} value={elementType}
+                          <select className={selectCls} value={elementType}
                             onChange={(e) => setElementType(e.target.value)}>
                             <option value="">Element Type</option>
                             <option value="Natural Diamond">Natural Diamond</option>
@@ -1527,7 +1527,7 @@ export default function AddMountingMaster() {
                           </label>
                           <input
                             type="text"
-                            style={inputStyle}
+                            className={inputCls}
                             placeholder="Lot No"
                             value={lotSearch}
                             onChange={(e) => {
@@ -1541,15 +1541,17 @@ export default function AddMountingMaster() {
                             <small className="text-muted" style={{ fontSize: 11 }}>{lotNoHint}</small>
                           )}
                           {lotOptions.length > 0 && (
-                            <div style={{
-                              position: "absolute", zIndex: 200, background: "#fff",
-                              border: "1px solid #ced4da", borderRadius: 4, width: "100%",
-                              maxHeight: 160, overflowY: "auto", boxShadow: "0 2px 8px rgba(0,0,0,.1)"
-                            }}>
+                            <div
+                              className="dropdown-menu show position-absolute w-100 shadow-sm"
+                              style={{ zIndex: 200, maxHeight: 160, overflowY: "auto" }}
+                            >
                               {lotOptions.map((o, idx) => (
-                                <div key={`${o.id}-${idx}`}
-                                  style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13 }}
-                                  onMouseDown={() => handleLotSelect(o.id, o.text)}>
+                                <div
+                                  key={`${o.id}-${idx}`}
+                                  className="dropdown-item"
+                                  role="button"
+                                  onMouseDown={() => handleLotSelect(o.id, o.text)}
+                                >
                                   {o.text}
                                 </div>
                               ))}
@@ -1560,7 +1562,7 @@ export default function AddMountingMaster() {
                         {/* Shape */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Shape</label>
-                          <select style={selectStyle} value={shape} onChange={(e) => setShape(e.target.value)}>
+                          <select className={selectCls} value={shape} onChange={(e) => setShape(e.target.value)}>
                             <option value="">Shape</option>
                             {shapeOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1571,7 +1573,7 @@ export default function AddMountingMaster() {
                         {/* Size */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Size</label>
-                          <select style={selectStyle} value={size} onChange={(e) => setSize(e.target.value)}>
+                          <select className={selectCls} value={size} onChange={(e) => setSize(e.target.value)}>
                             <option value="">Size</option>
                             {sizeOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1582,7 +1584,7 @@ export default function AddMountingMaster() {
                         {/* Sieve */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Sieve</label>
-                          <select style={selectStyle} value={sieve} onChange={(e) => setSieve(e.target.value)}>
+                          <select className={selectCls} value={sieve} onChange={(e) => setSieve(e.target.value)}>
                             <option value="">Sieve</option>
                             {sieveOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1593,7 +1595,7 @@ export default function AddMountingMaster() {
                         {/* Color */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Color</label>
-                          <select style={selectStyle} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
+                          <select className={selectCls} value={stoneColor} onChange={(e) => setStoneColor(e.target.value)}>
                             <option value="">Color</option>
                             {stoneColorOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1604,7 +1606,7 @@ export default function AddMountingMaster() {
                         {/* Clarity */}
                         <div style={{ flex: "1 1 100px", minWidth: 100 }}>
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Clarity</label>
-                          <select style={selectStyle} value={clarity} onChange={(e) => setClarity(e.target.value)}>
+                          <select className={selectCls} value={clarity} onChange={(e) => setClarity(e.target.value)}>
                             <option value="">Clarity</option>
                             {clarityOptions.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
@@ -1621,7 +1623,8 @@ export default function AddMountingMaster() {
                         ].map(([lbl, val, setter, ro]) => (
                           <div key={lbl} style={{ flex: "1 1 80px", minWidth: 80 }}>
                             <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{lbl}</label>
-                            <input type="text" style={{ ...(ro ? roStyle : inputStyle), textAlign: "right" }}
+                            <input type="text"
+                              className={`${ro ? roCls : inputCls} text-end`}
                               placeholder={lbl} value={val} readOnly={ro}
                               onChange={ro ? undefined : (e) => setter(e.target.value)} />
                           </div>
@@ -1632,7 +1635,7 @@ export default function AddMountingMaster() {
                           <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Lab</label>
                           <input
                             type="text"
-                            style={inputStyle}
+                            className={inputCls}
                             placeholder="Lab"
                             value={lab}
                             onChange={(e) => setLab(e.target.value)}
@@ -1689,17 +1692,13 @@ export default function AddMountingMaster() {
                 <Col lg={12}>
                   <Card>
                     <CardBody>
-                      <h5 style={{
-                        fontWeight: 600, color: "#5A8DEE", background: "#f2f4f7",
-                        padding: "8px 14px", borderRadius: 6, textAlign: "center",
-                        marginBottom: 12, fontSize: 13
-                      }}>
+                      <h5 className="fw-semibold text-primary text-center mb-3">
                         Parcel LotNo / Solitaire LotNo / Mounting LotNo
                       </h5>
                       <div className="table-responsive">
                         <table className="table table-bordered table-sm align-middle mb-0"
                           style={{ fontSize: 12, whiteSpace: "nowrap" }}>
-                          <thead className="table-light">
+                          <thead>
                             <tr>
                               {["", "Stock ID", "Stone Type", "Shape", "Size", "Sieve",
                                 "Color", "Clarity", "Pcs", "Carat", "Price", "Amount", "LAB"
@@ -1737,7 +1736,7 @@ export default function AddMountingMaster() {
                             ))}
                           </tbody>
                           {tableRows.length > 0 && (
-                            <tfoot className="table-light fw-bold">
+                            <tfoot className="fw-bold">
                               <tr>
                                 <td colSpan={8} style={{ padding: "6px 10px" }}></td>
                                 <td style={{ padding: "6px 10px" }}>

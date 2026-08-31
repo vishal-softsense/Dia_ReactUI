@@ -6,6 +6,23 @@ import { refreshReportCompanySettings } from "../../../helpers/reportCompanyDefa
 import { toast, ToastContainer } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
+const TEXT_VALUE_SETTING_NAMES = new Set([
+    "SaleConditions",
+    "MemoConditions",
+    "Information",
+    "Addperinother",
+    "Addperinasking",
+]);
+
+const LONG_TEXT_SETTING_NAMES = new Set([
+    "SaleConditions",
+    "MemoConditions",
+    "Information",
+]);
+
+const isTextValueSetting = (name) => TEXT_VALUE_SETTING_NAMES.has(name);
+const isLongTextSetting = (name) => LONG_TEXT_SETTING_NAMES.has(name);
+
 const PrintFormatList = () => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
@@ -49,7 +66,7 @@ const PrintFormatList = () => {
                 setSelectedPrintSetting(data);
                 setInvoiceFormatOptions(response.invoiceFormat || response.InvoiceFormat || []);
                 
-                if (name === "SaleConditions" || name === "MemoConditions" || name === "Information") {
+                if (isTextValueSetting(name)) {
                     setPrintConditions(data.Value ?? data.value ?? "");
                 } else {
                     setSelectedPrintFormat(data.Value ?? data.value ?? "");
@@ -65,9 +82,8 @@ const PrintFormatList = () => {
     };
 
     const handleSavePrintSetting = async () => {
-        const isCondition = selectedPrintSetting.Name === "SaleConditions" || 
-                            selectedPrintSetting.Name === "MemoConditions" || 
-                            selectedPrintSetting.Name === "Information";
+        const settingName = selectedPrintSetting.Name ?? selectedPrintSetting.name ?? "";
+        const isCondition = isTextValueSetting(settingName);
         const valToSave = isCondition ? printConditions : selectedPrintFormat;
 
         try {
@@ -215,18 +231,29 @@ const PrintFormatList = () => {
                                         />
                                     </div>
 
-                                    {((selectedPrintSetting.Name || selectedPrintSetting.name) === "SaleConditions" || 
-                                      (selectedPrintSetting.Name || selectedPrintSetting.name) === "MemoConditions" || 
-                                      (selectedPrintSetting.Name || selectedPrintSetting.name) === "Information") ? (
+                                    {isTextValueSetting(selectedPrintSetting.Name || selectedPrintSetting.name || "") ? (
                                         <div className="mb-3">
-                                            <Label className="form-label">{t("Conditions / Information Content")}</Label>
-                                            <Input
-                                                type="textarea"
-                                                rows="6"
-                                                value={printConditions}
-                                                onChange={(e) => setPrintConditions(e.target.value)}
-                                                placeholder={t("Enter terms and conditions text...")}
-                                            />
+                                            <Label className="form-label">
+                                                {isLongTextSetting(selectedPrintSetting.Name || selectedPrintSetting.name || "")
+                                                    ? t("Conditions / Information Content")
+                                                    : t("Conditions")}
+                                            </Label>
+                                            {isLongTextSetting(selectedPrintSetting.Name || selectedPrintSetting.name || "") ? (
+                                                <Input
+                                                    type="textarea"
+                                                    rows="6"
+                                                    value={printConditions}
+                                                    onChange={(e) => setPrintConditions(e.target.value)}
+                                                    placeholder={t("Enter terms and conditions text...")}
+                                                />
+                                            ) : (
+                                                <Input
+                                                    type="text"
+                                                    value={printConditions}
+                                                    onChange={(e) => setPrintConditions(e.target.value)}
+                                                    placeholder={t("Conditions")}
+                                                />
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="mb-3">
@@ -249,11 +276,9 @@ const PrintFormatList = () => {
                         <ModalFooter className="d-flex justify-content-between">
                             <div>
                                 {selectedPrintSetting && 
+                                 !isTextValueSetting(selectedPrintSetting.Name || selectedPrintSetting.name || "") &&
                                  (selectedPrintSetting.Name || selectedPrintSetting.name) !== "Inv Print Date" && 
-                                 (selectedPrintSetting.Name || selectedPrintSetting.name) !== "DecimalinInvoiceAmount" && 
-                                 (selectedPrintSetting.Name || selectedPrintSetting.name) !== "SaleConditions" && 
-                                 (selectedPrintSetting.Name || selectedPrintSetting.name) !== "MemoConditions" && 
-                                 (selectedPrintSetting.Name || selectedPrintSetting.name) !== "Information" && (
+                                 (selectedPrintSetting.Name || selectedPrintSetting.name) !== "DecimalinInvoiceAmount" && (
                                     <Button 
                                         color="info" 
                                         onClick={handlePrintPreview} 

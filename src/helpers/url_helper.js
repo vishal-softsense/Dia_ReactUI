@@ -721,6 +721,21 @@ export const DELETE_ACC_GRP_MASTER = "/api/AccGrpMaster/delete"; // append /{id}
 export const GET_ACC_EFF_CODE = "/api/AccGrpMaster/eff-code"; // append /{accType}
 export const GET_ACC_EFF_SIDE = "/api/AccGrpMaster/eff-side"; // append /{accType}
 
+// Loan Given / Loan Taken entry
+export const LOAN_GIVEN_LIST = "/api/LoanGiven/list";
+export const LOAN_GIVEN_PAGE_DATA = "/api/LoanGiven/pagedata";
+export const LOAN_GIVEN_DETAIL = "/api/LoanGiven/detail"; // append /{id}
+export const LOAN_GIVEN_ADD = "/api/LoanGiven/add";
+export const LOAN_GIVEN_EDIT = "/api/LoanGiven/edit";
+export const LOAN_GIVEN_DELETE = "/api/LoanGiven/delete";
+
+export const LOAN_TAKEN_LIST = "/api/LoanTaken/list";
+export const LOAN_TAKEN_PAGE_DATA = "/api/LoanTaken/pagedata";
+export const LOAN_TAKEN_DETAIL = "/api/LoanTaken/detail"; // append /{id}
+export const LOAN_TAKEN_ADD = "/api/LoanTaken/add";
+export const LOAN_TAKEN_EDIT = "/api/LoanTaken/edit";
+export const LOAN_TAKEN_DELETE = "/api/LoanTaken/delete";
+
 // Settings
 export const GET_SETTING_DATA = "/master/get-setting-data";
 export const FILTER_SETTING_DATA = "/master/filter-data";
