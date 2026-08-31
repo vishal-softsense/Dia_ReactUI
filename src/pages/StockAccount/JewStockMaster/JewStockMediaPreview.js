@@ -9,17 +9,50 @@ function normalizeMediaPath(path) {
   return trimmed;
 }
 
-/** Resolve MVC-style relative paths against IMAGE_URL (same pattern as jewellery reports). */
+const API_STATIC_PREFIXES = ["/JewelleryPhotos/", "/Upload/", "/CRreport/"];
+
+function isApiStaticPath(path) {
+  return API_STATIC_PREFIXES.some((prefix) => path.toLowerCase().startsWith(prefix.toLowerCase()));
+}
+
+/** Resolve MVC-style relative paths (Jewellery reports use IMAGE_URL; API static folders use API_URL). */
 export function resolveJewMediaUrl(path) {
   const trimmed = normalizeMediaPath(path);
   if (!trimmed) return "";
   if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
     return trimmed;
   }
-  const baseUrl = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+
   const clean = trimmed.replace(/^(\.\.\/)+/, "");
-  if (!baseUrl) return clean.startsWith("/") ? clean : `/${clean}`;
+  const rel = clean.startsWith("/") ? clean : `/${clean}`;
+  const apiBase = (api.API_URL || "").replace(/\/$/, "");
+  const imageBase = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+  const baseUrl = isApiStaticPath(rel) ? apiBase : imageBase;
+
+  if (!baseUrl) return rel;
   return clean.startsWith("/") ? `${baseUrl}${clean}` : `${baseUrl}/${clean}`;
+}
+
+/** Try API host, image host, then same-origin relative path (MVC parity). */
+export function collectJewMediaCandidates(path) {
+  const trimmed = normalizeMediaPath(path);
+  if (!trimmed) return [];
+
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+    return [trimmed];
+  }
+
+  const clean = trimmed.replace(/^(\.\.\/)+/, "");
+  const rel = clean.startsWith("/") ? clean : `/${clean}`;
+  const apiBase = (api.API_URL || "").replace(/\/$/, "");
+  const imageBase = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+  const urls = [];
+
+  if (isApiStaticPath(rel) && apiBase) urls.push(`${apiBase}${rel}`);
+  if (imageBase) urls.push(clean.startsWith("/") ? `${imageBase}${clean}` : `${imageBase}/${clean}`);
+  if (rel.startsWith("/")) urls.push(rel);
+
+  return [...new Set(urls.filter(Boolean))];
 }
 
 function toBinarySrc(binary) {
@@ -44,24 +77,34 @@ export default function JewStockMediaPreview({
   imageBinary = null,
 }) {
   const [mediaView, setMediaView] = useState("image");
-  const [imgFailed, setImgFailed] = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const [videoIdx, setVideoIdx] = useState(0);
 
   const binarySrc = useMemo(() => toBinarySrc(imageBinary), [imageBinary]);
 
-  const imageSrc = useMemo(() => {
-    return resolveJewMediaUrl(imagePath) || binarySrc || "";
+  const imageCandidates = useMemo(() => {
+    const fromPath = collectJewMediaCandidates(imagePath);
+    if (binarySrc) return [binarySrc, ...fromPath];
+    return fromPath;
   }, [imagePath, binarySrc]);
 
-  const videoSrc = useMemo(() => resolveJewMediaUrl(videoPath), [videoPath]);
+  const videoCandidates = useMemo(() => collectJewMediaCandidates(videoPath), [videoPath]);
+
+  const imageSrc = imageCandidates[imgIdx] || "";
+  const videoSrc = videoCandidates[videoIdx] || "";
 
   const certHref = useMemo(() => {
-    const fromStock = resolveJewMediaUrl(certPath);
-    return fromStock || "https://www.igi.org/verify-your-report/";
+    const candidates = collectJewMediaCandidates(certPath);
+    return candidates[0] || "https://www.igi.org/verify-your-report/";
   }, [certPath]);
 
   useEffect(() => {
-    setImgFailed(false);
-  }, [imageSrc]);
+    setImgIdx(0);
+  }, [imageCandidates]);
+
+  useEffect(() => {
+    setVideoIdx(0);
+  }, [videoCandidates]);
 
   const emptyMsg = (label) => (
     <div className="text-center text-muted p-3">
@@ -122,13 +165,13 @@ export default function JewStockMediaPreview({
         }}
       >
         {mediaView === "image" ? (
-          imageSrc && !imgFailed ? (
+          imageSrc ? (
             <img
               key={imageSrc}
               src={imageSrc}
               alt="Jewellery"
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              onError={() => setImgFailed(true)}
+              onError={() => setImgIdx((prev) => prev + 1)}
             />
           ) : (
             emptyMsg("image")
@@ -142,6 +185,7 @@ export default function JewStockMediaPreview({
             muted
             playsInline
             style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+            onError={() => setVideoIdx((prev) => prev + 1)}
           >
             Your browser does not support the video tag.
           </video>
