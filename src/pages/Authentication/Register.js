@@ -76,7 +76,7 @@ const Register = () => {
 
     }, [dispatch, success, error, history]);
 
-    document.title = "Basic SignUp | Velzon - React Admin & Dashboard Template";
+    document.title = "Basic SignUp | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

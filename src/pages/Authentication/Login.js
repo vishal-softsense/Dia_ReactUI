@@ -107,7 +107,7 @@ const Login = (props) => {
             }, 3000);
         }
     }, [dispatch, errorMsg]);
-    document.title = "Basic SignIn | DiaJewSoft - React Admin & Dashboard Template";
+    document.title = "Basic SignIn | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <ParticlesAuth>

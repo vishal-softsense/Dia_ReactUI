@@ -42,6 +42,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -168,10 +169,12 @@ const mapItemFromApi = (r, idx) => ({
   less2: getNumVal(r, "Less2"),
   less3: getNumVal(r, "Less3"),
   amount: getNumVal(r, "Amount", "PurAmount"),
-  status: getStrVal(r, "Status"),
+  // Status = stock CASE (e.g. Pending Purchase); SRtnStatus = sale-return status (Sale-rtn).
+  // MVC Status column binds to SRtnStatus only — never Status.
+  status: getStrVal(r, "Status", "status"),
   spCarats: getNumVal(r, "SpCarats"),
   returnCarats: getNumVal(r, "ReturnCarats", "RtnCarats"),
-  sRtnStatus: getStrVal(r, "SRtnStatus")
+  sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus")
 });
 
 const mapItemsForApi = (rows) =>
@@ -219,7 +222,8 @@ const ITEM_COLUMNS = [
   { key: "exportNo", label: "Export No" },
   { key: "memoTransCode", label: "MemoTrnCode" },
   { key: "returnCarats", label: "Return Cts", align: "end", decimals: 3 },
-  { key: "status", label: "Status" }
+  // MVC sale-form-new.js: column header "Status", data field SRtnStatus
+  { key: "sRtnStatus", label: "Status" }
 ];
 
 const getItemFooterValue = (footerKey, totals, itemRows) => {
@@ -349,7 +353,11 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     vatPer: 0,
     cgstPer: 0,
     sgstPer: 0,
-    igstPer: 0
+    igstPer: 0,
+    vatAmount: 0,
+    cgstAmt: 0,
+    sgstAmt: 0,
+    igstAmt: 0
   });
 
   const fieldH = { height: 31 };
@@ -543,10 +551,16 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       chkoldsale: !!(getVal(h, "chkoldsale") === true || getVal(h, "chkoldsale") === "true" || getVal(h, "OutStanding") === true),
       adatPer: toNum(getVal(h, "AdatPer")),
       brokerPer: toNum(getVal(h, "BrokerPer")),
-      vatPer: toNum(getVal(h, "VatPer")),
-      cgstPer: toNum(getVal(h, "CGSTPer")),
-      sgstPer: toNum(getVal(h, "SGSTPer")),
-      igstPer: toNum(getVal(h, "IGSTPer"))
+      // Match MVC EditSale + GetSalepurRecord: CGSTPer/SGSTPer/IGSTPer and Amount columns
+      // (CGSTAmt aliased from CGSTAmount). Use getNumVal so camelCase JSON keys are found.
+      vatPer: getNumVal(h, "VatPer", "VATPer", "vatPer"),
+      cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "cgstPer"),
+      sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "sgstPer"),
+      igstPer: getNumVal(h, "IGSTPer", "IgstPer", "igstPer"),
+      vatAmount: getNumVal(h, "VatAmount", "VATAmount", "vatAmount"),
+      cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt", "cgstAmt", "cgstAmount"),
+      sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt", "sgstAmt", "sgstAmount"),
+      igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt", "igstAmt", "igstAmount")
     });
 
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
@@ -802,16 +816,21 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     const roundAmount = toNum(header.roundAmount);
     const taxableAmount = netAmount + plusMinus;
     const mCurAmount = mOp === "/" ? taxableAmount / baseRate : taxableAmount * baseRate;
-    const vatAmt = Math.round(mCurAmount * (toNum(header.vatPer) / 100) * 100) / 100;
-    const cgstAmt = Math.round(mCurAmount * (toNum(header.cgstPer) / 100) * 100) / 100;
-    const sgstAmt = Math.round(mCurAmount * (toNum(header.sgstPer) / 100) * 100) / 100;
-    const igstAmt = Math.round(mCurAmount * (toNum(header.igstPer) / 100) * 100) / 100;
+    const vatAmtCalc = Math.round(mCurAmount * (toNum(header.vatPer) / 100) * 100) / 100;
+    const cgstAmtCalc = Math.round(mCurAmount * (toNum(header.cgstPer) / 100) * 100) / 100;
+    const sgstAmtCalc = Math.round(mCurAmount * (toNum(header.sgstPer) / 100) * 100) / 100;
+    const igstAmtCalc = Math.round(mCurAmount * (toNum(header.igstPer) / 100) * 100) / 100;
+    // Prefer live calc from %; if % is set but calc is 0 while saved amt exists (timing/init), keep saved.
+    const vatAmt = toNum(header.vatPer) !== 0 ? (vatAmtCalc || toNum(header.vatAmount)) : toNum(header.vatAmount);
+    const cgstAmt = toNum(header.cgstPer) !== 0 ? (cgstAmtCalc || toNum(header.cgstAmt)) : toNum(header.cgstAmt);
+    const sgstAmt = toNum(header.sgstPer) !== 0 ? (sgstAmtCalc || toNum(header.sgstAmt)) : toNum(header.sgstAmt);
+    const igstAmt = toNum(header.igstPer) !== 0 ? (igstAmtCalc || toNum(header.igstAmt)) : toNum(header.igstAmt);
     const taxTotal = vatAmt + cgstAmt + sgstAmt + igstAmt;
     const finalMAmount = mCurAmount + taxTotal;
     const receivableAmount = mOp === "/" ? (mCurAmount + taxTotal + roundAmount) * baseRate : (mCurAmount + taxTotal + roundAmount) / baseRate;
     const finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       taxableAmount,
       netAmount: fmt(taxableAmount),
@@ -825,6 +844,19 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fmt(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   const viewMemo = async () => {
     if (!party?.value && !header.memoNo) {
@@ -863,10 +895,11 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
           sale: ctsVal,
           rtn: toNum(getVal(r, "RtnCts")),
           balCts: 0,
-          mrp: toNum(getVal(r, "MRP")),
-          back: toNum(getVal(r, "Back")),
-          rate: toNum(getVal(r, "rate", "Rate")),
-          memoTransCode: toNum(getVal(r, "MemoTransCode")),
+          // API camelCase serializes MRP → mrp; getVal("MRP") misses it (mRP ≠ mrp)
+          mrp: getNumVal(r, "MRP", "mrp", "Mrp", "PurchaseMRP"),
+          back: getNumVal(r, "Back", "back"),
+          rate: getNumVal(r, "rate", "Rate"),
+          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode"),
           symbol: getVal(r, "Symbol")
         };
       });
@@ -1129,7 +1162,21 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
 
                       <Col md={3} sm={6}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Comm Agent")}</Label><Select styles={customStyles} options={commOpts} value={commission} onChange={setCommission} onInputChange={(v, meta) => { if (meta.action === "input-change") setCommInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setCommInput(""); setCommOpts([]); } }} isLoading={commLoading} placeholder={t("Search Commission")} isClearable isDisabled={readOnly} /></FormGroup></Col>
                       <Col md={1} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com%")}</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.adatPer} onChange={(e) => setHeaderField("adatPer", e.target.value)} /></FormGroup></Col>
-                      <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com Amount")}</Label><Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly /></FormGroup></Col>
+                      <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com Amount")}</Label><Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          /></FormGroup></Col>
                       <Col md={3} sm={6} className="d-flex align-items-center">
                         <div className="form-check form-check-md mb-2 d-flex align-items-center gap-2">
                           <Input type="checkbox" className="form-check-input" id="chkoldsale" checked={!!header.chkoldsale} onChange={(e) => setHeaderField("chkoldsale", e.target.checked)} style={{ width: 18, height: 18, marginTop: 0 }} />

@@ -42,6 +42,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -848,7 +849,7 @@ const JewPurchaseForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       netAmount: fmt(taxableAmount),
       netMAmount: fmt(mCurAmount),
@@ -861,6 +862,19 @@ const JewPurchaseForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fmt(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   const buildPayload = () => ({
     SalePur: {
@@ -1088,7 +1102,21 @@ const JewPurchaseForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Com Amount")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md={3} sm={6}>

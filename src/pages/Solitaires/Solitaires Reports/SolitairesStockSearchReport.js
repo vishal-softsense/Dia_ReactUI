@@ -40,7 +40,7 @@ import {
   getSolitaireStockEmailSettings,
   sendSolitaireStockEmail
 } from "../../../helpers/fakebackend_helper";
-import { exportToExcel, getExcelBase64 } from "../../../helpers/excel_helper";
+import { exportToExcel, exportCvdExcel, getExcelBase64 } from "../../../helpers/excel_helper";
 import StockHistoryPopupModal from "./StockHistoryPopupModal";
 
 const debounce = (func, delay) => {
@@ -1344,6 +1344,19 @@ const SolitairesStockSearchReport = () => {
         item.eyeClean || item.EyeClean || "",
         item.city || item.City || ""
       ]
+    },
+    // MVC: PrintName "CVD" → CVDExcelGenerate (same GetPrint flow as DiaSense/Rapnet/VDB/Nivoda)
+    CVD: {
+      label: "CVD",
+      headers: [
+        "Serial No", "Cert No", "Image", "Video", "Status", "Location",
+        "Lot No", "Shape", "Cts", "Color", "Clarity", "Prop", "Pol",
+        "Sym", "Fluo", "Lab", "Rap", "DISC", "RATE", "AMT", "Ratio",
+        "W", "L", "D", "TDep", "Tab%", "CH", "CA", "PH", "PA", "Nts",
+        "Shade", "EyeClean", "DO #"
+      ],
+      // Rich MVC formatting (hyperlinks, Diam→L/W/D, totals) via exportCvdExcel
+      exporter: "cvd"
     }
   };
 
@@ -1354,6 +1367,20 @@ const SolitairesStockSearchReport = () => {
     }
     const activeFormat = format || printFormat || "DirectPrint";
     const fmt = PRINT_FORMATS[activeFormat] || PRINT_FORMATS.DirectPrint;
+
+    // Same client-side pattern as other Direct Print options.
+    // CVD uses dedicated generator mirroring MVC CVDExcelGenerate
+    // (equivalent to DiasenseExcelGenerate / RapnetExcelGenerate / etc.).
+    if (fmt.exporter === "cvd") {
+      const res = await exportCvdExcel(searchResults, `SolitaireStock_${fmt.label.replace(/ /g, "_")}`);
+      if (res.success) {
+        toast.success(`${fmt.label} Excel generated successfully!`);
+      } else {
+        toast.error("Failed to generate Excel file.");
+      }
+      return;
+    }
+
     const rows = searchResults.map(fmt.mapper);
     const res = await exportToExcel(fmt.headers, rows, fmt.label, `SolitaireStock_${fmt.label.replace(/ /g, "_")}`);
     if (res.success) {

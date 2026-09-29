@@ -254,10 +254,13 @@ const MixPurchaseList = () => {
                 type="button"
                 className="btn btn-soft-primary btn-sm p-1"
                 style={{ width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                title={t("View")}
-                onClick={() => navigate(`/Mix_Pur/MixPurPrintInv?ID=${encodeURIComponent(code)}`)}
+                title={t("Print")}
+                onClick={() => {
+                  if (code == null || code === "") return;
+                  window.open(`/Mix_Pur/MixPurPrintInv?ID=${encodeURIComponent(code)}`, "_blank");
+                }}
               >
-                <i className="ri-eye-line" />
+                <i className="ri-printer-line" />
               </button>
               <button
                 type="button"

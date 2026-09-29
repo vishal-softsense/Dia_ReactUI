@@ -6,7 +6,7 @@ import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import Pagination from "../../../../Components/Common/Pagination";
 
 const CandidateList = () => {
-  document.title = "Candidate List View | Velzon -  Admin & Dashboard Template";
+  document.title = "Candidate List View | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   const [isBookmarkClick, setIsBookmarkClick] = useState(false);
   const [candidateData, setCandidateData] = useState();

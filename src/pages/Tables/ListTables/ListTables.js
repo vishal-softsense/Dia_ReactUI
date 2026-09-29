@@ -79,7 +79,7 @@ const ListTables = () => {
         });
     });
 
-    document.title = "Listjs | Velzon - React Admin & Dashboard Template";
+    document.title = "Listjs | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

@@ -489,6 +489,7 @@ export const SOLITAIRE_PURCHASE_CONSIGNMENT = "/api/SolitairePurchase/consignmen
 export const SOLITAIRE_PURCHASE_ADD_SINGLE_LOT = "/api/SolitairePurchase/add-single-lot";
 export const SOLITAIRE_PURCHASE_PRINT_VIEW = "/api/SolitairePurchase/print-view"; // append /{invNo}
 export const SOLITAIRE_PURCHASE_CURRENT_STATUS = "/api/SolitairePurchase/current-status"; // append /{invNo}
+export const SOLITAIRE_PURCHASE_GET_RAP_RATE = "/api/SolitairePurchase/get-rap-rate";
 
 // Mix Purchase (Parcel Transaction entry) — MVC: /MixPurchase/Mix-PurchaseList
 export const MIX_PURCHASE_LIST = "/api/MixPurchase/list";
@@ -503,6 +504,7 @@ export const MIX_PURCHASE_ADD_SINGLE_LOT = "/api/MixPurchase/add-single-lot";
 export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append /{id or invNo}
 export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
 export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
+export const MIX_PURCHASE_GET_MIX_LOT_NO_DI = "/api/MixPurchase/GetMixLotNoDI";
 
 // Mix Sale / MixForm (Parcel Transaction) — MVC: /mixform/mixformlist, TrnType CSALE
 export const MIX_SALE_LIST = "/api/MixSale/list";
@@ -530,6 +532,7 @@ export const MIX_CONSIGNMENT_ADD_SINGLE_LOT = "/api/MixConsignment/add-single-lo
 export const MIX_CONSIGNMENT_PRINT_VIEW = "/api/MixConsignment/print-view"; // append /{id or invNo}
 export const MIX_CONSIGNMENT_CURRENT_STATUS = "/api/MixConsignment/current-status"; // append /{id or invNo}
 export const MIX_CONSIGNMENT_LOTS = "/api/MixConsignment/lots";
+export const MIX_CONSIGNMENT_GET_MIX_LOT_NO_LM = "/api/MixConsignment/GetMixLotNoLM";
 
 // Mix Consignment Return (Parcel Transaction) — MVC: /MixConsignment/add-mix-Consignment-return
 export const MIX_CONSIGNMENT_RETURN_PAGE_DATA = "/api/MixConsignmentReturn/pagedata";
@@ -735,6 +738,45 @@ export const LOAN_TAKEN_DETAIL = "/api/LoanTaken/detail"; // append /{id}
 export const LOAN_TAKEN_ADD = "/api/LoanTaken/add";
 export const LOAN_TAKEN_EDIT = "/api/LoanTaken/edit";
 export const LOAN_TAKEN_DELETE = "/api/LoanTaken/delete";
+
+// Payment & Receipt entry (MVC: /Payment/Paymentlist, PaymentView)
+export const PAYMENT_LIST = "/api/Payment/list";
+export const PAYMENT_PAGE_DATA = "/api/Payment/pagedata";
+export const PAYMENT_JV_ENTRIES = "/api/Payment/jventries";
+export const PAYMENT_PENDING_INV = "/api/Payment/pending-inv";
+export const PAYMENT_DETAIL = "/api/Payment/detail"; // append /{id}
+export const PAYMENT_ADD = "/api/Payment/add";
+export const PAYMENT_EDIT = "/api/Payment/edit";
+export const PAYMENT_EDIT_DETAILS = "/api/Payment/edit-details";
+export const PAYMENT_EDIT_JV = "/api/Payment/edit-jv";
+export const PAYMENT_DELETE = "/api/Payment/delete";
+export const PAYMENT_DELETE_JV = "/api/Payment/delete-jv";
+
+export const PAY_WITH_EXDIFF_LIST = "/api/PayWithExDiff/list";
+export const PAY_WITH_EXDIFF_PAGE_DATA = "/api/PayWithExDiff/pagedata";
+export const PAY_WITH_EXDIFF_PENDING_INV = "/api/PayWithExDiff/pending-inv";
+export const PAY_WITH_EXDIFF_DETAIL = "/api/PayWithExDiff/detail";
+export const PAY_WITH_EXDIFF_ADD = "/api/PayWithExDiff/add";
+export const PAY_WITH_EXDIFF_EDIT_DETAILS = "/api/PayWithExDiff/edit-details";
+export const PAY_WITH_EXDIFF_EDIT = "/api/PayWithExDiff/edit";
+export const PAY_WITH_EXDIFF_DELETE = "/api/PayWithExDiff/delete";
+
+// Journal Entry (MVC: /Payment/jvList, /Payment/JVExpence)
+export const JOURNAL_ENTRY_LIST = "/api/JournalEntry/list";
+export const JOURNAL_ENTRY_PAGE_DATA = "/api/JournalEntry/pagedata";
+export const JOURNAL_ENTRY_DETAIL = "/api/JournalEntry/detail"; // append /{id}
+export const JOURNAL_ENTRY_ADD = "/api/JournalEntry/add";
+export const JOURNAL_ENTRY_EDIT = "/api/JournalEntry/edit";
+export const JOURNAL_ENTRY_DELETE = "/api/JournalEntry/delete";
+
+// Income & Expense (MVC: /Payment/incomeexpenselist)
+export const INCOME_EXPENSE_LIST = "/api/IncomeExpense/list";
+export const INCOME_EXPENSE_FILTER = "/api/IncomeExpense/filter";
+export const INCOME_EXPENSE_PAGE_DATA = "/api/IncomeExpense/pagedata";
+export const INCOME_EXPENSE_DETAIL = "/api/IncomeExpense/detail"; // append /{id}
+export const INCOME_EXPENSE_ADD = "/api/IncomeExpense/add";
+export const INCOME_EXPENSE_EDIT = "/api/IncomeExpense/edit";
+export const INCOME_EXPENSE_DELETE = "/api/IncomeExpense/delete";
 
 // Settings
 export const GET_SETTING_DATA = "/master/get-setting-data";

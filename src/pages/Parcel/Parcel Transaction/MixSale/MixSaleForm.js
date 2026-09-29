@@ -39,6 +39,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -178,7 +179,8 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "memoTransCode", label: "MemoTrnCode", align: "end" },
   { key: "stockType", label: "StockType" },
   { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3 },
-  { key: "sRtnStatus", label: "SRtnStatus" }
+  { key: "sRtnStatus", label: "SRtnStatus" },
+  { key: "invDescription", label: "ItemDescription" }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -276,19 +278,20 @@ const mapItemFromApi = (r, idx) => ({
   size: getStrVal(r, "Size", "SizeId", "PSize"),
   sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
   stockType: getStrVal(r, "StockType") || "Diamond",
+  invDescription: getStrVal(r, "InvDescription", "invDescription"),
   suppLotNo: getStrVal(r, "SuppLotNo"),
   askingRate: getNumVal(r, "AskingRate"),
   actualRate: getNumVal(r, "ActualRate"),
   groupId: getStrVal(r, "GroupId", "ItemGroup"),
   stoneType: getStrVal(r, "StoneType"),
   rmk: getStrVal(r, "RMK", "MemberRemarks"),
-  memoTransCode: getNumVal(r, "MemoTransCode"),
+  memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
   rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
   cogs: getNumVal(r, "COGS", "cogs"),
   exportNo: getStrVal(r, "ExportNo", "exportNo"),
   sRate: getNumVal(r, "SRate", "sRate", "StockRate"),
   rtnCts: getNumVal(r, "RtnCts", "RtnCarats", "ReturnCarats"),
-  sRtnStatus: getStrVal(r, "SRtnStatus", "SRtnstatus", "Status", "status")
+  sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
 });
 
 const emptyItem = () => ({
@@ -311,6 +314,7 @@ const emptyItem = () => ({
   size: "",
   sieve: "",
   stockType: "Diamond",
+  invDescription: "",
   suppLotNo: "",
   askingRate: "",
   actualRate: "",
@@ -320,10 +324,16 @@ const emptyItem = () => ({
   memoTransCode: 0,
   rtnCarats: "0",
   cogs: "0",
-  exportNo: ""
+  exportNo: "",
+  rtnCts: "0",
+  sRtnStatus: ""
 });
 
 const renderItemCell = (row, col) => {
+  if (col.key === "sRtnStatus") {
+    const status = String(row.sRtnStatus || row.status || "").trim();
+    return status === "Sale-rtn" ? status : "";
+  }
   const v = row[col.key];
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
@@ -355,11 +365,9 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
 };
 
 const getItemRowStyle = (row) => {
-  const sRtnStatus = row.sRtnStatus || row.status;
-  if (sRtnStatus === "Purchase") return { color: "green" };
-  if (sRtnStatus === "Sale-rtn" || sRtnStatus === "Consingment-rtn" || sRtnStatus === "Consignment-rtn") {
-    return { color: "red" };
-  }
+  const sRtnStatus = String(row.sRtnStatus || row.status || "").trim();
+  // MVC mix-data.js createdRow — only Sale-rtn rows are highlighted
+  if (sRtnStatus === "Sale-rtn") return { color: "red" };
   return undefined;
 };
 
@@ -931,6 +939,7 @@ const MixSaleForm = ({ mode = "add" }) => {
           size: getStrVal(lot, "Size", "SizeId"),
           sieve: getStrVal(lot, "Sieve", "SieveId"),
           stockType: getStrVal(lot, "StockType") || "Diamond",
+          invDescription: getStrVal(lot, "InvDescription"),
           cogs: getNumVal(lot, "COGS", "CPAVG") || "0",
           memoTransCode: 0,
           rtnCarats: "0"
@@ -986,6 +995,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       sRate: toNum(entry.sRate),
       sieve: entry.sieve || "",
       stockType: entry.stockType || "Diamond",
+      invDescription: entry.invDescription || "",
       memoTransCode: toNum(entry.memoTransCode),
       rtnCarats: Math.round(rtnCarats * 1000) / 1000
     };
@@ -1091,8 +1101,8 @@ const MixSaleForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
-      broDisplay: Math.round(broDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, true), // MVC Math.round
+      broDisplay: formatCommissionDisplay(broDisplay, true), // MVC Math.round
       netAmount: fix(taxableAmount),
       netMAmount: fix(mCurAmount),
       vatAmt,
@@ -1104,6 +1114,19 @@ const MixSaleForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fix(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp, masterSymbol, stockSymbol, currencyOpts]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   useEffect(() => {
     setHeader((prev) => ({
@@ -1284,7 +1307,7 @@ const MixSaleForm = ({ mode = "add" }) => {
           rate: getNumVal(r, "rate", "Rate"),
           mrp: getNumVal(r, "MRP", "mrp", "Mrp"),
           back: getNumVal(r, "Back", "back"),
-          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode"),
+          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
           symbol: getStrVal(r, "Symbol", "symbol", "Cur", "cur"),
           stockType: getStrVal(r, "StockType", "stockType") || "Diamond"
         };
@@ -1471,6 +1494,7 @@ const MixSaleForm = ({ mode = "add" }) => {
             size: getStrVal(lot, "Size", "SizeId"),
             sieve: getStrVal(lot, "Sieve", "SieveId"),
             stockType: getStrVal(lot, "StockType") || "Diamond",
+            invDescription: getStrVal(lot, "InvDescription"),
             cogs: getNumVal(lot, "COGS", "CPAVG") || "0",
             exportNo: getStrVal(lot, "ExportNo"),
             memoTransCode: 0
@@ -1582,6 +1606,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       RtnCarats: toNum(r.rtnCarats),
       ReturnCarats: toNum(r.rtnCarats),
       StockType: r.stockType || "Diamond",
+      InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
       COGS: toNum(r.cogs),
       ExportNo: r.exportNo || "",
@@ -1947,7 +1972,21 @@ const MixSaleForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={6} md={3} lg={2}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("COM AMOUNT")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col xs={12} sm={6} md={6} lg={2} className="d-flex align-items-center mb-2 pb-1" style={{ height: "31px" }}>
@@ -2401,6 +2440,12 @@ const MixSaleForm = ({ mode = "add" }) => {
                         </Col>
                         <Col xs={6} sm={3} lg={2}>
                           <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ItemDescription")}</Label>
+                            <Input className="form-control-sm" style={fieldH} placeholder={t("ItemDescription")} value={entry.invDescription || ""} onChange={(e) => onEntryChange("invDescription", e.target.value)} />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={3} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("MEMOTRNCODE")}</Label>
                             <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("MemoTrnCode")} value={entry.memoTransCode || 0} readOnly />
                           </FormGroup>
@@ -2441,9 +2486,11 @@ const MixSaleForm = ({ mode = "add" }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
-                              <td>
+                          {items.map((r, idx) => {
+                            const rowStyle = getItemRowStyle(r);
+                            return (
+                              <tr key={`${r.lotNo}-${idx}`} style={rowStyle}>
+                                <td style={rowStyle}>
                                 {!readOnly ? (
                                   <div className="d-flex gap-1">
                                     <button
@@ -2469,13 +2516,14 @@ const MixSaleForm = ({ mode = "add" }) => {
                                 <td
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
-                                  style={{ whiteSpace: "nowrap" }}
+                                  style={{ ...rowStyle, whiteSpace: "nowrap" }}
                                 >
                                   {renderItemCell(r, col)}
                                 </td>
                               ))}
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                         {items.length > 0 && (
                           <tfoot className="table-light fw-semibold">

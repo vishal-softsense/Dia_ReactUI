@@ -416,7 +416,7 @@ const CrmLeads = () => {
     setDate(joinDate);
   };
 
-  document.title = "Leads | Velzon - React Admin & Dashboard Template";
+  document.title = "Leads | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

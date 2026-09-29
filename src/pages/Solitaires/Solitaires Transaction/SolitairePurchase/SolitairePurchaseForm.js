@@ -32,7 +32,8 @@ import {
   getSolitairePurchaseConsignment,
   getSolitairePurchaseDetail,
   getSolitairePurchaseLotDetail,
-  getSolitairePurchasePageData
+  getSolitairePurchasePageData,
+  getSolitairePurchaseRapRate
 } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
@@ -40,6 +41,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -120,7 +122,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "shape", label: "Shape" },
   { key: "color", label: "Color" },
   { key: "clarity", label: "Clarity" },
-  { key: "cut", label: "Cut" },
+  { key: "cut", label: "Proportion" },
   { key: "polish", label: "Polish" },
   { key: "symmetry", label: "Symmetry" },
   { key: "fl", label: "FL" },
@@ -284,12 +286,17 @@ const mapItemFromApi = (r, idx) => ({
   color: getStrVal(r, "Color", "ColorId"),
   clarity: getStrVal(r, "Clarity", "ClarityId"),
   size: getStrVal(r, "Size", "SizeId"),
-  memoTransCode: getNumVal(r, "MemoTransCode") || getNumVal(r, "Code"),
+  memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode"),
   rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
   ...mapGradingFromSource(r)
 });
 
 const renderItemCell = (row, col) => {
+  // Simple PUR: MemoTransCode is 0 — show blank (do not display SalePurTran.Code)
+  if (col.key === "memoTransCode") {
+    const code = toNum(row.memoTransCode);
+    return code ? String(code) : "";
+  }
   const v = row[col.key];
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
@@ -757,20 +764,20 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         adatAmount: toNum(getVal(h, "AdatAmount")),
         brokerPer: toNum(getVal(h, "BrokerPer")),
         brokerAmount: toNum(getVal(h, "BrokerAmount")),
-        description: getVal(h, "Description"),
+        description: getVal(h, "Description", "InvDisc"),
         consignmentNo: isConsignmentMode ? memoInv : getVal(h, "ConsignmentNo"),
         chkGrading: !!(getVal(h, "chkGrading") === true || getVal(h, "chkGrading") === "true"),
         chkoldpur: !!(getVal(h, "chkoldpur") === true || getVal(h, "chkoldpur") === "true"),
         plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
         roundAmount: toNum(getVal(h, "RoundAmount")),
-        vatPer: toNum(getVal(h, "VatPer")),
-        cgstPer: toNum(getVal(h, "CGSTPer")),
-        sgstPer: toNum(getVal(h, "SGSTPer")),
-        igstPer: toNum(getVal(h, "IGSTPer")),
-        vatAmount: toNum(getVal(h, "VatAmount")),
-        cgstAmt: toNum(getVal(h, "CGSTAmt")),
-        sgstAmt: toNum(getVal(h, "SGSTAmt")),
-        igstAmt: toNum(getVal(h, "IGSTAmt")),
+        vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
+        cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "CGST", "CgstPercentage", "CGSTRate"),
+        sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "SGST", "SgstPercentage", "SGSTRate"),
+        igstPer: getNumVal(h, "IGSTPer", "IgstPer", "IGST", "IgstPercentage", "IGSTRate"),
+        vatAmount: getNumVal(h, "VatAmount", "VatAmt", "VATAmount"),
+        cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt"),
+        sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt"),
+        igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt"),
         decimalPlaces: 2
       });
 
@@ -894,8 +901,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const handleAddItem = () => {
     const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
     const weight = toNum(entry.weight);
-    const rate = toNum(entry.rate);
-    const back = toNum(entry.back);
+    let rate = toNum(entry.rate);
+    let back = toNum(entry.back);
     const mrp = toNum(entry.mrp);
 
     if (!lotNo) {
@@ -906,13 +913,15 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       toast.warning(t("Carat is invalid."));
       return;
     }
+    // Match MVC purchase add / import-excel-data: require at least one of rate or discount,
+    // then derive the other from MRP when possible.
     if (rate === 0 && back === 0) {
       toast.warning(t("Rate and Discount both can not be 0."));
       return;
     }
+    if (rate !== 0 && mrp !== 0) back = (rate * 100) / mrp - 100;
+    else if (mrp !== 0) rate = ((100 + back) * mrp) / 100;
 
-    let purchaseBack = back;
-    if (rate !== 0 && mrp !== 0) purchaseBack = (rate * 100) / mrp - 100;
     const amount = calcItemAmount(weight, rate, entry.less1, entry.less2, entry.less3);
 
     const row = {
@@ -922,8 +931,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       weight: Math.round(weight * 1000) / 1000,
       pcs: toNum(entry.pcs, 1),
       mrp,
-      back: Math.round(purchaseBack * 100) / 100,
-      rate,
+      back: Math.round(back * 100) / 100,
+      rate: Math.round(rate * 100) / 100,
       less1: toNum(entry.less1),
       less2: toNum(entry.less2),
       less3: toNum(entry.less3),
@@ -1030,7 +1039,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       netAmount: fix(taxableAmount),
       netMAmount: fix(mCurAmount),
@@ -1043,6 +1052,19 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fix(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp, masterSymbol, stockSymbol, currencyOpts]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   useEffect(() => {
     setHeader((prev) => ({
@@ -1057,77 +1079,331 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   }, [summary.comDisplay, summary.broDisplay, summary.vatAmt, summary.cgstAmt, summary.sgstAmt, summary.igstAmt]);
 
   const mapImportRows = (headers, dataRows) => {
-    const idx = (names) => headers.findIndex((h) => names.includes(h));
-    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #", "stoneid"]);
-    const iName = idx(["itemname", "item name", "description", "item"]);
-    const iWt = idx(["weight", "carat", "cts", "wt", "carats"]);
-    const iPcs = idx(["pcs", "qty", "quantity"]);
-    const iMrp = idx(["mrp"]);
-    const iBack = idx(["back", "purchaseback", "discount"]);
-    const iRate = idx(["rate", "purchaserate", "price", "purprice", "pur price"]);
-    const iL1 = idx(["less1"]);
-    const iL2 = idx(["less2"]);
-    const iL3 = idx(["less3"]);
-    const iShape = idx(["shape"]);
-    const iColor = idx(["color"]);
-    const iClarity = idx(["clarity"]);
-    const iCut = idx(["cut"]);
-    const iPolish = idx(["polish"]);
-    const iSymmetry = idx(["symmetry"]);
-    const iFl = idx(["fl", "fluorescence"]);
+    // Match MVC purchase/import-excel-data + DiaSense / PurchaseTransaction column names.
+    const norm = (h) =>
+      String(h || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+    const headersN = (headers || []).map(norm);
+    // Prefer first name in the list (PurPrice over Rate, Discount over Back).
+    const idx = (...names) => {
+      for (const name of names.map(norm)) {
+        const i = headersN.findIndex((h) => h === name);
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+    // Fuzzy header match for combined labels like "Discount/Back", "USDPricePerCarat".
+    const idxIncludes = (...parts) => {
+      for (const part of parts.map(norm)) {
+        const i = headersN.findIndex((h) => h === part || h.includes(part));
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+
+    // MVC: LotNo = StoneID; MfgPacketID = "Lot No". If StoneID blank, fall back to Lot No (React).
+    const iStone = idx("stoneid", "stone id", "stone #");
+    const iLotFallback = idx("lotno", "lot no", "lot", "stockno", "stock #");
+    const iPacket = idx("lot no", "lotno");
+    const iWt = idx("carats", "carat", "weight", "cts", "wt", "opening carat", "openingcarat");
+    const iPcs = idx("pcs", "qty", "quantity");
+    const iMrp = idx("mrp", "msp", "rap", "rapa");
+    const iBackExact = idx(
+      "discount",
+      "discount/back",
+      "back",
+      "purchaseback",
+      "purchase back",
+      "pmrpdown"
+    );
+    const iBack = iBackExact >= 0 ? iBackExact : idxIncludes("discount", "purchaseback");
+    const iRateExact = idx(
+      "purprice",
+      "pur price",
+      "purchaserate",
+      "purchase rate",
+      "usdpricepercarat",
+      "usd price per carat",
+      "pricepercarat",
+      "cogs",
+      "rate",
+      "price"
+    );
+    const iRate = iRateExact >= 0 ? iRateExact : idxIncludes("purprice", "purchaserate", "pricepercarat");
+    const iL1 = idx("less1");
+    const iL2 = idx("less2");
+    const iL3 = idx("less3");
+    const iShape = idx("shape", "shapeid");
+    const iColor = idx("color", "colorid");
+    const iClarity = idx("clarity", "clarityid");
+    const iSize = idx("size", "sizeid");
+    // MVC: Excel Cut → Pur.Cut (grid header "Proportion"); separate Proportion column also exists.
+    const iCut = idx("cut");
+    const iProportion = idx("proportion");
+    const iPolish = idx("polish", "polishid");
+    const iSymmetry = idx("symmetry", "sym", "symid");
+    const iFl = idx("fl", "fluorescence", "fluo", "flid");
+    const iLab = idx("cert", "lab", "certid");
+    const iCertNo = idx("certificateno", "certificate no", "cert no", "certno");
+    const iLw = idx("l:w %", "lw", "l:w", "ratio");
+    // MVC reads exact columns "L"/"W"/"D" (not FL / LW). Prefer full names, then exact single letters only.
+    const iLength = idx("length", "l");
+    const iWidth = idx("width", "w");
+    const iDepth = idx("depth", "d");
+    const iTotDep = idx("totdep", "totaldepth", "tdep", "totdepth");
+    const iTable = idx("table", "tableper", "tab%");
+    const iCulet = idx("culet");
+    const iGMin = idx("g.min", "gmin", "g min");
+    const iGMax = idx("g.max", "gmax", "g max");
+    const iMin = idx("min");
+    const iMax = idx("max");
+    const iGirdlePer = idx("girdleper", "girdle per");
+    const iBrown = idx("brown");
+    const iMilky = idx("milky");
+    const iHa = idx("h&a", "ha");
+    const iNatts = idx("natts");
+    const iEyeClean = idx("eyeclean", "eye clean");
+    const iAskingRate = idx("askingrate", "asking rate");
+    const iAskingBack = idx("askingback", "asking back");
+    const iActualRate = idx("actualrate", "actual rate");
+    const iActualBack = idx("actualback", "actual back");
+    const iKapan = idx("kapan/inv no", "kapan", "mfgseriesid");
 
     const cell = (cols, i) => (i >= 0 ? String(cols[i] ?? "").replace(/^"|"$/g, "").trim() : "");
 
-    return dataRows.map((cols) => {
+    const rows = [];
+    for (const cols of dataRows) {
+      const stoneVal = cell(cols, iStone);
+      const packetVal = cell(cols, iPacket >= 0 ? iPacket : iLotFallback);
+      // Prefer StoneID (MVC); if blank use Lot No so edited DiaSense sheets still import.
+      const lotNo = stoneVal || packetVal;
       const weight = toNum(cell(cols, iWt));
-      const rate = toNum(cell(cols, iRate));
+      // Skip blank / trailer rows (empty stone + carat). MVC loops all rows; empty carats are noise in templates.
+      if (!lotNo && weight <= 0) continue;
+      if (weight <= 0) continue;
+      if (!lotNo) continue;
+
+      // MVC: PurPrice → PurRate, Discount → Back
+      let rate = toNum(cell(cols, iRate));
+      if (rate < 0) rate = 0;
+      let back = toNum(cell(cols, iBack));
+      let mrp = toNum(cell(cols, iMrp));
+      // Fallback: stock-style sheets often have AskingRate when PurPrice is blank.
+      if (rate === 0) {
+        const ask = toNum(cell(cols, iAskingRate));
+        if (ask > 0) rate = ask;
+      }
+
+      // Rate/Back vs MRP derivation happens after GetRapRate enrichment (when Excel MRP is 0).
+      if (rate === 0 && back === 0) {
+        return { error: t("Rate and Discount both can not be 0."), rows: [] };
+      }
+      if (rate !== 0 && mrp !== 0) back = (rate * 100) / mrp - 100;
+      else if (mrp !== 0) rate = ((100 + back) * mrp) / 100;
+
+      let askingRate = toNum(cell(cols, iAskingRate));
+      if (askingRate < 0) askingRate = 0;
+      let askingBack = toNum(cell(cols, iAskingBack));
+      let actualRate = toNum(cell(cols, iActualRate));
+      if (actualRate < 0) actualRate = 0;
+      let actualBack = toNum(cell(cols, iActualBack));
+      if (askingRate !== 0 && mrp !== 0) askingBack = (askingRate * 100) / mrp - 100;
+      else if (mrp !== 0 && askingBack !== 0) askingRate = ((100 + askingBack) * mrp) / 100;
+      if (actualRate !== 0 && mrp !== 0) actualBack = (actualRate * 100) / mrp - 100;
+      else if (mrp !== 0 && actualBack !== 0) actualRate = ((100 + actualBack) * mrp) / 100;
+
       const less1 = toNum(cell(cols, iL1));
       const less2 = toNum(cell(cols, iL2));
       const less3 = toNum(cell(cols, iL3));
       const shape = cell(cols, iShape);
       const color = cell(cols, iColor);
       const clarity = cell(cols, iClarity);
-      return {
-        lotNo: cell(cols, iLot),
-        itemName: cell(cols, iName) || `${shape} ${color} ${clarity}`.trim(),
-        weight,
-        pcs: toNum(cell(cols, iPcs), 1),
-        mrp: toNum(cell(cols, iMrp)),
-        back: toNum(cell(cols, iBack)),
-        rate,
+      const certificateNo = cell(cols, iCertNo);
+      const cutVal = cell(cols, iCut);
+      const proportionVal = cell(cols, iProportion) || cutVal;
+      const roundedWeight = Math.round(weight * 1000) / 1000;
+      const roundedRate = Math.round(rate * 100) / 100;
+      const roundedBack = Math.round(back * 100) / 100;
+
+      // MVC: ItemName = Shape + ' ' + Color + ' ' + Clarity + ' ' + CertificateNo
+      const itemName = `${shape} ${color} ${clarity} ${certificateNo}`.replace(/\s+/g, " ").trim();
+
+      rows.push({
+        lotNo,
+        itemName,
+        weight: roundedWeight,
+        pcs: toNum(cell(cols, iPcs), 1) || 1,
+        mrp,
+        back: roundedBack,
+        rate: roundedRate,
         less1,
         less2,
         less3,
-        amount: calcItemAmount(weight, rate, less1, less2, less3),
+        amount: calcItemAmount(roundedWeight, roundedRate, less1, less2, less3),
         shape,
         color,
         clarity,
-        size: "",
+        size: cell(cols, iSize),
         polish: cell(cols, iPolish),
         symmetry: cell(cols, iSymmetry),
         fl: cell(cols, iFl),
-        cut: cell(cols, iCut),
-        lab: "",
-        certificateNo: "",
+        cut: cutVal,
+        proportion: proportionVal,
+        lab: cell(cols, iLab),
+        certificateNo,
+        lw: toNum(cell(cols, iLw)),
+        length: toNum(cell(cols, iLength)),
+        width: toNum(cell(cols, iWidth)),
+        depth: toNum(cell(cols, iDepth)),
+        totDep: toNum(cell(cols, iTotDep)),
+        tablePer: toNum(cell(cols, iTable)),
+        culet: cell(cols, iCulet),
+        gMin: cell(cols, iGMin),
+        gMax: cell(cols, iGMax),
+        min: toNum(cell(cols, iMin)),
+        max: toNum(cell(cols, iMax)),
+        girdlePer: toNum(cell(cols, iGirdlePer)),
+        brown: cell(cols, iBrown),
+        milky: cell(cols, iMilky),
+        ha: cell(cols, iHa),
+        natts: cell(cols, iNatts),
+        eyeClean: cell(cols, iEyeClean),
+        askingRate: Math.round(askingRate * 100) / 100,
+        askingBack: Math.round(askingBack * 100) / 100,
+        actualRate: Math.round(actualRate * 100) / 100,
+        actualBack: Math.round(actualBack * 100) / 100,
+        mfgSeriesID: cell(cols, iKapan),
+        mfgPacketID: packetVal,
         memoTransCode: 0,
         rtnCarats: 0
-      };
-    }).filter((r) => r.lotNo);
+      });
+    }
+    return { rows };
+  };
+
+  /** MVC GetRapRate when Excel MRP is 0/blank, then Back = (rate*100/mrp)-100 when PurPrice != 0. */
+  const enrichImportRowsWithRapRate = async (rows) => {
+    const list = Array.isArray(rows) ? rows : [];
+    const caratKey = (c) => String(Math.round(toNum(c) * 1000) / 1000);
+    const rowKey = (shape, color, clarity, carat) =>
+      `${String(shape || "").trim()}|${String(color || "").trim()}|${String(clarity || "").trim()}|${caratKey(carat)}`;
+
+    const needIdx = [];
+    const unique = new Map();
+    list.forEach((r, i) => {
+      if (toNum(r.mrp) !== 0) return;
+      if (!r.shape || !r.color || !r.clarity || toNum(r.weight) <= 0) return;
+      needIdx.push(i);
+      const key = rowKey(r.shape, r.color, r.clarity, r.weight);
+      if (!unique.has(key)) {
+        unique.set(key, {
+          shape: r.shape,
+          color: r.color,
+          clarity: r.clarity,
+          carat: toNum(r.weight)
+        });
+      }
+    });
+    if (!needIdx.length) return list;
+
+    try {
+      const res = await getSolitairePurchaseRapRate(Array.from(unique.values()));
+      if (!(res?.success || res?.Success)) return list;
+      const data = res.Data || res.data || [];
+      const mrpByKey = new Map();
+      (Array.isArray(data) ? data : []).forEach((d) => {
+        const key = rowKey(getVal(d, "Shape"), getVal(d, "Color"), getVal(d, "Clarity"), getNumVal(d, "Carat"));
+        mrpByKey.set(key, getNumVal(d, "MRP", "mrp"));
+      });
+
+      needIdx.forEach((i) => {
+        const r = list[i];
+        const key = rowKey(r.shape, r.color, r.clarity, r.weight);
+        const mrp = mrpByKey.get(key);
+        if (!mrp || mrp === 0) return;
+        r.mrp = mrp;
+        let rate = toNum(r.rate);
+        let back = toNum(r.back);
+        if (rate !== 0 && mrp !== 0) back = (rate * 100) / mrp - 100;
+        else if (mrp !== 0) rate = ((100 + back) * mrp) / 100;
+        r.rate = Math.round(rate * 100) / 100;
+        r.back = Math.round(back * 100) / 100;
+        r.amount = calcItemAmount(toNum(r.weight), r.rate, toNum(r.less1), toNum(r.less2), toNum(r.less3));
+
+        let askingRate = toNum(r.askingRate);
+        let askingBack = toNum(r.askingBack);
+        let actualRate = toNum(r.actualRate);
+        let actualBack = toNum(r.actualBack);
+        if (askingRate !== 0 && mrp !== 0) askingBack = (askingRate * 100) / mrp - 100;
+        else if (mrp !== 0 && askingBack !== 0) askingRate = ((100 + askingBack) * mrp) / 100;
+        if (actualRate !== 0 && mrp !== 0) actualBack = (actualRate * 100) / mrp - 100;
+        else if (mrp !== 0 && actualBack !== 0) actualRate = ((100 + actualBack) * mrp) / 100;
+        r.askingRate = Math.round(askingRate * 100) / 100;
+        r.askingBack = Math.round(askingBack * 100) / 100;
+        r.actualRate = Math.round(actualRate * 100) / 100;
+        r.actualBack = Math.round(actualBack * 100) / 100;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+    return list;
   };
 
   const parseCsv = (text) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
+    if (lines.length < 2) return { rows: [] };
     const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
     const dataRows = lines.slice(1).map((line) => line.split(",").map((c) => c.trim()));
     return mapImportRows(headers, dataRows);
   };
 
-  const applyImportedRows = (rows) => {
+  const findExcelHeaderRowIndex = (rows) => {
+    const markers = [
+      "stoneid",
+      "purprice",
+      "discount",
+      "discount/back",
+      "carats",
+      "carat",
+      "usdpricepercarat",
+      "lotno"
+    ];
+    for (let i = 0; i < Math.min(rows.length, 10); i += 1) {
+      const cells = (rows[i] || []).map((h) =>
+        String(h || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+      );
+      if (markers.some((m) => cells.some((c) => c === m || c.includes(m)))) return i;
+    }
+    return 0;
+  };
+
+  const densifyExcelRows = (rows) => {
+    const width = rows.reduce((max, row) => Math.max(max, (row || []).length), 0);
+    return rows.map((row) => {
+      const dense = Array.from({ length: width }, (_, i) => {
+        const v = row?.[i];
+        return v === undefined || v === null ? "" : v;
+      });
+      return dense.map((c) => String(c).trim());
+    });
+  };
+
+  const applyImportedRows = async (result) => {
+    if (result?.error) {
+      toast.warning(result.error);
+      return;
+    }
+    let rows = result?.rows || [];
     if (!rows.length) {
       toast.warning(t("No valid rows found in file."));
       return;
     }
+    rows = await enrichImportRowsWithRapRate(rows);
     setItems((prev) => {
       const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
       rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
@@ -1151,15 +1427,18 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
           toast.error(parsed?.error?.message || t("Failed to parse Excel file."));
           return;
         }
-        const headers = (parsed.rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
-        const dataRows = parsed.rows.slice(1).map((row) => (row || []).map((c) => String(c ?? "").trim()));
-        applyImportedRows(mapImportRows(headers, dataRows));
+        // parseExcelFile returns Array<Array> via sheet_to_json({ header: 1 }) — first matching header row.
+        const headerIdx = findExcelHeaderRowIndex(parsed.rows);
+        const dense = densifyExcelRows(parsed.rows);
+        const headers = (dense[headerIdx] || []).map((h) => String(h || "").trim().toLowerCase());
+        const dataRows = dense.slice(headerIdx + 1);
+        await applyImportedRows(mapImportRows(headers, dataRows));
         return;
       }
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
-          applyImportedRows(parseCsv(String(e.target?.result || "")));
+          await applyImportedRows(parseCsv(String(e.target?.result || "")));
         } catch (err) {
           console.error(err);
           toast.error(t("Failed to parse CSV."));
@@ -1296,6 +1575,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       BrokerName: broker?.label || "",
       BrokerPer: toNum(header.brokerPer),
       BrokerAmount: toNum(summary.broDisplay),
+      InvDisc: header.description,
       Description: header.description,
       ConsignmentNo: header.consignmentNo,
       TotCts: totals.totCts,
@@ -1715,7 +1995,21 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Com Amount")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md={3} sm={6}>

@@ -114,6 +114,7 @@ const normalizeReportRow = (row) => {
     lotNo: getRowVal(row, "lotNo", "LotNo", "stockID", "StockID"),
     trnDate: getRowVal(row, "trnDate", "TrnDate", "trndate"),
     trntype: getRowVal(row, "trntype", "Trntype", "trnType", "TrnType"),
+    invno: getRowVal(row, "invno", "Invno", "InvNo", "invNo"),
     perticulors: getRowVal(row, "perticulors", "Perticulors", "particulars", "Particulars"),
     inCts: getRowVal(row, "inCts", "InCts", "stockIn", "StockIn"),
     inRate: getRowVal(row, "inRate", "InRate", "stockInPrice", "StockInPrice"),
@@ -129,30 +130,55 @@ const normalizeReportRow = (row) => {
   };
 };
 
+/**
+ * MVC parcelstock-register.js (#dynamic-stock-register-container .trntype-cell)
+ * Opens Edit route with Mode=view using invcode (SalePur Code), not InvNo.
+ * OpStk / StkTrn / MixMemoInRtn / MixMemoRtnP / MemoInRtnP / MemoRtnP → no navigation.
+ */
 const resolveTransactionUrl = (trnType, invcode) => {
-  if (!trnType || !invcode) return "";
-  const lower = String(trnType).toLowerCase();
+  if (!trnType || invcode === null || invcode === undefined || invcode === "") return "";
+  const lower = String(trnType).trim().toLowerCase();
+  const id = encodeURIComponent(invcode);
 
-  // Parcel SP types (PPUR / PSALE / …) and generic aliases
-  if (["pur", "ppur", "cpur"].includes(lower)) {
-    return `../purchase/edit-purchase?Id=${invcode}&Mode=view`;
+  switch (lower) {
+    case "pur":
+      return `/purchase/edit-purchase?Id=${id}&Mode=view`;
+    case "sale":
+      return `/sale/edit-sale?Id=${id}&Mode=view`;
+    case "ppur":
+      return `/purchaseparcel/edit-purchaseparcel?Id=${id}&Mode=view`;
+    case "psale":
+      return `/saleParcel/edit-saleParcel?Id=${id}&Mode=view`;
+    case "memoin":
+      return `/consignment/edit-consignment?Id=${id}&Mode=view`;
+    case "pmemoin":
+      return `/ConsignmentParcel/edit-ConsignmentParcel?Id=${id}&Mode=view`;
+    case "memoout":
+      return `/memo/edit-memo?Id=${id}&Mode=view`;
+    case "pmemoout":
+      return `/memoparcel/edit-memoparcel?Id=${id}&Mode=view`;
+    case "psalertn":
+      return `/SaleReturnPartial/edit-salereturnParcel?Id=${id}&Mode=view`;
+    case "ppurrtn":
+      return `/PurchaseParcelReturn/edit-ppurchasertnview?Id=${id}&Mode=view`;
+    case "cpur":
+      return `/mix-purchase/edit-mixpur?Id=${id}&Mode=view`;
+    case "csale":
+      return `/mix/edit-mixdata?Id=${id}&Mode=view`;
+    case "cpurrtn":
+      return `/MixPurchaseReturn/edit-mixpurchasertndata?Id=${id}&Mode=view`;
+    case "csalertn":
+      return `/MixSaleReturn/edit-mixsalereturnParcel?Id=${id}&Mode=view`;
+    case "cmemoout":
+      return `/mix-memo/edit-mixmemo?Id=${id}&Mode=view`;
+    case "cmemoin":
+      return `/MixConsignment/edit-MixConsignment?Id=${id}&Mode=view`;
+    case "jewtrn":
+      // React route for jewellery stock edit (MVC: edit-jewellery-stock?ID=)
+      return `/master/edit-Mounting-stock?ID=${id}&Mode=view`;
+    default:
+      return "";
   }
-  if (["sale", "psale", "csale"].includes(lower)) {
-    return `../sale/edit-sale?Id=${invcode}&Mode=view`;
-  }
-  if (["memoin", "pmemoin", "cmemoin"].includes(lower)) {
-    return `../consignment/edit-consignment?Id=${invcode}&Mode=view`;
-  }
-  if (["memoout", "pmemoout", "cmemoout"].includes(lower)) {
-    return `../memo/edit-memo?Id=${invcode}&Mode=view`;
-  }
-  if (["purrtn", "ppurrtn", "cpurrtn"].includes(lower)) {
-    return `../purchasereturn/edit-purchasereturn?Id=${invcode}&Mode=view`;
-  }
-  if (["salertn", "psalertn", "csalertn"].includes(lower)) {
-    return `../salereturn/edit-salereturn?Id=${invcode}&Mode=view`;
-  }
-  return "";
 };
 
 const CustomOption = (props) => (
@@ -648,6 +674,7 @@ const ParcelStockRegisterReport = () => {
     const columns = [
       "TrnDate",
       "TrnType",
+      "InvNo",
       "Particulars",
       "StockIn",
       "StockInPrice",
@@ -681,13 +708,14 @@ const ParcelStockRegisterReport = () => {
       const items = grouped.get(stockId) || [];
       const subtotal = { InCts: 0, InRate: 0, InAmount: 0, OutCts: 0, OutRate: 0, OutAmount: 0 };
 
-      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", "", ""]);
 
       items.forEach((item) => {
         const trnDate = item.trntype === "OpStk" ? opStkDate : item.trnDate;
         rows.push([
           trnDate || "",
           item.trntype || "",
+          item.invno ?? "",
           item.perticulors || "",
           fmtFixed(item.inCts, caratDecimals),
           fmtFixed(item.inRate, priceDecimals),
@@ -727,6 +755,7 @@ const ParcelStockRegisterReport = () => {
         "Total:",
         "",
         "",
+        "",
         subtotal.InCts.toFixed(caratDecimals),
         subtotal.InRate.toFixed(priceDecimals),
         subtotal.InAmount.toFixed(amtDecimals),
@@ -742,6 +771,7 @@ const ParcelStockRegisterReport = () => {
 
     rows.push([
       "Grand Total:",
+      "",
       "",
       "",
       grandTotals.InCts.toFixed(caratDecimals),
@@ -775,6 +805,7 @@ const ParcelStockRegisterReport = () => {
     const columns = [
       { header: "TrnDate", key: "trnDate", numeric: false },
       { header: "TrnType", key: "trntype", numeric: false },
+      { header: "InvNo", key: "invno", numeric: false },
       { header: "Particulars", key: "perticulors", numeric: false },
       { header: "StockIn", key: "inCts", numeric: true, sum: true },
       { header: "StockInPrice", key: "inRate", numeric: true, sum: true },

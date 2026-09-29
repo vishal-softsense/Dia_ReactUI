@@ -1,5 +1,14 @@
 /** Shared helpers — parity with MVC JewDesign.js */
 
+/** MVC AddStockMaster.cshtml #Making-Type — fixed options, not SettingMaster. */
+export const MAKING_TYPE_OPTIONS = [
+  { value: "Per Gm", label: "Per Gm" },
+  { value: "Per Pcs", label: "Per Pcs" },
+  { value: "Lumsum", label: "Lumsum" },
+  { value: "Wastage", label: "Wastage" },
+  { value: "Per%", label: "Per%" },
+];
+
 export function isDiamondStoneType(type) {
   const t = (type || "").toLowerCase();
   return t === "natural diamond" || t === "lab grown diamond";
@@ -16,19 +25,12 @@ export function floorPurityRatio(ratio) {
   return (Math.floor(n * 1000) / 1000).toFixed(3);
 }
 
-/** MVC making-rate handler: Lumsum = rate, else rate × grossWeight (Per Gm/Pcs/% handled separately). */
-export function computeMakingCharges(makingType, makingRate, grossWeight, totalPcs, metalAmount) {
+/** MVC JewDesign.js #making-rate input: Lumsum = rate, else rate × grossWeight. */
+export function computeMakingCharges(makingType, makingRate, grossWeight) {
   const r = parseFloat(makingRate) || 0;
   const gw = parseFloat(grossWeight) || 0;
-  const pc = parseFloat(totalPcs) || 1;
-  const ma = parseFloat(metalAmount) || 0;
-
   if (!r) return 0;
-  if (makingType === "Per Gm") return r * gw;
-  if (makingType === "Per Pcs") return r * pc;
   if (makingType === "Lumsum") return r;
-  if (makingType === "Per%") return (ma * r) / 100;
-  if (makingType === "Wastage") return r * gw;
   return r * gw;
 }
 

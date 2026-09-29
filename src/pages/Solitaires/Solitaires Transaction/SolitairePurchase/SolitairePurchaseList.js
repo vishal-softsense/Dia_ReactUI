@@ -251,7 +251,10 @@ const SolitairePurchaseList = () => {
                 type="button"
                 className="btn btn-soft-primary btn-sm p-1"
                 title={t("Print")}
-                onClick={() => navigate(`/purchase/printinvview?InvNo=${encodeURIComponent(inv)}`)}
+                onClick={() => {
+                  if (!inv) return;
+                  window.open(`/purchase/printinvview?InvNo=${encodeURIComponent(inv)}`, "_blank");
+                }}
               >
                 <i className="ri-printer-line" />
               </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, Container } from "reactstrap";
@@ -10,29 +10,35 @@ import {
   getReportCompanySettings,
   resolveCompanyLogoUrl
 } from "../../../../helpers/reportCompanyDefaults";
+import { fmtNum, getPrintAmountHeader, getVal } from "../../../../printFormats/shared/printUtils";
 
-const getVal = (row, ...keys) => {
-  if (!row) return "";
-  for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
-    const camel = key.charAt(0).toLowerCase() + key.slice(1);
-    const pascal = key.charAt(0).toUpperCase() + key.slice(1);
-    if (row[camel] !== undefined && row[camel] !== null && row[camel] !== "") return row[camel];
-    if (row[pascal] !== undefined && row[pascal] !== null && row[pascal] !== "") return row[pascal];
-  }
-  return "";
+// MVC Views/JewelleryPurchase/Jewellery_PurchaseUSA_Print.cshtml
+const ITEMS_PER_PAGE = 7;
+
+const th = {
+  background: "#c0c0c0",
+  border: "2px solid #6e6e6e",
+  padding: "6px 0",
+  textAlign: "center",
+  fontWeight: "bold"
 };
 
-const fmt = (v, d = 2) => {
+const td = {
+  border: "2px solid #6e6e6e",
+  padding: "0 6px",
+  textAlign: "center",
+  verticalAlign: "middle"
+};
+
+const fmtWt = (v) => {
   const n = Number(v);
-  return Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
+  return Number.isFinite(n) && n !== 0 ? n.toFixed(3) : "";
 };
 
 const JewPurchasePrintView = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const invNo = searchParams.get("InvNo") || searchParams.get("invNo") || "";
-  const printRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [company, setCompany] = useState(() => getCachedReportCompany());
@@ -71,25 +77,33 @@ const JewPurchasePrintView = () => {
   }, [invNo, t]);
 
   const items = useMemo(() => data?.items || data?.Items || [], [data]);
+
   const totals = useMemo(() => {
     let qty = 0;
-    let wt = 0;
     let amount = 0;
     items.forEach((it) => {
-      qty += Number(getVal(it, "Qty", "qty")) || 0;
-      wt += Number(getVal(it, "Weight", "weight")) || 0;
+      qty += Number(getVal(it, "Qty", "qty", "Pcs", "pcs")) || 0;
       amount += Number(getVal(it, "Amount", "amount")) || 0;
     });
-    return { qty, wt, amount };
+    return { qty, amount };
+  }, [items]);
+
+  // MVC pagination: 7/page; if last page has >=5 items → overflow page for totals
+  const pagesMeta = useMemo(() => {
+    const totalItems = items.length;
+    let totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+    let itemsOnLastPage = totalItems % ITEMS_PER_PAGE;
+    if (itemsOnLastPage === 0 && totalItems > 0) itemsOnLastPage = ITEMS_PER_PAGE;
+    const overflowTotals = itemsOnLastPage >= 5;
+    const totalRenderPages = overflowTotals ? totalPages + 1 : totalPages;
+    return { totalPages, overflowTotals, totalRenderPages };
   }, [items]);
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
+  // MVC Jewellery_PurchaseUSA_Print: Amount US {SSymbol} | Amount {MSymbol}
+  const amountHeader = getPrintAmountHeader(data, company);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  document.title = `JEWELLERY PURCHASE_${invNo} | Admin`;
+  document.title = `Jewellery Purchase_${invNo} | Admin`;
 
   if (loading) {
     return (
@@ -101,8 +115,257 @@ const JewPurchasePrintView = () => {
     );
   }
 
-  const cell = { border: "1px solid #000", padding: "5px 6px" };
-  const th = { ...cell, background: "#c0c0c0", textAlign: "center", fontWeight: "bold" };
+  const renderHeader = () => (
+    <>
+      <table style={{ width: "100%", paddingBottom: 10 }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "13%", verticalAlign: "top" }}>
+              {logoUrl ? <img src={logoUrl} alt="Logo" style={{ width: 90 }} /> : null}
+            </td>
+            <td style={{ width: "47%", verticalAlign: "top", fontSize: 12 }}>
+              <div style={{ fontWeight: "bold", fontSize: 14 }}>{company.companyName}</div>
+              <div style={{ marginTop: 3 }}>{company.companyAddress}</div>
+              <div>{company.companyAddress1}</div>
+              <div>{company.companyAddress2}</div>
+              <div style={{ marginTop: 5 }}>
+                <b>Tel:</b>&nbsp;&nbsp;{company.companyPhone}
+              </div>
+              <div style={{ marginTop: 5 }}>
+                <b>Email:</b>&nbsp;&nbsp;{company.companyEmail}
+              </div>
+            </td>
+            <td style={{ width: "40%", verticalAlign: "top" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 24,
+                  paddingTop: 5,
+                  marginBottom: 12
+                }}
+              >
+                JEWELLERY PURCHASE
+              </div>
+              <table style={{ width: "70%", fontSize: 13, margin: "0 auto" }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: "40%" }}>
+                      <b>Date :</b>
+                    </td>
+                    <td style={{ width: "5%" }} />
+                    <td>{getVal(data, "TrnDate", "trnDate")}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "10px 0" }}>
+                      <b>Invoice # :</b>
+                    </td>
+                    <td style={{ width: "5%", padding: "5px 0" }} />
+                    <td style={{ padding: "5px 0" }}>{getVal(data, "InvNo", "invNo") || invNo}</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <b>Printed On :</b>
+                    </td>
+                    <td style={{ width: "5%" }} />
+                    <td>{getVal(data, "RoundDate", "roundDate")}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table style={{ width: "100%", marginTop: 10 }}>
+        <tbody>
+          <tr>
+            {["Bill To:", "Ship To:"].map((legend, i) => (
+              <td
+                key={legend}
+                style={{
+                  width: "50%",
+                  paddingRight: i === 0 ? 20 : 0,
+                  paddingLeft: i === 1 ? 20 : 0
+                }}
+              >
+                <fieldset
+                  style={{
+                    border: "1px solid #000",
+                    borderRadius: 12,
+                    padding: "8px 15px 12px 10px",
+                    height: 130,
+                    margin: 0
+                  }}
+                >
+                  <legend
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: 13,
+                      padding: "0 10px",
+                      width: "auto",
+                      marginLeft: 10,
+                      marginBottom: 2,
+                      background: "#fff",
+                      border: "none"
+                    }}
+                  >
+                    {legend}
+                  </legend>
+                  <div style={{ fontSize: 13, marginBottom: 5 }}>{getVal(data, "PartyName", "partyName")}</div>
+                  <div style={{ lineHeight: 1.5, fontSize: 12, marginBottom: 5 }}>
+                    {getVal(data, "AddressLine1", "addressLine1")}
+                  </div>
+                  <div style={{ lineHeight: 1.5, fontSize: 12, marginBottom: 5 }}>
+                    {getVal(data, "AddressLine2", "addressLine2")}
+                  </div>
+                  <div style={{ lineHeight: 1.5, fontSize: 12, marginBottom: 5 }}>
+                    {getVal(data, "AddressLine3", "addressLine3")}
+                  </div>
+                </fieldset>
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+
+      <div
+        style={{
+          fontSize: 11,
+          textAlign: "justify",
+          height: 80,
+          margin: "13px 0",
+          fontFamily: "Segoe UI",
+          overflow: "hidden"
+        }}
+      >
+        {company.information || ""}
+      </div>
+
+      <div style={{ marginBottom: 10 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <thead>
+            <tr>
+              {["CONTACT", "SALES PERSON", "CUST ORDER #", "SHIP VIA", "TRACKING #"].map((h) => (
+                <th key={h} style={{ ...th, height: 22 }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ ...td, height: 22 }} />
+              <td style={{ ...td, height: 22 }}>{getVal(data, "SalesPerson", "salesPerson")}</td>
+              <td style={{ ...td, height: 22 }} />
+              <td style={{ ...td, height: 22 }}>{getVal(data, "ShipVia", "shipVia")}</td>
+              <td style={{ ...td, height: 22 }}>{getVal(data, "Tracking", "tracking")}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+
+  const renderTotals = () => (
+    <>
+      <tr style={{ borderTop: "1px solid black", borderBottom: "1px solid black", height: 20 }}>
+        <td style={td} />
+        <td style={td} />
+        <td style={{ ...td, textAlign: "right", fontSize: 13, fontWeight: "bold" }}>{totals.qty}</td>
+        <td style={{ ...td, textAlign: "right", fontSize: 13 }} />
+        <td style={{ ...td, textAlign: "center", fontWeight: "bold", borderRight: "none" }}>
+          Terms: Due upon receipt
+        </td>
+        <td style={{ ...td, textAlign: "right", borderLeft: "none" }}>Sub Total</td>
+        <td style={{ ...td, textAlign: "right", fontSize: 13, lineHeight: 1.8, fontWeight: "bold" }}>
+          {fmtNum(totals.amount, 2)}
+        </td>
+      </tr>
+      <tr style={{ borderTop: "1px solid black", borderBottom: "1px solid black" }}>
+        <td colSpan={6} style={{ ...td, textAlign: "right", paddingLeft: 10, fontSize: 12, lineHeight: 1.8 }}>
+          Charges
+          <br />
+          Discount
+          <br />
+          <b style={{ fontSize: 15 }}>TOTAL</b>
+        </td>
+        <td style={{ ...td, textAlign: "right", fontSize: 13, lineHeight: 1.8 }}>
+          <br />
+          <br />
+          <b>{fmtNum(totals.amount, 2)}</b>
+        </td>
+      </tr>
+    </>
+  );
+
+  const renderPayment = () => (
+    <table style={{ fontSize: 13, borderCollapse: "collapse", marginTop: 10 }}>
+      <tbody>
+        <tr>
+          <td colSpan={2} style={{ fontWeight: "bold", paddingBottom: 6 }}>
+            Payment Instruction:
+          </td>
+        </tr>
+        <tr>
+          <td colSpan={2}>{company.companyName}</td>
+        </tr>
+        <tr>
+          <td colSpan={2}>{company.companyAddress}</td>
+        </tr>
+        <tr>
+          <td style={{ width: 140 }}>Bank Name :</td>
+          <td style={{ paddingLeft: 40 }}>{getVal(data, "bnm")}</td>
+        </tr>
+        <tr>
+          <td>Account No :</td>
+          <td style={{ paddingLeft: 40 }}>
+            <strong>{getVal(data, "BankAccNo", "bankAccNo")}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td>Routing Number :</td>
+          <td style={{ paddingLeft: 40 }}>
+            <strong>{getVal(data, "ABARoutingNumber", "abaRoutingNumber")}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <b>Swift Code :</b>
+          </td>
+          <td style={{ paddingLeft: 40 }}>
+            <strong>{getVal(data, "SwiftCode", "swiftCode")}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <b>ZELLE Id :</b>
+          </td>
+          <td style={{ paddingLeft: 40 }}>
+            <strong>{getVal(data, "ZelleID", "zelleID")}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+
+  if (!data) {
+    return (
+      <div className="page-content">
+        <Container fluid>
+          <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <Link to="/jewpurchase/jew-purchase-list" className="btn btn-soft-secondary btn-sm">
+              {t("Back to List")}
+            </Link>
+          </div>
+          <div className="text-center text-muted py-5">{t("No data found for this Invoice.")}</div>
+          <ToastContainer autoClose={2000} />
+        </Container>
+      </div>
+    );
+  }
+
+  const { totalPages, overflowTotals, totalRenderPages } = pagesMeta;
 
   return (
     <React.Fragment>
@@ -112,186 +375,189 @@ const JewPurchasePrintView = () => {
             <Link to="/jewpurchase/jew-purchase-list" className="btn btn-soft-secondary btn-sm">
               {t("Back to List")}
             </Link>
-            <Button color="primary" size="sm" onClick={handlePrint}>
+            <Button color="primary" size="sm" onClick={() => window.print()}>
               <i className="ri-printer-line me-1" />
               {t("Print")}
             </Button>
           </div>
 
           <div
-            ref={printRef}
             id="purchase-print-area"
             className="purchase-print-sheet"
             style={{
               fontFamily: "Verdana, Arial, sans-serif",
-              fontSize: 12,
+              fontSize: 13,
               color: "#000",
               background: "#fff",
               padding: 16,
               border: "1px solid #dee2e6",
               borderRadius: 8,
               width: "100%",
-              maxWidth: 900,
+              maxWidth: 960,
               margin: "0 auto"
             }}
           >
-            <table style={{ width: "100%", marginBottom: 14, tableLayout: "fixed" }}>
-              <tbody>
-                <tr>
-                  <td style={{ width: "12%", verticalAlign: "top" }}>
-                    {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: 80, maxWidth: "100%" }} /> : null}
-                  </td>
-                  <td style={{ width: "53%", verticalAlign: "top", fontSize: 11, paddingLeft: 8 }}>
-                    <div style={{ fontWeight: "bold", fontSize: 13 }}>{company.companyName}</div>
-                    <div style={{ marginTop: 3, lineHeight: 1.4 }}>{company.companyAddress}</div>
-                    <div style={{ lineHeight: 1.4 }}>{company.companyAddress1}</div>
-                    <div style={{ lineHeight: 1.4 }}>{company.companyAddress2}</div>
-                    <div style={{ marginTop: 6 }}>
-                      <b>Tel:</b>&nbsp;{company.companyPhone}
-                    </div>
-                    <div>
-                      <b>Email:</b>&nbsp;{company.companyEmail}
-                    </div>
-                  </td>
-                  <td style={{ width: "35%", verticalAlign: "top" }}>
-                    <div style={{ fontWeight: "bold", fontSize: 18 }}>JEWELLERY PURCHASE</div>
-                    <table style={{ width: "100%", fontSize: 12, marginTop: 8 }}>
+            {Array.from({ length: totalRenderPages }).map((_, page) => {
+              const isOverflowPage = overflowTotals && page === totalRenderPages - 1;
+              const isLastDataPage = page === totalPages - 1;
+              const showTotals = isOverflowPage || (!overflowTotals && isLastDataPage);
+              const skip = isOverflowPage ? items.length : page * ITEMS_PER_PAGE;
+              const pageItems = items.slice(skip, skip + ITEMS_PER_PAGE);
+              let srNo = skip + 1;
+              const isLastRender = page === totalRenderPages - 1;
+
+              return (
+                <div
+                  key={page}
+                  style={
+                    !isLastRender
+                      ? { pageBreakAfter: "always", breakAfter: "page" }
+                      : undefined
+                  }
+                >
+                  {renderHeader()}
+
+                  <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                    <colgroup>
+                      <col style={{ width: "5%" }} />
+                      <col style={{ width: "12%" }} />
+                      <col style={{ width: "6%" }} />
+                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "37%" }} />
+                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "15%" }} />
+                    </colgroup>
+                    <thead>
+                      <tr style={{ fontSize: 12 }}>
+                        {["Sr No", "ITEM", "PCS", "WT.", "DESCRIPTION", "Price/Carat", amountHeader].map(
+                          (h) => (
+                            <th key={h} style={th}>
+                              {h}
+                            </th>
+                          )
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageItems.map((item, idx) => {
+                        const img = getVal(item, "ImagePath", "imagePath");
+                        return (
+                          <tr key={idx} style={{ fontSize: 11, height: 65 }}>
+                            <td style={{ ...td, verticalAlign: "top", paddingTop: 5 }}>{srNo++}</td>
+                            <td style={{ ...td, padding: "10px 0", height: 65, verticalAlign: "middle" }}>
+                              {img ? (
+                                <img
+                                  src={img}
+                                  alt=""
+                                  style={{ width: 90, height: 65, objectFit: "contain" }}
+                                />
+                              ) : (
+                                <div style={{ height: 65 }} />
+                              )}
+                            </td>
+                            <td style={{ ...td, textAlign: "right", verticalAlign: "top", paddingTop: 5 }}>
+                              {getVal(item, "Qty", "qty", "Pcs", "pcs")}
+                            </td>
+                            <td style={{ ...td, textAlign: "right", verticalAlign: "top", padding: 0 }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                                <tbody>
+                                  <tr style={{ height: 15 }}>
+                                    <td style={{ width: "50%", textAlign: "left", padding: 5, border: "none" }}>
+                                      {fmtWt(getVal(item, "GrossWeight", "grossWeight"))}
+                                    </td>
+                                    <td
+                                      style={{
+                                        width: "50%",
+                                        textAlign: "right",
+                                        paddingRight: 5,
+                                        border: "none"
+                                      }}
+                                    >
+                                      GMS
+                                    </td>
+                                  </tr>
+                                  <tr style={{ height: 15 }}>
+                                    <td style={{ width: "50%", textAlign: "left", padding: 5, border: "none" }}>
+                                      {fmtWt(getVal(item, "NetWeight", "netWeight"))}
+                                    </td>
+                                    <td
+                                      style={{
+                                        width: "50%",
+                                        textAlign: "right",
+                                        paddingRight: 5,
+                                        border: "none"
+                                      }}
+                                    >
+                                      Carat
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                            <td style={{ ...td, textAlign: "left", verticalAlign: "top", paddingTop: 5 }}>
+                              {getVal(item, "Description", "description", "ItemName", "itemName")}
+                            </td>
+                            <td style={{ ...td, textAlign: "right", verticalAlign: "top", paddingTop: 5 }}>
+                              {fmtNum(
+                                getVal(item, "FinalJewAmount", "finalJewAmount", "PricePerCarat", "pricePerCarat"),
+                                2
+                              )}
+                            </td>
+                            <td style={{ ...td, textAlign: "right", verticalAlign: "top", paddingTop: 5 }}>
+                              {fmtNum(getVal(item, "Amount", "amount"), 2)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {showTotals && renderTotals()}
+                    </tbody>
+                  </table>
+
+                  {showTotals && renderPayment()}
+
+                  <div style={{ marginTop: 15 }}>
+                    <span style={{ fontSize: 13 }}>Signature:</span>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        borderBottom: "1px solid #000",
+                        width: 300,
+                        marginLeft: 10
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 11,
+                      textAlign: "justify",
+                      minHeight: 57,
+                      fontFamily: "Segoe UI",
+                      marginTop: 8
+                    }}
+                  >
+                    {company.saleConditions || ""}
+                  </div>
+
+                  <div style={{ marginTop: 3 }}>
+                    <table style={{ width: "100%" }}>
                       <tbody>
                         <tr>
-                          <td style={{ padding: "4px 0" }}>
-                            <b>Date :</b>
-                          </td>
-                          <td style={{ textAlign: "right" }}>{getVal(data, "TrnDate", "trnDate")}</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "4px 0" }}>
-                            <b>Purchase #</b>
-                          </td>
-                          <td style={{ textAlign: "right" }}>{getVal(data, "BillNo", "billNo")}</td>
+                          <td style={{ width: "50%", textAlign: "left" }}>{company.companyFooter || ""}</td>
+                          <td style={{ width: "50%", textAlign: "right" }}>{page + 1}</td>
                         </tr>
                       </tbody>
                     </table>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div
-              style={{
-                border: "1px solid #000",
-                borderRadius: 10,
-                padding: "10px 12px",
-                width: "48%",
-                minWidth: 220,
-                maxWidth: 400,
-                marginBottom: 14
-              }}
-            >
-              <div style={{ fontWeight: "bold", marginBottom: 6 }}>Consigned To:</div>
-              <div style={{ fontSize: 13, marginBottom: 2 }}>{getVal(data, "PartyName", "partyName")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine2", "addressLine2")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
-            </div>
-
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14, tableLayout: "fixed" }}>
-              <thead>
-                <tr>
-                  {["RECEIVED VIA", "INVOICE #", "TERMS"].map((h) => (
-                    <th key={h} style={{ ...th, width: "33.33%" }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ ...cell, height: 28 }} />
-                  <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "InvNo", "invNo")}</td>
-                  <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "DueDays", "dueDays")}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 11 }}>
-              <colgroup>
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "28%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "18%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  {["Sr No", "Stock #", "DESCRIPTION", "QTY", "WT.", "Price/Carat", "Amount US $"].map((h) => (
-                    <th key={h} style={th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((it, idx) => (
-                  <tr key={idx}>
-                    <td style={{ ...cell, textAlign: "center" }}>{idx + 1}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "StockNo", "stockNo")}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "Description", "description")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{getVal(it, "Qty", "qty")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Weight", "weight"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "PricePerCarat", "pricePerCarat"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Amount", "amount"))}</td>
-                  </tr>
-                ))}
-                <tr style={{ fontWeight: "bold" }}>
-                  <td style={cell} colSpan={3} />
-                  <td style={{ ...cell, textAlign: "right" }}>{totals.qty}</td>
-                  <td style={{ ...cell, textAlign: "right" }}>{fmt(totals.wt)}</td>
-                  <td style={{ ...cell, lineHeight: 1.6 }}>
-                    <div>Sub Total</div>
-                    <div>Charges</div>
-                    <div style={{ marginTop: 4 }}>TOTAL</div>
-                  </td>
-                  <td style={{ ...cell, textAlign: "right", lineHeight: 1.6 }}>
-                    <div>{fmt(totals.amount)}</div>
-                    <div>&nbsp;</div>
-                    <div style={{ marginTop: 4 }}>{fmt(totals.amount)}</div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div style={{ marginTop: 20 }}>
-              <span>Signature:</span>
-              <span
-                style={{
-                  display: "inline-block",
-                  borderBottom: "1px solid #000",
-                  width: 260,
-                  marginLeft: 8
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 18,
-                fontSize: 11,
-                gap: 12
-              }}
-            >
-              <span>{company.companyFooter || "Powered by SoftOnCloud"}</span>
-              <span>1</span>
-            </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Container>
 
         <style>{`
           @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: Letter portrait; margin: 10mm; }
             html, body {
               background: #fff !important;
               -webkit-print-color-adjust: exact !important;
@@ -325,12 +591,6 @@ const JewPurchasePrintView = () => {
             #page-topbar,
             .page-title-box {
               display: none !important;
-            }
-          }
-          @media (max-width: 767px) {
-            .purchase-print-sheet {
-              overflow-x: auto !important;
-              display: block !important;
             }
           }
         `}</style>

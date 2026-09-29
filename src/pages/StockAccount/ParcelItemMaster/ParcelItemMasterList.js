@@ -77,7 +77,7 @@ const ParcelItemMasterList = () => {
             return;
         }
 
-        const headers = ["Lot No", "Item Name", "Shape", "Color", "Size", "Clarity", "Sieve", "Weight", "Purchase Amount"];
+        const headers = ["Lot No", "Item Name", "Shape", "Color", "Size", "Clarity", "Sieve", "Weight", "MRP"];
         const rows = parcelItems.map((item) => [
             item.lotNo || item.LotNo || "",
             item.itemName || item.ItemName || "",
@@ -188,7 +188,7 @@ const ParcelItemMasterList = () => {
                 }
             },
             {
-                header: t("Purchase Amount"),
+                header: t("MRP"),
                 accessorKey: "purchaseAmount",
                 accessorFn: (row) => row.purchaseAmount || row.PurchaseAmount,
                 enableColumnFilter: true,

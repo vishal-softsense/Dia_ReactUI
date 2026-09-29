@@ -270,7 +270,12 @@ const AccGrpMasterAdd = () => {
 
         setSubmitting(true);
         try {
-            const response = await addAccGrpMaster(form);
+            const response = await addAccGrpMaster({
+                ...form,
+                // MVC SaveAccGrpMasterData(..., AccGrp.TermName, ...)
+                term: form.term || "",
+                termName: form.term || "",
+            });
             if (response.success || response.Success) {
                 navigate("/account/list-accountgroup", { state: { successMessage: response.message || response.Message || "Account Group saved successfully." } });
             } else {
@@ -574,11 +579,15 @@ const AccGrpMasterAdd = () => {
                                                     <Label>{t("Term")}</Label>
                                                     <select className="form-select" value={form.term} onChange={(e) => handleTextChange("term", e.target.value)}>
                                                         <option value="">{t("Select Term")}</option>
-                                                        {dropdowns.term.map((item, idx) => (
-                                                            <option key={idx} value={item.id || item.ID}>
-                                                                {item.name || item.Name || item.id || item.ID}
-                                                            </option>
-                                                        ))}
+                                                        {dropdowns.term.map((item, idx) => {
+                                                            // MVC SelectList(ViewBag.Term, "Name", "Name") — save TermName, not ID
+                                                            const termName = item.name || item.Name || item.textName || item.TextName || "";
+                                                            return (
+                                                                <option key={idx} value={termName}>
+                                                                    {termName || item.id || item.ID}
+                                                                </option>
+                                                            );
+                                                        })}
                                                     </select>
                                                 </FormGroup>
                                             </Col>

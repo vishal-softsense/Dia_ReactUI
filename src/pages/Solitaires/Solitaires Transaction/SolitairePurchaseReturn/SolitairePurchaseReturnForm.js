@@ -37,6 +37,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -555,10 +556,14 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundAmount: toNum(getVal(h, "RoundAmount")),
-      vatPer: toNum(getVal(h, "VatPer")),
-      cgstPer: toNum(getVal(h, "CGSTPer")),
-      sgstPer: toNum(getVal(h, "SGSTPer")),
-      igstPer: toNum(getVal(h, "IGSTPer"))
+      vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
+      cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "cgstPer", "CGST", "CgstPercentage", "CGSTRate"),
+      sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "sgstPer", "SGST", "SgstPercentage", "SGSTRate"),
+      igstPer: getNumVal(h, "IGSTPer", "IgstPer", "igstPer", "IGST", "IgstPercentage", "IGSTRate"),
+      vatAmount: getNumVal(h, "VatAmount", "VATAmount", "vatAmount"),
+      cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt", "cgstAmt", "cgstAmount"),
+      sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt", "sgstAmt", "sgstAmount"),
+      igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt", "igstAmt", "igstAmount")
     });
 
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
@@ -844,7 +849,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       netAmount: fmt(taxableAmount),
       netMAmount: fmt(mCurAmount),
@@ -857,6 +862,19 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fmt(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   const buildPayload = () => ({
     SalePur: {
@@ -1079,7 +1097,21 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Com Amount")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md={3} sm={6}>

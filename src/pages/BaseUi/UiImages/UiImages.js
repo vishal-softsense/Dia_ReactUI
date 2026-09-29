@@ -26,7 +26,7 @@ import { ImgRoundedCircleExample, ImgThumbnailsExample, ImgSizesExample, AvatarE
 
 
 const UiImages = () => {
-    document.title="Images | Velzon - React Admin & Dashboard Template";
+    document.title="Images | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <UiContent />

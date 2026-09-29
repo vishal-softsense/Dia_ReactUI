@@ -6,7 +6,7 @@ import RelatedJobs from "./RelatedJobs";
 import RightSection from "./RightSection";
 
 const JobOverview = () => {
-  document.title = "Job Overview | Velzon -  Admin & Dashboard Template";
+  document.title = "Job Overview | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

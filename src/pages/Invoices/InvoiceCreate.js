@@ -115,7 +115,7 @@ const InvoiceCreate = () => {
 
 
 
-  document.title = "Create Invoice | Velzon - React Admin & Dashboard Template";
+  document.title = "Create Invoice | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   const validation = useFormik({
     enableReinitialize: true,

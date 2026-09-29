@@ -192,7 +192,7 @@ const UiModals = () => {
         setmodal_signUpModals(!modal_signUpModals);
     }
 
-    document.title = "Modals | Velzon - React Admin & Dashboard Template";
+    document.title = "Modals | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

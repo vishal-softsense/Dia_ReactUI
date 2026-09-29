@@ -50,7 +50,7 @@ const FormValidations = () => {
     },
   });
 
-document.title ="Validation | Velzon - React Admin & Dashboard Template";
+document.title ="Validation | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

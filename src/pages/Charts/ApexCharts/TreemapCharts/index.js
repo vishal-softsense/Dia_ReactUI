@@ -5,7 +5,7 @@ import {BasicTreemap,MultiTreemap,DiffColorTreemap,ColorRangeTreemap} from './Tr
 
 
 const TreemapCharts = () => {
-    document.title="Treemap Charts | Velzon - React Admin & Dashboard Template";
+    document.title="Treemap Charts | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <React.Fragment>
             <div className="page-content">

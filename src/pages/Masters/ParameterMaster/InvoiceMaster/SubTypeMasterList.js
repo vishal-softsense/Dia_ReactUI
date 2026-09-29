@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
@@ -390,9 +390,9 @@ const SubTypeMasterList = () => {
             </div>
 
             {/* Add / Edit Form Modal */}
-            <Modal isOpen={formModal} toggle={() => setFormModal(false)} className="modal-dialog-centered">
-                <ModalHeader className="bg-primary pb-3 text-white" toggle={() => setFormModal(false)}>
-                    {isEdit ? t("Edit SubType Master") : t("Add SubType Master")}
+            <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
+                <ModalHeader toggle={() => setFormModal(false)} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{isEdit ? t("Edit SubType Master") : t("Add SubType Master")}</span>
                 </ModalHeader>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
@@ -463,15 +463,17 @@ const SubTypeMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button type="button" color="light" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button type="submit" color="primary">{isEdit ? t("Update") : t("Save")}</Button>
+                        <Button type="button" color="light" className="rounded-3" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button type="submit" color="primary" className="rounded-3">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
-                <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
+                <ModalHeader toggle={() => setDeleteModal(false)} className="bg-danger p-3 border-0">
+                    <span className="text-white fw-bold">{t("Confirm Delete")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -488,20 +490,22 @@ const SubTypeMasterList = () => {
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
+                        <Button type="button" color="light" className="w-sm rounded-3" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm rounded-3" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>
 
             {/* Import Excel Modal */}
-            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
-                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import SubType Master Excel")}</ModalHeader>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{t("Import SubType Master Excel")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download SubTypeMaster File Template Format")}</Label>
                         <div>
-                            <Button color="primary" onClick={handleDownloadTemplate} size="sm">
+                            <Button color="primary" onClick={handleDownloadTemplate} size="sm" className="rounded-3">
                                 <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
@@ -530,8 +534,8 @@ const SubTypeMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
+                    <Button color="light" className="rounded-3" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" className="rounded-3" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
             <ToastContainer autoClose={2000} />

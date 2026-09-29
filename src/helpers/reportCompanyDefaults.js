@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
   companyFooter: "reportCompanyFooter",
   companyLogo: "companyLoginLogo",
   stockSymbol: "reportStockSymbol",
+  masterSymbol: "reportMasterSymbol",
   companyGSTNo: "reportCompanyGSTNo",
   companyHSNCode: "reportCompanyHSNCode",
   memoConditions: "reportMemoConditions",
@@ -38,6 +39,7 @@ const DEFAULT_COMPANY = {
   companyFooter: "Powered by SoftOnCloud",
   companyLogo: "",
   stockSymbol: "",
+  masterSymbol: "",
   companyGSTNo: "",
   companyHSNCode: "",
   memoConditions: "",
@@ -87,6 +89,7 @@ export function getCachedReportCompany() {
     companyFooter: localStorage.getItem(STORAGE_KEYS.companyFooter) || DEFAULT_COMPANY.companyFooter,
     companyLogo: localStorage.getItem(STORAGE_KEYS.companyLogo) || DEFAULT_COMPANY.companyLogo,
     stockSymbol: localStorage.getItem(STORAGE_KEYS.stockSymbol) || DEFAULT_COMPANY.stockSymbol,
+    masterSymbol: localStorage.getItem(STORAGE_KEYS.masterSymbol) || DEFAULT_COMPANY.masterSymbol,
     companyGSTNo: localStorage.getItem(STORAGE_KEYS.companyGSTNo) || DEFAULT_COMPANY.companyGSTNo,
     companyHSNCode: localStorage.getItem(STORAGE_KEYS.companyHSNCode) || DEFAULT_COMPANY.companyHSNCode,
     memoConditions: localStorage.getItem(STORAGE_KEYS.memoConditions) || DEFAULT_COMPANY.memoConditions,
@@ -113,6 +116,7 @@ export function setCachedReportCompany(company, { dispatchEvent = true } = {}) {
   localStorage.setItem(STORAGE_KEYS.companyFooter, merged.companyFooter || DEFAULT_COMPANY.companyFooter);
   localStorage.setItem(STORAGE_KEYS.companyLogo, merged.companyLogo || "");
   localStorage.setItem(STORAGE_KEYS.stockSymbol, merged.stockSymbol || "");
+  localStorage.setItem(STORAGE_KEYS.masterSymbol, merged.masterSymbol || "");
   localStorage.setItem(STORAGE_KEYS.companyGSTNo, merged.companyGSTNo || "");
   localStorage.setItem(STORAGE_KEYS.companyHSNCode, merged.companyHSNCode || "");
   localStorage.setItem(STORAGE_KEYS.memoConditions, merged.memoConditions || "");
@@ -176,6 +180,7 @@ export async function getReportCompanySettings({ forceRefresh = true } = {}) {
       companyFooter: pickSettingValue(rows, "ReportFooterDesc") || fallback.companyFooter,
       companyLogo: pickSettingValue(rows, "CompanyLoginLogo") || fallback.companyLogo,
       stockSymbol: pickSettingValue(rows, "SSymbol") || fallback.stockSymbol,
+      masterSymbol: pickSettingValue(rows, "MSymbol") || fallback.masterSymbol,
       companyGSTNo: pickSettingValue(rows, "CompanyGSTNo") || fallback.companyGSTNo,
       companyHSNCode: pickSettingValue(rows, "CompanyHSNCode") || fallback.companyHSNCode,
       memoConditions: pickSettingValue(rows, "MemoConditions") || fallback.memoConditions,

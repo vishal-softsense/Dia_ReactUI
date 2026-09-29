@@ -433,6 +433,18 @@ import LoanGivenEdit from "../pages/FinancialTransaction/Loan/LoanGiven/LoanGive
 import LoanTakenList from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenList";
 import LoanTakenAdd from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenAdd";
 import LoanTakenEdit from "../pages/FinancialTransaction/Loan/LoanTaken/LoanTakenEdit";
+import PaymentList from "../pages/FinancialTransaction/Payment/Payment & Receipts/PaymentList";
+import PaymentAdd from "../pages/FinancialTransaction/Payment/Payment & Receipts/PaymentAdd";
+import PaymentEdit from "../pages/FinancialTransaction/Payment/Payment & Receipts/PaymentEdit";
+import PayWithExDiffList from "../pages/FinancialTransaction/Payment/PayWithExDiff/PayWithExDiffList";
+import PayWithExDiffAdd from "../pages/FinancialTransaction/Payment/PayWithExDiff/PayWithExDiffAdd";
+import PayWithExDiffEdit from "../pages/FinancialTransaction/Payment/PayWithExDiff/PayWithExDiffEdit";
+import JournalEntryList from "../pages/FinancialTransaction/Payment/Journal Entries/JournalEntryList";
+import JournalEntryAdd from "../pages/FinancialTransaction/Payment/Journal Entries/JournalEntryAdd";
+import JournalEntryEdit from "../pages/FinancialTransaction/Payment/Journal Entries/JournalEntryEdit";
+import IncomeExpenseList from "../pages/FinancialTransaction/Payment/Income Expense/IncomeExpenseList";
+import IncomeExpenseAdd from "../pages/FinancialTransaction/Payment/Income Expense/IncomeExpenseAdd";
+import IncomeExpenseEdit from "../pages/FinancialTransaction/Payment/Income Expense/IncomeExpenseEdit";
 import MixPurchaseList from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseList";
 import MixPurchaseAdd from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseAdd";
 import MixPurchaseEdit from "../pages/Parcel/Parcel Transaction/MixPurchase/MixPurchaseEdit";
@@ -657,6 +669,8 @@ const authProtectedRoutes = [
   { path: "/master/list-Mounting-stock", component: <JewStockMasterList /> },
   { path: "/master/add-stock-Mounting", component: <JewStockMasterAdd /> },
   { path: "/master/edit-Mounting-stock", component: <JewStockMasterEdit /> },
+  // MVC: /master/edit-jewellery-stock?ID={JewCode}&Mode=view (Parcel Stock History JewTrn)
+  { path: "/master/edit-jewellery-stock", component: <JewStockMasterEdit /> },
 
   // DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
   { path: "/data/StockAnalyze", component: <StockAnalyze /> },
@@ -720,6 +734,9 @@ const authProtectedRoutes = [
   { path: "/purchase/add-purchase", component: <SolitairePurchaseAdd /> },
   { path: "/purchase/edit-purchase", component: <SolitairePurchaseEdit /> },
   { path: "/purchase/printinvview", component: <SolitairePurchasePrintView /> },
+  { path: "/purchase/PrintInvView", component: <SolitairePurchasePrintView /> },
+  { path: "/Purchase/PrintInvView", component: <SolitairePurchasePrintView /> },
+  { path: "/purchase/printinv", component: <SolitairePurchasePrintView /> },
   { path: "/purchase/PurCurStatusPrintInv", component: <SolitairePurchaseCurStatus /> },
   { path: "/purchase/purcurstatusprintinv", component: <SolitairePurchaseCurStatus /> },
 
@@ -778,6 +795,37 @@ const authProtectedRoutes = [
   { path: "/loan/loantaken-list", component: <LoanTakenList /> },
   { path: "/loan/add-loantaken", component: <LoanTakenAdd /> },
   { path: "/loan/edit-loantaken", component: <LoanTakenEdit /> },
+
+  // Payment & Receipt entry (MVC: /Payment/Paymentlist)
+  { path: "/payment/payment-list", component: <PaymentList /> },
+  { path: "/Payment/Paymentlist", component: <PaymentList /> },
+  { path: "/payment/add-payment", component: <PaymentAdd /> },
+  { path: "/payment/edit-payment", component: <PaymentEdit /> },
+
+  // Payment & Receipt With ExDiff (MVC: /Payment/PayWithExDiffList)
+  { path: "/payment/pay-with-exdiff-list", component: <PayWithExDiffList /> },
+  { path: "/Payment/PayWithExDiffList", component: <PayWithExDiffList /> },
+  { path: "/payment/add-pay-with-exdiff", component: <PayWithExDiffAdd /> },
+  { path: "/payment/edit-pay-with-exdiff", component: <PayWithExDiffEdit /> },
+
+  // Journal Entry (MVC: /Payment/jvList, /Payment/JVExpence, /JournalEntry/GetJournalEntries)
+  { path: "/payment/journal-entry-list", component: <JournalEntryList /> },
+  { path: "/Payment/jvList", component: <JournalEntryList /> },
+  { path: "/Payment/jvlist", component: <JournalEntryList /> },
+  { path: "/payment/add-journal-entry", component: <JournalEntryAdd /> },
+  { path: "/Payment/JVExpence", component: <JournalEntryAdd /> },
+  { path: "/payment/edit-journal-entry", component: <JournalEntryEdit /> },
+  { path: "/JournalEntry/GetJournalEntries", component: <JournalEntryEdit /> },
+
+  // Income & Expense (MVC: /Payment/incomeexpenselist, IncomeExpenseView, GetIncomeExpense)
+  { path: "/payment/income-expense-list", component: <IncomeExpenseList /> },
+  { path: "/Payment/incomeexpenselist", component: <IncomeExpenseList /> },
+  { path: "/Payment/IncomeExpenseList", component: <IncomeExpenseList /> },
+  { path: "/payment/add-income-expense", component: <IncomeExpenseAdd /> },
+  { path: "/Payment/IncomeExpenseView", component: <IncomeExpenseAdd /> },
+  { path: "/Payment/incomeexpenseView", component: <IncomeExpenseAdd /> },
+  { path: "/payment/edit-income-expense", component: <IncomeExpenseEdit /> },
+  { path: "/Payment/GetIncomeExpense", component: <IncomeExpenseEdit /> },
 
   // Jewellery Purchase entry (MVC: /jewpurchase/*)
   { path: "/jewpurchase/jew-purchase-list", component: <JewPurchaseList /> },

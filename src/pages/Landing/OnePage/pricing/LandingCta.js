@@ -10,7 +10,7 @@ const LandingCta = ({
 }) => {
   if (variant === "soft") {
     return (
-      <section className="py-5" data-aos="fade-up" data-aos-delay="180" data-aos-duration="750" id="contact">
+      <section className="py-5" data-aos="fade-up" data-aos-delay="180" data-aos-duration="750">
         <Container>
           <div className="landing-cta-soft d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div className="d-flex align-items-center gap-3">
@@ -31,7 +31,7 @@ const LandingCta = ({
   }
 
   return (
-    <section className="py-5 bg-primary position-relative" data-aos="fade-up" data-aos-delay="180" data-aos-duration="750" id="contact">
+    <section className="py-5 bg-primary position-relative" data-aos="fade-up" data-aos-delay="180" data-aos-duration="750">
       <div className="bg-overlay bg-overlay-pattern opacity-50"></div>
       <Container>
         <Row className="align-items-center gy-4">

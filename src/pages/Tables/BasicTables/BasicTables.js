@@ -35,7 +35,7 @@ import avtarImage6 from '../../../assets/images/users/avatar-6.jpg';
 
 
 const BasicTables = () => {
-    document.title = "Basic Tables | Velzon - React Admin & Dashboard Template";
+    document.title = "Basic Tables | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <UiContent />

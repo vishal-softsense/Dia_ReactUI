@@ -179,7 +179,7 @@ const EcommerceSellerDetail = () => {
     ],
     []
   );
-  document.title = "Sellers Details | Velzon - React Admin & Dashboard Template";
+  document.title = "Sellers Details | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

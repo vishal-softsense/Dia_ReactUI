@@ -41,6 +41,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -737,7 +738,7 @@ const SolitaireSaleReturnForm = ({ mode = "add" }) => {
     const receivableAmount = mOp === "/" ? (mCurAmount + taxTotal + roundAmount) * baseRate : (mCurAmount + taxTotal + roundAmount) / baseRate;
     const finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       taxableAmount,
       netAmount: fmt(taxableAmount),
@@ -751,6 +752,19 @@ const SolitaireSaleReturnForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fmt(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   const viewInvoices = async () => {
     if (!party?.value && !header.saleInvNo) {
@@ -1082,7 +1096,21 @@ const SolitaireSaleReturnForm = ({ mode = "add" }) => {
 
                       <Col md={3} sm={6}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Comm Agent")}</Label><Select styles={customStyles} options={commOpts} value={commission} onChange={setCommission} onInputChange={(v, meta) => { if (meta.action === "input-change") setCommInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setCommInput(""); setCommOpts([]); } }} isLoading={commLoading} placeholder={t("Search Commission")} isClearable isDisabled={readOnly} /></FormGroup></Col>
                       <Col md={1} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com%")}</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.adatPer} onChange={(e) => setHeaderField("adatPer", e.target.value)} /></FormGroup></Col>
-                      <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com Amount")}</Label><Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly /></FormGroup></Col>
+                      <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com Amount")}</Label><Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          /></FormGroup></Col>
                       <Col md={3} sm={6}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Description")}</Label><Input className="form-control-sm" style={fieldH} value={header.description} onChange={(e) => setHeaderField("description", e.target.value)} /></FormGroup></Col>
 
                       <Col md={3} sm={6}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Broker")}</Label><Select styles={customStyles} options={brokerOpts} value={broker} onChange={setBroker} onInputChange={(v, meta) => { if (meta.action === "input-change") setBrokerInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setBrokerInput(""); setBrokerOpts([]); } }} isLoading={brokerLoading} placeholder={t("Search Broker")} isClearable isDisabled={readOnly} /></FormGroup></Col>

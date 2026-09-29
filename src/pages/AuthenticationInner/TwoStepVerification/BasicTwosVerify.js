@@ -8,7 +8,7 @@ import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 
 const BasicTwosVerify = () => {
-    document.title = "Two Step Verification | Velzon - React Admin & Dashboard Template";
+    document.title = "Two Step Verification | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     const getInputElement = (index) => {
         return document.getElementById('digit' + index + '-input');

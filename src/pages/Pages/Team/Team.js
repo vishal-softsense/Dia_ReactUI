@@ -28,7 +28,7 @@ import { useFormik } from "formik";
 import { createSelector } from 'reselect';
 
 const Team = () => {
-    document.title = "Team | Velzon - React Admin & Dashboard Template";
+    document.title = "Team | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     const dispatch = useDispatch();
 

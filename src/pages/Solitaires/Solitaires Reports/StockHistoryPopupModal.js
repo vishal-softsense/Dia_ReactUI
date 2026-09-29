@@ -7,6 +7,13 @@ import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireStockSearchHistory } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
+const formatDateYMDToDMY = (dateStr) => {
+  if (!dateStr) return "";
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+};
+
 const fmtFixed = (value, decimals) => {
   if (value === null || value === undefined || value === "") return "";
   const num = Number(value);
@@ -57,10 +64,12 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
   const { getDates } = useSettingReportDates();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [historyFromDate, setHistoryFromDate] = useState("");
 
   useEffect(() => {
     if (!isOpen || !stockId) {
       setRows([]);
+      setHistoryFromDate("");
       return;
     }
 
@@ -72,6 +81,10 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
 
       try {
         const { fromDate, toDate } = await getDates();
+        if (!cancelled) {
+          setHistoryFromDate(formatDateYMDToDMY(fromDate));
+        }
+
         const payload = {
           FromDate: fromDate,
           ToDate: toDate,
@@ -106,7 +119,7 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, stockId, t]);
+  }, [isOpen, stockId, t, getDates]);
 
   const totals = useMemo(() => {
     return rows.reduce(
@@ -146,7 +159,7 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
 
     rows.forEach((item) => {
       const trnType = getRowVal(item, "trnType", "TrnType");
-      const trnDate = trnType === "OpStk" ? HISTORY_FROM_DATE : getRowVal(item, "trnDate", "TrnDate");
+      const trnDate = trnType === "OpStk" ? historyFromDate : getRowVal(item, "trnDate", "TrnDate");
       excelRows.push([
         trnDate,
         trnType,
@@ -230,7 +243,7 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
                 {rows.map((item, idx) => {
                   const trnType = getRowVal(item, "trnType", "TrnType");
                   const trnDate =
-                    trnType === "OpStk" ? HISTORY_FROM_DATE : getRowVal(item, "trnDate", "TrnDate");
+                    trnType === "OpStk" ? historyFromDate : getRowVal(item, "trnDate", "TrnDate");
 
                   return (
                     <tr key={idx}>

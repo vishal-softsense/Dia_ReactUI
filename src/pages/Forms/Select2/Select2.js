@@ -4,7 +4,7 @@ import BreadCrumb from '../../../Components/Common/BreadCrumb';
 import Select from "react-select";
 
 const Select2 = () => {
-    document.title = "Select2 | Velzon - React Admin & Dashboard Template";
+    document.title = "Select2 | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     const [sortBy, setsortBy] = useState(null);
     const [selectMulti, setselectMulti] = useState(null);

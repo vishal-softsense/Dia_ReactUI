@@ -185,7 +185,8 @@ const AccGrpMasterEdit = () => {
                     creditLimit: detail.creditLimit || detail.CreditLimit || 0,
                     dueDays: detail.dueDays || detail.DueDays || 0,
                     gracePeriod: detail.gracePeriod || detail.GracePeriod || 0,
-                    term: detail.term || detail.Term || detail.termName || detail.TermName || "",
+                    // MVC saves TermName (dropdown Name); prefer TermName when loading edit
+                    term: detail.termName || detail.TermName || detail.term || detail.Term || "",
                     termPer: detail.termPer || detail.TermPer || 0,
                     markup: detail.markup || detail.Markup || "",
                     localLangName: detail.localLangName || detail.LocalLangName || "",
@@ -392,7 +393,12 @@ const AccGrpMasterEdit = () => {
 
         setSubmitting(true);
         try {
-            const response = await updateAccGrpMaster(id, form);
+            const response = await updateAccGrpMaster(id, {
+                ...form,
+                // MVC UpdateAccGrpMasterData(..., AccGrp.TermName, ...)
+                term: form.term || "",
+                termName: form.term || "",
+            });
             if (response.success || response.Success) {
                 navigate("/account/list-accountgroup", { state: { successMessage: response.message || response.Message || "Account Group updated successfully." } });
             } else {
@@ -708,11 +714,15 @@ const AccGrpMasterEdit = () => {
                                                     <Label>{t("Term")}</Label>
                                                     <select className="form-select" value={form.term} onChange={(e) => handleTextChange("term", e.target.value)}>
                                                         <option value="">{t("Select Term")}</option>
-                                                        {dropdowns.term.map((item, idx) => (
-                                                            <option key={idx} value={item.id || item.ID}>
-                                                                {item.name || item.Name || item.id || item.ID}
-                                                            </option>
-                                                        ))}
+                                                        {dropdowns.term.map((item, idx) => {
+                                                            // MVC SelectList(ViewBag.Term, "Name", "Name") — save TermName, not ID
+                                                            const termName = item.name || item.Name || item.textName || item.TextName || "";
+                                                            return (
+                                                                <option key={idx} value={termName}>
+                                                                    {termName || item.id || item.ID}
+                                                                </option>
+                                                            );
+                                                        })}
                                                     </select>
                                                 </FormGroup>
                                             </Col>

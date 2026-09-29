@@ -1,40 +1,27 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, Container } from "reactstrap";
 import { toast, ToastContainer } from "react-toastify";
 
-import {
-  getMixPurchasePrintView
-} from "../../../../helpers/fakebackend_helper";
+import { getMixPurchasePrintView } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   resolveCompanyLogoUrl
 } from "../../../../helpers/reportCompanyDefaults";
-
-const getVal = (row, ...keys) => {
-  if (!row) return "";
-  for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
-    const camel = key.charAt(0).toLowerCase() + key.slice(1);
-    const pascal = key.charAt(0).toUpperCase() + key.slice(1);
-    if (row[camel] !== undefined && row[camel] !== null && row[camel] !== "") return row[camel];
-    if (row[pascal] !== undefined && row[pascal] !== null && row[pascal] !== "") return row[pascal];
-  }
-  return "";
-};
-
-const fmt = (v, d = 2) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
-};
+import MixPurPrintUsaFormat from "../../../../printFormats/mixPurchase/MixPurPrintUsaFormat";
+import { getVal } from "../../../../printFormats/shared/printUtils";
 
 const MixPurchasePrintView = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const invNo = searchParams.get("ID") || searchParams.get("Id") || searchParams.get("InvNo") || searchParams.get("invNo") || "";
-  const printRef = useRef(null);
+  const invNo =
+    searchParams.get("ID") ||
+    searchParams.get("Id") ||
+    searchParams.get("InvNo") ||
+    searchParams.get("invNo") ||
+    "";
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [company, setCompany] = useState(() => getCachedReportCompany());
@@ -60,11 +47,11 @@ const MixPurchasePrintView = () => {
         if (res?.success || res?.Success) {
           setData(res.Data || res.data || null);
         } else {
-          toast.error(res?.Data || res?.data || t("Failed to load print view."));
+          toast.error(res?.Data || res?.data || t("No data found for this Invoice."));
         }
       } catch (err) {
         console.error(err);
-        toast.error(t("Failed to load print view."));
+        toast.error(err?.response?.data?.Data || err?.message || t("No data found for this Invoice."));
       } finally {
         setLoading(false);
       }
@@ -78,21 +65,21 @@ const MixPurchasePrintView = () => {
     let wt = 0;
     let amount = 0;
     items.forEach((it) => {
-      qty += Number(getVal(it, "Qty", "qty")) || 0;
-      wt += Number(getVal(it, "Weight", "weight")) || 0;
-      amount += Number(getVal(it, "Amount", "amount")) || 0;
+      qty += Number(getVal(it, "Qty", "qty", "Pcs", "pcs")) || 0;
+      wt += Number(getVal(it, "Weight", "weight", "Carats", "carats")) || 0;
+      amount += Number(getVal(it, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount")) || 0;
     });
     return { qty, wt, amount };
   }, [items]);
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
+  const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
 
   const handlePrint = () => {
-    // Print current page so layout matches what user sees
     window.print();
   };
 
-  document.title = `Purchase_${invNo} | Admin`;
+  document.title = `MixPurPrint_${invDisplay} | Admin`;
 
   if (loading) {
     return (
@@ -104,12 +91,25 @@ const MixPurchasePrintView = () => {
     );
   }
 
-  const cell = { border: "1px solid #000", padding: "5px 6px" };
-  const th = { ...cell, background: "#c0c0c0", textAlign: "center", fontWeight: "bold" };
+  if (!data) {
+    return (
+      <div className="page-content">
+        <Container fluid>
+          <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <Link to="/MixPurchase/Mix-PurchaseList" className="btn btn-soft-secondary btn-sm">
+              {t("Back to List")}
+            </Link>
+          </div>
+          <div className="text-center text-muted py-5">{t("No data found for this Invoice.")}</div>
+          <ToastContainer autoClose={2000} />
+        </Container>
+      </div>
+    );
+  }
 
   return (
     <React.Fragment>
-      <div className="page-content purchase-print-page">
+      <div className="page-content mix-pur-print-page">
         <Container fluid>
           <div className="d-flex justify-content-between align-items-center mb-3 d-print-none flex-wrap gap-2">
             <Link to="/MixPurchase/Mix-PurchaseList" className="btn btn-soft-secondary btn-sm">
@@ -122,190 +122,48 @@ const MixPurchasePrintView = () => {
           </div>
 
           <div
-            ref={printRef}
-            id="purchase-print-area"
-            className="purchase-print-sheet"
+            id="mix-pur-print-area"
+            className="mix-pur-print-sheet"
             style={{
-              fontFamily: "Verdana, Arial, sans-serif",
-              fontSize: 12,
-              color: "#000",
               background: "#fff",
               padding: 16,
               border: "1px solid #dee2e6",
               borderRadius: 8,
               width: "100%",
-              maxWidth: 900,
+              maxWidth: 960,
               margin: "0 auto"
             }}
           >
-            <table style={{ width: "100%", marginBottom: 14, tableLayout: "fixed" }}>
-              <tbody>
-                <tr>
-                  <td style={{ width: "12%", verticalAlign: "top" }}>
-                    {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: 80, maxWidth: "100%" }} /> : null}
-                  </td>
-                  <td style={{ width: "53%", verticalAlign: "top", fontSize: 11, paddingLeft: 8 }}>
-                    <div style={{ fontWeight: "bold", fontSize: 13 }}>{company.companyName}</div>
-                    <div style={{ marginTop: 3, lineHeight: 1.4 }}>{company.companyAddress}</div>
-                    <div style={{ lineHeight: 1.4 }}>{company.companyAddress1}</div>
-                    <div style={{ lineHeight: 1.4 }}>{company.companyAddress2}</div>
-                    <div style={{ marginTop: 6 }}>
-                      <b>Tel:</b>&nbsp;{company.companyPhone}
-                    </div>
-                    <div>
-                      <b>Email:</b>&nbsp;{company.companyEmail}
-                    </div>
-                  </td>
-                  <td style={{ width: "35%", verticalAlign: "top" }}>
-                    <div style={{ fontWeight: "bold", fontSize: 20 }}>MEMO IN</div>
-                    <table style={{ width: "100%", fontSize: 12, marginTop: 8 }}>
-                      <tbody>
-                        <tr>
-                          <td style={{ padding: "4px 0" }}>
-                            <b>Date :</b>
-                          </td>
-                          <td style={{ textAlign: "right" }}>{getVal(data, "TrnDate", "trnDate")}</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "4px 0" }}>
-                            <b>Purchase #</b>
-                          </td>
-                          <td style={{ textAlign: "right" }}>{getVal(data, "BillNo", "billNo")}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div
-              style={{
-                border: "1px solid #000",
-                borderRadius: 10,
-                padding: "10px 12px",
-                width: "48%",
-                minWidth: 220,
-                maxWidth: 400,
-                marginBottom: 14
-              }}
-            >
-              <div style={{ fontWeight: "bold", marginBottom: 6 }}>Consigned To:</div>
-              <div style={{ fontSize: 13, marginBottom: 2 }}>{getVal(data, "PartyName", "partyName")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine2", "addressLine2")}</div>
-              <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
-            </div>
-
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14, tableLayout: "fixed" }}>
-              <thead>
-                <tr>
-                  {["RECEIVED VIA", "INVOICE #", "TERMS"].map((h) => (
-                    <th key={h} style={{ ...th, width: "33.33%" }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ ...cell, height: 28 }} />
-                  <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "InvNo", "invNo")}</td>
-                  <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "DueDays", "dueDays")}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 11 }}>
-              <colgroup>
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "28%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "18%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  {["Sr No", "Stock #", "DESCRIPTION", "QTY", "WT.", "Price/Carat", "Amount US $"].map((h) => (
-                    <th key={h} style={th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((it, idx) => (
-                  <tr key={idx}>
-                    <td style={{ ...cell, textAlign: "center" }}>{idx + 1}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "StockNo", "stockNo")}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "Description", "description")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{getVal(it, "Qty", "qty")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Weight", "weight"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "PricePerCarat", "pricePerCarat"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Amount", "amount"))}</td>
-                  </tr>
-                ))}
-                <tr style={{ fontWeight: "bold" }}>
-                  <td style={cell} colSpan={3} />
-                  <td style={{ ...cell, textAlign: "right" }}>{totals.qty}</td>
-                  <td style={{ ...cell, textAlign: "right" }}>{fmt(totals.wt)}</td>
-                  <td style={{ ...cell, lineHeight: 1.6 }}>
-                    <div>Sub Total</div>
-                    <div>Charges</div>
-                    <div style={{ marginTop: 4 }}>TOTAL</div>
-                  </td>
-                  <td style={{ ...cell, textAlign: "right", lineHeight: 1.6 }}>
-                    <div>{fmt(totals.amount)}</div>
-                    <div>&nbsp;</div>
-                    <div style={{ marginTop: 4 }}>{fmt(totals.amount)}</div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div style={{ marginTop: 20 }}>
-              <span>Signature:</span>
-              <span
-                style={{
-                  display: "inline-block",
-                  borderBottom: "1px solid #000",
-                  width: 260,
-                  marginLeft: 8
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 18,
-                fontSize: 11,
-                gap: 12
-              }}
-            >
-              <span>{company.companyFooter || "Powered by SoftOnCloud"}</span>
-              <span>1</span>
-            </div>
+            <MixPurPrintUsaFormat
+              data={data}
+              items={items}
+              totals={totals}
+              company={company}
+              logoUrl={logoUrl}
+              heading="GENERAL PURCHASE NOTE"
+              variant="note"
+            />
           </div>
         </Container>
 
         <style>{`
+          .page-break { page-break-after: always; }
+          .mix-pur-print-sheet {
+            font-family: Verdana, Arial, sans-serif;
+          }
           @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: Letter portrait; margin: 10mm; }
             html, body {
               background: #fff !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
             body * { visibility: hidden !important; }
-            #purchase-print-area,
-            #purchase-print-area * {
+            #mix-pur-print-area,
+            #mix-pur-print-area * {
               visibility: visible !important;
             }
-            #purchase-print-area {
+            #mix-pur-print-area {
               position: absolute !important;
               left: 0 !important;
               top: 0 !important;
@@ -331,7 +189,7 @@ const MixPurchasePrintView = () => {
             }
           }
           @media (max-width: 767px) {
-            .purchase-print-sheet {
+            .mix-pur-print-sheet {
               overflow-x: auto !important;
               display: block !important;
             }

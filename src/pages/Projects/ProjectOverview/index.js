@@ -4,7 +4,7 @@ import Section from './Section';
 
 
 const ProjectOverview = () => {
-    document.title="Project Overview | Velzon - React Admin & Dashboard Template";
+    document.title="Project Overview | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <div className="page-content">

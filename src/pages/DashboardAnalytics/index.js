@@ -14,7 +14,7 @@ import TopPages from './TopPages';
 
 
 const DashboardAnalytics = () => {
-document.title="Analytics | Velzon - React Admin & Dashboard Template";
+document.title="Analytics | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <div className="page-content">

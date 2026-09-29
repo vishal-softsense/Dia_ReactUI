@@ -70,7 +70,7 @@ const UiCards = () => {
         }, 3000);
     };
     
-    document.title="Cards | Velzon - React Admin & Dashboard Template";
+    document.title="Cards | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

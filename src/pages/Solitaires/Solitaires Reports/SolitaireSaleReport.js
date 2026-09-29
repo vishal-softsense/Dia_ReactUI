@@ -27,6 +27,12 @@ import {
   getSolitaireSaleDropdowns,
   getSolitaireSaleReport
 } from "../../../helpers/fakebackend_helper";
+import {
+  getCachedReportCompany,
+  getReportCompanySettings,
+  REPORT_COMPANY_SETTINGS_EVENT,
+  resolveCompanyLogoUrl
+} from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
@@ -42,6 +48,268 @@ const getRowVal = (row, ...keys) => {
   }
   return "";
 };
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_MAP = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+};
+
+const parseReportDateParts = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const dmyMatch = text.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch) {
+    return { day: Number(dmyMatch[1]), month: Number(dmyMatch[2]), year: Number(dmyMatch[3]) };
+  }
+
+  const dmyMmm = text.match(/^(\d{1,2})[-/]([A-Za-z]{3,9})[-/](\d{4})/);
+  if (dmyMmm) {
+    const monthKey = dmyMmm[2].slice(0, 3).toLowerCase();
+    return {
+      day: Number(dmyMmm[1]),
+      month: MONTH_MAP[monthKey] || 1,
+      year: Number(dmyMmm[3])
+    };
+  }
+
+  const isoMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    return { day: Number(isoMatch[3]), month: Number(isoMatch[2]), year: Number(isoMatch[1]) };
+  }
+
+  return null;
+};
+
+const formatReportDisplayDate = (value) => {
+  if (value === null || value === undefined || value === "") return "-";
+  const parts = parseReportDateParts(value);
+  if (!parts) {
+    const text = String(value).trim();
+    return text || "-";
+  }
+  const d = String(parts.day).padStart(2, "0");
+  const mmm = MONTH_NAMES[parts.month - 1] || "Jan";
+  return `${d}-${mmm}-${parts.year}`;
+};
+
+const getRowDueDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date");
+
+const GROUPED_SUM_COLUMNS = ["Carats", "ReturnCarats", "Amount"];
+const GROUPED_DECIMALS = {
+  Carats: 3,
+  ReturnCarats: 2,
+  Amount: 2
+};
+
+const getGroupedNumeric = (row, key) => {
+  const aliases = {
+    Carats: ["Carats", "carats"],
+    ReturnCarats: ["ReturnCarats", "returnCarats", "RtnCarats", "rtnCarats"],
+    Amount: ["Amount", "amount"]
+  };
+  return Number(getRowVal(row, ...(aliases[key] || [key])) || 0);
+};
+
+const getGroupedInvNo = (row) => getRowVal(row, "Invno", "invno", "InvNo", "invNo");
+const getGroupedLotNo = (row) => getRowVal(row, "Item", "item");
+
+const buildGroupedReportSections = (rows, groupBy) => {
+  const grouped = {};
+
+  (rows || []).forEach((item) => {
+    const key =
+      groupBy === "PartyName"
+        ? String(getRowVal(item, "Party", "party") || "Unknown Party")
+        : String(getGroupedInvNo(item) || "Unknown Invoice");
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+
+  // Match MVC sale-report.js: client-side Sr No (not SP RowIndex).
+  // InvNo group → one Sr No per invoice (shared by all lines).
+  // PartyName group → one Sr No per distinct InvNo, global counter across parties.
+  let srNo = 1;
+  const sections = Object.keys(grouped).map((groupKey) => {
+    const groupRows = grouped[groupKey];
+    const first = groupRows[0];
+    const subtotal = {};
+    GROUPED_SUM_COLUMNS.forEach((c) => {
+      subtotal[c] = 0;
+    });
+    groupRows.forEach((item) => {
+      GROUPED_SUM_COLUMNS.forEach((c) => {
+        subtotal[c] += getGroupedNumeric(item, c);
+      });
+    });
+
+    let rowsWithSrNo;
+    if (groupBy === "PartyName") {
+      const invSrMap = {};
+      rowsWithSrNo = groupRows.map((item) => {
+        const invKey = String(getGroupedInvNo(item) || "");
+        if (!(invKey in invSrMap)) {
+          invSrMap[invKey] = srNo++;
+        }
+        return { ...item, _srNo: invSrMap[invKey] };
+      });
+    } else {
+      const currentSrNo = srNo++;
+      rowsWithSrNo = groupRows.map((item) => ({ ...item, _srNo: currentSrNo }));
+    }
+
+    return { groupKey, first, rows: rowsWithSrNo, subtotal };
+  });
+
+  const grandTotal = {};
+  GROUPED_SUM_COLUMNS.forEach((c) => {
+    grandTotal[c] = 0;
+  });
+  sections.forEach((section) => {
+    GROUPED_SUM_COLUMNS.forEach((c) => {
+      grandTotal[c] += section.subtotal[c];
+    });
+  });
+
+  return { sections, grandTotal };
+};
+
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const GROUPED_PRINT_STYLES = `
+    @page {
+        size: A4 landscape;
+        margin: 2mm;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+        font-family: Arial, sans-serif;
+        font-size: 13.5px;
+        color: #000;
+        padding: 0;
+        margin: 0;
+    }
+    #header {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        max-width: 270mm;
+        width: 100%;
+        margin: 0 auto 8px auto;
+    }
+    #header .company-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        max-width: 70%;
+    }
+    #header img {
+        max-height: 90px;
+        width: 96px;
+        object-fit: contain;
+    }
+    #header .company-text {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    #header .report-title {
+        text-align: right;
+        font-size: 20px;
+        font-weight: 700;
+        min-width: 180px;
+    }
+    #report-date-range {
+        font-size: 12px;
+        color: #555;
+        margin-top: 4px;
+        text-align: right;
+    }
+    #dynamic-solitaire-sale-report-table {
+        border-collapse: collapse;
+        table-layout: fixed;
+        width: 100%;
+        max-width: 270mm;
+        margin: 16px auto 0 auto;
+    }
+    #dynamic-solitaire-sale-report-table th,
+    #dynamic-solitaire-sale-report-table td {
+        padding: 2px;
+        font-size: 10px;
+        border: 1px solid #000;
+        vertical-align: middle;
+        word-break: break-word;
+        white-space: normal;
+    }
+    #dynamic-solitaire-sale-report-table thead th {
+        background: #f2f2f2;
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    /* Match MVC print widths (View omitted): Sr No → Amount */
+    #dynamic-solitaire-sale-report-table col:nth-child(1) { width: 10%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(2) { width: 10%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(3) { width: 22%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(4) { width: 12%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(5) { width: 12%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(6) { width: 15%; }
+    #dynamic-solitaire-sale-report-table col:nth-child(7) { width: 15%; }
+    #dynamic-solitaire-sale-report-table th:nth-child(n+4),
+    #dynamic-solitaire-sale-report-table td.col-num {
+        text-align: right !important;
+    }
+    #dynamic-solitaire-sale-report-table tbody td.col-text {
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #dynamic-solitaire-sale-report-table tbody td.col-num {
+        white-space: nowrap;
+        word-break: keep-all;
+    }
+    #dynamic-solitaire-sale-report-table .invoice-info td {
+        background: #f5f5f5;
+        font-weight: 600;
+        text-align: left !important;
+        padding: 6px 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #dynamic-solitaire-sale-report-table .subtotal td,
+    #dynamic-solitaire-sale-report-table .grand-total td {
+        font-weight: 700;
+    }
+    #dynamic-solitaire-sale-report-table .subtotal td.col-label,
+    #dynamic-solitaire-sale-report-table .grand-total td.col-label {
+        text-align: left !important;
+        white-space: nowrap;
+    }
+    #dynamic-solitaire-sale-report-table .subtotal td.col-num,
+    #dynamic-solitaire-sale-report-table .grand-total td.col-num {
+        text-align: right !important;
+        white-space: nowrap;
+        word-break: keep-all;
+    }
+    #cpny-footer {
+        max-width: 270mm;
+        width: 100%;
+        margin: 20px auto 0 auto;
+        font-size: 12px;
+    }
+`;
+
+const calcGroupedAvgRate = (subtotal) =>
+  subtotal.Carats > 0 ? subtotal.Amount / subtotal.Carats : 0;
 
 const getTableTotals = (table) => {
   const rows = table.getFilteredRowModel().rows.map((r) => r.original);
@@ -93,7 +361,9 @@ const getAgGrandTotalsFromRows = (rows) => {
 const SolitaireSaleReport = () => {
   const { t } = useTranslation();
 
-  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
+  const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({
+    includePrintDates: true
+  });
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,6 +371,7 @@ const SolitaireSaleReport = () => {
   const [reportMode, setReportMode] = useState("standard");
 
   const [dropdownData, setDropdownData] = useState({});
+  const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
   const [expandedGroups, setExpandedGroups] = useState(() => new Set());
   const [reportRows, setReportRows] = useState([]);
 
@@ -132,8 +403,20 @@ const SolitaireSaleReport = () => {
     natts: [],
     mines: [],
     productType: [],
-    sieve: []
+    sieve: [],
+    fromRChkBox: false,
+    rDate: fromDate,
+    rToDate: toDate,
+    groupBy: "InvNo"
   });
+
+  const groupByOptions = useMemo(
+    () => [
+      { value: "InvNo", label: t("Group by InvNo") },
+      { value: "PartyName", label: t("Group by PartyName") }
+    ],
+    [t]
+  );
 
   const customStyles = useMemo(
     () => ({
@@ -238,6 +521,23 @@ const SolitaireSaleReport = () => {
   }, [t]);
 
   useEffect(() => {
+    const loadCompanySettings = async () => {
+      const company = await getReportCompanySettings({ forceRefresh: true });
+      setCompanyInfo(company);
+    };
+    const handleCompanyRefresh = () => setCompanyInfo(getCachedReportCompany());
+    loadCompanySettings();
+    window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, handleCompanyRefresh);
+    window.addEventListener("companyNameUpdated", handleCompanyRefresh);
+    window.addEventListener("companyLogoUpdated", handleCompanyRefresh);
+    return () => {
+      window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, handleCompanyRefresh);
+      window.removeEventListener("companyNameUpdated", handleCompanyRefresh);
+      window.removeEventListener("companyLogoUpdated", handleCompanyRefresh);
+    };
+  }, []);
+
+  useEffect(() => {
     setFilters((prev) => mergeDates(prev));
   }, [fromDate, toDate, mergeDates]);
 
@@ -277,7 +577,11 @@ const SolitaireSaleReport = () => {
       natts: [],
       mines: [],
       productType: [],
-      sieve: []
+      sieve: [],
+      fromRChkBox: false,
+      rDate: fromDate,
+      rToDate: toDate,
+      groupBy: "InvNo"
     }),
     []
   );
@@ -304,6 +608,9 @@ const SolitaireSaleReport = () => {
     ExpParty: filters.expParty || null,
     Broker: filters.broker || null,
     PurRtn: filters.purRtn,
+    FromRChkBox: filters.fromRChkBox,
+    RDate: filters.rDate || null,
+    RToDate: filters.rToDate || null,
     LotNo: filters.lotNo || null,
     Shape: filters.shape,
     Color: filters.color,
@@ -348,6 +655,139 @@ const SolitaireSaleReport = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGroupedReport = () => handleReport("grouped");
+
+  const groupedReportData = useMemo(
+    () => buildGroupedReportSections(reportRows, filters.groupBy || "InvNo"),
+    [reportRows, filters.groupBy]
+  );
+
+  const companyLogoUrl = useMemo(() => resolveCompanyLogoUrl(companyInfo?.companyLogo), [companyInfo?.companyLogo]);
+
+  const handlePrintGroupedReport = () => {
+    const { sections, grandTotal } = groupedReportData;
+    if (!sections.length) return;
+
+    const logoHtml = companyLogoUrl
+      ? `<img src="${escapeHtml(companyLogoUrl)}" alt="Company Logo" />`
+      : "";
+
+    const headerHtml = `
+            <div id="header">
+                <div class="company-block">
+                    ${logoHtml}
+                    <div class="company-text">
+                        <div><strong>${escapeHtml(companyInfo?.companyName)}</strong></div>
+                        <div>${escapeHtml(companyInfo?.companyAddress)}</div>
+                        ${companyInfo?.companyAddress1 ? `<div>${escapeHtml(companyInfo.companyAddress1)}</div>` : ""}
+                        ${companyInfo?.companyAddress2 ? `<div>${escapeHtml(companyInfo.companyAddress2)}</div>` : ""}
+                        ${companyInfo?.companyPhone ? `<div><strong>${escapeHtml(t("Tel"))}:</strong> ${escapeHtml(companyInfo.companyPhone)}</div>` : ""}
+                        ${companyInfo?.companyEmail ? `<div><strong>${escapeHtml(t("Email"))}:</strong> ${escapeHtml(companyInfo.companyEmail)}</div>` : ""}
+                    </div>
+                </div>
+                <div>
+                    <div class="report-title">${escapeHtml(t("Sale Report"))}</div>
+                    <div id="report-date-range">
+                        <div><strong>${escapeHtml(t("From"))}:</strong> ${escapeHtml(filters.fromDate)}</div>
+                        <div><strong>${escapeHtml(t("To"))}:</strong> ${escapeHtml(filters.toDate)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+    let bodyRows = "";
+    sections.forEach((section) => {
+      const infoText =
+        filters.groupBy === "PartyName"
+          ? `<strong>${escapeHtml(t("Party"))}:</strong> ${escapeHtml(section.groupKey)} &nbsp;|&nbsp; <strong>${escapeHtml(t("Date"))}:</strong> ${escapeHtml(formatReportDisplayDate(getRowDueDateRaw(section.first)))}`
+          : `<strong>${escapeHtml(t("Party"))}:</strong> ${escapeHtml(getRowVal(section.first, "Party", "party"))} &nbsp;|&nbsp; <strong>${escapeHtml(t("Inv No"))}:</strong> ${escapeHtml(section.groupKey)} &nbsp;|&nbsp; <strong>${escapeHtml(t("Date"))}:</strong> ${escapeHtml(formatReportDisplayDate(getRowDueDateRaw(section.first)))}`;
+
+      bodyRows += `<tr class="invoice-info"><td colspan="7">${infoText}</td></tr>`;
+
+      section.rows.forEach((row) => {
+        bodyRows += `
+                    <tr>
+                        <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
+                        <td class="col-text">${escapeHtml(getGroupedInvNo(row))}</td>
+                        <td class="col-text">${escapeHtml(getGroupedLotNo(row))}</td>
+                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
+                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "ReturnCarats"), GROUPED_DECIMALS.ReturnCarats))}</td>
+                        <td class="col-num">${escapeHtml(fmtFixed(getRowVal(row, "Rate", "rate"), 2))}</td>
+                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Amount"), GROUPED_DECIMALS.Amount))}</td>
+                    </tr>
+                `;
+      });
+
+      // MVC print (View removed): colspan covers Sr No + InvNo, then LotNo + numeric cols
+      bodyRows += `
+                <tr class="subtotal">
+                    <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
+                    <td></td>
+                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(section.subtotal), 2))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
+                </tr>
+            `;
+    });
+
+    bodyRows += `
+            <tr class="grand-total">
+                <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
+                <td></td>
+                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(grandTotal), 2))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
+            </tr>
+        `;
+
+    const tableHtml = `
+            <table id="dynamic-solitaire-sale-report-table">
+                <colgroup>
+                    <col /><col /><col /><col /><col /><col /><col />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Sr No</th>
+                        <th>InvNo</th>
+                        <th>${escapeHtml(t("LotNo"))}</th>
+                        <th>${escapeHtml(t("Carats"))}</th>
+                        <th>${escapeHtml(t("Return"))}</th>
+                        <th>${escapeHtml(t("Rate"))}</th>
+                        <th>${escapeHtml(t("Amount"))}</th>
+                    </tr>
+                </thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        `;
+
+    const footerHtml = companyInfo?.companyFooter
+      ? `<div id="cpny-footer">${escapeHtml(companyInfo.companyFooter)}</div>`
+      : `<div id="cpny-footer"></div>`;
+
+    const printWindow = window.open("", "", "height=1000,width=1200");
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(t("Sale Report"))}</title>`);
+    printWindow.document.write(`<style>${GROUPED_PRINT_STYLES}</style>`);
+    printWindow.document.write("</head><body>");
+    printWindow.document.write(headerHtml);
+    printWindow.document.write(tableHtml);
+    printWindow.document.write(footerHtml);
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  const renderGroupedValue = (row, key) => {
+    if (GROUPED_DECIMALS[key] !== undefined) {
+      return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+    }
+    return dashText(getRowVal(row, "Rate", "rate"));
   };
 
   const agGrandTotals = useMemo(() => getAgGrandTotalsFromRows(reportRows), [reportRows]);
@@ -1157,6 +1597,9 @@ const SolitaireSaleReport = () => {
                   <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleReport("ag")} disabled={loading}>
                     {loading ? t("Loading...") : t("ReportAG")}
                   </Button>
+                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleGroupedReport} disabled={loading}>
+                    {loading ? t("Loading...") : t("View Grouped Invoices")}
+                  </Button>
                   <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={handleClear} disabled={loading}>
                     {t("Clear")}
                   </Button>
@@ -1176,16 +1619,28 @@ const SolitaireSaleReport = () => {
                   >
                     {t("New Search")}
                   </Button>
-
-                  <UncontrolledDropdown>
-                    <DropdownToggle color="success" className="btn-sm rounded-2 px-3 py-1" caret disabled={reportRows.length === 0}>
-                      {t("Excel")} / {t("Print")}
-                    </DropdownToggle>
-                    <DropdownMenu>
-                      <DropdownItem onClick={handleExcel}>{t("Direct Print")}</DropdownItem>
-                      <DropdownItem onClick={handleExcel}>{t("Sale Report Print")}</DropdownItem>
-                    </DropdownMenu>
-                  </UncontrolledDropdown>
+                  {reportMode === "grouped" && (
+                    <Button
+                      color="primary"
+                      className="btn-sm rounded-2 px-3 py-1"
+                      onClick={handlePrintGroupedReport}
+                      disabled={reportRows.length === 0}
+                    >
+                      <i className="ri-printer-line align-middle me-1" />
+                      {t("print")}
+                    </Button>
+                  )}
+                  {reportMode !== "grouped" && (
+                    <UncontrolledDropdown>
+                      <DropdownToggle color="success" className="btn-sm rounded-2 px-3 py-1" caret disabled={reportRows.length === 0}>
+                        {t("Excel")} / {t("Print")}
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem onClick={handleExcel}>{t("Direct Print")}</DropdownItem>
+                        <DropdownItem onClick={handleExcel}>{t("Sale Report Print")}</DropdownItem>
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
+                  )}
                 </>
               )}
             </div>
@@ -1642,11 +2097,62 @@ const SolitaireSaleReport = () => {
                     </FormGroup>
                   </Col>
                 </Row>
+
+                {/* MVC SaleReport: Print Date / Print To Date / Group By */}
+                <Row className="g-2 mt-2">
+                  <Col sm={2}>
+                    <FormGroup className="mb-0">
+                      <div className="d-flex align-items-center gap-1 mb-1">
+                        <input
+                          type="checkbox"
+                          id="fromRChkBox"
+                          checked={filters.fromRChkBox}
+                          onChange={(e) => setFilters((prev) => ({ ...prev, fromRChkBox: e.target.checked }))}
+                        />
+                        <Label htmlFor="fromRChkBox" className="fw-medium mb-0 small">
+                          {t("Print Date")}
+                        </Label>
+                      </div>
+                      <Input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ height: "35px" }}
+                        value={filters.rDate}
+                        onChange={(e) => setFilters((prev) => ({ ...prev, rDate: e.target.value }))}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col sm={2}>
+                    <FormGroup className="mb-0">
+                      <Label className="fw-medium mb-1 small">{t("Print To Date")}</Label>
+                      <Input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ height: "35px" }}
+                        value={filters.rToDate}
+                        onChange={(e) => setFilters((prev) => ({ ...prev, rToDate: e.target.value }))}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col sm={2}>
+                    <FormGroup className="mb-0">
+                      <Label className="fw-medium mb-1 small">{t("Group By")}</Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        styles={customStyles}
+                        options={groupByOptions}
+                        value={groupByOptions.find((o) => o.value === filters.groupBy) || groupByOptions[0]}
+                        onChange={(sel) => setFilters((prev) => ({ ...prev, groupBy: sel?.value || "InvNo" }))}
+                        placeholder={t("Group By")}
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
           )}
 
-          {hasSearched && (
+          {hasSearched && reportMode !== "grouped" && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody>
                 <div className="d-flex justify-content-end gap-4 mb-3 small fw-semibold">
@@ -1674,6 +2180,203 @@ const SolitaireSaleReport = () => {
                     renderSubRows={renderSubRows}
                   />
                 )}
+              </CardBody>
+            </Card>
+          )}
+
+          {hasSearched && reportMode === "grouped" && (
+            <Card className="shadow-lg border-0 rounded-3 mb-4">
+              <CardBody>
+                <style>{`
+                    #dynamic-solitaire-sale-report-table th {
+                        white-space: nowrap;
+                    }
+                    #dynamic-solitaire-sale-report-table .invoice-info td {
+                        background: #f5f5f5;
+                        font-weight: 600;
+                    }
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table th,
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table td {
+                        border-color: rgba(255, 255, 255, 0.15) !important;
+                        color: var(--vz-body-color, #e9ecef);
+                    }
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table thead th {
+                        background: #262a2f !important;
+                        color: var(--vz-body-color, #e9ecef) !important;
+                    }
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table .invoice-info td {
+                        background: #2c3238 !important;
+                        color: var(--vz-body-color, #e9ecef) !important;
+                    }
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table .subtotal td,
+                    [data-bs-theme="dark"] #dynamic-solitaire-sale-report-table .grand-total td {
+                        background: #262a2f !important;
+                        color: var(--vz-body-color, #e9ecef) !important;
+                    }
+                `}</style>
+                <div className="mb-3">
+                  <div className="row align-items-start">
+                    <div className="col-sm-10 d-flex">
+                      {companyLogoUrl ? (
+                        <div className="pe-3 pt-2">
+                          <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                        </div>
+                      ) : null}
+                      <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
+                        <div className="fw-bold">{companyInfo?.companyName}</div>
+                        <div>{companyInfo?.companyAddress}</div>
+                        {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
+                        {companyInfo?.companyAddress2 ? <div>{companyInfo.companyAddress2}</div> : null}
+                        {companyInfo?.companyPhone ? (
+                          <div>
+                            <strong>{t("Tel")}:</strong> {companyInfo.companyPhone}
+                          </div>
+                        ) : null}
+                        {companyInfo?.companyEmail ? (
+                          <div>
+                            <strong>{t("Email")}:</strong> {companyInfo.companyEmail}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="col-sm-2 text-end pt-2">
+                      <div className="fs-5 fw-bold">{t("Sale Report")}</div>
+                      <div className="small text-muted">
+                        <div>
+                          <strong>{t("From")}:</strong> {filters.fromDate}
+                        </div>
+                        <div>
+                          <strong>{t("To")}:</strong> {filters.toDate}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {groupedReportData.sections.length === 0 ? (
+                  <div className="text-center py-4 text-muted">{t("No data available.")}</div>
+                ) : (
+                  <div className="table-responsive sol-sale-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                    <table className="table table-bordered align-middle mb-0" id="dynamic-solitaire-sale-report-table" style={{ tableLayout: "fixed", minWidth: "860px" }}>
+                      <colgroup>
+                        <col style={{ width: "48px" }} />
+                        <col style={{ width: "56px" }} />
+                        <col style={{ width: "70px" }} />
+                        <col style={{ width: "110px" }} />
+                        <col style={{ width: "100px" }} />
+                        <col style={{ width: "90px" }} />
+                        <col style={{ width: "90px" }} />
+                        <col style={{ width: "100px" }} />
+                      </colgroup>
+                      <thead>
+                        <tr className="table-light text-center">
+                          <th>{t("View")}</th>
+                          <th>Sr No</th>
+                          <th>InvNo</th>
+                          <th>{t("LotNo")}</th>
+                          <th className="text-end">{t("Carats")}</th>
+                          <th className="text-end">{t("Return")}</th>
+                          <th className="text-end">{t("Rate")}</th>
+                          <th className="text-end">{t("Amount")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groupedReportData.sections.map((section) => (
+                          <React.Fragment key={section.groupKey}>
+                            <tr className="invoice-info">
+                              <td colSpan={8} className="text-start">
+                                {filters.groupBy === "PartyName" ? (
+                                  <>
+                                    <strong>{t("Party")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
+                                    <strong>{t("Date")}:</strong>{" "}
+                                    {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
+                                  </>
+                                ) : (
+                                  <>
+                                    <strong>{t("Party")}:</strong> {dashText(getRowVal(section.first, "Party", "party"))} &nbsp;|&nbsp;
+                                    <strong>{t("Inv No")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
+                                    <strong>{t("Date")}:</strong>{" "}
+                                    {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                            {section.rows.map((row, rowIndex) => {
+                              const code = getRowVal(row, "Code", "code");
+                              const viewUrl = filters.purRtn
+                                ? `/salereturn/edit-salereturn?Id=${code}&Mode=view`
+                                : `/sale/edit-sale?Id=${code}&Mode=view`;
+                              return (
+                                <tr key={`${section.groupKey}-${rowIndex}`}>
+                                  <td className="text-center">
+                                    {code ? (
+                                      <div className="report-action">
+                                        <a href={viewUrl} target="_blank" rel="noreferrer">
+                                          <i className="bx bx-show-alt" />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      ""
+                                    )}
+                                  </td>
+                                  <td className="text-center">{row._srNo ?? ""}</td>
+                                  <td className="text-center">{dashText(getGroupedInvNo(row))}</td>
+                                  <td className="text-center">{dashText(getGroupedLotNo(row))}</td>
+                                  <td className="text-end">{renderGroupedValue(row, "Carats")}</td>
+                                  <td className="text-end">{renderGroupedValue(row, "ReturnCarats")}</td>
+                                  <td className="text-end">{fmtFixed(getRowVal(row, "Rate", "rate"), 2)}</td>
+                                  <td className="text-end">{renderGroupedValue(row, "Amount")}</td>
+                                </tr>
+                              );
+                            })}
+                            <tr className="subtotal">
+                              <td />
+                              <td colSpan={2} className="text-start ps-5">
+                                <strong>{t("Total")}</strong>
+                              </td>
+                              <td />
+                              <td className="text-end">
+                                <strong>{fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                              </td>
+                              <td className="text-end">
+                                <strong>{fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                              </td>
+                              <td className="text-end">
+                                <strong>{fmtFixed(calcGroupedAvgRate(section.subtotal), 2)}</strong>
+                              </td>
+                              <td className="text-end">
+                                <strong>{fmtFixed(section.subtotal.Amount, GROUPED_DECIMALS.Amount)}</strong>
+                              </td>
+                            </tr>
+                          </React.Fragment>
+                        ))}
+                        <tr className="grand-total">
+                          <td />
+                          <td colSpan={2} className="text-start ps-5">
+                            <strong>{t("Grand Total")}</strong>
+                          </td>
+                          <td />
+                          <td className="text-end">
+                            <strong>{fmtFixed(groupedReportData.grandTotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                          </td>
+                          <td className="text-end">
+                            <strong>{fmtFixed(groupedReportData.grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                          </td>
+                          <td className="text-end">
+                            <strong>{fmtFixed(calcGroupedAvgRate(groupedReportData.grandTotal), 2)}</strong>
+                          </td>
+                          <td className="text-end">
+                            <strong>{fmtFixed(groupedReportData.grandTotal.Amount, GROUPED_DECIMALS.Amount)}</strong>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {companyInfo?.companyFooter ? (
+                  <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
+                ) : null}
               </CardBody>
             </Card>
           )}

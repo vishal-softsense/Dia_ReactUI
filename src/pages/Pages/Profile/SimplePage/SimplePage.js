@@ -29,7 +29,7 @@ import smallImage9 from '../../../../assets/images/small/img-9.jpg';
 import { projects, documents } from '../../../../common/data';
 
 const SimplePage = () => {
-    document.title = "Profile | Velzon - React Admin & Dashboard Template";
+    document.title = "Profile | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     SwiperCore.use([Autoplay]);
 

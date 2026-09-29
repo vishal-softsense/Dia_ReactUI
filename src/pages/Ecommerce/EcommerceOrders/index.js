@@ -505,7 +505,7 @@ const EcommerceOrders = () => {
     return updateTime;
   };
 
-  document.title = "Orders | Velzon - React Admin & Dashboard Template";
+  document.title = "Orders | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <div className="page-content">
       <ExportCSVModal

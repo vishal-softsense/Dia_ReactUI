@@ -9,7 +9,7 @@ import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 
 const BasicSignIn = () => {
-document.title="Basic SignIn | Velzon - React Admin & Dashboard Template";
+document.title="Basic SignIn | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <ParticlesAuth>

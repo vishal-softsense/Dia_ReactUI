@@ -7,11 +7,11 @@ import {
   Button, Col, Row, Spinner, Container
 } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import Select from "react-select";
 import {
   getMountingStockDetail,
   getJewPurity,
   getPureRatio,
-  getJewSettingType,
   saveMountingStock,
   deleteMountingStock,
   getMountingStockDropdown,
@@ -25,6 +25,7 @@ import {
   computeChargeTotals,
   computeMakingCharges,
   floorPurityRatio,
+  MAKING_TYPE_OPTIONS,
   mapDiamondListToRows,
   summarizeTableRows,
 } from "./jewStockFormUtils";
@@ -99,6 +100,10 @@ export default function JewStockMasterEdit() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const id = searchParams.get("id") || searchParams.get("ID");
+  // MVC EditStockMaster / EditMountingStock: Mode=view disables inputs & hides submit
+  const isView =
+    String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
+  const readOnly = isView;
 
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -161,7 +166,6 @@ export default function JewStockMasterEdit() {
   const [purityOptions, setPurityOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
-  const [settingTypeOptions, setSettingTypeOptions] = useState([]);
   const [shapeOptions, setShapeOptions] = useState([]);
   const [sizeOptions, setSizeOptions] = useState([]);
   const [sieveOptions, setSieveOptions] = useState([]);
@@ -196,21 +200,6 @@ export default function JewStockMasterEdit() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadSettingType = async () => {
-      try {
-        const response = await getJewSettingType();
-        const { success, data, message } = unwrapApiResponse(response);
-        if (cancelled) return;
-        if (success && Array.isArray(data)) {
-          setSettingTypeOptions(data.map((v) => ({ value: v, label: v })));
-        } else {
-          toast.error(message || "Failed to load Making Type list.");
-        }
-      } catch (err) {
-        if (!cancelled) console.error(err);
-      }
-    };
-
     const loadAddMountingDropdowns = async () => {
       try {
         const response = await getAddMountingStockData();
@@ -241,10 +230,6 @@ export default function JewStockMasterEdit() {
         );
         setMetalTypeOptions(idOnlyOptions(data.JewMetalType ?? data.jewMetalType, "MetalID"));
         setColorOptions(idOnlyOptions(data.JewColor ?? data.jewColor, "JewColorID"));
-        const settingValues = data.JewSettingValue ?? data.jewSettingValue;
-        if (Array.isArray(settingValues) && settingValues.length > 0) {
-          setSettingTypeOptions(settingValues.map((v) => ({ value: v, label: v })));
-        }
         const basis = data.DecimalinInvoiceAmount ?? data.decimalinInvoiceAmount ?? "";
         if (basis) {
           setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
@@ -259,7 +244,7 @@ export default function JewStockMasterEdit() {
       }
     };
 
-    Promise.all([loadAddMountingDropdowns(), loadSettingType()]);
+    loadAddMountingDropdowns();
     return () => { cancelled = true; };
   }, []);
 
@@ -301,16 +286,71 @@ export default function JewStockMasterEdit() {
       .catch(() => { });
   }, [jewCategory, showMountingSection]);
 
-  // Restore Use Mounting selection after options load (MVC SavedMountingId / SavedMounting)
+  // Restore Use Mounting selection after options load (MVC LoadMountingStock + SavedMountingId / SavedMounting)
   useEffect(() => {
-    if (!mountOpts.length || !savedMountingName) return;
-    const byId = mountOpts.find((o) => String(o.value) === String(useMounting));
-    if (byId) return;
-    const byName = mountOpts.find(
-      (o) => o.label === savedMountingName || String(o.value) === String(savedMountingName)
+    if (!mountOpts.length) return;
+
+    // Already bound to a valid option value (JewCode ID)
+    if (useMounting && mountOpts.some((o) => String(o.value) === String(useMounting))) {
+      return;
+    }
+
+    const candidates = [useMounting, savedMountingName].filter(
+      (v) => v != null && String(v).trim() !== "" && String(v) !== "Use Mounting"
     );
-    if (byName) setUseMounting(byName.value);
-  }, [mountOpts, savedMountingName]);
+
+    for (const candidate of candidates) {
+      const match = mountOpts.find(
+        (o) =>
+          String(o.value) === String(candidate) ||
+          o.label === candidate ||
+          String(o.label).toLowerCase() === String(candidate).toLowerCase()
+      );
+      if (match) {
+        setUseMounting(String(match.value));
+        if (!savedMountingName || savedMountingName === "Use Mounting") {
+          setSavedMountingName(match.label);
+        }
+        return;
+      }
+    }
+  }, [mountOpts, savedMountingName, useMounting]);
+
+  // Options + selected value for react-select (match by ID or saved name like MVC)
+  const mountingSelectOptions = useMemo(() => {
+    const opts = [...mountOpts];
+    const label =
+      savedMountingName && savedMountingName !== "Use Mounting" ? savedMountingName : "";
+    const val = useMounting || label;
+    if (
+      val &&
+      !opts.some(
+        (o) =>
+          String(o.value) === String(val) ||
+          (label && o.label === label) ||
+          o.label === val
+      )
+    ) {
+      opts.unshift({ value: String(val), label: label || String(val) });
+    }
+    return opts;
+  }, [mountOpts, useMounting, savedMountingName]);
+
+  const mountingSelectValue = useMemo(() => {
+    if (!useMounting && !(savedMountingName && savedMountingName !== "Use Mounting")) {
+      return null;
+    }
+    return (
+      mountingSelectOptions.find((o) => String(o.value) === String(useMounting)) ||
+      mountingSelectOptions.find(
+        (o) =>
+          o.label === savedMountingName ||
+          o.label === useMounting ||
+          String(o.value) === String(savedMountingName)
+      ) ||
+      null
+    );
+  }, [mountingSelectOptions, useMounting, savedMountingName]);
 
   // MVC: Use Mounting change → get-all-Mounting-details fill
   const applyMountingDetail = useCallback(async (mountingJewCode) => {
@@ -429,7 +469,9 @@ export default function JewStockMasterEdit() {
 
   const handleUseMountingChange = (selectedId) => {
     setUseMounting(selectedId);
-    setSavedMountingName(mountOpts.find((o) => String(o.value) === String(selectedId))?.label || "");
+    const label =
+      mountingSelectOptions.find((o) => String(o.value) === String(selectedId))?.label || "";
+    setSavedMountingName(label);
     applyMountingDetail(selectedId);
   };
 
@@ -515,8 +557,11 @@ export default function JewStockMasterEdit() {
         setImageBinary(data.imageBinary || data.ImageBinary || null);
         const mountName = data.useMounting || data.UseMounting || "";
         const mountId = data.useMountingId || data.UseMountingId || "";
-        setSavedMountingName(mountName);
-        setUseMounting(mountId || mountName || "");
+        // MVC hidden fields: SavedMounting / SavedMountingId — name is what SP stores in UseMounting
+        const normalizedName =
+          mountName && mountName !== "Use Mounting" ? mountName : "";
+        setSavedMountingName(normalizedName);
+        setUseMounting(mountId || normalizedName || "");
         setDiamondQty(String(data.totalDiamondQty ?? data.TotalDiamondQty ?? ""));
         setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
         setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
@@ -605,11 +650,11 @@ export default function JewStockMasterEdit() {
   }, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
-    const mc = computeMakingCharges(makingType, makingRate, grossWeight, totalPcs, metalAmount);
+    const mc = computeMakingCharges(makingType, makingRate, grossWeight);
     const val = mc.toFixed(2);
     setOriginalMakingCharges(val);
     setMakingCharges(val);
-  }, [makingType, makingRate, grossWeight, totalPcs, metalAmount]);
+  }, [makingType, makingRate, grossWeight]);
 
   useEffect(() => {
     const hc = parseFloat(handlingCarat) || 0;
@@ -988,45 +1033,53 @@ export default function JewStockMasterEdit() {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Edit Mounting Stock")} pageTitle={t("Stock & Account")} />
+          <BreadCrumb
+            title={isView ? t("View Jewellery Stock") : t("Edit Mounting Stock")}
+            pageTitle={t("Stock & Account")}
+          />
 
           <Card className="shadow-lg border-0 rounded-3 overflow-hidden mb-3">
             <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
               <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
-                <i className="ri-edit-line fs-20 text-primary"></i>
-                {t("Edit Mounting Stock")}
+                <i className={`${isView ? "ri-eye-line" : "ri-edit-line"} fs-20 text-primary`}></i>
+                {isView ? t("View Jewellery Stock") : t("Edit Mounting Stock")}
               </h5>
               <div className="d-flex gap-2">
                 <Button
                   color="light"
-                  onClick={() => navigate("/master/jewelleryM-stock-list")}
+                  onClick={() => navigate(-1)}
                   className="rounded-3 d-inline-flex align-items-center gap-1"
                 >
                   <i className="ri-arrow-left-line align-bottom"></i> {t("Back")}
                 </Button>
-                <Button
-                  color="danger"
-                  onClick={() => setDeleteModal(true)}
-                  className="rounded-3 d-inline-flex align-items-center gap-1"
-                >
-                  <i className="ri-delete-bin-line align-bottom"></i> {t("Delete")}
-                </Button>
-                <Button
-                  color="primary"
-                  onClick={handleSubmit}
-                  disabled={submitLoading}
-                  className="rounded-3 d-inline-flex align-items-center gap-1"
-                >
-                  {submitLoading ? (
-                    <><Spinner size="sm" /> {t("Saving...")}</>
-                  ) : (
-                    <><i className="ri-save-line align-bottom"></i> {t("Update")}</>
-                  )}
-                </Button>
+                {!readOnly && (
+                  <>
+                    <Button
+                      color="danger"
+                      onClick={() => setDeleteModal(true)}
+                      className="rounded-3 d-inline-flex align-items-center gap-1"
+                    >
+                      <i className="ri-delete-bin-line align-bottom"></i> {t("Delete")}
+                    </Button>
+                    <Button
+                      color="primary"
+                      onClick={handleSubmit}
+                      disabled={submitLoading}
+                      className="rounded-3 d-inline-flex align-items-center gap-1"
+                    >
+                      {submitLoading ? (
+                        <><Spinner size="sm" /> {t("Saving...")}</>
+                      ) : (
+                        <><i className="ri-save-line align-bottom"></i> {t("Update")}</>
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </CardHeader>
           </Card>
 
+          <fieldset disabled={readOnly} className="border-0 m-0 p-0" style={{ minWidth: 0 }}>
           <Row className="mb-3 align-items-stretch">
             {/* ── COL 1 : Stock Details / Image ── */}
             <Col xl={4} lg={4} md={4} className="d-flex flex-column mb-3 mb-md-0">
@@ -1093,12 +1146,28 @@ export default function JewStockMasterEdit() {
                       </FieldRow>
                       {showMountingSection && (
                         <FieldRow label="Use Mounting">
-                          <select className={selectCls} value={useMounting} onChange={(e) => handleUseMountingChange(e.target.value)}>
-                            <option value="">Select Mounting Stock</option>
-                            {mountOpts.map((o) => (
-                              <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                          </select>
+                          {/* MVC Select2 (#UseMounting): searchable dropdown; show saved name on edit */}
+                          <Select
+                            classNamePrefix="react-select"
+                            placeholder="Select Lot No"
+                            isClearable
+                            isSearchable
+                            options={mountingSelectOptions}
+                            value={mountingSelectValue}
+                            onChange={(selected) => handleUseMountingChange(selected ? selected.value : "")}
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                minHeight: 31,
+                                fontSize: 13,
+                              }),
+                              menu: (base) => ({ ...base, zIndex: 20, fontSize: 13 }),
+                              option: (base) => ({ ...base, fontSize: 13 }),
+                              input: (base) => ({ ...base, margin: 0, padding: 0 }),
+                              valueContainer: (base) => ({ ...base, padding: "0 8px" }),
+                              indicatorsContainer: (base) => ({ ...base, height: 29 }),
+                            }}
+                          />
                         </FieldRow>
                       )}
                       <FieldRow label="Category">
@@ -1250,16 +1319,7 @@ export default function JewStockMasterEdit() {
                     <div className="d-flex gap-1">
                       <select className={selectCls} style={{ flex: 1 }} value={makingType} onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
-                        {(settingTypeOptions.length > 0
-                          ? settingTypeOptions
-                          : [
-                              { value: "Per Gm", label: "Per Gm" },
-                              { value: "Per Pcs", label: "Per Pcs" },
-                              { value: "Lumsum", label: "Lumsum" },
-                              { value: "Wastage", label: "Wastage" },
-                              { value: "Per%", label: "Per%" },
-                            ]
-                        ).map((o) => (
+                        {MAKING_TYPE_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
@@ -1565,6 +1625,7 @@ export default function JewStockMasterEdit() {
               </Row>
             </>
           )}
+          </fieldset>
         </Container>
       </div>
       <DeleteModal

@@ -217,7 +217,7 @@ const ParcelItemMasterAdd = () => {
                     <form onSubmit={handleSubmit}>
                         <Card>
                             <CardHeader className="d-flex align-items-center">
-                                <h5 className="card-title mb-0 flex-grow-1">{t("Parcel Item Details")}</h5>
+                                <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary">{t("Parcel Item Details")}</h5>
                                 <div className="d-flex gap-2">
                                     <Button color="light" type="button" onClick={() => navigate("/parcel/list-ParcelItemMaster")}>{t("Cancel")}</Button>
                                     <Button color="primary" type="submit" disabled={submitting}>

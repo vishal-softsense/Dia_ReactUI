@@ -7,7 +7,7 @@ import ParticlesAuth from "../ParticlesAuth";
 import { APP_LOGO as logoSm } from "../../../Components/constants/brandLogo";
 
 const BasicLogout = () => {
-    document.title = "Log Out | Velzon - React Admin & Dashboard Template";
+    document.title = "Log Out | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <ParticlesAuth>

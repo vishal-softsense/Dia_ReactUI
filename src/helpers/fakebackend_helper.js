@@ -620,6 +620,8 @@ export const getSolitairePurchaseConsignment = (payload) => api.create(url.SOLIT
 export const addSolitairePurchaseSingleLot = (payload) => api.create(url.SOLITAIRE_PURCHASE_ADD_SINGLE_LOT, payload);
 export const getSolitairePurchasePrintView = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_PRINT_VIEW}/${invNo}`);
 export const getSolitairePurchaseCurrentStatus = (invNo) => api.get(`${url.SOLITAIRE_PURCHASE_CURRENT_STATUS}/${invNo}`);
+export const getSolitairePurchaseRapRate = (items) =>
+  api.create(url.SOLITAIRE_PURCHASE_GET_RAP_RATE, { items: Array.isArray(items) ? items : [items] });
 
 // Mix Purchase (Parcel Transaction)
 export const getMixPurchaseList = () => api.get(url.MIX_PURCHASE_LIST);
@@ -642,6 +644,7 @@ export const getMixPurchaseLots = (searchby) => {
   const s = encodeURIComponent(searchby || "");
   return api.get(`${url.MIX_PURCHASE_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
+export const getMixPurchaseMixLotNoDI = () => api.get(url.MIX_PURCHASE_GET_MIX_LOT_NO_DI);
 
 // Mix Sale / MixForm (CSALE)
 export const getMixSaleList = () => api.get(url.MIX_SALE_LIST);
@@ -680,6 +683,7 @@ export const getMixConsignmentLots = (searchby) => {
   const s = encodeURIComponent(searchby || "");
   return api.get(`${url.MIX_CONSIGNMENT_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
+export const getMixConsignmentMixLotNoLM = () => api.get(url.MIX_CONSIGNMENT_GET_MIX_LOT_NO_LM);
 
 // Mix Consignment Return (Parcel Transaction)
 export const getMixConsignmentReturnPageData = () => api.get(url.MIX_CONSIGNMENT_RETURN_PAGE_DATA);
@@ -811,6 +815,51 @@ export const getLoanTakenDetail = (id) => api.get(`${url.LOAN_TAKEN_DETAIL}/${id
 export const addLoanTaken = (data) => api.create(url.LOAN_TAKEN_ADD, data);
 export const editLoanTaken = (data) => api.create(url.LOAN_TAKEN_EDIT, data);
 export const deleteLoanTaken = (id) => api.create(url.LOAN_TAKEN_DELETE, { id });
+
+// Journal Entry (MVC: /Payment/jvList)
+export const getJournalEntryList = () => api.get(url.JOURNAL_ENTRY_LIST);
+export const getJournalEntryPageData = () => api.get(url.JOURNAL_ENTRY_PAGE_DATA);
+export const getJournalEntryDetail = (id) => api.get(`${url.JOURNAL_ENTRY_DETAIL}/${id}`);
+export const addJournalEntry = (data) => api.create(url.JOURNAL_ENTRY_ADD, data);
+export const editJournalEntry = (data) => api.create(url.JOURNAL_ENTRY_EDIT, data);
+export const deleteJournalEntry = (id) => api.create(url.JOURNAL_ENTRY_DELETE, { id });
+
+// Income & Expense (MVC: /Payment/incomeexpenselist)
+export const getIncomeExpenseList = (transDate) =>
+  api.get(`${url.INCOME_EXPENSE_LIST}${transDate ? `?transDate=${encodeURIComponent(transDate)}` : ""}`);
+export const getIncomeExpenseFilter = (transDate) =>
+  api.get(`${url.INCOME_EXPENSE_FILTER}${transDate ? `?TransDate=${encodeURIComponent(transDate)}` : ""}`);
+export const getIncomeExpensePageData = () => api.get(url.INCOME_EXPENSE_PAGE_DATA);
+export const getIncomeExpenseDetail = (id) => api.get(`${url.INCOME_EXPENSE_DETAIL}/${id}`);
+export const addIncomeExpense = (data) => api.create(url.INCOME_EXPENSE_ADD, data);
+export const editIncomeExpense = (data) => api.create(url.INCOME_EXPENSE_EDIT, data);
+export const deleteIncomeExpense = (id) => api.create(url.INCOME_EXPENSE_DELETE, { id });
+
+// Payment & Receipt (MVC: /Payment/Paymentlist, PaymentView)
+export const getPaymentList = () => api.get(url.PAYMENT_LIST);
+export const getPaymentPageData = () => api.get(url.PAYMENT_PAGE_DATA);
+export const getPaymentJvEntries = (transDate) =>
+  api.get(`${url.PAYMENT_JV_ENTRIES}${transDate ? `?transDate=${encodeURIComponent(transDate)}` : ""}`);
+export const getPaymentPendingInv = (data) => api.create(url.PAYMENT_PENDING_INV, data);
+export const getPaymentDetail = (id) => api.get(`${url.PAYMENT_DETAIL}/${id}`);
+export const addPayment = (data) => api.create(url.PAYMENT_ADD, data);
+export const editPayment = (data) => api.create(url.PAYMENT_EDIT, data);
+export const getPaymentEditDetails = (gcode, adjustmentType = "Payment") =>
+  api.create(url.PAYMENT_EDIT_DETAILS, { gcode, adjustmentType });
+export const editPaymentJv = (data) => api.create(url.PAYMENT_EDIT_JV, data);
+export const deletePayment = (id) => api.create(url.PAYMENT_DELETE, { id });
+export const deletePaymentJv = (id) => api.create(url.PAYMENT_DELETE_JV, { id });
+
+// Payment & Receipt With ExDiff (MVC: /Payment/PayWithExDiffList)
+export const getPayWithExDiffList = () => api.get(url.PAY_WITH_EXDIFF_LIST);
+export const getPayWithExDiffPageData = () => api.get(url.PAY_WITH_EXDIFF_PAGE_DATA);
+export const getPayWithExDiffPendingInv = (data) => api.create(url.PAY_WITH_EXDIFF_PENDING_INV, data);
+export const getPayWithExDiffDetail = (id) => api.get(`${url.PAY_WITH_EXDIFF_DETAIL}/${id}`);
+export const addPayWithExDiff = (data) => api.create(url.PAY_WITH_EXDIFF_ADD, data);
+export const getPayWithExDiffEditDetails = (gcode, adjustmentType = "Payment") =>
+  api.create(url.PAY_WITH_EXDIFF_EDIT_DETAILS, { gcode, adjustmentType });
+export const editPayWithExDiff = (data) => api.create(url.PAY_WITH_EXDIFF_EDIT, data);
+export const deletePayWithExDiff = (id) => api.create(url.PAY_WITH_EXDIFF_DELETE, { id });
 
 export const getSolitairePartyHoldReturnPageData = () => api.get(url.SOLITAIRE_PARTY_HOLD_RETURN_PAGE_DATA);
 export const getSolitairePartyHoldReturnList = (filter) => api.create(url.SOLITAIRE_PARTY_HOLD_RETURN_LIST, filter);

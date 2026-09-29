@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "DiaJewel",
+  "name": "DiaJewel - Diamond & Jewellery Cloud Business App",
+  "description": "Manage Inventory & Accounts",
   "icons": [
     {
       "src": "favicon.ico",

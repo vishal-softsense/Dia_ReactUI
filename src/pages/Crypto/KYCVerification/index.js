@@ -4,7 +4,7 @@ import BreadCrumb from '../../../Components/Common/BreadCrumb';
 import KYC from './KYCVerification';
 
 const KYCVerification = () => {
-    document.title ="KYC  Application | Velzon - React Admin & Dashboard Template";
+    document.title ="KYC  Application | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <div className="page-content">

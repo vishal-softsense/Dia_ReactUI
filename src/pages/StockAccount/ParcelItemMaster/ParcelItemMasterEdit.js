@@ -100,6 +100,13 @@ const ParcelItemMasterEdit = () => {
             const response = await getParcelItemMasterDetail(itemCode);
             if (response.success || response.Success) {
                 const data = response.data || response.Data || {};
+                const weight = parseFloat(data.weight ?? data.Weight) || 0;
+                const pDollorRate = parseFloat(data.pDollorRate ?? data.PDollorRate) || 0;
+                const askingRate = parseFloat(data.askingRate ?? data.AskingRate) || 0;
+                // Same as MVC Parcel-item-master.js document.ready:
+                // Asking INR is not persisted by SP_ItemMaster; recalculate on edit load.
+                const askingINR = askingRate * pDollorRate;
+                const askingINRAmt = askingINR * weight;
                 setForm({
                     itemCode: data.itemCode || data.ItemCode || 0,
                     srNo: data.srNo || data.SrNo || "",
@@ -114,17 +121,17 @@ const ParcelItemMasterEdit = () => {
                     category: data.category || data.Category || "",
                     instruction: data.instruction || data.Instruction || "Polished",
                     productType: data.productType || data.ProductType || "",
-                    weight: parseFloat(data.weight || data.Weight) || 0,
+                    weight,
                     pcs: parseInt(data.pcs || data.Pcs) || 0,
-                    pDollorRate: parseFloat(data.pDollorRate || data.PDollorRate) || 0,
-                    purchaseRate: parseFloat(data.purchaseRate || data.PurchaseRate) || 0,
-                    purchaseAmount: parseFloat(data.purchaseAmount || data.PurchaseAmount) || 0,
-                    masterCurrencyRate: parseFloat(data.masterCurrencyRate || data.MasterCurrencyRate) || 0,
-                    masterCurrencyAmount: parseFloat(data.masterCurrencyAmount || data.MasterCurrencyAmount) || 0,
-                    askingRate: parseFloat(data.askingRate || data.AskingRate) || 0,
-                    askingAmount: parseFloat(data.askingAmount || data.AskingAmount) || 0,
-                    askingINR: parseFloat(data.askingINR || data.AskingINR) || 0,
-                    askingINRAmt: parseFloat(data.askingINRAmt || data.AskingINRAmt) || 0,
+                    pDollorRate,
+                    purchaseRate: parseFloat(data.purchaseRate ?? data.PurchaseRate) || 0,
+                    purchaseAmount: parseFloat(data.purchaseAmount ?? data.PurchaseAmount) || 0,
+                    masterCurrencyRate: parseFloat(data.masterCurrencyRate ?? data.MasterCurrencyRate) || 0,
+                    masterCurrencyAmount: parseFloat(data.masterCurrencyAmount ?? data.MasterCurrencyAmount) || 0,
+                    askingRate,
+                    askingAmount: parseFloat(data.askingAmount ?? data.AskingAmount) || (weight * askingRate),
+                    askingINR,
+                    askingINRAmt,
                     publicCommnets: data.publicCommnets || data.PublicCommnets || ""
                 });
             } else {
@@ -262,7 +269,7 @@ const ParcelItemMasterEdit = () => {
                         <form onSubmit={handleSubmit}>
                             <Card>
                                 <CardHeader className="d-flex align-items-center">
-                                    <h5 className="card-title mb-0 flex-grow-1">Edit Item Code: {form.itemCode}</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary">Parcel Item Details</h5>
                                     <div className="d-flex gap-2">
                                         <Button color="light" type="button" onClick={() => navigate("/parcel/list-ParcelItemMaster")}>{t("Cancel")}</Button>
                                         <Button color="primary" type="submit" disabled={submitting}>

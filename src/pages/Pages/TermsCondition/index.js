@@ -4,7 +4,7 @@ import { Card, CardBody, Col, Container, Row } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 
 const TermsCondition = () => {
-  document.title = "Terms & Condition | Velzon - React Admin & Dashboard Template";
+  document.title = "Terms & Condition | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <React.Fragment>
       <div className="page-content">

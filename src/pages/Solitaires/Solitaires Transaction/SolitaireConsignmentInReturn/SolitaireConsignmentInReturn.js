@@ -190,22 +190,25 @@ const SolitaireConsignmentInReturn = () => {
     []
   );
 
-  const searchAccounts = useCallback(async (term, setOpts, setLoad) => {
-    if (!term || term.length < 2) {
-      setOpts([]);
+  const mapAccountOpts = (d) =>
+    (Array.isArray(d) ? d : []).map((item) => ({
+      value: String(item.accGrpCode || item.AccGrpCode || ""),
+      label: item.accGrpName || item.AccGrpName || ""
+    })).filter((o) => o.value || o.label);
+
+  // MVC FillList (#Party select2 allowClear): after clear, Party is empty and searching again
+  // returns accounts from /common/get-account. Empty filter on Core API returns all parties.
+  // Do not wipe options to [] on short/empty input — that left the dropdown empty after X.
+  const searchAccounts = useCallback(async (term, setOpts, setLoad, { allowEmpty = false } = {}) => {
+    const q = (term || "").trim();
+    if (!allowEmpty && q.length < 2) {
       return;
     }
     setLoad(true);
     try {
-      const res = await getAccGrpMasters(term);
+      const res = await getAccGrpMasters(q);
       if (res?.success || res?.Success) {
-        const d = res.data || res.Data || [];
-        setOpts(
-          d.map((item) => ({
-            value: String(item.accGrpCode || item.AccGrpCode || ""),
-            label: item.accGrpName || item.AccGrpName || ""
-          }))
-        );
+        setOpts(mapAccountOpts(res.data || res.Data || []));
       }
     } catch {
       /* ignore */
@@ -213,6 +216,27 @@ const SolitaireConsignmentInReturn = () => {
       setLoad(false);
     }
   }, []);
+
+  const loadAllParties = useCallback(() => {
+    searchAccounts("", setPartyOpts, setPartyLoading, { allowEmpty: true });
+  }, [searchAccounts]);
+
+  const handlePartyChange = useCallback(
+    (sel) => {
+      setParty(sel || null);
+      if (!sel) {
+        // X / clear: empty selection and show all parties again (MVC allowClear behavior)
+        setPartyInput("");
+        loadAllParties();
+      } else {
+        setPartyOpts((prev) => {
+          if (prev.some((o) => String(o.value) === String(sel.value))) return prev;
+          return [sel, ...prev];
+        });
+      }
+    },
+    [loadAllParties]
+  );
 
   useEffect(() => {
     const tmr = setTimeout(() => searchAccounts(partyInput, setPartyOpts, setPartyLoading), 400);
@@ -328,6 +352,7 @@ const SolitaireConsignmentInReturn = () => {
         setBillNo("");
         setParty(null);
         setPartyInput("");
+        loadAllParties();
         setLotNo("");
         setClearMemo(false);
         setType("External");
@@ -431,9 +456,17 @@ const SolitaireConsignmentInReturn = () => {
                           placeholder={t("Search Party")}
                           options={partyOpts}
                           value={party}
-                          onChange={setParty}
+                          onChange={handlePartyChange}
                           onInputChange={(val, meta) => {
                             if (meta.action === "input-change") setPartyInput(val);
+                            if (meta.action === "set-value" || meta.action === "menu-close") {
+                              // keep partyInput in sync after select/clear so next search is not stuck
+                              if (!val) setPartyInput("");
+                            }
+                          }}
+                          onMenuOpen={() => {
+                            // If options were never loaded / emptied, load full party list on open
+                            if (!partyOpts.length) loadAllParties();
                           }}
                           isLoading={partyLoading}
                           styles={selectStyles}

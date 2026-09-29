@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Progress } from "reactstrap";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -408,7 +408,7 @@ const GreenMasterList = () => {
                                         {t("Green List")}
                                     </h5>
                                     <div className="d-flex gap-2">
-                                        <Button color="primary" className="add-btn" onClick={handleAddClick}>
+                                        <Button color="primary" className="add-btn rounded-3 d-inline-flex align-items-center gap-1" onClick={handleAddClick}>
                                             <i className="ri-add-line align-bottom me-1"></i> {t("Add Green")}
                                         </Button>
                                         <Button color="soft-success" onClick={() => setImportModal(true)}>{t("Import Excel")}</Button>
@@ -453,8 +453,8 @@ const GreenMasterList = () => {
 
             <Modal isOpen={formModal} toggle={() => setFormModal(false)} centered>
                 <Form onSubmit={(e) => { e.preventDefault(); validation.handleSubmit(); }}>
-                    <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? t("Edit Green Master") : t("Add Green Master")}
+                    <ModalHeader toggle={() => setFormModal(false)} className="bg-primary p-3 border-0">
+                        <span className="text-white fw-bold">{isEdit ? t("Edit Green Master") : t("Add Green Master")}</span>
                     </ModalHeader>
                     <ModalBody>
                         <Row className="gy-3">
@@ -530,20 +530,22 @@ const GreenMasterList = () => {
                         </Row>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="light" type="button" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
-                        <Button color="primary" type="submit">{t("Save")}</Button>
+                        <Button color="light" type="button" className="rounded-3" onClick={() => setFormModal(false)}>{t("Cancel")}</Button>
+                        <Button color="primary" type="submit" className="rounded-3">{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
                 </Form>
             </Modal>
 
             {/* Import Excel Modal */}
-            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
-                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Green Master Excel")}</ModalHeader>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{t("Import Green Master Excel")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mb-4">
                         <Label className="form-label">{t("Download Green Master File Template Format")}</Label>
                         <div>
-                            <Button color="primary" onClick={handleDownloadTemplate} size="sm">
+                            <Button color="primary" onClick={handleDownloadTemplate} size="sm" className="rounded-3">
                                 <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
                         </div>
                     </div>
@@ -569,14 +571,16 @@ const GreenMasterList = () => {
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
-                    <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
+                    <Button color="light" className="rounded-3" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" className="rounded-3" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
                 </ModalFooter>
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} className="modal-dialog-centered">
-                <ModalHeader className="bg-danger pb-3 text-white" toggle={() => setDeleteModal(false)}>{t("Confirm Delete")}</ModalHeader>
+            <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)} centered>
+                <ModalHeader toggle={() => setDeleteModal(false)} className="bg-danger p-3 border-0">
+                    <span className="text-white fw-bold">{t("Confirm Delete")}</span>
+                </ModalHeader>
                 <ModalBody>
                     <div className="mt-2 text-center">
                         <lord-icon
@@ -593,8 +597,8 @@ const GreenMasterList = () => {
                         </div>
                     </div>
                     <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
-                        <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
+                        <Button type="button" color="light" className="w-sm rounded-3" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm rounded-3" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
                     </div>
                 </ModalBody>
             </Modal>

@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 
 
 const UiGeneral = () => {
-    document.title="General | Velzon - React Admin & Dashboard Template";
+    document.title="General | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <UiContent />

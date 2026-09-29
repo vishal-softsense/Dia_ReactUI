@@ -103,22 +103,22 @@ const Navbar = () => {
                             id="navbar-example"
                         >
                             <li className="nav-item">
-                                <NavLink href="#hero" onClick={closeMenu}>Home</NavLink>
+                                <NavLink href="/#hero" onClick={closeMenu}>Home</NavLink>
                             </li>
                             <li className="nav-item">
-                                <NavLink href="#services" onClick={closeMenu}>Services</NavLink>
+                                <NavLink href="/#services" onClick={closeMenu}>Services</NavLink>
                             </li>
                             <li className="nav-item">
-                                <NavLink href="#features" onClick={closeMenu}>Features</NavLink>
+                                <NavLink href="/#features" onClick={closeMenu}>Features</NavLink>
                             </li>
                             <li className="nav-item">
-                                <NavLink href="#faqs" onClick={closeMenu}>FAQ</NavLink>
+                                <NavLink href="/#faqs" onClick={closeMenu}>FAQ</NavLink>
                             </li>
                             <li className="nav-item">
-                                <NavLink href="#pricing" onClick={closeMenu}>Pricing</NavLink>
+                                <NavLink href="/#pricing" onClick={closeMenu}>Pricing</NavLink>
                             </li>
                             <li className="nav-item">
-                                <NavLink href="#contact" onClick={closeMenu}>Contact</NavLink>
+                                <NavLink href="/#contact" onClick={closeMenu}>Contact</NavLink>
                             </li>
                         </Scrollspy>
 

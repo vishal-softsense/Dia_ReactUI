@@ -72,7 +72,7 @@ const FormWizard = () => {
     }
   }
 
-document.title ="Wizard | Velzon - React Admin & Dashboard Template";
+document.title ="Wizard | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <React.Fragment>
       <div className="page-content">        

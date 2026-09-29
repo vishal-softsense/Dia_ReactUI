@@ -9,7 +9,7 @@ import PreviewCardHeader from '../../../Components/Common/PreviewCardHeader';
 
 
 const BasicElements = () => {
-    document.title = "Basic Elements | Velzon - React Admin & Dashboard Template";  
+    document.title = "Basic Elements | DiaJewel - Diamond & Jewellery Cloud Business App";  
 
     return (
         <React.Fragment>

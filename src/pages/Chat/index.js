@@ -220,7 +220,7 @@ const Chat = () => {
   };
 
 
-  document.title = "Chat | Velzon - React Admin & Dashboard Template";
+  document.title = "Chat | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

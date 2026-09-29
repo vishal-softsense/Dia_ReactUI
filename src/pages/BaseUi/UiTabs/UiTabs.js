@@ -190,7 +190,7 @@ const UiTabs = () => {
         }
     };
 
-    document.title = "Tabs | Velzon - React Admin & Dashboard Template";
+    document.title = "Tabs | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

@@ -27,7 +27,7 @@ import { createSelector } from 'reselect';
 
 
 const FileManager = () => {
-    document.title = "File Manager | Velzon - React Admin & Dashboard Template";
+    document.title = "File Manager | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     const dispatch = useDispatch();
 

@@ -17,7 +17,7 @@ import { jobCategories } from "../../../common/data/appsJobs";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 
 const JobCategories = () => {
-  document.title = "Job Categories | Velzon -  Admin & Dashboard Template";
+  document.title = "Job Categories | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

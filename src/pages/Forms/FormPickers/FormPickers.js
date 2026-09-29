@@ -55,7 +55,7 @@ const FormPickers = () => {
     setcolor(c1);
   };
 
-  document.title = "Pickers | Velzon - React Admin & Dashboard Template";
+  document.title = "Pickers | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <React.Fragment>

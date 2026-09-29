@@ -35,6 +35,7 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -229,7 +230,8 @@ const emptyItem = () => ({
   amount: "",
   exportNo: "",
   memoTransCode: "",
-  stockType: ""
+  stockType: "",
+  invDescription: ""
 });
 
 const mapItemFromApi = (r, idx, sBaseRate = 1) => {
@@ -294,7 +296,8 @@ const mapItemFromApi = (r, idx, sBaseRate = 1) => {
     amount,
     exportNo: getStrVal(r, "ExportNo", "exportNo"),
     memoTransCode: getStrVal(r, "MemoTransCode", "memoTransCode"),
-    stockType
+    stockType,
+    invDescription: getStrVal(r, "InvDescription", "invDescription")
   };
 };
 
@@ -320,7 +323,8 @@ const ITEM_COLUMNS = [
   { key: "less3", label: "Less3", align: "end", decimals: 2 },
   { key: "amount", label: "Amount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "exportNo", label: "ExportNo" },
-  { key: "stockType", label: "StockType" }
+  { key: "stockType", label: "StockType" },
+  { key: "invDescription", label: "ItemDescription" }
 ];
 
 const getItemFooterValue = (footerKey, totals, itemRows) => {
@@ -388,7 +392,8 @@ const mapItemToPayload = (r, i) => ({
   Amount: toNum(r.amount),
   ExportNo: r.exportNo || "",
   MemoTransCode: toNum(r.memoTransCode),
-  StockType: r.stockType || "Diamond"
+  StockType: r.stockType || "Diamond",
+  InvDescription: r.invDescription || ""
 });
 
 const MixPurchaseReturnForm = ({ mode = "add" }) => {
@@ -949,6 +954,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
             sRate,
             cogs,
             stockType,
+            invDescription: getStrVal(lot, "InvDescription"),
             less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
             less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
             less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3
@@ -1138,8 +1144,8 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
-      broDisplay: Math.round(broDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, true), // MVC Math.round
+      broDisplay: formatCommissionDisplay(broDisplay, true), // MVC Math.round
       netAmount: fmt(taxableAmount),
       netMAmount: fmt(mCurAmount),
       vatAmt,
@@ -1151,6 +1157,19 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fmt(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   const buildPayload = () => ({
     SalePur: {
@@ -1465,7 +1484,21 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3} xs={8}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1 text-uppercase small">{t("COM AMOUNT")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4} xs={6} className="d-flex align-items-center pt-md-3">
@@ -1863,6 +1896,21 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               placeholder="ExportNo"
                               value={entry.exportNo}
                               onChange={(e) => onEntryChange("exportNo", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+
+                        <Col xs={6} sm={3} lg={2}>
+                          <FormGroup className="mb-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px", color: "#495057" }}>
+                              {t("ItemDescription")}
+                            </Label>
+                            <Input
+                              className="form-control-sm"
+                              style={fieldH}
+                              placeholder={t("ItemDescription")}
+                              value={entry.invDescription || ""}
+                              onChange={(e) => onEntryChange("invDescription", e.target.value)}
                             />
                           </FormGroup>
                         </Col>

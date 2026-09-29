@@ -34,7 +34,7 @@ const Timeline = () => {
     SwiperCore.use([FreeMode, Navigation, Thumbs]);
     const [thumbsSwiper] = useState(null);
 
-    document.title = "Timeline | Velzon - React Admin & Dashboard Template";
+    document.title = "Timeline | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

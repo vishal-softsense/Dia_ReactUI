@@ -128,7 +128,7 @@ function EcommerceProductDetail(props) {
     }
   };
 
-document.title ="Product Details | Velzon - React Admin & Dashboard Template";
+document.title ="Product Details | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <div className="page-content">
       <Container fluid>        

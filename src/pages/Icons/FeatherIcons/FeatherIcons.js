@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, Col, Container, Row } from 'reactstrap';
 import BreadCrumb from '../../../Components/Common/BreadCrumb';
 
 const FeatherIcons = () => {
-    document.title="Feather Icons | Velzon - React Admin & Dashboard Template";
+    document.title="Feather Icons | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <div className="page-content">

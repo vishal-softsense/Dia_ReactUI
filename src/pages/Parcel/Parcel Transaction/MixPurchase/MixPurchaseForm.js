@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -32,7 +32,10 @@ import {
   getMixPurchaseConsignment,
   getMixPurchaseDetail,
   getMixPurchaseLotDetail,
-  getMixPurchasePageData
+  getMixPurchasePageData,
+  addParcelItemMaster,
+  checkLotNoExists,
+  getMixPurchaseMixLotNoDI
 } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
@@ -40,6 +43,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -177,7 +181,8 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "stoneType", label: "StoneType" },
   { key: "rmk", label: "RMK" },
   { key: "memoTransCode", label: "MemoTransCode", align: "end" },
-  { key: "stockType", label: "StockType" }
+  { key: "stockType", label: "StockType" },
+  { key: "invDescription", label: "ItemDescription" }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -275,15 +280,128 @@ const mapItemFromApi = (r, idx) => ({
   size: getStrVal(r, "Size", "SizeId", "PSize"),
   sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
   stockType: getStrVal(r, "StockType") || "Diamond",
+  invDescription: getStrVal(r, "InvDescription", "invDescription"),
   suppLotNo: getStrVal(r, "SuppLotNo"),
   askingRate: getNumVal(r, "AskingRate"),
   actualRate: getNumVal(r, "ActualRate"),
   groupId: getStrVal(r, "GroupId", "ItemGroup"),
   stoneType: getStrVal(r, "StoneType"),
   rmk: getStrVal(r, "RMK", "MemberRemarks"),
-  memoTransCode: getNumVal(r, "MemoTransCode"),
-  rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats")
+  memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
+  rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+  status: getStrVal(r, "Status", "status")
 });
+
+const resolveOptionValue = (options = [], rawValue) => {
+  if (rawValue == null || rawValue === "") return "";
+  const needle = String(rawValue).trim().toLowerCase();
+  const matched = (options || []).find((o) => {
+    const v = String(o?.value ?? "").trim().toLowerCase();
+    const l = String(o?.label ?? "").trim().toLowerCase();
+    const id = String(o?.id ?? "").trim().toLowerCase();
+    return v === needle || l === needle || (id && id === needle);
+  });
+  return matched ? matched.value : String(rawValue).trim();
+};
+
+const pickSpecFromItemName = (options, itemName, used = new Set()) => {
+  if (!itemName || !options?.length) return "";
+  for (const token of String(itemName).split(/\s+/).filter(Boolean)) {
+    const needle = token.toLowerCase();
+    const matched = options.find((o) => {
+      const val = String(o?.value ?? "").trim().toLowerCase();
+      const lbl = String(o?.label ?? "").trim().toLowerCase();
+      if (!val || used.has(val)) return false;
+      return val === needle || lbl === needle;
+    });
+    if (matched) {
+      used.add(String(matched.value).trim().toLowerCase());
+      return matched.value;
+    }
+  }
+  return "";
+};
+
+const buildEntryFromAddItemForm = (form, lotNo, header, opts = {}) => {
+  const {
+    shapeOpts = [],
+    colorOpts = [],
+    clarityOpts = [],
+    sizeOpts = [],
+    sieveOpts = []
+  } = opts;
+
+  const sRateBase = toNum(header.sBaseRate, 1) || toNum(header.baseRate, 1) || 1;
+  const purchaseRate = toNum(form.purchaseRate);
+  const masterRate = toNum(form.masterCurrencyRate);
+  const pDollorRate = toNum(form.pDollorRate);
+  const sRate = purchaseRate;
+  const rate = masterRate || (purchaseRate ? purchaseRate * sRateBase : 0);
+  const itemName =
+    (form.itemName || "").trim() ||
+    [form.shapeId, form.colorId, form.sizeId, form.clarityId].filter(Boolean).join(" ");
+
+  const used = new Set();
+  let shape = resolveOptionValue(shapeOpts, form.shapeId);
+  if (shape) used.add(String(shape).trim().toLowerCase());
+  else shape = pickSpecFromItemName(shapeOpts, itemName, used);
+
+  let color = resolveOptionValue(colorOpts, form.colorId);
+  if (color) used.add(String(color).trim().toLowerCase());
+  else color = pickSpecFromItemName(colorOpts, itemName, used);
+
+  let clarity = resolveOptionValue(clarityOpts, form.clarityId);
+  if (clarity) used.add(String(clarity).trim().toLowerCase());
+  else clarity = pickSpecFromItemName(clarityOpts, itemName, used);
+
+  let size = resolveOptionValue(sizeOpts, form.sizeId);
+  if (size) used.add(String(size).trim().toLowerCase());
+  else size = pickSpecFromItemName(sizeOpts, itemName, used);
+
+  let sieve = resolveOptionValue(sieveOpts, form.sieveId);
+  if (sieve) used.add(String(sieve).trim().toLowerCase());
+  else sieve = pickSpecFromItemName(sieveOpts, itemName, used);
+
+  const entry = {
+    ...emptyItem(),
+    lotNo,
+    itemName,
+    shape,
+    color,
+    clarity,
+    size,
+    sieve,
+    groupId: form.itemGroupID || "",
+    stoneType: form.stoneTypes || "",
+    rmk: form.publicCommnets || "",
+    pcs: form.stoneTypes === "Single" ? "1" : "1",
+    rate: fmt(rate, 2),
+    sRate: fmt(sRate, 2),
+    mrp: "0",
+    back: "0",
+    weight: "0",
+    issueCarats: "0",
+    rtnCarats: "0",
+    less1: "0",
+    less2: "0",
+    less3: "0",
+    memoTransCode: 0,
+    stockType: "Diamond",
+    suppLotNo: "",
+    askingRate: "0",
+    actualRate: "0",
+    certificateNo: form.certificateNo || "",
+    productType: form.productType || "",
+    category: form.category || "",
+    instruction: form.instruction || "",
+    pDollorRate: fmt(pDollorRate, 2)
+  };
+
+  entry.amount = fmt(
+    calcItemAmount(entry.weight, entry.rate, entry.less1, entry.less2, entry.less3, entry.pcs, entry.stockType)
+  );
+  return entry;
+};
 
 const emptyItem = () => ({
   lotNo: "",
@@ -305,6 +423,7 @@ const emptyItem = () => ({
   size: "",
   sieve: "",
   stockType: "Diamond",
+  invDescription: "",
   suppLotNo: "",
   askingRate: "",
   actualRate: "",
@@ -314,6 +433,78 @@ const emptyItem = () => ({
   memoTransCode: 0,
   rtnCarats: "0"
 });
+
+const pickNonEmpty = (primary, fallback) => {
+  if (primary != null && primary !== "") return primary;
+  return fallback != null && fallback !== "" ? fallback : "";
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** MVC #pur-lotno change: fill entry row from get-parcellot-detail */
+const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
+  const {
+    shapeOpts = [],
+    colorOpts = [],
+    clarityOpts = [],
+    sizeOpts = [],
+    sieveOpts = []
+  } = opts;
+
+  const carats = getNumVal(lot, "Carats", "Weight");
+  const caratStr = fmt(carats, 2);
+  const pcs = getNumVal(lot, "Pcs") || 1;
+  const mrp = getNumVal(lot, "PurchaseMRP", "MRP");
+  const finalAmountRaw = getStrVal(lot, "FinalAmount");
+  const finalAmount =
+    finalAmountRaw ||
+    (getNumVal(lot, "FinalAmount", "Amount") ? fmt(getNumVal(lot, "FinalAmount", "Amount"), 2) : "0.00");
+
+  return {
+    ...emptyItem(),
+    lotNo: getStrVal(lot, "LotNo") || lotNo,
+    itemName: getStrVal(lot, "ItemName"),
+    shape: resolveOptionValue(shapeOpts, getStrVal(lot, "ShapeId", "Shape")),
+    color: resolveOptionValue(colorOpts, getStrVal(lot, "ColorId", "Color")),
+    clarity: resolveOptionValue(clarityOpts, getStrVal(lot, "ClarityId", "Clarity")),
+    size: resolveOptionValue(sizeOpts, getStrVal(lot, "SizeId", "Size")),
+    sieve: resolveOptionValue(sieveOpts, getStrVal(lot, "SieveId", "Sieve")),
+    pcs: String(pcs),
+    mrp: fmt(mrp, 2),
+    back: "0",
+    issueCarats: caratStr,
+    weight: caratStr,
+    rtnCarats: "0",
+    rate: "0.00",
+    sRate: "0.00",
+    less1: "0",
+    less2: "0",
+    less3: "0",
+    memoTransCode: 0,
+    stockType: getStrVal(lot, "StockType") || "Diamond",
+    invDescription: getStrVal(lot, "InvDescription"),
+    amount: finalAmount
+  };
+};
+
+const mergeEntryWithFallback = (apiEntry, fallbackEntry) => {
+  if (!fallbackEntry) return apiEntry;
+  return {
+    ...apiEntry,
+    itemName: pickNonEmpty(apiEntry.itemName, fallbackEntry.itemName),
+    shape: pickNonEmpty(apiEntry.shape, fallbackEntry.shape),
+    color: pickNonEmpty(apiEntry.color, fallbackEntry.color),
+    clarity: pickNonEmpty(apiEntry.clarity, fallbackEntry.clarity),
+    size: pickNonEmpty(apiEntry.size, fallbackEntry.size),
+    sieve: pickNonEmpty(apiEntry.sieve, fallbackEntry.sieve),
+    issueCarats: pickNonEmpty(apiEntry.issueCarats, fallbackEntry.issueCarats),
+    weight: pickNonEmpty(apiEntry.weight, fallbackEntry.weight),
+    pcs: pickNonEmpty(apiEntry.pcs, fallbackEntry.pcs),
+    mrp: pickNonEmpty(apiEntry.mrp, fallbackEntry.mrp),
+    amount: pickNonEmpty(apiEntry.amount, fallbackEntry.amount),
+    stockType: pickNonEmpty(apiEntry.stockType, fallbackEntry.stockType)
+  };
+};
 
 const renderItemCell = (row, col) => {
   const v = row[col.key];
@@ -345,8 +536,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
 };
 
 const getItemRowStyle = (row) => {
-  if (row.status === "Purchase") return { color: "green" };
-  if (row.status === "Consingment-rtn") return { color: "red" };
+  const status = String(row.status || "").trim();
+  // MVC MixPurchase.js createdRow — green when Status is Purchase (consignment-to-purchase rows)
+  if (status === "Purchase" || (status === "" && toNum(row.memoTransCode) !== 0)) {
+    return { color: "Green" };
+  }
+  if (status === "Consingment-rtn") return { color: "red" };
   return undefined;
 };
 
@@ -455,6 +650,31 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   const [clarityOpts, setClarityOpts] = useState([]);
   const [sizeOpts, setSizeOpts] = useState([]);
   const [sieveOpts, setSieveOpts] = useState([]);
+  const [groupOpts, setGroupOpts] = useState([]);
+  const [productTypeOpts, setProductTypeOpts] = useState([]);
+
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addItemSubmitting, setAddItemSubmitting] = useState(false);
+  const [addItemLotExists, setAddItemLotExists] = useState(false);
+  const [addItemForm, setAddItemForm] = useState({
+    lotNo: "",
+    shapeId: "",
+    colorId: "",
+    clarityId: "",
+    sizeId: "",
+    sieveId: "",
+    itemName: "",
+    itemGroupID: "",
+    publicCommnets: "",
+    category: "Natural Diamond",
+    instruction: "Polished",
+    productType: "",
+    certificateNo: "",
+    pDollorRate: "0.00",
+    purchaseRate: "0.00",
+    masterCurrencyRate: "0.00",
+    stoneTypes: "Single"
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOpts, setPartyOpts] = useState([]);
@@ -475,6 +695,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   const [lotOpts, setLotOpts] = useState([]);
   const [lotLoading, setLotLoading] = useState(false);
   const [lotSel, setLotSel] = useState(null);
+  const fillFromLotRequestRef = useRef(0);
 
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
@@ -681,6 +902,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       const clarities = mapBasicWithNameAsValue(d.Clarity || d.clarity);
       const sizes = mapBasicWithNameAsValue(d.Size || d.size);
       const sieves = mapBasicWithNameAsValue(d.Sieve || d.sieve);
+      const groups = mapBasicWithNameAsValue(d.ItemGroup || d.itemGroup);
+      const productTypes = mapBasicWithNameAsValue(d.ProductType || d.productType);
       const defaultCurrencyCode = d.DefaultCurrencyCode || d.defaultCurrencyCode || "";
       setTypeOpts(types);
       setSubTypeOpts(subs);
@@ -691,11 +914,152 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       setClarityOpts(clarities);
       setSizeOpts(sizes);
       setSieveOpts(sieves);
-      return { types, subs, cats, curs, shapes, colors, clarities, sizes, sieves, defaultCurrencyCode };
+      setGroupOpts(groups);
+      setProductTypeOpts(productTypes);
+      return { types, subs, cats, curs, shapes, colors, clarities, sizes, sieves, groups, productTypes, defaultCurrencyCode };
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load page data."));
       return null;
+    }
+  };
+
+  const handleAddItemChange = (field, value) => {
+    if (field === "stoneTypes") {
+      if (value === "Parcel") {
+        setAddItemForm((prev) => ({ ...prev, stoneTypes: value }));
+        fetchAddItemParcelLotNo();
+        return;
+      }
+      setAddItemForm((prev) => ({ ...prev, stoneTypes: value, lotNo: "" }));
+      setAddItemLotExists(false);
+      return;
+    }
+
+    setAddItemForm((prev) => {
+      const updated = { ...prev, [field]: value };
+      if (["shapeId", "colorId", "clarityId", "sizeId"].includes(field)) {
+        const parts = [
+          updated.shapeId,
+          updated.colorId,
+          updated.sizeId,
+          updated.clarityId
+        ].filter(Boolean);
+        updated.itemName = parts.join(" ");
+      }
+      return updated;
+    });
+  };
+
+  const fetchAddItemParcelLotNo = useCallback(async () => {
+    try {
+      const res = await getMixPurchaseMixLotNoDI();
+      const lotNo = res?.lotNo ?? res?.LotNo ?? res?.Data?.lotNo ?? res?.Data?.LotNo;
+      if (lotNo) {
+        setAddItemForm((prev) => ({ ...prev, lotNo }));
+        setAddItemLotExists(false);
+      } else {
+        setAddItemForm((prev) => ({ ...prev, lotNo: "No Lot Found" }));
+      }
+    } catch (err) {
+      console.error(err);
+      setAddItemForm((prev) => ({ ...prev, lotNo: "Error fetching lot" }));
+    }
+  }, []);
+
+  const openAddItemModal = () => {
+    setAddItemOpen(true);
+  };
+
+  useEffect(() => {
+    if (!addItemOpen) return;
+    if (addItemForm.stoneTypes === "Parcel") {
+      fetchAddItemParcelLotNo();
+    }
+  }, [addItemOpen, fetchAddItemParcelLotNo]);
+
+  const handleAddItemLotBlur = async () => {
+    if (!addItemForm.lotNo || !addItemForm.lotNo.trim()) return;
+    try {
+      const res = await checkLotNoExists(addItemForm.lotNo.trim());
+      if (res?.success || res?.Success) {
+        const exists = res.exists || res.Exists || false;
+        setAddItemLotExists(exists);
+        if (exists) {
+          toast.warning(t("LotNo Already Exists"));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSaveAddItem = async () => {
+    if (!addItemForm.lotNo || !addItemForm.lotNo.trim()) {
+      toast.error(t("Stock ID/ LotNo is required."));
+      return;
+    }
+    if (addItemLotExists) {
+      toast.error(t("LotNo Already Exists"));
+      return;
+    }
+    setAddItemSubmitting(true);
+    const savedForm = {
+      ...addItemForm,
+      lotNo: addItemForm.lotNo.trim()
+    };
+    try {
+      const res = await addParcelItemMaster({
+        ...savedForm,
+        stoneTypes: savedForm.stoneTypes || "Single",
+        weight: 0,
+        pcs: 0,
+        pDollorRate: toNum(savedForm.pDollorRate),
+        purchaseRate: toNum(savedForm.purchaseRate),
+        purchaseAmount: 0,
+        masterCurrencyRate: toNum(savedForm.masterCurrencyRate),
+        masterCurrencyAmount: 0
+      });
+      if (res?.success || res?.Success) {
+        toast.success(res.message || res.Message || t("LotNo Created Successfully."));
+        const newLot = savedForm.lotNo;
+        const displayLabel =
+          savedForm.itemName ||
+          [savedForm.shapeId, savedForm.colorId, savedForm.sizeId, savedForm.clarityId].filter(Boolean).join(" ") ||
+          newLot;
+        const lotOption = { value: newLot, label: displayLabel };
+        fillFromLotRequestRef.current += 1;
+        setLotOpts((prev) => (prev.some((o) => o.value === newLot) ? prev : [lotOption, ...prev]));
+        setLotSel(null);
+        setEntry(emptyItem());
+        setAddItemOpen(false);
+        setAddItemForm({
+          lotNo: "",
+          shapeId: "",
+          colorId: "",
+          clarityId: "",
+          sizeId: "",
+          sieveId: "",
+          itemName: "",
+          itemGroupID: "",
+          publicCommnets: "",
+          category: "Natural Diamond",
+          instruction: "Polished",
+          productType: "",
+          certificateNo: "",
+          pDollorRate: "0.00",
+          purchaseRate: "0.00",
+          masterCurrencyRate: "0.00",
+          stoneTypes: "Single"
+        });
+      } else {
+        toast.error(res?.message || res?.Message || res?.data || res?.Data || t("Failed to save item."));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Error saving item."));
+    } finally {
+      setAddItemSubmitting(false);
     }
   };
 
@@ -750,20 +1114,20 @@ const MixPurchaseForm = ({ mode = "add" }) => {
         adatAmount: toNum(getVal(h, "AdatAmount")),
         brokerPer: toNum(getVal(h, "BrokerPer")),
         brokerAmount: toNum(getVal(h, "BrokerAmount")),
-        description: getVal(h, "Description"),
+        description: getVal(h, "Description", "InvDisc"),
         consignmentNo: getVal(h, "ConsignmentNo"),
         chkGrading: !!(getVal(h, "chkGrading") === true || getVal(h, "chkGrading") === "true"),
         chkoldpur: !!(getVal(h, "chkoldpur") === true || getVal(h, "chkoldpur") === "true"),
         plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
         roundAmount: toNum(getVal(h, "RoundAmount")),
-        vatPer: toNum(getVal(h, "VatPer")),
-        cgstPer: toNum(getVal(h, "CGSTPer")),
-        sgstPer: toNum(getVal(h, "SGSTPer")),
-        igstPer: toNum(getVal(h, "IGSTPer")),
-        vatAmount: toNum(getVal(h, "VatAmount")),
-        cgstAmt: toNum(getVal(h, "CGSTAmt")),
-        sgstAmt: toNum(getVal(h, "SGSTAmt")),
-        igstAmt: toNum(getVal(h, "IGSTAmt")),
+        vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
+        cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "CGST", "CgstPercentage", "CGSTRate"),
+        sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "SGST", "SgstPercentage", "SGSTRate"),
+        igstPer: getNumVal(h, "IGSTPer", "IgstPer", "IGST", "IgstPercentage", "IGSTRate"),
+        vatAmount: getNumVal(h, "VatAmount", "VatAmt", "VATAmount"),
+        cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt"),
+        sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt"),
+        igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt"),
         decimalPlaces: 2
       });
 
@@ -863,52 +1227,46 @@ const MixPurchaseForm = ({ mode = "add" }) => {
     });
   };
 
-  const fillFromLot = async (lotNo) => {
+  const fillFromLot = async (lotNo, fallbackForm = null) => {
     if (!lotNo) return;
-    try {
-      const res = await getMixPurchaseLotDetail(lotNo);
-      if (!(res?.success || res?.Success)) {
-        toast.warning(res?.Data || res?.data || t("Lot detail not found."));
-        return;
+    const requestId = ++fillFromLotRequestRef.current;
+    const opts = { shapeOpts, colorOpts, clarityOpts, sizeOpts, sieveOpts };
+    const fallbackEntry = fallbackForm
+      ? buildEntryFromAddItemForm(fallbackForm, lotNo, header, opts)
+      : null;
+
+    const applyEntry = (entry) => {
+      if (requestId !== fillFromLotRequestRef.current) return;
+      setEntry({ ...entry, lotNo });
+    };
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (requestId !== fillFromLotRequestRef.current) return;
+      try {
+        const res = await getMixPurchaseLotDetail(lotNo);
+        if (requestId !== fillFromLotRequestRef.current) return;
+        if (res?.success || res?.Success) {
+          const rows = res.Data || res.data || [];
+          const lot = Array.isArray(rows) ? rows[0] : rows;
+          if (lot) {
+            applyEntry(mergeEntryWithFallback(mapLotDetailToEntry(lot, lotNo, opts), fallbackEntry));
+            return;
+          }
+        } else if (!fallbackEntry && attempt === 2) {
+          toast.warning(res?.Data || res?.data || t("Lot detail not found."));
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        if (!fallbackEntry && attempt === 2) {
+          toast.error(t("Failed to load lot detail."));
+          return;
+        }
       }
-      const rows = res.Data || res.data || [];
-      const lot = Array.isArray(rows) ? rows[0] : rows;
-      if (!lot) return;
-
-      const weight = getNumVal(lot, "Carats", "Weight");
-      const issueCarats = weight;
-      const pcs = getNumVal(lot, "Pcs") || 1;
-      const rate = 0;
-
-      setEntry((prev) =>
-        recalcEntryAmount({
-          ...prev,
-          lotNo: getStrVal(lot, "LotNo") || lotNo,
-          itemName: getStrVal(lot, "ItemName"),
-          weight,
-          issueCarats,
-          pcs,
-          mrp: getNumVal(lot, "PurchaseMRP", "MRP"),
-          back: "0",
-          rate,
-          sRate: "",
-          less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
-          less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
-          less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
-          shape: getStrVal(lot, "Shape", "ShapeId"),
-          color: getStrVal(lot, "Color", "ColorId"),
-          clarity: getStrVal(lot, "Clarity", "ClarityId"),
-          size: getStrVal(lot, "Size", "SizeId"),
-          sieve: getStrVal(lot, "Sieve", "SieveId"),
-          stockType: getStrVal(lot, "StockType") || "Diamond",
-          memoTransCode: 0,
-          rtnCarats: "0"
-        })
-      );
-    } catch (err) {
-      console.error(err);
-      toast.error(t("Failed to load lot detail."));
+      if (attempt < 2) await sleep(350);
     }
+
+    if (fallbackEntry) applyEntry(fallbackEntry);
   };
 
   const handleAddItem = () => {
@@ -1054,7 +1412,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       netAmount: fix(taxableAmount),
       netMAmount: fix(mCurAmount),
@@ -1067,6 +1425,19 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       finalMPayRecAmount: fix(receivableAmount)
     };
   }, [totals.totAmount, header, mOp, sOp, masterSymbol, stockSymbol, currencyOpts]);
+
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
 
   useEffect(() => {
     setHeader((prev) => ({
@@ -1256,7 +1627,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
           rate: getNumVal(r, "rate", "Rate"),
           mrp: getNumVal(r, "MRP", "mrp", "Mrp"),
           back: getNumVal(r, "Back", "back"),
-          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode"),
+          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
           symbol: getStrVal(r, "Symbol", "symbol", "Cur", "cur"),
           stockType: getStrVal(r, "StockType", "stockType") || "Diamond"
         };
@@ -1377,7 +1748,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
           sieve: "",
           stockType: r.stockType || "Diamond",
           memoTransCode: toNum(r.memoTransCode),
-          rtnCarats: toNum(r.rtn)
+          rtnCarats: toNum(r.rtn),
+          status: "Purchase"
         };
         const idx = next.findIndex((x) => String(x.lotNo).toLowerCase() === String(lotNo).toLowerCase());
         if (idx >= 0) next[idx] = row;
@@ -1416,6 +1788,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       BrokerName: broker?.label || "",
       BrokerPer: toNum(header.brokerPer),
       BrokerAmount: toNum(summary.broDisplay),
+      InvDisc: header.description,
       Description: header.description,
       ConsignmentNo: header.consignmentNo,
       TotCts: totals.totCts,
@@ -1471,6 +1844,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       RtnCarats: toNum(r.rtnCarats),
       ReturnCarats: toNum(r.rtnCarats),
       StockType: r.stockType || "Diamond",
+      InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
       AskingRate: toNum(r.askingRate),
       ActualRate: toNum(r.actualRate),
@@ -1617,7 +1991,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           )
                         }
                       >
-                        <i className="ri-file-list-3-line me-1" />
+                        <i className="ri-printer-line me-1" />
                         {t("Current Status Invoice")}
                       </Button>
                     )}
@@ -1869,7 +2243,21 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={6} md={3} lg={2}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("COM AMOUNT")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col xs={12} sm={6} md={6} lg={2} className="d-flex align-items-center mb-2 pb-1" style={{ height: "31px" }}>
@@ -2098,9 +2486,14 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
                               {t("LOT NUMBER")}{" "}
-                              <Link to="/parcel/add-ParcelItemMaster" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                              <button
+                                type="button"
+                                className="ms-1 border border-primary text-primary px-1 rounded bg-transparent p-0"
+                                style={{ fontSize: "10px", textDecoration: "none", cursor: "pointer" }}
+                                onClick={openAddItemModal}
+                              >
                                 {t("ADD ITEM")}
-                              </Link>
+                              </button>
                               <Input
                                 type="checkbox"
                                 className="form-check-input ms-2"
@@ -2353,8 +2746,14 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                         </Col>
                       </Row>
 
-                      {/* Item Entry Row 3: MEMOTRNCODE, STOCKTYPE + Mobile Add Item Button */}
+                      {/* Item Entry Row 3: ITEMDESCRIPTION, MEMOTRNCODE, STOCKTYPE + Mobile Add Item Button */}
                       <Row className="g-2 align-items-end">
+                        <Col xs={12} sm={6} md={3} className="ie-r3-desc">
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ItemDescription")}</Label>
+                            <Input className="form-control-sm" style={fieldH} placeholder={t("ItemDescription")} value={entry.invDescription || ""} onChange={(e) => onEntryChange("invDescription", e.target.value)} />
+                          </FormGroup>
+                        </Col>
                         <Col xs={12} sm={6} md={3} className="ie-r3-memo">
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("MEMOTRNCODE")}</Label>
@@ -2396,41 +2795,44 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
-                              <td>
-                                {!readOnly ? (
-                                  <div className="d-flex gap-1">
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-primary btn-sm p-1"
-                                      onClick={() => handleEditRow(idx)}
-                                    >
-                                      <i className="ri-pencil-line" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-danger btn-sm p-1"
-                                      onClick={() => handleDeleteRow(idx)}
-                                    >
-                                      <i className="ri-delete-bin-line" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
-                              </td>
-                              {PURCHASE_ITEM_COLUMNS.map((col) => (
-                                <td
-                                  key={col.key}
-                                  className={col.align === "end" ? "text-end" : ""}
-                                  style={{ whiteSpace: "nowrap" }}
-                                >
-                                  {renderItemCell(r, col)}
+                          {items.map((r, idx) => {
+                            const rowStyle = getItemRowStyle(r);
+                            return (
+                              <tr key={`${r.lotNo}-${idx}`} style={rowStyle}>
+                                <td style={rowStyle}>
+                                  {!readOnly ? (
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-primary btn-sm p-1"
+                                        onClick={() => handleEditRow(idx)}
+                                      >
+                                        <i className="ri-pencil-line" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-danger btn-sm p-1"
+                                        onClick={() => handleDeleteRow(idx)}
+                                      >
+                                        <i className="ri-delete-bin-line" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted">-</span>
+                                  )}
                                 </td>
-                              ))}
-                            </tr>
-                          ))}
+                                {PURCHASE_ITEM_COLUMNS.map((col) => (
+                                  <td
+                                    key={col.key}
+                                    className={col.align === "end" ? "text-end" : ""}
+                                    style={{ ...rowStyle, whiteSpace: "nowrap" }}
+                                  >
+                                    {renderItemCell(r, col)}
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
                         </tbody>
                         {items.length > 0 && (
                           <tfoot className="table-light fw-semibold">
@@ -2613,6 +3015,300 @@ const MixPurchaseForm = ({ mode = "add" }) => {
             </Button>
             <Button color="primary" size="sm" onClick={consignToPurchase}>
               {t("MixConsignment To MixPurchase")}
+            </Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* Add Parcel Item Modal */}
+        <Modal isOpen={addItemOpen} toggle={() => setAddItemOpen(!addItemOpen)} size="xl" centered>
+          <ModalHeader toggle={() => setAddItemOpen(false)}>
+            {t("Add Item")}
+          </ModalHeader>
+          <ModalBody>
+            {/* Row 1: Stock ID / LotNo */}
+            <Row className="mb-3">
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
+                    {t("STOCK ID/ LOTNO")}
+                  </Label>
+                  <Input
+                    type="text"
+                    className={`form-control ${addItemLotExists ? "is-invalid" : ""}`}
+                    placeholder={t("Stock ID/ LotNo")}
+                    value={addItemForm.lotNo}
+                    onChange={(e) => {
+                      setAddItemLotExists(false);
+                      handleAddItemChange("lotNo", e.target.value);
+                    }}
+                    onBlur={handleAddItemLotBlur}
+                  />
+                  {addItemLotExists && <div className="invalid-feedback">{t("LotNo Already Exists")}</div>}
+                </FormGroup>
+              </Col>
+            </Row>
+
+            {/* Row 2: Shape, Color, Clarity, Size, Sieve/MM */}
+            <Row className="mb-3">
+              <Col md={2}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("SHAPE")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.shapeId}
+                    onChange={(e) => handleAddItemChange("shapeId", e.target.value)}
+                  >
+                    <option value="">{t("Select Shape")}</option>
+                    {shapeOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={2}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("COLOR")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.colorId}
+                    onChange={(e) => handleAddItemChange("colorId", e.target.value)}
+                  >
+                    <option value="">{t("Select Color")}</option>
+                    {colorOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={2}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("CLARITY")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.clarityId}
+                    onChange={(e) => handleAddItemChange("clarityId", e.target.value)}
+                  >
+                    <option value="">{t("Select Clarity")}</option>
+                    {clarityOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={2}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("SIZE")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.sizeId}
+                    onChange={(e) => handleAddItemChange("sizeId", e.target.value)}
+                  >
+                    <option value="">{t("Select Size")}</option>
+                    {sizeOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={2}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("SIEVE / MM")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.sieveId}
+                    onChange={(e) => handleAddItemChange("sieveId", e.target.value)}
+                  >
+                    <option value="">{t("Select Sieve")}</option>
+                    {sieveOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+            </Row>
+
+            {/* Row 3: Stock Name, Stock GroupID, Description */}
+            <Row className="mb-3">
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("STOCK NAME")}</Label>
+                  <Input
+                    type="text"
+                    className="form-control"
+                    placeholder={t("Stock Name")}
+                    value={addItemForm.itemName}
+                    onChange={(e) => handleAddItemChange("itemName", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("STOCK GROUPID")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.itemGroupID}
+                    onChange={(e) => handleAddItemChange("itemGroupID", e.target.value)}
+                  >
+                    <option value="">{t("Select GroupID")}</option>
+                    {groupOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("DESCRIPTION")}</Label>
+                  <Input
+                    type="textarea"
+                    rows="2"
+                    className="form-control"
+                    placeholder={t("Description")}
+                    value={addItemForm.publicCommnets}
+                    onChange={(e) => handleAddItemChange("publicCommnets", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+
+            {/* Row 4: Stock Type, Stock SubType, Grown/Process Type, Certificate No */}
+            <Row className="mb-3">
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("STOCK TYPE")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.category}
+                    onChange={(e) => handleAddItemChange("category", e.target.value)}
+                  >
+                    <option value="Natural Diamond">Natural Diamond</option>
+                    <option value="Lab Grown Diamond">Lab Grown Diamond</option>
+                    <option value="Gem Stone">Gem Stone</option>
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("STOCK SUBTYPE")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.instruction}
+                    onChange={(e) => handleAddItemChange("instruction", e.target.value)}
+                  >
+                    <option value="Polished">{t("Polished")}</option>
+                    <option value="Makeble">{t("Makeble")}</option>
+                    <option value="Rough">{t("Rough")}</option>
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("GROWN/PROCESS TYPE")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.productType}
+                    onChange={(e) => handleAddItemChange("productType", e.target.value)}
+                  >
+                    <option value="">{t("Select ProductType")}</option>
+                    {productTypeOpts.map((opt, idx) => (
+                      <option key={idx} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("CERTIFICATE NO")}</Label>
+                  <Input
+                    type="text"
+                    className="form-control"
+                    placeholder={t("Certificate No")}
+                    value={addItemForm.certificateNo}
+                    onChange={(e) => handleAddItemChange("certificateNo", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+
+            {/* Row 5: USD to INR Rate, Purchase/Cost Price USD/Carats, Purchase/Cost Price INR/Carats, Single/Parcel */}
+            <Row className="mb-3">
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
+                    {t(`${stockSymbol} TO ${masterSymbol} RATE`).toUpperCase()}
+                  </Label>
+                  <Input
+                    type="text"
+                    className="form-control text-end"
+                    placeholder={t("USD to INR Rate")}
+                    value={addItemForm.pDollorRate}
+                    onChange={(e) => handleAddItemChange("pDollorRate", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
+                    {t(`PURCHASE/COST PRICE ${stockSymbol}/CARATS`).toUpperCase()}
+                  </Label>
+                  <Input
+                    type="text"
+                    className="form-control text-end"
+                    placeholder={t("Purchase/Cost Price USD/Carats")}
+                    value={addItemForm.purchaseRate}
+                    onChange={(e) => handleAddItemChange("purchaseRate", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
+                    {t(`PURCHASE/COST PRICE ${masterSymbol}/CARATS`).toUpperCase()}
+                  </Label>
+                  <Input
+                    type="text"
+                    className="form-control text-end"
+                    placeholder={t("Purchase/Cost Price INR/Carats")}
+                    value={addItemForm.masterCurrencyRate}
+                    onChange={(e) => handleAddItemChange("masterCurrencyRate", e.target.value)}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={3}>
+                <FormGroup className="mb-0">
+                  <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>{t("SINGLE / PARCEL")}</Label>
+                  <select
+                    className="form-select"
+                    value={addItemForm.stoneTypes}
+                    onChange={(e) => handleAddItemChange("stoneTypes", e.target.value)}
+                  >
+                    <option value="Single">{t("Single")}</option>
+                    <option value="Parcel">{t("Parcel")}</option>
+                  </select>
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="light" onClick={() => setAddItemOpen(false)}>
+              {t("Close")}
+            </Button>
+            <Button color="primary" onClick={handleSaveAddItem} disabled={addItemSubmitting}>
+              {addItemSubmitting ? t("Saving...") : t("Save")}
             </Button>
           </ModalFooter>
         </Modal>

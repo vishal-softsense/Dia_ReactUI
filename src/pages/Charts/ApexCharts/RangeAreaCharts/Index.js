@@ -4,7 +4,7 @@ import BreadCrumb from '../../../../Components/Common/BreadCrumb';
 import { RangeAreaBasicChartCode, RangeAreaChartCode } from './RangeChart';
 
 const RangeArea = () => {
-  document.title = "Apex Range Area Charts | Velzon - React Admin & Dashboard Template";
+  document.title = "Apex Range Area Charts | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
       <React.Fragment>
           <div className="page-content">

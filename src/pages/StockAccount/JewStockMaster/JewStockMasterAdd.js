@@ -7,12 +7,12 @@ import {
   Button, Col, Row, Spinner, Container
 } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import Select from "react-select";
 
 import {
   getMountingStock,
   getJewPurity,
   getPureRatio,
-  getJewSettingType,
   saveMountingStock,
   getMountingStockDropdown,
   getAllLotNoList,
@@ -27,6 +27,7 @@ import {
   computeChargeTotals,
   computeMakingCharges,
   floorPurityRatio,
+  MAKING_TYPE_OPTIONS,
   mapDiamondListToRows,
   summarizeTableRows,
 } from "./jewStockFormUtils";
@@ -66,11 +67,9 @@ import {
   so `toOptions()` below checks several common id/label field name patterns.
   Trim it once you've confirmed the real row shape for each endpoint.
 
-  ASSUMPTION: "jew-setting-type" is used here to populate the "Making Type"
-  dropdown (Per Gm / Per Pcs / Lumsum / Per% etc.) since that was the last
-  hardcoded type-list in the form. If GetJewSettingValueAsync actually
-  returns something else (e.g. Setting Charges types, not Making Types),
-  just point it at the right field — the wiring is the same either way.
+  Making Type (#Making-Type) uses fixed MVC options from jewStockFormUtils
+  (Per Gm / Per Pcs / Lumsum / Wastage / Per%). JewSettingValue from API is
+  for stone Setting Type (#Setting-Type), not Making Type.
   ─────────────────────────────────────────────────────────────────────────
 */
 
@@ -322,7 +321,6 @@ export default function AddMountingMaster() {
   const [metalTypeOptions, setMetalTypeOptions] = useState([]);
   const [colorOptions, setColorOptions] = useState([]);
   const [purityOptions, setPurityOptions] = useState([]);
-  const [settingTypeOptions, setSettingTypeOptions] = useState([]);
   const [shapeOptions, setShapeOptions] = useState([]);
   const [sizeOptions, setSizeOptions] = useState([]);
   const [sieveOptions, setSieveOptions] = useState([]);
@@ -409,30 +407,9 @@ export default function AddMountingMaster() {
   // ── Form submit loading ──
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Category / Sub Category / Metal / Color / Setting Type don't depend on
-  // anything else, so load them all once on mount.
+  // Category / Sub Category / Metal / Color load once on mount.
   useEffect(() => {
     let cancelled = false;
-
-    // Dedicated loader for Setting Type — fallback if not in add-stock-mounting payload
-    const loadSettingType = async () => {
-      try {
-        const response = await getJewSettingType();
-        const { success, data, message } = unwrapApiResponse(response);
-        if (cancelled) return;
-        if (success && Array.isArray(data)) {
-          // data is string[] e.g. ["Per Gm", "Per Pcs", "Lumsum", "Per%"]
-          setSettingTypeOptions(data.map((v) => ({ value: v, label: v })));
-        } else {
-          toast.error(message || "Failed to load Making Type list.");
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          toast.error("Failed to load Making Type list.");
-        }
-      }
-    };
 
     const loadAddMountingDropdowns = async () => {
       try {
@@ -465,10 +442,6 @@ export default function AddMountingMaster() {
         );
         setMetalTypeOptions(idOnlyOptions(data.JewMetalType ?? data.jewMetalType, "MetalID"));
         setColorOptions(idOnlyOptions(data.JewColor ?? data.jewColor, "JewColorID"));
-        const settingValues = data.JewSettingValue ?? data.jewSettingValue;
-        if (Array.isArray(settingValues) && settingValues.length > 0) {
-          setSettingTypeOptions(settingValues.map((v) => ({ value: v, label: v })));
-        }
         const basis = data.DecimalinInvoiceAmount ?? data.decimalinInvoiceAmount ?? "";
         if (basis) {
           setCalcBasis(String(basis) === "GrossWeight" ? "GrossWeight" : "NetWeight");
@@ -486,77 +459,63 @@ export default function AddMountingMaster() {
     };
 
     setDropdownLoading(true);
-    Promise.all([
-      loadAddMountingDropdowns(),
-      loadSettingType(),
-    ]).finally(() => { if (!cancelled) setDropdownLoading(false); });
+    loadAddMountingDropdowns().finally(() => { if (!cancelled) setDropdownLoading(false); });
 
     return () => { cancelled = true; };
   }, []);
 
-  // Purity list depends on the selected Metal Type: GET list-jew-purity?metalType=...
-  useEffect(() => {
-    if (!metal) {
+  // Same as MVC LoadMetalPurityOptions / Edit loadPurity — load options without clearing selection
+  const loadPurity = useCallback(async (metalType) => {
+    if (!metalType) {
       setPurityOptions([]);
-      setMetalPurity("");
-      setPurityRatio("");
       return;
     }
-    let cancelled = false;
     setPurityLoading(true);
-    getJewPurity(metal)
-      .then((response) => {
-        if (cancelled) return;
-        const { success, data, message } = unwrapApiResponse(response);
-        if (success) {
-          setPurityOptions(idOnlyOptions(data, "MetalPurityID"));
-        } else {
-          toast.error(message || "Failed to load Purity list.");
-          setPurityOptions([]);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.error(err);
-          toast.error("Failed to load Purity list.");
-        }
-      })
-      .finally(() => { if (!cancelled) setPurityLoading(false); });
+    try {
+      const response = await getJewPurity(metalType);
+      const { success, data, message } = unwrapApiResponse(response);
+      if (success) {
+        setPurityOptions(idOnlyOptions(data, "MetalPurityID"));
+      } else {
+        toast.error(message || "Failed to load Purity list.");
+        setPurityOptions([]);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load Purity list.");
+      setPurityOptions([]);
+    } finally {
+      setPurityLoading(false);
+    }
+  }, []);
 
-    // metal type changed → previously selected purity/ratio no longer valid
+  const loadRatio = useCallback(async (metalType, purity) => {
+    if (!metalType || !purity) return;
+    try {
+      const response = await getPureRatio(metalType, purity);
+      const { success, data, message } = unwrapApiResponse(response);
+      if (success) {
+        const ratio = (data && typeof data === "object")
+          ? (data.Ratio ?? data.ratio ?? data.PureRatio ?? data.purityRatio ?? "")
+          : data;
+        setPurityRatio(floorPurityRatio(ratio));
+      } else {
+        toast.error(message || "Failed to load Purity Ratio.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load Purity Ratio.");
+    }
+  }, []);
+
+  // Manual metal change only — do NOT clear purity when Use Mounting fills metal + purity together
+  const handleMetalChange = (value) => {
+    setMetal(value);
     setMetalPurity("");
     setPurityRatio("");
-    return () => { cancelled = true; };
-  }, [metal]);
-
-  // Purity Ratio depends on Metal Type + Purity: GET get-pure-ratio?metalType=&metalPurity=
-  useEffect(() => {
-    if (!metal || !metalPurity) return;
-    let cancelled = false;
-    getPureRatio(metal, metalPurity)
-      .then((response) => {
-        if (cancelled) return;
-        const { success, data, message } = unwrapApiResponse(response);
-        if (success) {
-          // `data` is expected to be the ratio itself (number/string) per
-          // GetPureRatioAsync's return type — adjust if it comes back as
-          // an object like { Ratio: 91.6 } instead.
-          const ratio = (data && typeof data === "object")
-            ? (data.Ratio ?? data.ratio ?? data.PureRatio ?? data.purityRatio ?? "")
-            : data;
-          setPurityRatio(floorPurityRatio(ratio));
-        } else {
-          toast.error(message || "Failed to load Purity Ratio.");
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.error(err);
-          toast.error("Failed to load Purity Ratio.");
-        }
-      });
-    return () => { cancelled = true; };
-  }, [metal, metalPurity]);
+    if (value) loadPurity(value);
+    else setPurityOptions([]);
+  };
 
   // ── Derived visibility ──
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
@@ -607,11 +566,11 @@ export default function AddMountingMaster() {
   }, [calcBasis, metalPricePerGm, grossWeight, netWeight, purityRatio]);
 
   useEffect(() => {
-    const mc = computeMakingCharges(makingType, makingRate, grossWeight, totalPcs, metalAmount);
+    const mc = computeMakingCharges(makingType, makingRate, grossWeight);
     const val = mc.toFixed(2);
     setOriginalMakingCharges(val);
     setMakingCharges(val);
-  }, [makingType, makingRate, grossWeight, totalPcs, metalAmount]);
+  }, [makingType, makingRate, grossWeight]);
 
   useEffect(() => {
     const hc = parseFloat(handlingCarat) || 0;
@@ -736,7 +695,9 @@ export default function AddMountingMaster() {
       setJewSize(data.jewSize || data.JewSize || "");
       setMetal(data.metalType || data.MetalType || "");
       setColor(data.color || data.Color || "");
-      setMetalPurity(data.purity || data.Purity || "");
+      const loadedPurity = data.purity || data.Purity || "";
+      const loadedMetalType = data.metalType || data.MetalType || "";
+      setMetalPurity(loadedPurity);
       setPurityRatio(
         data.pureRatio != null || data.PureRatio != null
           ? Number(data.pureRatio ?? data.PureRatio).toFixed(3)
@@ -806,23 +767,32 @@ export default function AddMountingMaster() {
       setStoneAmount(data.totalStoneAmount ?? data.TotalStoneAmount ?? "");
       setStoneQty(String(data.totalStoneQty ?? data.TotalStoneQty ?? ""));
 
+      // MVC: LoadMetalPurityOptions(d.MetalType, d.Purity) — load options, keep selected purity
+      if (loadedMetalType) {
+        await loadPurity(loadedMetalType);
+        if (loadedPurity) {
+          await loadRatio(loadedMetalType, loadedPurity);
+        }
+      }
+
       const rows = mapDiamondListToRows(diamondList);
       setTableRows((prev) => [...prev, ...rows]);
     } catch (err) {
       console.error(err);
       toast.error("Error fetching mounting details.");
     }
-  }, [askingPer]);
+  }, [askingPer, loadPurity, loadRatio]);
 
   const handleUseMountingChange = (selectedId) => {
     setUseMounting(selectedId);
     applyMountingDetail(selectedId);
   };
 
-  // ─── Metal Purity change → the get-pure-ratio effect above fetches the
-  //     ratio automatically whenever `metal` + `metalPurity` are both set.
+  // ─── Metal Purity change → fetch pure ratio (MVC MetalPurity change)
   const handlePurityChange = (val) => {
     setMetalPurity(val);
+    if (metal && val) loadRatio(metal, val);
+    else setPurityRatio("");
   };
 
   // ─── Sub Category options, filtered by selected Category when the API
@@ -1241,13 +1211,28 @@ export default function AddMountingMaster() {
 
                       {showMountingSection && (
                         <FieldRow label="Use Mounting">
-                          <select className={selectCls} value={useMounting}
-                            onChange={(e) => handleUseMountingChange(e.target.value)}>
-                            <option value="">Select Lot No</option>
-                            {mountOpts.map((o) => (
-                              <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                          </select>
+                          {/* MVC Select2 (#UseMounting): searchable dropdown */}
+                          <Select
+                            classNamePrefix="react-select"
+                            placeholder="Select Lot No"
+                            isClearable
+                            isSearchable
+                            options={mountOpts}
+                            value={mountOpts.find((o) => String(o.value) === String(useMounting)) || null}
+                            onChange={(selected) => handleUseMountingChange(selected ? selected.value : "")}
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                minHeight: 31,
+                                fontSize: 13,
+                              }),
+                              menu: (base) => ({ ...base, zIndex: 20, fontSize: 13 }),
+                              option: (base) => ({ ...base, fontSize: 13 }),
+                              input: (base) => ({ ...base, margin: 0, padding: 0 }),
+                              valueContainer: (base) => ({ ...base, padding: "0 8px" }),
+                              indicatorsContainer: (base) => ({ ...base, height: 29 }),
+                            }}
+                          />
                         </FieldRow>
                       )}
 
@@ -1324,7 +1309,7 @@ export default function AddMountingMaster() {
                     <>
                       <FieldRow label="Metal Type">
                         <select className={selectCls} value={metal}
-                          onChange={(e) => setMetal(e.target.value)}>
+                          onChange={(e) => handleMetalChange(e.target.value)}>
                           <option value="">Select MetalType</option>
                           {metalTypeOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -1423,16 +1408,7 @@ export default function AddMountingMaster() {
                       <select className={selectCls} style={{ flex: 1 }} value={makingType}
                         onChange={(e) => setMakingType(e.target.value)}>
                         <option value="">Select Making Type</option>
-                        {(settingTypeOptions.length > 0
-                          ? settingTypeOptions
-                          : [
-                              { value: "Per Gm", label: "Per Gm" },
-                              { value: "Per Pcs", label: "Per Pcs" },
-                              { value: "Lumsum", label: "Lumsum" },
-                              { value: "Wastage", label: "Wastage" },
-                              { value: "Per%", label: "Per%" },
-                            ]
-                        ).map((o) => (
+                        {MAKING_TYPE_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>

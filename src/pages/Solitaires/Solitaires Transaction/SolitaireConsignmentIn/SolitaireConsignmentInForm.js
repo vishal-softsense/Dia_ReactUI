@@ -31,7 +31,8 @@ import {
   getSolitaireConsignmentInDetail,
   getSolitaireConsignmentInLotDetail,
   getSolitaireConsignmentInPageData,
-  getSolitaireLots
+  getSolitaireLots,
+  getSolitairePurchaseRapRate
 } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
@@ -39,6 +40,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
+import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -689,18 +691,18 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
         adatAmount: toNum(getVal(h, "AdatAmount")),
         brokerPer: toNum(getVal(h, "BrokerPer")),
         brokerAmount: toNum(getVal(h, "BrokerAmount")),
-        description: getVal(h, "Description"),
+        description: getVal(h, "Description", "InvDisc"),
         chkGrading: !!(getVal(h, "chkGrading") === true || getVal(h, "chkGrading") === "true"),
         plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
         roundAmount: toNum(getVal(h, "RoundAmount")),
-        vatPer: toNum(getVal(h, "VatPer")),
-        cgstPer: toNum(getVal(h, "CGSTPer")),
-        sgstPer: toNum(getVal(h, "SGSTPer")),
-        igstPer: toNum(getVal(h, "IGSTPer")),
-        vatAmount: toNum(getVal(h, "VatAmount")),
-        cgstAmt: toNum(getVal(h, "CGSTAmt")),
-        sgstAmt: toNum(getVal(h, "SGSTAmt")),
-        igstAmt: toNum(getVal(h, "IGSTAmt")),
+        vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
+        cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "cgstPer", "CGST", "CgstPercentage", "CGSTRate"),
+        sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "sgstPer", "SGST", "SgstPercentage", "SGSTRate"),
+        igstPer: getNumVal(h, "IGSTPer", "IgstPer", "igstPer", "IGST", "IgstPercentage", "IGSTRate"),
+        vatAmount: getNumVal(h, "VatAmount", "VATAmount", "vatAmount"),
+        cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt", "cgstAmt", "cgstAmount"),
+        sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt", "sgstAmt", "sgstAmount"),
+        igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt", "igstAmt", "igstAmount"),
         decimalPlaces: 2
       });
 
@@ -960,7 +962,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     let finalSAmount = sOp === "/" ? (stockCurRate !== 0 ? receivableAmount / stockCurRate : 0) : receivableAmount * stockCurRate;
 
     return {
-      comDisplay: Math.round(comDisplay * 100) / 100,
+      comDisplay: formatCommissionDisplay(comDisplay, false),
       broDisplay: Math.round(broDisplay * 100) / 100,
       netAmount: fix(taxableAmount),
       netMAmount: fix(mCurAmount),
@@ -974,6 +976,19 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     };
   }, [totals.totAmount, header, mOp, sOp, masterSymbol, stockSymbol, currencyOpts]);
 
+  // MVC #CommissionAmount.change → reverse-calc AdatPer (Commission %)
+  const [comAmtEdit, setComAmtEdit] = useState(null);
+  const applyCommissionAmount = (rawValue) => {
+    const adatPer = calcCommissionPerFromAmount({
+      enteredComAmount: rawValue,
+      netAmount: totals.totAmount,
+      baseRate: header.baseRate,
+      mOp
+    });
+    setHeaderField("adatPer", adatPer);
+  };
+
+
   useEffect(() => {
     setHeader((prev) => ({
       ...prev,
@@ -986,78 +1001,433 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     }));
   }, [summary.comDisplay, summary.broDisplay, summary.vatAmt, summary.cgstAmt, summary.sgstAmt, summary.igstAmt]);
 
+  // MVC Consignment Import Excel reuses purchase/import-excel-data (GetItemDetails) — same mapping/calcs.
   const mapImportRows = (headers, dataRows) => {
-    const idx = (names) => headers.findIndex((h) => names.includes(h));
-    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #", "stoneid"]);
-    const iName = idx(["itemname", "item name", "description", "item"]);
-    const iWt = idx(["weight", "carat", "cts", "wt", "carats"]);
-    const iPcs = idx(["pcs", "qty", "quantity"]);
-    const iMrp = idx(["mrp"]);
-    const iBack = idx(["back", "purchaseback", "discount"]);
-    const iRate = idx(["rate", "purchaserate", "price", "purprice", "pur price"]);
-    const iL1 = idx(["less1"]);
-    const iL2 = idx(["less2"]);
-    const iL3 = idx(["less3"]);
-    const iShape = idx(["shape"]);
-    const iColor = idx(["color"]);
-    const iClarity = idx(["clarity"]);
-    const iCut = idx(["cut"]);
-    const iPolish = idx(["polish"]);
-    const iSymmetry = idx(["symmetry"]);
-    const iFl = idx(["fl", "fluorescence"]);
+    const norm = (h) =>
+      String(h || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+    const headersN = (headers || []).map(norm);
+    const idx = (...names) => {
+      for (const name of names.map(norm)) {
+        const i = headersN.findIndex((h) => h === name);
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+    const idxIncludes = (...parts) => {
+      for (const part of parts.map(norm)) {
+        const i = headersN.findIndex((h) => h === part || h.includes(part));
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+
+    // MVC required columns
+    const required = [
+      ["stoneid", "stone id", "stone #"],
+      ["shape"],
+      ["carats", "carat"],
+      ["color"],
+      ["clarity"],
+      ["purprice", "pur price"],
+      ["cut"],
+      ["polish"],
+      ["symmetry"],
+      ["fl", "fluorescence"]
+    ];
+    const missing = required.filter((names) => idx(...names) < 0);
+    if (missing.length) {
+      return {
+        error: t("** Required column missing. Please download format file and try again."),
+        rows: []
+      };
+    }
+
+    // MVC: LotNo = StoneID; MfgPacketID = "Lot No"
+    const iStone = idx("stoneid", "stone id", "stone #");
+    const iLotFallback = idx("lotno", "lot no", "lot", "stockno", "stock #");
+    const iPacket = idx("lot no", "lotno");
+    const iWt = idx("carats", "carat", "weight", "cts", "wt", "opening carat", "openingcarat");
+    const iPcs = idx("pcs", "qty", "quantity");
+    const iMrp = idx("mrp", "msp", "rap", "rapa");
+    const iBackExact = idx(
+      "discount",
+      "discount/back",
+      "back",
+      "purchaseback",
+      "purchase back",
+      "pmrpdown"
+    );
+    const iBack = iBackExact >= 0 ? iBackExact : idxIncludes("discount", "purchaseback");
+    const iRateExact = idx(
+      "purprice",
+      "pur price",
+      "purchaserate",
+      "purchase rate",
+      "usdpricepercarat",
+      "usd price per carat",
+      "pricepercarat",
+      "cogs",
+      "rate",
+      "price"
+    );
+    const iRate = iRateExact >= 0 ? iRateExact : idxIncludes("purprice", "purchaserate", "pricepercarat");
+    const iShape = idx("shape", "shapeid");
+    const iColor = idx("color", "colorid");
+    const iClarity = idx("clarity", "clarityid");
+    const iSize = idx("size", "sizeid");
+    const iCut = idx("cut");
+    const iProportion = idx("proportion");
+    const iPolish = idx("polish", "polishid");
+    const iSymmetry = idx("symmetry", "sym", "symid");
+    const iFl = idx("fl", "fluorescence", "fluo", "flid");
+    const iLab = idx("cert", "lab", "certid");
+    const iCertNo = idx("certificateno", "certificate no", "cert no", "certno");
+    const iLw = idx("l:w %", "lw", "l:w", "ratio");
+    const iLength = idx("length", "l");
+    const iWidth = idx("width", "w");
+    const iDepth = idx("depth", "d");
+    const iTotDep = idx("totdep", "totaldepth", "tdep", "totdepth");
+    const iTable = idx("table", "tableper", "tab%");
+    const iCulet = idx("culet");
+    const iGMin = idx("g.min", "gmin", "g min");
+    const iGMax = idx("g.max", "gmax", "g max");
+    const iMin = idx("min");
+    const iMax = idx("max");
+    const iGirdlePer = idx("girdleper", "girdle per");
+    const iBrown = idx("brown");
+    const iMilky = idx("milky");
+    const iHa = idx("h&a", "ha");
+    const iNatts = idx("natts");
+    const iEyeClean = idx("eyeclean", "eye clean");
+    const iOit = idx("oit");
+    const iOig = idx("oig");
+    const iOic = idx("oic");
+    const iOip = idx("oip");
+    const iTabInc = idx("tabinc");
+    const iIncPattern = idx("inclusion pattern", "incpattern");
+    const iInscription = idx("inscription text", "inscriptiontext", "laserinscriptiontext");
+    const iCh = idx("ch");
+    const iCa = idx("ca");
+    const iPa = idx("pa");
+    const iPh = idx("ph");
+    const iStrLn = idx("strln");
+    const iLrHalf = idx("lr_half", "lrhalf");
+    const iLuster = idx("luster");
+    const iKeyToSymbols = idx("keytosymbols", "key to symbols");
+    const iLabComments = idx("labcomments", "lab comments");
+    const iReportDate = idx("reportdate", "report date");
+    const iMfgComments = idx("mfgcomments", "mfg comments");
+    const iMemberRemarks = idx("memberremarks", "member remarks");
+    const iIgiCut = idx("igicut");
+    const iHrdCut = idx("hrdcut");
+    const iGirdleCondition = idx("girdlecondition", "girdle condition");
+    const iAskingRate = idx("askingrate", "asking rate");
+    const iAskingBack = idx("askingback", "asking back");
+    const iActualRate = idx("actualrate", "actual rate");
+    const iActualBack = idx("actualback", "actual back");
+    const iGreen = idx("green");
+    const iFlColor = idx("flcolor", "fl color");
+    const iCuletCondition = idx("culetcondition", "culet condition");
+    const iShade = idx("shade");
+    const iCrownInclusion = idx("crowninclusion", "crown inclusion");
+    const iBit = idx("blackintable", "bit");
+    const iBis = idx("blackinside", "bis");
+    const iFancyColor = idx("fancycolor", "fancy color");
+    const iFancyIntensity = idx("fancycolorintensity", "fancy color intensity");
+    const iFancyOvertone = idx("fancycolorovertone", "fancy color overtone");
+    const iRmk = idx("rmk");
+    const iItemGroup = idx("itemgroup", "item group");
+    const iTreatment = idx("treatment");
+    const iRfid = idx("rfid");
+    const iImagePath = idx("imagepath", "image path");
+    const iVideoPath = idx("videopath", "video path");
+    const iPagePath = idx("pagepath", "page path");
+    const iCountryOrigin = idx("countryoforigin", "country of origin");
+    const iCountryMfg = idx("countryofmfg", "country of mfg");
+    const iKapan = idx("kapan/inv no", "kapan", "mfgseriesid");
+
+    // MVC: Less1/2/3 come from form (ImportData), not Excel columns
+    const formLess1 = toNum(entry.less1);
+    const formLess2 = toNum(entry.less2);
+    const formLess3 = toNum(entry.less3);
 
     const cell = (cols, i) => (i >= 0 ? String(cols[i] ?? "").replace(/^"|"$/g, "").trim() : "");
 
-    return dataRows.map((cols) => {
+    const rows = [];
+    for (const cols of dataRows) {
+      const stoneVal = cell(cols, iStone);
+      const packetVal = cell(cols, iPacket >= 0 ? iPacket : iLotFallback);
+      const lotNo = stoneVal || packetVal;
       const weight = toNum(cell(cols, iWt));
-      const rate = toNum(cell(cols, iRate));
-      const less1 = toNum(cell(cols, iL1));
-      const less2 = toNum(cell(cols, iL2));
-      const less3 = toNum(cell(cols, iL3));
+      if (!lotNo && weight <= 0) continue;
+      if (weight <= 0) {
+        return { error: t("Carat is invalid."), rows: [] };
+      }
+      if (!lotNo) continue;
+
+      let rate = toNum(cell(cols, iRate));
+      if (rate < 0) rate = 0;
+      let back = toNum(cell(cols, iBack));
+      let mrp = toNum(cell(cols, iMrp));
+      if (rate === 0) {
+        const ask = toNum(cell(cols, iAskingRate));
+        if (ask > 0) rate = ask;
+      }
+
+      if (rate === 0 && back === 0) {
+        return { error: t("Rate and Discount both can not be 0."), rows: [] };
+      }
+      if (rate !== 0 && mrp !== 0) back = (rate * 100) / mrp - 100;
+      else if (mrp !== 0) rate = ((100 + back) * mrp) / 100;
+
+      let askingRate = toNum(cell(cols, iAskingRate));
+      if (askingRate < 0) askingRate = 0;
+      let askingBack = toNum(cell(cols, iAskingBack));
+      let actualRate = toNum(cell(cols, iActualRate));
+      if (actualRate < 0) actualRate = 0;
+      let actualBack = toNum(cell(cols, iActualBack));
+      if (askingRate !== 0 && mrp !== 0) askingBack = (askingRate * 100) / mrp - 100;
+      else if (mrp !== 0 && askingBack !== 0) askingRate = ((100 + askingBack) * mrp) / 100;
+      if (actualRate !== 0 && mrp !== 0) actualBack = (actualRate * 100) / mrp - 100;
+      else if (mrp !== 0 && actualBack !== 0) actualRate = ((100 + actualBack) * mrp) / 100;
+
+      const less1 = formLess1;
+      const less2 = formLess2;
+      const less3 = formLess3;
       const shape = cell(cols, iShape);
       const color = cell(cols, iColor);
       const clarity = cell(cols, iClarity);
-      return {
-        lotNo: cell(cols, iLot),
-        itemName: cell(cols, iName) || `${shape} ${color} ${clarity}`.trim(),
-        weight,
-        pcs: toNum(cell(cols, iPcs), 1),
-        mrp: toNum(cell(cols, iMrp)),
-        back: toNum(cell(cols, iBack)),
-        rate,
+      const certificateNo = cell(cols, iCertNo);
+      const cutVal = cell(cols, iCut);
+      const proportionVal = cell(cols, iProportion) || cutVal;
+      const roundedWeight = Math.round(weight * 1000) / 1000;
+      const roundedRate = Math.round(rate * 100) / 100;
+      const roundedBack = Math.round(back * 100) / 100;
+
+      // MVC: ItemName = Shape + Color + Clarity + CertificateNo
+      const itemName = `${shape} ${color} ${clarity} ${certificateNo}`.replace(/\s+/g, " ").trim();
+
+      rows.push({
+        ...emptyItem(),
+        lotNo,
+        itemName,
+        weight: roundedWeight,
+        pcs: toNum(cell(cols, iPcs), 1) || 1,
+        mrp,
+        back: roundedBack,
+        rate: roundedRate,
         less1,
         less2,
         less3,
-        amount: calcItemAmount(weight, rate, less1, less2, less3),
+        amount: calcItemAmount(roundedWeight, roundedRate, less1, less2, less3),
         shape,
         color,
         clarity,
-        size: "",
+        size: cell(cols, iSize),
         polish: cell(cols, iPolish),
         symmetry: cell(cols, iSymmetry),
         fl: cell(cols, iFl),
-        cut: cell(cols, iCut),
-        lab: "",
-        certificateNo: "",
+        cut: cutVal,
+        proportion: proportionVal,
+        lab: cell(cols, iLab),
+        certificateNo,
+        lw: toNum(cell(cols, iLw)),
+        length: toNum(cell(cols, iLength)),
+        width: toNum(cell(cols, iWidth)),
+        depth: toNum(cell(cols, iDepth)),
+        totDep: toNum(cell(cols, iTotDep)),
+        tablePer: toNum(cell(cols, iTable)),
+        culet: cell(cols, iCulet),
+        gMin: cell(cols, iGMin),
+        gMax: cell(cols, iGMax),
+        min: toNum(cell(cols, iMin)),
+        max: toNum(cell(cols, iMax)),
+        girdlePer: toNum(cell(cols, iGirdlePer)),
+        brown: cell(cols, iBrown),
+        milky: cell(cols, iMilky),
+        ha: cell(cols, iHa),
+        natts: cell(cols, iNatts),
+        eyeClean: cell(cols, iEyeClean),
+        oit: cell(cols, iOit),
+        oig: cell(cols, iOig),
+        oic: cell(cols, iOic),
+        oip: cell(cols, iOip),
+        tabInc: cell(cols, iTabInc),
+        incPattern: cell(cols, iIncPattern),
+        inscriptionText: cell(cols, iInscription),
+        ch: toNum(cell(cols, iCh)),
+        ca: toNum(cell(cols, iCa)),
+        pa: toNum(cell(cols, iPa)),
+        ph: toNum(cell(cols, iPh)),
+        strLn: toNum(cell(cols, iStrLn)),
+        lrHalf: toNum(cell(cols, iLrHalf)),
+        luster: cell(cols, iLuster),
+        keyToSymbols: cell(cols, iKeyToSymbols),
+        labComments: cell(cols, iLabComments),
+        reportDate: cell(cols, iReportDate),
+        mfgComments: cell(cols, iMfgComments),
+        memberRemarks: cell(cols, iMemberRemarks),
+        igiCut: cell(cols, iIgiCut),
+        hrdCut: cell(cols, iHrdCut),
+        stoneId: stoneVal,
+        girdleCondition: cell(cols, iGirdleCondition),
+        askingRate: Math.round(askingRate * 100) / 100,
+        askingBack: Math.round(askingBack * 100) / 100,
+        actualRate: Math.round(actualRate * 100) / 100,
+        actualBack: Math.round(actualBack * 100) / 100,
+        green: cell(cols, iGreen),
+        flColor: cell(cols, iFlColor),
+        culetCondition: cell(cols, iCuletCondition),
+        shade: cell(cols, iShade),
+        crownInclusion: cell(cols, iCrownInclusion),
+        bit: cell(cols, iBit),
+        bis: cell(cols, iBis),
+        fancyColor: cell(cols, iFancyColor),
+        fancyColorIntensity: cell(cols, iFancyIntensity),
+        fancyColorOvertone: cell(cols, iFancyOvertone),
+        rmk: cell(cols, iRmk),
+        itemGroup: cell(cols, iItemGroup),
+        treatment: cell(cols, iTreatment),
+        rfid: cell(cols, iRfid),
+        imagePath: cell(cols, iImagePath),
+        videoPath: cell(cols, iVideoPath),
+        pagePath: cell(cols, iPagePath),
+        countryOfOrigin: cell(cols, iCountryOrigin),
+        countryOfMfg: cell(cols, iCountryMfg),
+        mfgSeriesID: cell(cols, iKapan),
+        mfgPacketID: packetVal,
         memoTransCode: 0,
         rtnCarats: 0
-      };
-    }).filter((r) => r.lotNo);
+      });
+    }
+    return { rows };
+  };
+
+  /** MVC GetRapRate when Excel MRP is 0/blank, then derive Back/Rate. */
+  const enrichImportRowsWithRapRate = async (rows) => {
+    const list = Array.isArray(rows) ? rows : [];
+    const caratKey = (c) => String(Math.round(toNum(c) * 1000) / 1000);
+    const rowKey = (shape, color, clarity, carat) =>
+      `${String(shape || "").trim()}|${String(color || "").trim()}|${String(clarity || "").trim()}|${caratKey(carat)}`;
+
+    const needIdx = [];
+    const unique = new Map();
+    list.forEach((r, i) => {
+      if (toNum(r.mrp) !== 0) return;
+      if (!r.shape || !r.color || !r.clarity || toNum(r.weight) <= 0) return;
+      needIdx.push(i);
+      const key = rowKey(r.shape, r.color, r.clarity, r.weight);
+      if (!unique.has(key)) {
+        unique.set(key, {
+          shape: r.shape,
+          color: r.color,
+          clarity: r.clarity,
+          carat: toNum(r.weight)
+        });
+      }
+    });
+    if (!needIdx.length) return list;
+
+    try {
+      const res = await getSolitairePurchaseRapRate(Array.from(unique.values()));
+      if (!(res?.success || res?.Success)) return list;
+      const data = res.Data || res.data || [];
+      const mrpByKey = new Map();
+      (Array.isArray(data) ? data : []).forEach((d) => {
+        const key = rowKey(getVal(d, "Shape"), getVal(d, "Color"), getVal(d, "Clarity"), getNumVal(d, "Carat"));
+        mrpByKey.set(key, getNumVal(d, "MRP", "mrp"));
+      });
+
+      needIdx.forEach((i) => {
+        const r = list[i];
+        const key = rowKey(r.shape, r.color, r.clarity, r.weight);
+        const mrp = mrpByKey.get(key);
+        if (!mrp || mrp === 0) return;
+        r.mrp = mrp;
+        let rate = toNum(r.rate);
+        let back = toNum(r.back);
+        if (rate !== 0 && mrp !== 0) back = (rate * 100) / mrp - 100;
+        else if (mrp !== 0) rate = ((100 + back) * mrp) / 100;
+        r.rate = Math.round(rate * 100) / 100;
+        r.back = Math.round(back * 100) / 100;
+        r.amount = calcItemAmount(toNum(r.weight), r.rate, toNum(r.less1), toNum(r.less2), toNum(r.less3));
+
+        let askingRate = toNum(r.askingRate);
+        let askingBack = toNum(r.askingBack);
+        let actualRate = toNum(r.actualRate);
+        let actualBack = toNum(r.actualBack);
+        if (askingRate !== 0 && mrp !== 0) askingBack = (askingRate * 100) / mrp - 100;
+        else if (mrp !== 0 && askingBack !== 0) askingRate = ((100 + askingBack) * mrp) / 100;
+        if (actualRate !== 0 && mrp !== 0) actualBack = (actualRate * 100) / mrp - 100;
+        else if (mrp !== 0 && actualBack !== 0) actualRate = ((100 + actualBack) * mrp) / 100;
+        r.askingRate = Math.round(askingRate * 100) / 100;
+        r.askingBack = Math.round(askingBack * 100) / 100;
+        r.actualRate = Math.round(actualRate * 100) / 100;
+        r.actualBack = Math.round(actualBack * 100) / 100;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+    return list;
   };
 
   const parseCsv = (text) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
+    if (lines.length < 2) return { rows: [] };
     const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
     const dataRows = lines.slice(1).map((line) => line.split(",").map((c) => c.trim()));
     return mapImportRows(headers, dataRows);
   };
 
-  const applyImportedRows = (rows) => {
+  const findExcelHeaderRowIndex = (rows) => {
+    const markers = [
+      "stoneid",
+      "purprice",
+      "discount",
+      "discount/back",
+      "carats",
+      "carat",
+      "usdpricepercarat",
+      "lotno"
+    ];
+    for (let i = 0; i < Math.min(rows.length, 10); i += 1) {
+      const cells = (rows[i] || []).map((h) =>
+        String(h || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+      );
+      if (markers.some((m) => cells.some((c) => c === m || c.includes(m)))) return i;
+    }
+    return 0;
+  };
+
+  const densifyExcelRows = (rows) => {
+    const width = rows.reduce((max, row) => Math.max(max, (row || []).length), 0);
+    return rows.map((row) => {
+      const dense = Array.from({ length: width }, (_, i) => {
+        const v = row?.[i];
+        return v === undefined || v === null ? "" : v;
+      });
+      return dense.map((c) => String(c).trim());
+    });
+  };
+
+  const applyImportedRows = async (result) => {
+    if (result?.error) {
+      toast.warning(result.error);
+      return;
+    }
+    let rows = result?.rows || [];
     if (!rows.length) {
       toast.warning(t("No valid rows found in file."));
       return;
     }
+    rows = await enrichImportRowsWithRapRate(rows);
+    // MVC appends to existing TempData grid (does not clear); React merges by LotNo
     setItems((prev) => {
       const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
       rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
@@ -1074,6 +1444,10 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       return;
     }
     const name = (excelFile.name || "").toLowerCase();
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xls") && !name.endsWith(".csv")) {
+      toast.warning(t("File format is not valid."));
+      return;
+    }
     try {
       if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
         const parsed = await parseExcelFile(excelFile);
@@ -1081,15 +1455,17 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
           toast.error(parsed?.error?.message || t("Failed to parse Excel file."));
           return;
         }
-        const headers = (parsed.rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
-        const dataRows = parsed.rows.slice(1).map((row) => (row || []).map((c) => String(c ?? "").trim()));
-        applyImportedRows(mapImportRows(headers, dataRows));
+        const headerIdx = findExcelHeaderRowIndex(parsed.rows);
+        const dense = densifyExcelRows(parsed.rows);
+        const headers = (dense[headerIdx] || []).map((h) => String(h || "").trim().toLowerCase());
+        const dataRows = dense.slice(headerIdx + 1);
+        await applyImportedRows(mapImportRows(headers, dataRows));
         return;
       }
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
-          applyImportedRows(parseCsv(String(e.target?.result || "")));
+          await applyImportedRows(parseCsv(String(e.target?.result || "")));
         } catch (err) {
           console.error(err);
           toast.error(t("Failed to parse CSV."));
@@ -1137,7 +1513,8 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       BrokerName: broker?.label || "",
       BrokerPer: toNum(header.brokerPer),
       BrokerAmount: toNum(summary.broDisplay),
-      Description: header.description,
+      InvDisc: header.description || "",
+      Description: header.description || "",
       TotCts: totals.totCts,
       TotAmount: totals.totAmount,
       PlusMinusAmount: toNum(header.plusMinusAmount),
@@ -1233,6 +1610,15 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       MemoTransCode: toNum(r.memoTransCode),
       RtnCarats: toNum(r.rtnCarats),
       ReturnCarats: toNum(r.rtnCarats),
+      TabInc: r.tabInc,
+      IncPattern: r.incPattern,
+      CrownInclusion: r.crownInclusion,
+      Treatment: r.treatment,
+      RFID: r.rfid,
+      IGICut: r.igiCut,
+      HRDCut: r.hrdCut,
+      MfgComments: r.mfgComments,
+      RMK: r.rmk,
       ImagePath: r.imagePath,
       VideoPath: r.videoPath,
       PagePath: r.pagePath,
@@ -1533,7 +1919,21 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       <Col md={2} sm={3}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Com Amount")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={fmt(summary.comDisplay)} readOnly />
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                            disabled={readOnly}
+                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                            onChange={(e) => setComAmtEdit(e.target.value)}
+                            onBlur={() => {
+                              if (comAmtEdit !== null) {
+                                applyCommissionAmount(comAmtEdit);
+                                setComAmtEdit(null);
+                              }
+                            }}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md={3} sm={6}>

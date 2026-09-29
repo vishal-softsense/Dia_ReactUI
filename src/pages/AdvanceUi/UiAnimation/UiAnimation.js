@@ -21,7 +21,7 @@ const UiAnimation = () => {
             anchorPlacement: 'top-bottom',
         });
     }, []);
-    document.title = "Animation | Velzon - React Admin & Dashboard Template";
+    document.title = "Animation | DiaJewel - Diamond & Jewellery Cloud Business App";
     return (
         <React.Fragment>
             <div className="page-content">

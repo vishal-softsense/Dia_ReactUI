@@ -272,15 +272,6 @@ const MixSaleList = () => {
               </button>
               <button
                 type="button"
-                className="btn btn-soft-primary btn-sm p-1"
-                style={{ width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                title={t("View")}
-                onClick={() => navigate(`/MixSale/MixSalePrintInv?ID=${encodeURIComponent(code)}`)}
-              >
-                <i className="ri-eye-line" />
-              </button>
-              <button
-                type="button"
                 className="btn btn-soft-danger btn-sm p-1"
                 style={{ width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                 title={t("Delete")}

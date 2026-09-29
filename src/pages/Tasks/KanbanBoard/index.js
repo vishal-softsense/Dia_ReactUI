@@ -9,7 +9,7 @@ import TasksKanban from './MainPage'
 
 const Kanbanboard = () => {
 
-    document.title = "Kanban Board | Velzon - React Admin & Dashboard Template";
+    document.title = "Kanban Board | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

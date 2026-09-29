@@ -15,7 +15,7 @@ const Settings = () => {
         if (activeTab !== tab) setActiveTab(tab);
     };
 
-    document.title = "Profile Settings | Velzon - React Admin & Dashboard Template";
+    document.title = "Profile Settings | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

@@ -1,3 +1,5 @@
+import { api } from "../../config";
+
 export const FALLBACK_MEMO_CONDITIONS =
   "The diamonds invoiced herein are purchased from legitimate sources, not involved in funding conflict & in compliance with the United Nations resolutions. The seller hereby agrees the assurances are based on personal knowledge and /or written assurances given by the supplier of these diamonds";
 
@@ -16,6 +18,13 @@ export const getVal = (row, ...keys) => {
 export const fmt = (v, d = 2) => {
   const n = Number(v);
   return Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
+};
+
+/** MVC MixSalePrint_USA N2 with thousands separator (e.g. 153,000.00). */
+export const fmtNum = (v, d = 2) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return (0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 };
 
 export const fmtDate = (val) => {
@@ -113,4 +122,101 @@ export const PRINT_SETTING_NAMES = {
   solitaireSale: "DEFAULT SALE INVOICE  PRINT FORMAT SOLITAIRE",
   parcelSale: "DEFAULT SALE INVOICE  PRINT FORMAT PARCEL",
   mixMemo: "DEFAULT MIX MEMO PRINT FORMAT"
+};
+
+export const normalizeMediaPath = (path) => {
+  if (!path || typeof path !== "string") return "";
+  let trimmed = path.trim();
+  if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") return "";
+  return trimmed.replace(/\\/g, "/").replace(/^~\//, "/");
+};
+
+export const resolveMediaUrl = (path) => {
+  const trimmed = normalizeMediaPath(path);
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return trimmed;
+  const baseUrl = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+  const clean = trimmed.replace(/^(\.\.\/)+/, "");
+  if (clean.startsWith("/")) return `${baseUrl}${clean}`;
+  return `${baseUrl}/${clean}`;
+};
+
+export const getItemImageUrl = (item) =>
+  resolveMediaUrl(
+    getVal(item, "ImagePath", "imagePath", "AssetImagePath", "assetImagePath", "Image", "image")
+  );
+
+/** MVC jewsale/JewSaleprintinv — ImageFullPath byte[] → data:image/png;base64,... */
+export const resolveImageFullPath = (item) => {
+  const raw = item?.ImageFullPath ?? item?.imageFullPath;
+  if (!raw) return "";
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.toLowerCase() === "null") return "";
+    if (trimmed.startsWith("data:")) return trimmed;
+    return `data:image/png;base64,${trimmed}`;
+  }
+
+  if (Array.isArray(raw) && raw.length > 0) {
+    const bytes = new Uint8Array(raw);
+    let binary = "";
+    bytes.forEach((b) => {
+      binary += String.fromCharCode(b);
+    });
+    return `data:image/png;base64,${btoa(binary)}`;
+  }
+
+  return "";
+};
+
+/**
+ * MVC print amount column heading:
+ * Currency is resolved invoice currency (SSymbol or MSymbol).
+ * Display: "Amount USD" / "Amount INR" (Amount {Currency}).
+ */
+export const getPrintAmountHeader = (data, company = {}) => {
+  let auth = {};
+  try {
+    auth = JSON.parse(
+      sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}"
+    );
+  } catch {
+    /* ignore */
+  }
+  const authRoot = auth?.data || auth || {};
+
+  const stockSymbol =
+    getVal(data, "StockSymbol", "stockSymbol") ||
+    company?.stockSymbol ||
+    authRoot.SSymbol ||
+    authRoot.sSymbol ||
+    auth?.SSymbol ||
+    "USD";
+  const masterSymbol =
+    getVal(data, "MasterSymbol", "masterSymbol") ||
+    company?.masterSymbol ||
+    authRoot.MSymbol ||
+    authRoot.mSymbol ||
+    auth?.MSymbol ||
+    "INR";
+
+  let currency = String(getVal(data, "Currency", "currency") || "").trim();
+  if (!currency) {
+    currency = stockSymbol;
+  }
+
+  // Prefer the resolved invoice currency symbol (USD / INR / …) — never hard-code.
+  const upper = currency.toUpperCase();
+  const stockUpper = String(stockSymbol).trim().toUpperCase();
+  const masterUpper = String(masterSymbol).trim().toUpperCase();
+
+  if (upper === stockUpper || upper === "USD") {
+    return `Amount ${stockSymbol}`;
+  }
+  if (upper === masterUpper) {
+    return `Amount ${masterSymbol}`;
+  }
+  // Currency already a symbol name from API
+  return `Amount ${currency}`;
 };

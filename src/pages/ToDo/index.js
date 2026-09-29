@@ -68,7 +68,7 @@ const Priority = ({ priority }) => {
 };
 
 const ToDoList = () => {
-    document.title = "To Do Lists | Velzon - React Admin & Dashboard Template";
+    document.title = "To Do Lists | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     const dispatch = useDispatch();
 

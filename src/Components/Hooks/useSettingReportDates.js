@@ -20,6 +20,7 @@ import {
  *   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({
  *     includeReturnDates: true, // optional: also sets fromRtnDate / toRtnDate
  *     includeDueDates: true,    // optional: also sets fromDateDue / toDateDue
+ *     includePrintDates: true,  // optional: also sets rDate / rToDate (Print Date filters)
  *   });
  *
  *   const [filters, setFilters] = useState({
@@ -59,7 +60,8 @@ import {
 export function useSettingReportDates(options = {}) {
   const {
     includeReturnDates = false,
-    includeDueDates = false
+    includeDueDates = false,
+    includePrintDates = false
   } = options;
 
   const [dates, setDates] = useState(() => getCachedSettingReportDates());
@@ -103,9 +105,15 @@ export function useSettingReportDates(options = {}) {
         next.toDateDue = override.toDate;
       }
 
+      // MVC RFromDate / RToDate (Print Date filters) — same session Min/Max defaults
+      if (includePrintDates) {
+        next.rDate = override.fromDate;
+        next.rToDate = override.toDate;
+      }
+
       return next;
     },
-    [dates, includeReturnDates, includeDueDates]
+    [dates, includeReturnDates, includeDueDates, includePrintDates]
   );
 
   const getDates = useCallback(async () => {

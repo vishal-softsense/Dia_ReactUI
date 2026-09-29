@@ -6,7 +6,7 @@ import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import Pagination from "../../../../Components/Common/Pagination";
 
 const CandidateGrid = () => {
-  document.title = "Candidates Grid View | Velzon -  Admin & Dashboard Template";
+  document.title = "Candidates Grid View | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   const [calendarGrid, setCalendarGrid] = useState();
   const [currentPage, setCurrentPage] = useState(1);

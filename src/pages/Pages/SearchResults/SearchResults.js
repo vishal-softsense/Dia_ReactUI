@@ -43,7 +43,7 @@ const SearchResults = () => {
         setDropdownOpen(!dropdownOpen);
     };
 
-document.title="Search Results | Velzon - React Admin & Dashboard Template";
+document.title="Search Results | DiaJewel - Diamond & Jewellery Cloud Business App";
 
     return (
         <React.Fragment>

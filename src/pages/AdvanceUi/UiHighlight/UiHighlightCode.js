@@ -7,7 +7,7 @@ const htmlHighlightCode =
 <!DOCTYPE html>
 <html>
     <head>
-        {document.title ="Velzon - Responsive Admin Dashboard Template"}
+        {document.title ="DiaJewel - Diamond & Jewellery Cloud Business App"}
     </head>
     <body>
         <div>

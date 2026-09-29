@@ -315,7 +315,7 @@ const products = useSelector(selectecomproductData);
   ],
     []
   );
-  document.title = "Products | Velzon - React Admin & Dashboard Template";
+  document.title = "Products | DiaJewel - Diamond & Jewellery Cloud Business App";
 
   return (
     <div className="page-content">

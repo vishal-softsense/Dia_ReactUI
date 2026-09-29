@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, CardHeader, CardBody, Button, Modal, ModalHe
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
-import { getBrownMasters, saveBrownMaster,deleteBrownMaster  } from "../../../../helpers/fakebackend_helper";
+import { getBrownMasters, saveBrownMaster, deleteBrownMaster } from "../../../../helpers/fakebackend_helper";
 import { exportToExcel, parseExcelFile } from "../../../../helpers/excel_helper";
 import { toast, ToastContainer } from "react-toastify";
 import { useFormik } from "formik";
@@ -19,11 +19,11 @@ const BrownMasterList = () => {
     const [loading, setLoading] = useState(false);
 
     const [formModal, setFormModal] = useState(false);
-const [isEdit, setIsEdit] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
 
-const [deleteModal, setDeleteModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false);
 
-const [brownToDelete, setBrownToDelete] = useState(null);
+    const [brownToDelete, setBrownToDelete] = useState(null);
     const [importModal, setImportModal] = useState(false);
     const [importing, setImporting] = useState(false);
     const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
@@ -64,84 +64,84 @@ const [brownToDelete, setBrownToDelete] = useState(null);
 
     const handleEditClick = (brown) => {
 
-    setIsEdit(true);
+        setIsEdit(true);
 
-    validation.setValues({
+        validation.setValues({
 
-        id: brown.id || brown.ID || 0,
+            id: brown.id || brown.ID || 0,
 
-        brownID: brown.brownID || brown.BrownID || "",
+            brownID: brown.brownID || brown.BrownID || "",
 
-        brownName: brown.brownName || brown.BrownName || "",
+            brownName: brown.brownName || brown.BrownName || "",
 
-        brownPriority:
-            brown.brownPriority !== undefined
-                ? brown.brownPriority
-                : brown.BrownPriority,
+            brownPriority:
+                brown.brownPriority !== undefined
+                    ? brown.brownPriority
+                    : brown.BrownPriority,
 
-        brownGroupName:
-            brown.brownGroupName || brown.BrownGroupName || "",
+            brownGroupName:
+                brown.brownGroupName || brown.BrownGroupName || "",
 
-        brownGroupPriority:
-            brown.brownGroupPriority !== undefined
-                ? brown.brownGroupPriority
-                : brown.BrownGroupPriority,
+            brownGroupPriority:
+                brown.brownGroupPriority !== undefined
+                    ? brown.brownGroupPriority
+                    : brown.BrownGroupPriority,
 
-        pricingBrownID:
-            brown.pricingBrownID || brown.PricingBrownID || ""
+            pricingBrownID:
+                brown.pricingBrownID || brown.PricingBrownID || ""
 
-    });
+        });
 
-    setFormModal(true);
+        setFormModal(true);
 
-};
+    };
 
-const handleDeleteClick = (brown) => {
+    const handleDeleteClick = (brown) => {
 
-    setBrownToDelete(brown);
+        setBrownToDelete(brown);
 
-    setDeleteModal(true);
+        setDeleteModal(true);
 
-};
+    };
 
-const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = async () => {
 
-    if (!brownToDelete) return;
+        if (!brownToDelete) return;
 
-    const id = brownToDelete.id || brownToDelete.ID;
+        const id = brownToDelete.id || brownToDelete.ID;
 
-    try {
+        try {
 
-        const response = await deleteBrownMaster(id);
+            const response = await deleteBrownMaster(id);
 
-        if (response.success || response.Success) {
+            if (response.success || response.Success) {
 
-            toast.success("Brown Deleted Successfully");
+                toast.success("Brown Deleted Successfully");
 
-            fetchBrownMaster();
+                fetchBrownMaster();
+
+            }
+            else {
+
+                toast.error(
+                    response.message ||
+                    response.Message ||
+                    "Unable to delete Brown."
+                );
+
+            }
+
+        } catch {
+
+            toast.error("Unable to delete Brown.");
 
         }
-        else {
 
-            toast.error(
-                response.message ||
-                response.Message ||
-                "Unable to delete Brown."
-            );
+        setDeleteModal(false);
 
-        }
+        setBrownToDelete(null);
 
-    } catch {
-
-        toast.error("Unable to delete Brown.");
-
-    }
-
-    setDeleteModal(false);
-
-    setBrownToDelete(null);
-
-};
+    };
 
     const validation = useFormik({
         enableReinitialize: true,
@@ -230,7 +230,7 @@ const handleDeleteConfirm = async () => {
         }
 
     });
-  const handleFileSelect = (e) => {
+    const handleFileSelect = (e) => {
         setSelectedFile(e.target.files[0]);
     };
 
@@ -250,7 +250,7 @@ const handleDeleteConfirm = async () => {
             const expectedHeaders = ["Brown ID", "Brown Name", "Brown Priority", "Brown Group Name", "Brown Group Priority", "Pricing Brown ID"];
             const parsed = await parseExcelFile(file, expectedHeaders);
             if (!parsed.success) throw parsed.error || new Error("Failed to parse file");
-            
+
             const rows = parsed.rows;
 
             if (rows.length <= 1) {
@@ -328,7 +328,7 @@ const handleDeleteConfirm = async () => {
             } else {
                 toast.success(`Import complete! Successfully saved ${successCount} Brown.`);
             }
-            
+
             fetchBrownMaster();
             setImportModal(false);
             setSelectedFile(null);
@@ -372,71 +372,68 @@ const handleDeleteConfirm = async () => {
             "BrownMasterList"
         );
     };
-const handleDownloadTemplate = async () => {
-    const headers = [
-        "Brown ID",
-        "Brown Name",
-        "Brown Priority",
-        "Brown Group Name",
-        "Brown Group Priority",
-        "Pricing Brown ID"
-    ];
+    const handleDownloadTemplate = async () => {
+        const headers = [
+            "Brown ID",
+            "Brown Name",
+            "Brown Priority",
+            "Brown Group Name",
+            "Brown Group Priority",
+            "Pricing Brown ID"
+        ];
 
-    const sampleRow = [
-        "B001",
-        "LIGHT BROWN",
-        "1",
-        "BROWN GROUP",
-        "1",
-        "PB001"
-    ];
+        const sampleRow = [
+            "B001",
+            "LIGHT BROWN",
+            "1",
+            "BROWN GROUP",
+            "1",
+            "PB001"
+        ];
 
-    const result = await exportToExcel(
-        headers,
-        [sampleRow],
-        "Template",
-        "BrownMasterTemplate"
-    );
-
-    if (!result.success) {
-        toast.error("Failed to download template.");
-    }
-};
-    const columns = useMemo(() => [
-{
-    header: t("Actions"),
-    id: "actions",
-    enableColumnFilter: false,
-
-    cell: (cellProps) => {
-
-        const row = cellProps.row.original;
-
-        return (
-
-            <div className="d-flex gap-2">
-
-                <button
-                    className="btn btn-sm btn-soft-primary"
-                    onClick={() => handleEditClick(row)}
-                >
-                    <i className="ri-pencil-fill"></i>
-                </button>
-
-                <button
-                    className="btn btn-sm btn-soft-danger"
-                    onClick={() => handleDeleteClick(row)}
-                >
-                    <i className="ri-delete-bin-fill"></i>
-                </button>
-
-            </div>
-
+        const result = await exportToExcel(
+            headers,
+            [sampleRow],
+            "Template",
+            "BrownMasterTemplate"
         );
 
-    }
+        if (!result.success) {
+            toast.error("Failed to download template.");
+        }
+    };
+    const columns = useMemo(() => [
+        {
+            header: t("Actions"),
+            id: "actions",
+            enableColumnFilter: false,
 
-},
+            cell: (cellProps) => {
+
+                const row = cellProps.row.original;
+
+                return (
+
+                    <div className="d-flex gap-2">
+
+                        <button
+                            className="btn btn-sm btn-soft-primary"
+                            onClick={() => handleEditClick(row)}
+                        >
+                            <i className="ri-pencil-fill"></i>
+                        </button>
+
+                        <button
+                            className="btn btn-sm btn-soft-danger"
+                            onClick={() => handleDeleteClick(row)}
+                        >
+                            <i className="ri-delete-bin-fill"></i>
+                        </button>
+                    </div>
+                );
+
+            }
+        },
         {
             header: t("ID"),
             accessorFn: row => row.brownID || row.BrownID
@@ -470,30 +467,24 @@ const handleDownloadTemplate = async () => {
     ], [t]);
 
     return (
-
         <React.Fragment>
-
             <div className="page-content">
-
                 <Container fluid>
-
                     <BreadCrumb
                         title={t("Brown Master")}
                         pageTitle={t("Masters")}
                     />
 
                     <Row>
-
                         <Col lg={12}>
-
                             <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
-
                                 <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
-
-                                    <h5 className="card-title mb-0">{t("Brown Master")}</h5>
+                                    <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
+                                        <i className="ri-medal-line fs-20 text-primary"></i>
+                                        {t("Brown Master")}
+                                    </h5>
 
                                     <div className="d-flex gap-2">
-
                                         <Button
                                             color="primary"
                                             className="add-btn"
@@ -529,11 +520,8 @@ const handleDownloadTemplate = async () => {
                                         </Button>
 
                                     </div>
-
                                 </CardHeader>
-
                                 <CardBody>
-
                                     {loading ?
 
                                         <div className="text-center">
@@ -558,15 +546,10 @@ const handleDownloadTemplate = async () => {
                                     }
 
                                 </CardBody>
-
                             </Card>
-
                         </Col>
-
                     </Row>
-
                 </Container>
-
             </div>
             <Modal
                 isOpen={formModal}
@@ -579,8 +562,8 @@ const handleDownloadTemplate = async () => {
                         validation.handleSubmit();
                     }}
                 >
-                    <ModalHeader toggle={() => setFormModal(false)}>
-                        {isEdit ? t("Edit Brown Master") : t("Add Brown Master")}
+                    <ModalHeader toggle={() => setFormModal(false)} className="bg-primary p-3 border-0">
+                        <span className="text-white fw-bold">{isEdit ? t("Edit Brown Master") : t("Add Brown Master")}</span>
                     </ModalHeader>
 
                     <ModalBody>
@@ -697,116 +680,101 @@ const handleDownloadTemplate = async () => {
                                     onChange={validation.handleChange}
                                 />
                             </Col>
-
                         </Row>
-
                     </ModalBody>
 
                     <ModalFooter>
-
                         <Button
                             color="light"
                             type="button"
+                            className="rounded-3"
                             onClick={() => {
                                 validation.resetForm();
                                 setFormModal(false);
                             }}
                         >{t("Cancel")}</Button>
-
                         <Button
                             color="primary"
                             type="submit"
-                        >{t("Save")}</Button>
-
+                            className="rounded-3"
+                        >{isEdit ? t("Update") : t("Save")}</Button>
                     </ModalFooter>
-
                 </Form>
-
             </Modal>
 
             {/* Import Excel Modal */}
-                        <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="modal-dialog-centered">
-                <ModalHeader className="bg-success pb-3 text-white" toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }}>{t("Import Brown Master Excel")}</ModalHeader>
-                            <ModalBody>
-                                <div className="mb-4">
-                                    <Label className="form-label">{t("Download Brown Master File Template Format")}</Label>
-                                    <div>
-                                        <Button color="primary" onClick={handleDownloadTemplate} size="sm">
-                                            <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
-                                    </div>
-                                </div>
-            
-                                <hr />
-            
-                                <div className="mb-3">
-                                    <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
-                                    <Input
-                                        type="file"
-                                        id="importFile"
-                                        accept=".xls, .xlsx"
-                                        onChange={handleFileSelect}
-                                        disabled={importing}
-                                    />
-                                </div>
-            
-                                {importing && (
-                                    <div className="mt-3">
-                                        <div className="d-flex justify-content-between mb-1">
-                                            <span className="text-muted">{t("Processing rows...")}</span>
-                                            <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
-                                        </div>
-                                        <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
-                                    </div>
-                                )}
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button color="light" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
-                                <Button color="primary" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
-                            </ModalFooter>
-                        </Modal>
+            <Modal isOpen={importModal} toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} centered>
+                <ModalHeader toggle={() => { if (!importing) { setImportModal(false); setSelectedFile(null); } }} className="bg-primary p-3 border-0">
+                    <span className="text-white fw-bold">{t("Import Brown Master Excel")}</span>
+                </ModalHeader>
+                <ModalBody>
+                    <div className="mb-4">
+                        <Label className="form-label">{t("Download Brown Master File Template Format")}</Label>
+                        <div>
+                            <Button color="primary" onClick={handleDownloadTemplate} size="sm" className="rounded-3">
+                                <i className="ri-download-2-line align-bottom me-1"></i>{t("Download Format")}</Button>
+                        </div>
+                    </div>
 
-                        <Modal
-    isOpen={deleteModal}
-    toggle={() => setDeleteModal(false)}
-    centered
->
-    <ModalHeader toggle={() => setDeleteModal(false)}>
-        Confirm Delete
-    </ModalHeader>
+                    <hr />
 
-    <ModalBody>
+                    <div className="mb-3">
+                        <Label htmlFor="importFile" className="form-label">{t("Select Excel File To Import")}</Label>
+                        <Input
+                            type="file"
+                            id="importFile"
+                            accept=".xls, .xlsx"
+                            onChange={handleFileSelect}
+                            disabled={importing}
+                        />
+                    </div>
 
-        <h5 className="text-center">
-<lord-icon
+                    {importing && (
+                        <div className="mt-3">
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-muted">{t("Processing rows...")}</span>
+                                <span className="text-muted">{importProgress.current} / {importProgress.total}</span>
+                            </div>
+                            <Progress value={importProgress.total ? (importProgress.current / importProgress.total) * 100 : 0} color="primary" />
+                        </div>
+                    )}
+                </ModalBody>
+                <ModalFooter>
+                    <Button color="light" className="rounded-3" onClick={() => { setImportModal(false); setSelectedFile(null); }} disabled={importing}>{t("Close")}</Button>
+                    <Button color="primary" className="rounded-3" onClick={processImportFile} disabled={importing || !selectedFile}>{t("Submit")}</Button>
+                </ModalFooter>
+            </Modal>
+
+            <Modal
+                isOpen={deleteModal}
+                toggle={() => setDeleteModal(false)}
+                centered
+            >
+                <ModalHeader toggle={() => setDeleteModal(false)} className="bg-danger p-3 border-0">
+                    <span className="text-white fw-bold">{t("Confirm Delete")}</span>
+                </ModalHeader>
+                <ModalBody>
+                    <h5 className="text-center">
+                        <lord-icon
                             src="https://cdn.lordicon.com/gsqxdxog.json"
                             trigger="loop"
                             colors="primary:#f7b84b,secondary:#f06548"
                             style={{ width: "100px", height: "100px" }}
                         ></lord-icon>
-           <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <div className="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                             <h4>{t("Are you sure?")}</h4>
                             <p className="text-muted mx-4 mb-0">
                                 {t("Are you sure you want to delete Brown")} <strong>{brownToDelete?.brownID || brownToDelete?.brownName}</strong>?
                             </p>
                         </div>
-            <br />
-
-            
-
-        </h5>
-<div className="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                <Button type="button" color="light" className="w-sm" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
-                                <Button type="button" color="danger" className="w-sm" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
-                            </div>
-    </ModalBody>
-
-
-
-        
-
-
-
-</Modal>
+                        <br />
+                    </h5>
+                    <div className="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <Button type="button" color="light" className="w-sm rounded-3" onClick={() => setDeleteModal(false)}>{t("Cancel")}</Button>
+                        <Button type="button" color="danger" className="w-sm rounded-3" onClick={handleDeleteConfirm}>{t("Yes, Delete It!")}</Button>
+                    </div>
+                </ModalBody>
+            </Modal>
             <ToastContainer autoClose={2000} />
 
         </React.Fragment>

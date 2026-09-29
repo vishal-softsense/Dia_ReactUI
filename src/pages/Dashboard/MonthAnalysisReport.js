@@ -524,7 +524,9 @@ const MonthAnalysisReport = () => {
                         >
                           <option value="Party">{t("Party")}</option>
                           <option value="Broker">{t("Broker")}</option>
-                          <option value="Commission">{t("Commission Party")}</option>
+                          <option value="Commission">{t("Comm.Agent")}</option>
+                          <option value="Type">{t("Type")}</option>
+                          <option value="SubType">{t("SubType")}</option>
                           <option value="Category">{t("Category")}</option>
                         </select>
                       </FormGroup>

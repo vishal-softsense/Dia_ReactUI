@@ -44,6 +44,12 @@ const getInitials = (name) => {
     return cleanName.slice(0, 2).toUpperCase();
 };
 
+// API/DTO keep MVC spelling "Recievable*" — read both variants
+const getLedgerUsd = (item) =>
+    Number(item?.recievableUSD ?? item?.recievableUsd ?? item?.receivableUSD ?? item?.receivableUsd ?? 0) || 0;
+const getLedgerInr = (item) =>
+    Number(item?.recievableINR ?? item?.recievableInr ?? item?.receivableINR ?? item?.receivableInr ?? 0) || 0;
+
 const getAvatarColorClass = (name) => {
     if (!name) return 'bg-primary-subtle text-primary';
     const h = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -204,8 +210,8 @@ const ParcelDashboard = () => {
         let totals = { cts: 0, receivableUsd: 0, receivableInr: 0, sales: 0, pl: 0, remainingAmount: 0, invoiceAmount: 0 };
         data.forEach(item => {
             totals.cts += Number(item.cts) || 0;
-            totals.receivableUsd += Number(item.receivableUsd || item.receivableUSD) || 0;
-            totals.receivableInr += Number(item.receivableInr || item.receivableINR) || 0;
+            totals.receivableUsd += getLedgerUsd(item);
+            totals.receivableInr += getLedgerInr(item);
             totals.sales += Number(item.sales) || 0;
             totals.pl += Number(item.pl || item.pL) || 0;
             totals.invoiceAmount += Number(item.invoiceAmount) || 0;
@@ -253,8 +259,8 @@ const ParcelDashboard = () => {
                     rows.push([
                         item.broker || '',
                         Number(item.cts || 0),
-                        Number(item.receivableUsd || item.receivableUSD || 0),
-                        Number(item.receivableInr || item.receivableINR || 0),
+                        getLedgerUsd(item),
+                        getLedgerInr(item),
                         Number(item.sales || 0),
                         Number(item.pl || 0)
                     ]);
@@ -273,8 +279,8 @@ const ParcelDashboard = () => {
                     rows.push([
                         item.customer || item.broker || '',
                         Number(item.cts || 0),
-                        Number(item.receivableUSD || item.receivableUsd || 0),
-                        Number(item.receivableINR || item.receivableInr || 0)
+                        getLedgerUsd(item),
+                        getLedgerInr(item)
                     ]);
                 });
                 rows.push([
@@ -998,11 +1004,11 @@ const ParcelDashboard = () => {
                                                             </div>
 
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '22%', textAlign: 'right' }} className="fw-extrabold text-success fs-14">
-                                                                ${Number(item.receivableUSD || item.receivableUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                ${getLedgerUsd(item).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
 
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '23%', textAlign: 'right' }} className="fw-semibold text-muted fs-13">
-                                                                ₹{Number(item.receivableINR || item.receivableInr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                ₹{getLedgerInr(item).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                             </div>
                                                             {reportType === 'brokers' && (
                                                                 <>

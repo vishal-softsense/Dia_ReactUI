@@ -131,7 +131,8 @@ const emptyItem = () => ({
   status: "",
   spCarats: "",
   returnCarats: "",
-  stockType: "Diamond"
+  stockType: "Diamond",
+  invDescription: ""
 });
 
 const mapBasic = (list = []) =>
@@ -175,7 +176,8 @@ const mapItemFromApi = (r, idx) => ({
   status: getStrVal(r, "Status"),
   spCarats: getNumVal(r, "SpCarats"),
   returnCarats: getNumVal(r, "ReturnCarats"),
-  stockType: getStrVal(r, "StockType") || "Diamond"
+  stockType: getStrVal(r, "StockType") || "Diamond",
+  invDescription: getStrVal(r, "InvDescription", "invDescription")
 });
 
 const mapItemsForApi = (rows) =>
@@ -195,7 +197,8 @@ const mapItemsForApi = (rows) =>
     Status: r.status || "",
     SpCarats: toNum(r.spCarats),
     ReturnCarats: toNum(r.returnCarats),
-    StockType: r.stockType || "Diamond"
+    StockType: r.stockType || "Diamond",
+    InvDescription: r.invDescription || ""
   }));
 
 const getRowStatusStyle = (status) => {
@@ -219,7 +222,8 @@ const ITEM_COLUMNS = [
   { key: "status", label: "Status" },
   { key: "spCarats", label: "SpCarats", align: "end", decimals: 3 },
   { key: "returnCarats", label: "ReturnCarats", align: "end", decimals: 3 },
-  { key: "stockType", label: "StockType" }
+  { key: "stockType", label: "StockType" },
+  { key: "invDescription", label: "ItemDescription" }
 ];
 
 const getItemFooterValue = (footerKey, totals, itemRows) => {
@@ -702,7 +706,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
           less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
           less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
-          stockType: getStrVal(lot, "StockType") || prev.stockType || "Diamond"
+          stockType: getStrVal(lot, "StockType") || prev.stockType || "Diamond",
+          invDescription: getStrVal(lot, "InvDescription")
         })
       );
     } catch (err) {
@@ -1192,6 +1197,10 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Amount")}</Label>
                         <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
+                      </Col>
+                      <Col xs={6} sm={4} md={1}>
+                        <Label className="form-label mb-1">{t("ItemDescription")}</Label>
+                        <Input className="form-control-sm" style={fieldH} placeholder={t("ItemDescription")} value={entry.invDescription || ""} onChange={(e) => onEntryChange("invDescription", e.target.value)} />
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("StockType")}</Label>

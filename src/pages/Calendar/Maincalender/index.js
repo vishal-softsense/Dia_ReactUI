@@ -363,7 +363,7 @@ const Calender = () => {
     }
   };
 
-  document.title = "Calendar | Velzon - React Admin & Dashboard Template";
+  document.title = "Calendar | DiaJewel - Diamond & Jewellery Cloud Business App";
   return (
     <React.Fragment>
       <DeleteModal
