@@ -197,7 +197,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "memoTransCode", label: "MemoTrnCode", align: "end" },
   { key: "stockType", label: "StockType" },
   { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3 },
-  { key: "sRtnStatus", label: "Status" }
+  { key: "sRtnStatus", label: "Status" },
   { key: "sRtnStatus", label: "SRtnStatus" },
   { key: "invDescription", label: "ItemDescription" }
 ];
