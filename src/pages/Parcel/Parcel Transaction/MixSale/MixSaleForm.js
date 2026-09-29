@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -19,7 +19,7 @@ import {
   Table
 } from "reactstrap";
 import Select from "react-select";
-import CreatableSelect from "react-select/creatable";
+import AsyncSelect from "react-select/async";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -143,9 +143,20 @@ const mapMixLotOptions = (res) =>
           value
       ).trim();
       if (!value && !label) return null;
-      return { value: value || label, label: label || value };
+      const stockType =
+        item.stockType ??
+        item.StockType ??
+        (isJewelleryLot(value || label) ? "Jewellery" : "Diamond");
+      return { value: value || label, label: label || value, stockType };
     })
     .filter(Boolean);
+
+const isJewelleryLot = (lotNo) => /^jew_/i.test(String(lotNo || "").trim());
+
+const resolveStockType = (lotNo, stockType) =>
+  String(stockType || "").toLowerCase() === "jewellery" || isJewelleryLot(lotNo)
+    ? "Jewellery"
+    : (stockType || "Diamond");
 
 const toNum = (v, d = 0) => {
   const n = parseFloat(v);
@@ -153,6 +164,13 @@ const toNum = (v, d = 0) => {
 };
 
 const fmt = (v, decimals = 2) => toNum(v).toFixed(decimals);
+
+/** MVC CaratFormatNew: N3 or truncate last digit when format is not 0.000 */
+const formatCaratWeight = (weight, caratFormat = "0.000") => {
+  const weight3D = toNum(weight).toFixed(3);
+  if (caratFormat === "0.000") return toNum(weight3D);
+  return toNum(weight3D.slice(0, -1));
+};
 
 const PURCHASE_ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
@@ -178,7 +196,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "memoTransCode", label: "MemoTrnCode", align: "end" },
   { key: "stockType", label: "StockType" },
   { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3 },
-  { key: "sRtnStatus", label: "SRtnStatus" }
+  { key: "sRtnStatus", label: "Status" }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -275,7 +293,7 @@ const mapItemFromApi = (r, idx) => ({
   clarity: getStrVal(r, "Clarity", "ClarityId", "PClarity"),
   size: getStrVal(r, "Size", "SizeId", "PSize"),
   sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
-  stockType: getStrVal(r, "StockType") || "Diamond",
+  stockType: resolveStockType(getStrVal(r, "LotNo", "lotNo"), getStrVal(r, "StockType")),
   suppLotNo: getStrVal(r, "SuppLotNo"),
   askingRate: getNumVal(r, "AskingRate"),
   actualRate: getNumVal(r, "ActualRate"),
@@ -485,9 +503,6 @@ const MixSaleForm = ({ mode = "add" }) => {
   const [brokerLoading, setBrokerLoading] = useState(false);
   const [broker, setBroker] = useState(null);
 
-  const [lotInput, setLotInput] = useState("");
-  const [lotOpts, setLotOpts] = useState([]);
-  const [lotLoading, setLotLoading] = useState(false);
   const [lotSel, setLotSel] = useState(null);
 
   const [mOp, setMOp] = useState("*");
@@ -507,6 +522,7 @@ const MixSaleForm = ({ mode = "add" }) => {
 
   const [masterSymbol, setMasterSymbol] = useState("INR");
   const [stockSymbol, setStockSymbol] = useState("USD");
+  const [caratFormat, setCaratFormat] = useState("0.000");
 
   useEffect(() => {
     const loadSymbols = async () => {
@@ -645,25 +661,22 @@ const MixSaleForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [brokerInput, searchAccounts]);
 
-  useEffect(() => {
-    if (!lotInput || lotInput.trim().length < 1) {
-      setLotOpts([]);
+  const loadLotOptions = useCallback((inputValue, callback) => {
+    const term = (inputValue || "").trim();
+    if (term.length < 2) {
+      callback([]);
       return;
     }
-    const tmr = setTimeout(async () => {
-      setLotLoading(true);
-      try {
-        const res = await getMixSaleLots(lotInput);
-        const opts = mapMixLotOptions(res);
-        setLotOpts(opts);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLotLoading(false);
-      }
-    }, 250);
-    return () => clearTimeout(tmr);
-  }, [lotInput]);
+    getMixSaleLots(term)
+      .then((res) => {
+        if (res?.success === false) {
+          callback([]);
+          return;
+        }
+        callback(mapMixLotOptions(res));
+      })
+      .catch(() => callback([]));
+  }, []);
 
   const applyCurrencyRates = async (curCode) => {
     if (!curCode) return;
@@ -702,6 +715,8 @@ const MixSaleForm = ({ mode = "add" }) => {
       const sieves = mapBasicWithNameAsValue(d.Sieve || d.sieve);
       const addresses = mapBasic(d.Address || d.address);
       const defaultCurrencyCode = d.DefaultCurrencyCode || d.defaultCurrencyCode || "";
+      const loadedCaratFormat = d.CaratFormatNew || d.caratFormatNew || "0.000";
+      setCaratFormat(loadedCaratFormat);
       setTypeOpts(types);
       setSubTypeOpts(subs);
       setCategoryOpts(cats);
@@ -712,7 +727,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       setSizeOpts(sizes);
       setSieveOpts(sieves);
       setAddressOpts(addresses);
-      return { types, subs, cats, curs, shapes, colors, clarities, sizes, sieves, addresses, defaultCurrencyCode };
+      return { types, subs, cats, curs, shapes, colors, clarities, sizes, sieves, addresses, defaultCurrencyCode, caratFormat: loadedCaratFormat };
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load page data."));
@@ -905,6 +920,12 @@ const MixSaleForm = ({ mode = "add" }) => {
       const lot = Array.isArray(rows) ? rows[0] : rows;
       if (!lot) return;
 
+      const resolvedStockType = resolveStockType(
+        lotNo,
+        getStrVal(lot, "StockType", "stockType")
+      );
+      const isJewellery = resolvedStockType === "Jewellery";
+
       const weight = getNumVal(lot, "Carats", "Weight");
       const issueCarats = weight;
       const pcs = getNumVal(lot, "Pcs") || 1;
@@ -913,7 +934,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       setEntry((prev) =>
         recalcEntryAmount({
           ...prev,
-          lotNo: getStrVal(lot, "LotNo") || lotNo,
+          lotNo: getStrVal(lot, "LotNo", "Stock_ID") || lotNo,
           itemName: getStrVal(lot, "ItemName"),
           weight,
           issueCarats,
@@ -925,12 +946,12 @@ const MixSaleForm = ({ mode = "add" }) => {
           less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
           less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
           less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
-          shape: getStrVal(lot, "Shape", "ShapeId"),
-          color: getStrVal(lot, "Color", "ColorId"),
-          clarity: getStrVal(lot, "Clarity", "ClarityId"),
-          size: getStrVal(lot, "Size", "SizeId"),
-          sieve: getStrVal(lot, "Sieve", "SieveId"),
-          stockType: getStrVal(lot, "StockType") || "Diamond",
+          shape: isJewellery ? "" : getStrVal(lot, "Shape", "ShapeId"),
+          color: isJewellery ? "" : getStrVal(lot, "Color", "ColorId"),
+          clarity: isJewellery ? "" : getStrVal(lot, "Clarity", "ClarityId"),
+          size: isJewellery ? "" : getStrVal(lot, "Size", "SizeId"),
+          sieve: isJewellery ? "" : getStrVal(lot, "Sieve", "SieveId"),
+          stockType: resolvedStockType,
           cogs: getNumVal(lot, "COGS", "CPAVG") || "0",
           memoTransCode: 0,
           rtnCarats: "0"
@@ -955,11 +976,17 @@ const MixSaleForm = ({ mode = "add" }) => {
       toast.warning(t("Lot Number is required."));
       return;
     }
-    if (weight <= 0 && String(entry.stockType || "").toLowerCase() !== "jewellery") {
+    const isJewellery = resolveStockType(lotNo, entry.stockType) === "Jewellery";
+    if (isJewellery) {
+      if (toNum(entry.pcs) === 0 && rate !== 0) {
+        toast.warning(t("Carat or Rate can not be 0"));
+        return;
+      }
+    } else if (weight <= 0 && rate !== 0) {
       toast.warning(t("Carat is invalid."));
       return;
     }
-    if (rate === 0 && back === 0) {
+    if (rate === 0 && back === 0 && toNum(entry.amount) === 0) {
       toast.warning(t("Rate and Discount both can not be 0."));
       return;
     }
@@ -985,7 +1012,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       exportNo: entry.exportNo || "",
       sRate: toNum(entry.sRate),
       sieve: entry.sieve || "",
-      stockType: entry.stockType || "Diamond",
+      stockType: resolveStockType(lotNo, entry.stockType),
       memoTransCode: toNum(entry.memoTransCode),
       rtnCarats: Math.round(rtnCarats * 1000) / 1000
     };
@@ -1031,7 +1058,7 @@ const MixSaleForm = ({ mode = "add" }) => {
     let totMrp = 0;
     let totWithoutLess = 0;
     items.forEach((r) => {
-      const w = toNum(r.weight);
+      const w = formatCaratWeight(r.weight, caratFormat);
       totCts += w;
       totAmount += toNum(r.amount);
       totRejection += toNum(r.rtnCarats);
@@ -1048,7 +1075,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const deci = Math.min(4, Math.max(0, toNum(header.decimalPlaces, 2)));
@@ -1286,7 +1313,10 @@ const MixSaleForm = ({ mode = "add" }) => {
           back: getNumVal(r, "Back", "back"),
           memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode"),
           symbol: getStrVal(r, "Symbol", "symbol", "Cur", "cur"),
-          stockType: getStrVal(r, "StockType", "stockType") || "Diamond"
+          stockType: resolveStockType(
+            getStrVal(r, "Lotno", "lotno", "LotNo", "lotNo"),
+            getStrVal(r, "StockType", "stockType")
+          )
         };
       });
       setConsignLotFilter("");
@@ -1383,6 +1413,7 @@ const MixSaleForm = ({ mode = "add" }) => {
         // MVC MixConsignmentToMixSale: IssueCarats = Weight = Purchase; Rate = PurchaseRate
         const weight = toNum(r.purchase);
         const rate = toNum(r.rate);
+        const rowStockType = resolveStockType(lotNo, r.stockType);
         const row = {
           ...emptyItem(),
           lotNo,
@@ -1397,13 +1428,13 @@ const MixSaleForm = ({ mode = "add" }) => {
           less1: 0,
           less2: 0,
           less3: 0,
-          amount: calcItemAmount(weight, rate, 0, 0, 0, 1, r.stockType || "Diamond"),
+          amount: calcItemAmount(weight, rate, 0, 0, 0, 1, rowStockType),
           shape: "",
           color: "",
           clarity: "",
           size: "",
           sieve: "",
-          stockType: r.stockType || "Diamond",
+          stockType: rowStockType,
           memoTransCode: toNum(r.memoTransCode),
           rtnCarats: toNum(r.rtn)
         };
@@ -1449,10 +1480,15 @@ const MixSaleForm = ({ mode = "add" }) => {
         const issueCarats = weight;
         const rate = getNumVal(lot, "PurchaseRate", "Rate");
         const sBase = toNum(header.sBaseRate, 1) || 1;
+        const resolvedStockType = resolveStockType(
+          lotNo,
+          getStrVal(lot, "StockType", "stockType")
+        );
+        const isJewellery = resolvedStockType === "Jewellery";
         loaded.push(
           recalcEntryAmount({
             ...emptyItem(),
-            lotNo: getStrVal(lot, "LotNo") || lotNo,
+            lotNo: getStrVal(lot, "LotNo", "Stock_ID") || lotNo,
             itemName: getStrVal(lot, "ItemName"),
             weight,
             issueCarats,
@@ -1465,12 +1501,12 @@ const MixSaleForm = ({ mode = "add" }) => {
             less1: toNum(entry.less1),
             less2: toNum(entry.less2),
             less3: toNum(entry.less3),
-            shape: getStrVal(lot, "Shape", "ShapeId"),
-            color: getStrVal(lot, "Color", "ColorId"),
-            clarity: getStrVal(lot, "Clarity", "ClarityId"),
-            size: getStrVal(lot, "Size", "SizeId"),
-            sieve: getStrVal(lot, "Sieve", "SieveId"),
-            stockType: getStrVal(lot, "StockType") || "Diamond",
+            shape: isJewellery ? "" : getStrVal(lot, "Shape", "ShapeId"),
+            color: isJewellery ? "" : getStrVal(lot, "Color", "ColorId"),
+            clarity: isJewellery ? "" : getStrVal(lot, "Clarity", "ClarityId"),
+            size: isJewellery ? "" : getStrVal(lot, "Size", "SizeId"),
+            sieve: isJewellery ? "" : getStrVal(lot, "Sieve", "SieveId"),
+            stockType: resolvedStockType,
             cogs: getNumVal(lot, "COGS", "CPAVG") || "0",
             exportNo: getStrVal(lot, "ExportNo"),
             memoTransCode: 0
@@ -1499,7 +1535,6 @@ const MixSaleForm = ({ mode = "add" }) => {
     const salePur = {
       Code: toNum(header.code),
       TrnDate: header.trnDate,
-      Mode: "PUR",
       chkoldsale: !!header.chkoldsale,
       DueDays: toNum(header.dueDays),
       DueDate: header.dueDate,
@@ -1581,7 +1616,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       MemoTransCode: toNum(r.memoTransCode),
       RtnCarats: toNum(r.rtnCarats),
       ReturnCarats: toNum(r.rtnCarats),
-      StockType: r.stockType || "Diamond",
+      StockType: resolveStockType(r.lotNo, r.stockType),
       SuppLotNo: r.suppLotNo || "",
       COGS: toNum(r.cogs),
       ExportNo: r.exportNo || "",
@@ -2197,9 +2232,11 @@ const MixSaleForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
                               {t("LOT NUMBER")}{" "}
-                              <Link to="/parcel/add-ParcelItemMaster" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
-                                {t("ADD ITEM")}
-                              </Link>
+                              {resolveStockType(entry.lotNo || lotSel?.value, entry.stockType) !== "Jewellery" && (
+                                <Link to="/parcel/add-ParcelItemMaster" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                  {t("ADD ITEM")}
+                                </Link>
+                              )}
                               <Input
                                 type="checkbox"
                                 className="form-check-input ms-2"
@@ -2208,30 +2245,31 @@ const MixSaleForm = ({ mode = "add" }) => {
                                 style={{ width: 16, height: 16, marginTop: 0, verticalAlign: "middle" }}
                               />
                             </Label>
-                            <CreatableSelect
+                            <AsyncSelect
                               styles={customStyles}
-                              options={lotOpts}
+                              cacheOptions={false}
+                              defaultOptions={false}
+                              loadOptions={loadLotOptions}
                               value={lotSel}
                               onChange={(o) => {
                                 setLotSel(o);
                                 onEntryChange("lotNo", o?.value || "");
+                                if (o?.stockType) onEntryChange("stockType", o.stockType);
+                                else if (o?.value) onEntryChange("stockType", resolveStockType(o.value));
                                 if (o?.value) fillFromLot(o.value);
                               }}
-                              onInputChange={(v, meta) => {
-                                if (meta.action === "input-change") setLotInput(v);
-                              }}
-                              isLoading={lotLoading}
                               placeholder={t("Lot No")}
                               isClearable
                               isSearchable
                               filterOption={null}
-                              noOptionsMessage={({ inputValue }) =>
-                                lotLoading
-                                  ? t("Searching...")
-                                  : (inputValue || "").trim()
-                                  ? t("No matching lot numbers")
-                                  : t("Type to search lot numbers")
-                              }
+                              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                              menuPosition="fixed"
+                              loadingMessage={() => t("Searching...")}
+                              noOptionsMessage={({ inputValue }) => {
+                                const term = (inputValue || "").trim();
+                                if (term.length < 2) return t("Type at least 2 characters");
+                                return t("No matching lot numbers");
+                              }}
                             />
                           </FormGroup>
                         </Col>
@@ -2493,6 +2531,11 @@ const MixSaleForm = ({ mode = "add" }) => {
                           </tfoot>
                         )}
                       </Table>
+                    </div>
+                  )}
+                  {items.length > 0 && (
+                    <div className="mt-2 text-muted small">
+                      {t("Showing")} 1 {t("to")} {items.length} {t("of")} {items.length} {t("entries")}
                     </div>
                   )}
                 </CardBody>

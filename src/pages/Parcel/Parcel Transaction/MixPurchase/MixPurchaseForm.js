@@ -1190,18 +1190,13 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       toast.error(t("Failed to parse Excel file."));
     }
   };
-
-  const downloadTemplate = () => {
-    const csv =
-      "LotNo,ItemName,Weight,Pcs,MRP,Back,Rate,Less1,Less2,Less3,Shape,Color,Clarity\n" +
-      "SAMPLE-001,ROUND D VS1,1.000,1,5000,-10,4500,0,0,0,ROUND,D,VS1\n";
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const downloadTemplate = () => {
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "MixPurchaseTemplate.csv";
+    a.href = (process.env.PUBLIC_URL || "") + "/excelfolder/GeneralPurchase.xlsx";
+    a.download = "GeneralPurchase.xlsx";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
   };
 
   const viewConsignment = async () => {
@@ -1590,7 +1585,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                       outline
                       size="sm"
                       className="btn-outline-primary flex-fill flex-sm-grow-0 text-nowrap"
-                      onClick={() => navigate("/reports/utility/get-lab-data")}
+                      onClick={() => navigate("/data/getlabdata")}
                     >
                       {t("Get Lab Data")}
                     </Button>
