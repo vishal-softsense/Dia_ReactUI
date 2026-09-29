@@ -1288,12 +1288,12 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                   <div className="d-flex gap-2 flex-wrap">
                     {!readOnly && (
                       <>
-                        <Button color="soft-primary" size="sm" className="btn-soft-primary">
+                        {/* <Button color="soft-primary" size="sm" className="btn-soft-primary">
                           {t("Get Lab Data")}
-                        </Button>
-                        <Button color="soft-primary" size="sm" className="btn-soft-primary">
+                        </Button> */}
+                        {/* <Button color="soft-primary" size="sm" className="btn-soft-primary">
                           {t("Import Excel")}
-                        </Button>
+                        </Button> */}
                       </>
                     )}
                     <Link to="/MixPurchaseReturn/mixpurchasereturnlist" className="btn btn-soft-primary btn-sm">
@@ -2003,6 +2003,11 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                       </Table>
                     </div>
                   )}
+                  {items.length > 0 && (
+                    <div className="mt-2 text-muted small">
+                      {t("Showing")} 1 {t("to")} {items.length} {t("of")} {items.length} {t("entries")}
+                    </div>
+                  )}
                 </CardBody>
               </Card>
             </Col>
@@ -2091,9 +2096,9 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                       <Button color="primary" size="sm" className="w-100 mb-2 fw-medium" onClick={handleGetItemFromList}>
                         {t("Get Item From Lot")}
                       </Button>
-                      <Button color="soft-primary" size="sm" className="btn-soft-primary w-100 mb-3 fw-medium">
+                      {/* <Button color="soft-primary" size="sm" className="btn-soft-primary w-100 mb-3 fw-medium">
                         {t("Get Back from Excel")}
-                      </Button>
+                      </Button> */}
                     </>
                   )}
                   <fieldset disabled={readOnly} className="border-0 m-0 p-0" style={{ minWidth: 0 }}>

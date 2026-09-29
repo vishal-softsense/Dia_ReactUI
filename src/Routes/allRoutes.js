@@ -560,11 +560,14 @@ import JewelleryMemoInReturnReport from "../pages/Jewellery/Jewellery Reports/Je
 // Jewellery MemoOut Return Report
 import JewelleryMemoOutReturnReporte from "../pages/Jewellery/Jewellery Reports/JewelleryMemoOutReturnReporte";
 
+
+
 // Jewellery ConsignMent In Report
 import JewelleryConsignMentInReport from "../pages/Jewellery/Jewellery Reports/JewelleryConsignMentInReport";
 
+import GetLabData from "../pages/Parcel/Parcel Transaction/MixPurchase/GetLabData";
+
 import ImportPricing from "../pages/Reports/Utility/ImportPricing";
-import GetLabData from "../pages/Reports/Utility/GetLabData";
 import ConvertExcelUtility from "../pages/Reports/Utility/ConvertExcelUtility";
 import StockTelly from "../pages/Reports/Utility/StockTelly";
 import MasterPriceComparison from "../pages/Reports/Utility/MasterPriceComparison";
@@ -645,6 +648,7 @@ const authProtectedRoutes = [
   { path: "/Master/SettingMaster", component: <SettingMasterList /> },
   { path: "/PrintFormat/PrintFormat", component: <PrintFormatList /> },
   { path: "/PrintFormat/preview", component: <PrintFormatPreview /> },
+  { path: "/reports/utility/get-lab-data", component: <GetLabData /> },
   { path: "/ColumnAbbreviations/ColumnAbbreviations", component: <ColumnAbbreviationsList /> },
   { path: "/masters/sync-master", component: <Sync /> },
 
