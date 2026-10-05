@@ -24,6 +24,7 @@ import {
     getInvoiceLedgerReport,
     getInvoiceLedgerReportPermission
 } from "../../../helpers/fakebackend_helper";
+import { openReportTxnView, resolveVTypePath } from "../../../helpers/reportTxnLinks";
 import {
     getCachedReportCompany,
     getReportCompanySettings,
@@ -92,12 +93,12 @@ const fmtFixed = (value) => {
     return n.toFixed(2);
 };
 
+/** MVC Invoice Ledger setlink — open sale/parcel/mix edit in view mode. */
 const openTxnLink = (code, trnType) => {
-    const type = String(trnType || "").toUpperCase();
-    let url = "";
-    if (type === "PSALE") url = `../saleParcel/edit-saleParcel?ID=${code}&Mode=view`;
-    else url = `../sale/edit-sale?ID=${code}&Mode=view`;
-    if (url) window.open(url, "_blank")?.focus();
+    // Sale forms read `Id` (case-sensitive); map CSALE → mix, etc. via shared helper.
+    // Unknown types fall back to SALE (same as MVC else-branch).
+    const type = String(trnType || "").trim();
+    openReportTxnView(code, resolveVTypePath(type) ? type : "SALE");
 };
 
 const InvoiceLedgerReport = () => {

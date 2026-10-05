@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
@@ -29,6 +29,7 @@ import {
   editPaymentJv,
   getAccGrpMasters,
   getCurrencyRates,
+  getPaymentJvDetail,
   getPaymentJvEntries,
   getPaymentPageData,
   getPaymentPendingInv
@@ -56,7 +57,30 @@ const toNum = (v, d = 0) => {
   return Number.isFinite(n) ? n : d;
 };
 
-const todayIso = () => new Date().toISOString().substr(0, 10);
+/** Local calendar yyyy-MM-dd — avoid toISOString UTC day shift (MVC uses yyyy-MM-dd). */
+const todayIso = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+/** Parse API/DB date to yyyy-MM-dd without timezone shift. */
+const toLocalDateStr = (val) => {
+  if (val == null || val === "") return "";
+  const s = String(val).trim();
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dmy = s.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 const fmtDate = (value) => {
   if (!value) return "-";
@@ -129,7 +153,9 @@ const mapCurrency = (list = []) =>
 const PaymentForm = ({ mode }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEditRoute = mode === "edit";
+  const editId = searchParams.get("Id") || searchParams.get("id") || "";
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -274,7 +300,22 @@ const PaymentForm = ({ mode }) => {
           sBaseRate: fmtNum(data.SBaseRate ?? data.sBaseRate ?? 0)
         }));
         if (defCode) await applyCurrencyRates(defCode);
-        await loadJvList(todayIso());
+
+        // MVC EditJVPayment: load saved JV header by GCODE (do not leave today's date)
+        if (isEditRoute && editId) {
+          const detailRes = await getPaymentJvDetail(editId);
+          if (!(detailRes?.success || detailRes?.Success)) {
+            toast.error(detailRes?.Data || detailRes?.data || t("JV Payment record not found."));
+            await loadJvList(todayIso());
+            return;
+          }
+          const row = detailRes.Data || detailRes.data || {};
+          const savedDate = toLocalDateStr(getVal(row, "Date", "date")) || todayIso();
+          applyJvRowToForm(row, currencies);
+          await loadJvList(savedDate);
+        } else {
+          await loadJvList(todayIso());
+        }
       } catch (err) {
         console.error(err);
         toast.error(t("Failed to load page data."));
@@ -615,7 +656,7 @@ const PaymentForm = ({ mode }) => {
     await doSavePayment(isJVMode);
   };
 
-  const startJvEdit = (row) => {
+  const applyJvRowToForm = (row, currencies = currencyOpts) => {
     const gcode = getVal(row, "GCODE", "gcode");
     const vtype = String(getVal(row, "Vtype", "vtype") || "").toUpperCase();
     const amount = toNum(getVal(row, "Amount", "amount"));
@@ -626,7 +667,7 @@ const PaymentForm = ({ mode }) => {
     const mainCode = String(getVal(row, "mainacc") || "");
     const partyCode = String(getVal(row, "trnacc") || "");
 
-    // MVC GetPaymentDataForEdit swaps for JVPay
+    // MVC GetPaymentDataForEdit / EditJVPayment swaps for JVPay
     const finalMain = isPay
       ? { value: String(getVal(row, "trnacc") || mainCode), label: mainName }
       : { value: mainCode, label: mainName };
@@ -636,27 +677,34 @@ const PaymentForm = ({ mode }) => {
 
     setMainAcc(finalMain.value ? finalMain : null);
     setPartyAcc(finalParty.value ? finalParty : null);
+
+    let cur = String(getVal(row, "CurCode", "curCode") || "");
+    const symbol = String(getVal(row, "Symbol", "symbol") || "").trim().toUpperCase();
+    if ((!cur || cur === "0") && symbol && currencies.length) {
+      const bySym = currencies.find((o) => String(o.label).trim().toUpperCase() === symbol);
+      if (bySym) cur = bySym.value;
+    }
+
     setForm((prev) => ({
       ...prev,
-      gcode: String(gcode),
-      transDate: (() => {
-        const d = new Date(getVal(row, "Date", "date"));
-        if (Number.isNaN(d.getTime())) return prev.transDate;
-        return d.toISOString().substr(0, 10);
-      })(),
+      gcode: String(gcode || ""),
+      transDate: toLocalDateStr(getVal(row, "Date", "date")) || prev.transDate,
       rec: vtype === "JVREC" ? fmtNum(amount) : "0.00",
       paid: vtype === "JVPAY" ? fmtNum(amount) : "0.00",
-      currency: String(getVal(row, "CurCode", "curCode") || prev.currency),
+      currency: cur || prev.currency,
       mBaseRate: fmtNum(getVal(row, "MasterCurrencyRate", "masterCurrencyRate") || prev.mBaseRate),
       sBaseRate: fmtNum(getVal(row, "StockCurrencyRate", "stockCurrencyRate") || prev.sBaseRate),
       desc: getVal(row, "disc", "Disc") || ""
     }));
-    const cur = String(getVal(row, "CurCode", "curCode") || form.currency);
     if (cur) applyCurrencyRates(cur);
     setJvEditMode(true);
     setGridMode(null);
     setPendingRows([]);
     setLocked(false);
+  };
+
+  const startJvEdit = (row) => {
+    applyJvRowToForm(row);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

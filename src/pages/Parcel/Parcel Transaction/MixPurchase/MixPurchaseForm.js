@@ -35,14 +35,14 @@ import {
   getMixPurchasePageData,
   addParcelItemMaster,
   checkLotNoExists,
-  getMixPurchaseMixLotNoDI
+  getMixPurchaseMixLotNoDI,
+  importMixPurchaseExcel
 } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
-import { parseExcelFile } from "../../../../helpers/excel_helper";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
@@ -1451,78 +1451,58 @@ const MixPurchaseForm = ({ mode = "add" }) => {
     }));
   }, [summary.comDisplay, summary.broDisplay, summary.vatAmt, summary.cgstAmt, summary.sgstAmt, summary.igstAmt]);
 
-  const mapImportRows = (headers, dataRows) => {
-    const idx = (names) => headers.findIndex((h) => names.includes(h));
-    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #", "stoneid"]);
-    const iName = idx(["itemname", "item name", "description", "item"]);
-    const iWt = idx(["weight", "carat", "cts", "wt", "carats"]);
-    const iPcs = idx(["pcs", "qty", "quantity"]);
-    const iMrp = idx(["mrp"]);
-    const iBack = idx(["back", "purchaseback", "discount"]);
-    const iRate = idx(["rate", "purchaserate", "price", "purprice", "pur price"]);
-    const iL1 = idx(["less1"]);
-    const iL2 = idx(["less2"]);
-    const iL3 = idx(["less3"]);
-    const iShape = idx(["shape"]);
-    const iColor = idx(["color"]);
-    const iClarity = idx(["clarity"]);
+  const buildExistingItemsForImport = () =>
+    items.map((r, i) => ({
+      SrNo: i + 1,
+      LotNo: r.lotNo,
+      ItemName: r.itemName,
+      Shape: r.shape,
+      ShapeId: r.shape,
+      PShape: r.shape,
+      Size: r.size,
+      PSize: r.size,
+      Color: r.color,
+      ColorId: r.color,
+      PColor: r.color,
+      Clarity: r.clarity,
+      ClarityId: r.clarity,
+      PClarity: r.clarity,
+      Sieve: r.sieve,
+      SieveId: r.sieve,
+      PSieve: r.sieve,
+      Weight: toNum(r.weight),
+      Carats: toNum(r.weight),
+      IssueCarats: toNum(r.issueCarats) || toNum(r.weight),
+      Pcs: toNum(r.pcs, 1),
+      MRP: toNum(r.mrp),
+      PurchaseBack: toNum(r.back),
+      PurchaseRate: toNum(r.rate),
+      Rate: toNum(r.rate),
+      PurAmount: toNum(r.amount),
+      Amount: toNum(r.amount),
+      Less1: toNum(r.less1),
+      Less2: toNum(r.less2),
+      Less3: toNum(r.less3),
+      MemoTransCode: toNum(r.memoTransCode),
+      RtnCarats: toNum(r.rtnCarats),
+      ReturnCarats: toNum(r.rtnCarats),
+      StockType: r.stockType || "Diamond",
+      InvDescription: r.invDescription || "",
+      SuppLotNo: r.suppLotNo || "",
+      AskingRate: toNum(r.askingRate),
+      ActualRate: toNum(r.actualRate),
+      GroupId: r.groupId || "",
+      StoneType: r.stoneType || "",
+      RMK: r.rmk || ""
+    }));
 
-    const cell = (cols, i) => (i >= 0 ? String(cols[i] ?? "").replace(/^"|"$/g, "").trim() : "");
-
-    return dataRows.map((cols) => {
-      const weight = toNum(cell(cols, iWt));
-      const rate = toNum(cell(cols, iRate));
-      const less1 = toNum(cell(cols, iL1));
-      const less2 = toNum(cell(cols, iL2));
-      const less3 = toNum(cell(cols, iL3));
-      const shape = cell(cols, iShape);
-      const color = cell(cols, iColor);
-      const clarity = cell(cols, iClarity);
-      return {
-        lotNo: cell(cols, iLot),
-        itemName: cell(cols, iName) || `${shape} ${color} ${clarity}`.trim(),
-        weight,
-        pcs: toNum(cell(cols, iPcs), 1),
-        mrp: toNum(cell(cols, iMrp)),
-        back: toNum(cell(cols, iBack)),
-        rate,
-        less1,
-        less2,
-        less3,
-        amount: calcItemAmount(weight, rate, less1, less2, less3),
-        shape,
-        color,
-        clarity,
-        size: "",
-        polish: "",
-        symmetry: "",
-        fl: "",
-        lab: "",
-        certificateNo: "",
-        memoTransCode: 0,
-        rtnCarats: 0
-      };
-    }).filter((r) => r.lotNo);
-  };
-
-  const parseCsv = (text) => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
-    const dataRows = lines.slice(1).map((line) => line.split(",").map((c) => c.trim()));
-    return mapImportRows(headers, dataRows);
-  };
-
-  const applyImportedRows = (rows) => {
+  const applyImportedGrid = (gridData) => {
+    const rows = gridData?.excelData || gridData?.ExcelData || [];
     if (!rows.length) {
       toast.warning(t("No valid rows found in file."));
       return;
     }
-    setItems((prev) => {
-      const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
-      rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
-      return Array.from(map.values());
-    });
+    setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
     toast.success(t("Excel Import Success!"));
     setExcelOpen(false);
     setExcelFile(null);
@@ -1534,31 +1514,32 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       return;
     }
     const name = (excelFile.name || "").toLowerCase();
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xls")) {
+      toast.error(t("File format is not valid."));
+      return;
+    }
     try {
-      if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-        const parsed = await parseExcelFile(excelFile);
-        if (!parsed.success || !parsed.rows?.length) {
-          toast.error(parsed?.error?.message || t("Failed to parse Excel file."));
-          return;
-        }
-        const headers = (parsed.rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
-        const dataRows = parsed.rows.slice(1).map((row) => (row || []).map((c) => String(c ?? "").trim()));
-        applyImportedRows(mapImportRows(headers, dataRows));
+      const res = await importMixPurchaseExcel({
+        ImportFile: excelFile,
+        Less1: toNum(entry.less1),
+        Less2: toNum(entry.less2),
+        Less3: toNum(entry.less3),
+        CurCode: header.curCode || "",
+        ExistingItems: buildExistingItemsForImport()
+      });
+      if (res?.success || res?.Success) {
+        applyImportedGrid(res.Data || res.data);
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          applyImportedRows(parseCsv(String(e.target?.result || "")));
-        } catch (err) {
-          console.error(err);
-          toast.error(t("Failed to parse CSV."));
-        }
-      };
-      reader.readAsText(excelFile);
+      toast.error(res?.Data || res?.data || res?.Message || res?.message || t("Failed to import Excel file."));
     } catch (err) {
       console.error(err);
-      toast.error(t("Failed to parse Excel file."));
+      toast.error(
+        err?.response?.data?.Data ||
+        err?.response?.data?.data ||
+        err?.message ||
+        t("Failed to import Excel file.")
+      );
     }
   };
     const downloadTemplate = () => {
@@ -2873,7 +2854,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                 <i className="ri-download-2-line me-1" />
                 {t("Download")}
               </Button>
-              <div className="text-muted small mt-2">{t("Supports CSV and Excel (.xlsx / .xls).")}</div>
+              <div className="text-muted small mt-2">{t("Supports Excel (.xlsx / .xls).")}</div>
             </div>
           </ModalBody>
           <ModalFooter>

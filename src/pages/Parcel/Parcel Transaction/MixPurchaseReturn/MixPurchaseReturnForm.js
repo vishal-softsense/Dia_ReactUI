@@ -16,6 +16,7 @@ import {
 } from "reactstrap";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import CreatableSelect from "react-select/creatable";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -24,6 +25,7 @@ import {
   editMixPurchaseReturn,
   getAccGrpMasters,
   getCurrencyRates,
+  getMixMemoOutShipVia,
   getMixPurchaseReturnDetail,
   getMixPurchaseReturnItemFromList,
   getMixPurchaseReturnLotDetail,
@@ -433,6 +435,12 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
   const [brokerLoading, setBrokerLoading] = useState(false);
   const [broker, setBroker] = useState(null);
 
+  // MVC mix-pur-return.js #ShipVia select2 → /saleParcel/get-shipvia (GetShipViaForDropdown)
+  const [shipViaInput, setShipViaInput] = useState("");
+  const [shipViaOpts, setShipViaOpts] = useState([]);
+  const [shipViaLoading, setShipViaLoading] = useState(false);
+  const [shipVia, setShipVia] = useState(null);
+
   const [lotSel, setLotSel] = useState(null);
 
   const [mOp, setMOp] = useState("*");
@@ -614,6 +622,32 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [brokerInput, searchAccounts]);
 
+  // MVC: minimumInputLength 2 → GetShipViaForDropdown
+  useEffect(() => {
+    if (!shipViaInput || shipViaInput.trim().length < 2) {
+      setShipViaOpts([]);
+      return;
+    }
+    const tmr = setTimeout(async () => {
+      setShipViaLoading(true);
+      try {
+        const res = await getMixMemoOutShipVia(shipViaInput);
+        const raw = res?.Data || res?.data || [];
+        setShipViaOpts(
+          (Array.isArray(raw) ? raw : []).map((item) => ({
+            value: String(item.text || item.id || item.Text || item.Id || ""),
+            label: String(item.text || item.id || item.Text || item.Id || "")
+          })).filter((o) => o.value)
+        );
+      } catch {
+        setShipViaOpts([]);
+      } finally {
+        setShipViaLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(tmr);
+  }, [shipViaInput]);
+
   const loadLotOptions = useCallback((inputValue, callback) => {
     const term = (inputValue || "").trim();
     if (term.length < 1) {
@@ -720,6 +754,8 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
         }
         : null
     );
+    const shipViaText = getVal(h, "ShipVia", "Shipvia");
+    setShipVia(shipViaText ? { value: shipViaText, label: shipViaText } : null);
 
     setHeader({
       code: toNum(getVal(h, "Code"), 0),
@@ -1199,7 +1235,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       InvDisc: header.description,
       Description: header.description,
       chkoldsale: !!header.chkoldsale,
-      ShipVia: header.shipVia,
+      ShipVia: shipVia?.label || shipVia?.value || header.shipVia || "",
       Tracking: header.tracking,
       SalesPerson: header.salesPerson,
       MemoNo: header.memoNo,
@@ -1575,12 +1611,32 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                     </Row>
 
-                    {/* Row 5: SHIP VIA */}
+                    {/* Row 5: SHIP VIA — MVC select2 Search ShipVia */}
                     <Row className="g-2 align-items-end">
                       <Col md={4} sm={6} xs={12}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1 text-uppercase small">{t("SHIP VIA")}</Label>
-                          <Input className="form-control-sm" style={fieldH} value={header.shipVia} placeholder={t("Search ShipVia")} onChange={(e) => setHeaderField("shipVia", e.target.value)} />
+                          <CreatableSelect
+                            styles={customStyles}
+                            options={shipViaOpts}
+                            value={shipVia}
+                            onChange={(sel) => {
+                              setShipVia(sel);
+                              setHeaderField("shipVia", sel?.label || sel?.value || "");
+                            }}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setShipViaInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setShipViaInput("");
+                                setShipViaOpts([]);
+                              }
+                            }}
+                            isLoading={shipViaLoading}
+                            placeholder={t("Search ShipVia")}
+                            isClearable
+                            isDisabled={readOnly}
+                            menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                          />
                         </FormGroup>
                       </Col>
                     </Row>

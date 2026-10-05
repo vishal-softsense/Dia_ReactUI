@@ -1,18 +1,50 @@
 import React from "react";
-import { fmt, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
+import { fmtDateMMM, fmtNum, getVal, paginateVariable } from "../shared/printUtils";
 
-// Matches MVC Views/MixSaleReturnPartial/MixSaleRtnPrint_USA.cshtml
-const th = { background: "#BFBFBF", border: "2px solid #909090", padding: "6px 0", textAlign: "center" };
-const td = { border: "2px solid #A2A1A1", padding: "0 6px", textAlign: "center", height: 24 };
-const itemTh = { background: "#BFBFBF", border: "2px solid #909090", padding: "6px 0", textAlign: "center" };
-const itemTd = { border: "2px solid #A2A1A1", padding: "0 6px", textAlign: "center", height: 24 };
+// MVC Views/MixSaleReturnPartial/MixSaleRtnPrint_USA.cshtml — same-to-same
+const SINGLE_PAGE = 18;
+const FIRST_PAGE = 26;
+const MIDDLE_PAGE = 24;
+const LAST_PAGE = 16;
+const COL_COUNT = 8;
+
+const th = {
+  background: "#BFBFBF",
+  border: "2px solid #909090",
+  padding: "6px 0",
+  textAlign: "center",
+  fontWeight: "bold"
+};
+const td = {
+  border: "2px solid #A2A1A1",
+  padding: "0 6px",
+  textAlign: "center",
+  height: 24,
+  verticalAlign: "middle"
+};
+const itemTh = { ...th };
+const itemTd = { ...td };
 
 const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
-  const pages = paginateVariable(items, { single: 18, first: 26, middle: 24, last: 16 });
+  const pages = paginateVariable(items, {
+    single: SINGLE_PAGE,
+    first: FIRST_PAGE,
+    middle: MIDDLE_PAGE,
+    last: LAST_PAGE
+  });
   const plusMinus =
     (Number(getVal(data, "PlusMinusAmount", "plusMinusAmount")) || 0) *
     (Number(getVal(data, "BaseRate", "baseRate")) || 0);
   const finalAmount = Number(getVal(data, "FinalAmount", "finalAmount")) || totals.amount;
+
+  const getPageCapacity = (pageIdx) => {
+    const isLast = pageIdx === pages.length - 1;
+    const isFirst = pageIdx === 0;
+    if (isFirst && isLast) return SINGLE_PAGE;
+    if (isFirst) return FIRST_PAGE;
+    if (isLast) return LAST_PAGE;
+    return MIDDLE_PAGE;
+  };
 
   const renderHeader = () => (
     <>
@@ -21,7 +53,7 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
           <tr>
             <td style={{ width: "55%", verticalAlign: "top" }}>
               {logoUrl ? <img src={logoUrl} alt="Logo" style={{ height: 90, width: 110 }} /> : null}
-              <div style={{ fontFamily: "Verdana", fontSize: 11, fontWeight: "bold" }}>
+              <div style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 11, fontWeight: "bold" }}>
                 <div style={{ fontSize: 14 }}>{company.companyName}</div>
                 <div>{company.companyAddress}</div>
                 <div>{company.companyAddress1}</div>
@@ -93,10 +125,10 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 12, marginTop: 8 }}>
         <tbody>
-          <tr>
+          <tr style={{ height: 8 }}>
             {["Bill To", "Ship To"].map((label, i) => (
               <React.Fragment key={label}>
-                {i === 1 && <td style={{ width: "12%" }} />}
+                {i === 1 ? <td style={{ width: "12%" }} /> : null}
                 <td style={{ width: "44%", border: "2px solid #A2A1A1", verticalAlign: "top" }}>
                   <div
                     style={{
@@ -110,14 +142,20 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
                   >
                     {label}
                   </div>
-                  <div style={{ padding: 5, minHeight: 120, fontSize: 14 }}>
-                    <div style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
-                      {getVal(data, "PartyName", "partyName")}
-                    </div>
-                    <div style={{ padding: "2px 0" }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
-                    <div>{getVal(data, "AddressLine2", "addressLine2")}</div>
-                    <div style={{ padding: "4px 0" }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
-                  </div>
+                  <table style={{ width: "100%", height: 120, borderCollapse: "collapse" }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: 5, verticalAlign: "top", fontSize: 14 }}>
+                          <div style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
+                            {getVal(data, "PartyName", "partyName")}
+                          </div>
+                          <div style={{ padding: "2px 0" }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
+                          <div>{getVal(data, "AddressLine2", "addressLine2")}</div>
+                          <div style={{ padding: "4px 0" }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
               </React.Fragment>
             ))}
@@ -125,7 +163,10 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
         </tbody>
       </table>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8, fontSize: 10 }}>
+      <table
+        className="mix-sale-rtn-meta"
+        style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8, fontSize: 10, border: "2px solid #A2A1A1" }}
+      >
         <thead>
           <tr>
             {["Sales Person", "Terms", "Due Date", "Ship Via", "Ship Date", "Tracking No"].map((h) => (
@@ -150,18 +191,29 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
   );
 
   return (
-    <div style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
+    <div className="mix-sale-rtn-usa-root" style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
       {pages.map((pageItems, pageIdx) => {
         const isLastPage = pageIdx === pages.length - 1;
-        let srNo = (items || []).indexOf(pageItems[0]) + 1 || 1;
+        const pageCapacity = getPageCapacity(pageIdx);
+        // Always fill to page capacity — print stays a complete set for any record count
+        const fillTo = pageCapacity;
+        const srNoStart = pages.slice(0, pageIdx).reduce((sum, p) => sum + p.length, 0) + 1;
+        let srNo = srNoStart;
+
         return (
           <div
             key={pageIdx}
-            className={isLastPage ? "" : "page-break"}
-            style={{ position: "relative", minHeight: 1050, paddingTop: 5 }}
+            className={`mix-sale-rtn-usa-page${isLastPage ? "" : " page-break"}${
+              pageIdx > 0 ? " mix-sale-rtn-print-page-next" : ""
+            }`}
+            style={{ position: "relative", paddingTop: 5 }}
           >
             {renderHeader()}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, border: "2px solid #A2A1A1" }}>
+
+            <table
+              className="mix-sale-rtn-items"
+              style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, border: "2px solid #A2A1A1" }}
+            >
               <thead>
                 <tr style={{ height: 29 }}>
                   {[
@@ -182,45 +234,90 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
               </thead>
               <tbody>
                 {pageItems.map((item, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} className="mix-sale-rtn-item-row">
                     <td style={itemTd}>{srNo++}</td>
-                    <td style={itemTd}>{getVal(item, "InvNo", "invNo") || getVal(data, "InvNo")}</td>
+                    <td style={itemTd}>
+                      {getVal(item, "InvNo", "invNo", "SaleInvNo", "saleInvNo") ||
+                        getVal(data, "InvNo", "invNo")}
+                    </td>
                     <td style={{ ...itemTd, textAlign: "center" }}>
-                      {getVal(item, "Lotno", "lotno", "StockNo", "stockNo")}
+                      {getVal(item, "Lotno", "lotno", "LotNo", "lotNo", "StockNo", "stockNo")}
                     </td>
                     <td style={{ ...itemTd, textAlign: "center" }}>
                       {getVal(item, "ItemName", "itemName", "Description", "description")}
                     </td>
                     <td style={itemTd}>{getVal(item, "Pcs", "pcs", "Qty", "qty")}</td>
                     <td style={{ ...itemTd, textAlign: "right" }}>
-                      {fmt(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                      {fmtNum(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
                     </td>
                     <td style={{ ...itemTd, textAlign: "right" }}>
-                      {fmt(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
+                      {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
                     </td>
                     <td style={{ ...itemTd, textAlign: "right" }}>
-                      {fmt(getVal(item, "MasterCurrencyAmount", "Amount", "amount"), 2)}
+                      {fmtNum(getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount"), 2)}
                     </td>
                   </tr>
                 ))}
+
+                {/* Empty rows — always fill to page capacity (MVC: complete set for any record count) */}
+                {Array.from({ length: Math.max(0, fillTo - pageItems.length) }).map((_, i) => (
+                  <tr key={`e-${i}`} className="mix-sale-rtn-empty-row">
+                    <td
+                      style={{
+                        borderLeft: "1px solid #000",
+                        borderRight: "none",
+                        borderTop: "none",
+                        borderBottom: "none",
+                        height: 24
+                      }}
+                    >
+                      &nbsp;
+                    </td>
+                    {Array.from({ length: COL_COUNT - 2 }).map((__, c) => (
+                      <td key={c} style={{ border: "none", height: 24 }}>
+                        &nbsp;
+                      </td>
+                    ))}
+                    <td
+                      style={{
+                        borderRight: "1px solid #000",
+                        borderLeft: "none",
+                        borderTop: "none",
+                        borderBottom: "none",
+                        height: 24
+                      }}
+                    >
+                      &nbsp;
+                    </td>
+                  </tr>
+                ))}
+
                 {isLastPage && (
                   <>
                     <tr style={{ fontWeight: "bold", background: "#f0f0f0" }}>
-                      <td colSpan={5} style={{ ...itemTd, textAlign: "left", paddingLeft: 6, borderRight: "none" }}>
+                      <td
+                        colSpan={5}
+                        style={{
+                          ...itemTd,
+                          textAlign: "left",
+                          paddingLeft: 6,
+                          borderRight: "none"
+                        }}
+                      >
                         Total Carats:
                       </td>
                       <td style={{ ...itemTd, textAlign: "right", borderLeft: "none", fontSize: 13 }}>
-                        {fmt(totals.wt, 2)}
+                        {fmtNum(totals.wt, 2)}
                       </td>
                       <td style={{ ...itemTd, textAlign: "center", fontSize: 13 }}>US $ :</td>
-                      <td style={{ ...itemTd, textAlign: "right", fontSize: 13 }}>{fmt(totals.amount, 2)}</td>
+                      <td style={{ ...itemTd, textAlign: "right", fontSize: 13 }}>{fmtNum(totals.amount, 2)}</td>
                     </tr>
                     <tr>
                       <td colSpan={7} style={{ border: "none" }} />
                       <td style={{ ...itemTd, fontWeight: "bold" }}>
                         <div style={{ overflow: "hidden" }}>
                           <span style={{ float: "left" }}>+/- Amt</span>
-                          <span style={{ float: "right" }}>{fmt(plusMinus, 2)}</span>
+                          <span style={{ float: "right" }}>{fmtNum(plusMinus, 2)}</span>
                         </div>
                       </td>
                     </tr>
@@ -235,7 +332,7 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
                           borderTop: "2px solid #000"
                         }}
                       >
-                        {fmt(finalAmount, 2)}
+                        {fmtNum(finalAmount, 2)}
                       </td>
                     </tr>
                   </>
@@ -244,7 +341,7 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
             </table>
 
             {isLastPage && (
-              <>
+              <div className="mix-sale-rtn-footer-block">
                 <table style={{ width: "100%", marginTop: 10 }}>
                   <tbody>
                     <tr>
@@ -295,23 +392,32 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
                     </tr>
                   </tbody>
                 </table>
+
                 {company.saleConditions ? (
                   <div
                     style={{
                       fontSize: 12,
                       textAlign: "justify",
                       margin: "13px 0",
-                      fontFamily: "Segoe UI",
+                      fontFamily: "Segoe UI, Verdana, Arial, sans-serif",
                       wordSpacing: 5
                     }}
                   >
                     {company.saleConditions}
                   </div>
                 ) : null}
-              </>
+              </div>
             )}
 
-            <div style={{ position: "relative", fontSize: 12, marginTop: 20, fontWeight: "bold", textAlign: "center" }}>
+            <div
+              style={{
+                position: "relative",
+                fontSize: 12,
+                marginTop: 20,
+                fontWeight: "bold",
+                textAlign: "center"
+              }}
+            >
               <span>Thank you for your business. It&apos;s been a pleasure working with you!</span>
               <span style={{ position: "absolute", right: 0 }}>{pageIdx + 1}</span>
             </div>

@@ -28,7 +28,8 @@ const MixPurchasePrintView = () => {
 
   useEffect(() => {
     const load = async () => {
-      const c = await getReportCompanySettings({ forceRefresh: true });
+      // persist:false — print must not overwrite shared company/report settings cache
+      const c = await getReportCompanySettings({ forceRefresh: true, persist: false });
       setCompany(c);
     };
     load();
@@ -67,19 +68,32 @@ const MixPurchasePrintView = () => {
     items.forEach((it) => {
       qty += Number(getVal(it, "Qty", "qty", "Pcs", "pcs")) || 0;
       wt += Number(getVal(it, "Weight", "weight", "Carats", "carats")) || 0;
-      amount += Number(getVal(it, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount")) || 0;
+      amount += Number(getVal(it, "Amount", "amount")) || 0;
     });
     return { qty, wt, amount };
   }, [items]);
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
   const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
+  const partyDisplay = String(getVal(data, "PartyName", "partyName") || "")
+    .replace(/ /g, "_")
+    .replace(/\//g, "")
+    .replace(/\\/g, "");
+  // Save as PDF: MixPur_{InvNo}_{Party}.pdf
+  const pdfFileName = partyDisplay
+    ? `MixPur_${invDisplay}_${partyDisplay}`
+    : `MixPur_${invDisplay || "Print"}`;
 
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = pdfFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
-  document.title = `MixPurPrint_${invDisplay} | Admin`;
+  document.title = pdfFileName;
 
   if (loading) {
     return (
@@ -147,14 +161,28 @@ const MixPurchasePrintView = () => {
         </Container>
 
         <style>{`
-          .page-break { page-break-after: always; }
+          .page-break { page-break-after: always; break-after: page; }
+          /* Second+ print pages: top spacing after page break */
+          .mix-pur-print-page-next {
+            margin-top: 24px;
+            padding-top: 10px;
+          }
+          /* MVC MixPurchasePrint_USA — Verdana 13px everywhere (match MVC PDF visual) */
+          .mix-pur-print-sheet,
+          .mix-pur-print-sheet * {
+            font-family: Verdana, Arial, sans-serif !important;
+          }
           .mix-pur-print-sheet {
-            font-family: Verdana, Arial, sans-serif;
+            font-size: 13px;
+            color: #000;
           }
           @media print {
-            @page { size: Letter portrait; margin: 10mm; }
+            /* margin:0 keeps Chrome Headers/Footers from eating Letter space (MVC Rotativa has no browser chrome) */
+            @page { size: Letter portrait; margin: 0; }
             html, body {
               background: #fff !important;
+              margin: 0 !important;
+              padding: 0 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
@@ -170,12 +198,62 @@ const MixPurchasePrintView = () => {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              padding: 0 !important;
+              /* Match MVC Rotativa PageMargins(10,10,10,10) without browser header/footer chrome */
+              padding: 10mm !important;
               border: none !important;
               border-radius: 0 !important;
               box-shadow: none !important;
               background: #fff !important;
               color: #000 !important;
+              box-sizing: border-box !important;
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 13px !important;
+            }
+            #mix-pur-print-area,
+            #mix-pur-print-area * {
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 13px !important;
+            }
+            #mix-pur-print-area .mix-pur-title {
+              font-size: 18px !important;
+            }
+            #mix-pur-print-area .mix-pur-company-name {
+              font-size: 14px !important;
+            }
+            #mix-pur-print-area .mix-pur-company-detail {
+              font-size: 12px !important;
+            }
+            #mix-pur-print-area .mix-pur-addr-line {
+              font-size: 12px !important;
+            }
+            /* Keep table chrome + gray headers identical to on-screen / MVC */
+            #mix-pur-print-area table {
+              border-collapse: collapse !important;
+            }
+            #mix-pur-print-area th {
+              background-color: #c0c0c0 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #mix-pur-print-area td,
+            #mix-pur-print-area th {
+              box-sizing: border-box !important;
+            }
+            /* Fit Letter like Rotativa: empty rows must not force a 2nd page for single-invoice prints */
+            #mix-pur-print-area .mix-pur-item-row td,
+            #mix-pur-print-area .mix-pur-empty-row td {
+              height: 18px !important;
+              max-height: 18px !important;
+              line-height: 18px !important;
+              padding-top: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            #mix-pur-print-area .mix-pur-address-box {
+              height: 120px !important;
+            }
+            #mix-pur-print-area .mix-pur-print-page-next {
+              margin-top: 0 !important;
+              padding-top: 10mm !important;
             }
             .d-print-none,
             .navbar-menu,
@@ -186,6 +264,7 @@ const MixPurchasePrintView = () => {
             #page-topbar,
             .page-title-box {
               display: none !important;
+              visibility: hidden !important;
             }
           }
           @media (max-width: 767px) {

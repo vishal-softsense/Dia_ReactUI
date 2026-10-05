@@ -1,216 +1,555 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, getVal, paginateFixed, paginateStella } from "../shared/printUtils";
+import { fmt, fmtNum, getVal } from "../shared/printUtils";
+import deltaQr from "../../assets/images/print/deltaqr.png";
+import deltaInstaQr from "../../assets/images/print/delta.png";
 
-const ClassicFormat = ({ data, items, totals, company, logoUrl }) => {
-  const isSinglePageLayout = items.length >= 11;
-  const pages = isSinglePageLayout ? paginateStella(items, 40, 35) : paginateFixed(items, 10);
+/**
+ * Solitaire Memo (Classic) — mirrors MVC Views/Memo/SoMemoOutPrintInv.cshtml
+ * OFFICE COPY + CUSTOMER COPY stacked on Letter portrait (Rotativa 10mm margins).
+ * 10 rows per page; totals only on last page.
+ */
+const PAGE_SIZE = 10;
 
-  const cell = { border: "1px solid #000", padding: "5px 6px" };
-  const th = { ...cell, background: "#c0c0c0", textAlign: "center", fontWeight: "bold" };
+/** MVC SoMemoOutPrintInv date: dd-MMMM-yyyy */
+const fmtClassicDate = (val) => {
+  if (!val) return "0.00";
+  try {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${dd}-${months[d.getMonth()]}-${d.getFullYear()}`;
+  } catch {
+    return String(val);
+  }
+};
+
+const lineAmt = (item) => {
+  const m = getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount");
+  if (m !== "" && m !== undefined && m !== null) return Number(m) || 0;
+  return Number(getVal(item, "Amount", "amount")) || 0;
+};
+
+const MemoCopy = ({
+  copyTitle,
+  data,
+  pageItems,
+  srNoStart,
+  isLastPage,
+  company,
+  logoUrl,
+  totals,
+  footerMarginTop
+}) => {
+  let srNo = srNoStart;
+  const emptyCount = Math.max(0, PAGE_SIZE - pageItems.length);
+  const companyFooter = company?.companyFooter || "Powered by SoftOnCloud";
+  const plusMinus =
+    (Number(getVal(data, "PlusMinusAmount", "plusMinusAmount", "PlusMinAmount", "plusMinAmount")) || 0) *
+    (Number(getVal(data, "BaseRate", "baseRate")) || 0);
+  const finalAmt =
+    Number(getVal(data, "FinalAmount", "finalAmount", "FinalMAmount", "finalMAmount")) ||
+    totals.amount ||
+    0;
 
   return (
-    <div className="classic-print-container" style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 12, color: "#000" }}>
-      {pages.map((currentItems, pageIdx) => {
-        const startRowNo = (items || []).indexOf(currentItems[0]) + 1 || 1;
-        const isLastPage = pageIdx === pages.length - 1;
+    <div className="classic-copy">
+      {/* Header */}
+      <table className="classic-header" style={{ width: "100%", marginBottom: 10, borderCollapse: "collapse" }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "16%", verticalAlign: "top", paddingRight: 0 }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="classic-logo" style={{ maxHeight: 95, width: 120 }} />
+              ) : null}
+            </td>
+            <td style={{ width: "42%", verticalAlign: "top", letterSpacing: 1, fontSize: 11, paddingLeft: 5 }}>
+              <div>{company?.companyName}</div>
+              <div style={{ margin: "1px 0" }}>{company?.companyAddress}</div>
+              <div>{company?.companyAddress1}</div>
+              <div style={{ margin: "1px 0" }}>{company?.companyAddress2}</div>
+              <div>{company?.companyPhone}</div>
+              <div>{company?.companyEmail}</div>
+            </td>
+            <td style={{ width: "42%", verticalAlign: "top" }}>
+              <div
+                className="classic-copy-title"
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 22,
+                  fontFamily: "Verdana, Arial, sans-serif",
+                  textAlign: "right",
+                  marginTop: 10,
+                  marginBottom: 0
+                }}
+              >
+                {copyTitle}
+              </div>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  marginTop: 5,
+                  border: "1px solid #A2A1A1"
+                }}
+              >
+                <thead>
+                  <tr style={{ height: 20 }}>
+                    <th
+                      style={{
+                        width: "50%",
+                        border: "1px solid #A2A1A1",
+                        background: "#ccc",
+                        padding: 3,
+                        fontFamily: "Verdana, Arial, sans-serif",
+                        textAlign: "center"
+                      }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      style={{
+                        width: "50%",
+                        border: "1px solid #A2A1A1",
+                        background: "#ccc",
+                        padding: 3,
+                        fontFamily: "Verdana, Arial, sans-serif",
+                        textAlign: "center"
+                      }}
+                    >
+                      Memo #
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        border: "1px solid #A2A1A1",
+                        padding: 3,
+                        textAlign: "center",
+                        letterSpacing: 1
+                      }}
+                    >
+                      {fmtClassicDate(getVal(data, "TrnDate", "trnDate"))}
+                    </td>
+                    <td style={{ border: "1px solid #A2A1A1", padding: 3, textAlign: "center" }}>
+                      {getVal(data, "InvNo", "invNo")}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Memo To + Ship */}
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "Verdana, Arial, sans-serif", marginTop: 2 }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "50%", verticalAlign: "top", paddingRight: 8 }}>
+              <table className="classic-memo-to" style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #A2A1A1" }}>
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        background: "#c0c0c0",
+                        padding: 6,
+                        fontWeight: "bold",
+                        textAlign: "center"
+                      }}
+                    >
+                      Memo To
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ border: "1px solid #A2A1A1", padding: 8, textAlign: "left", fontSize: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: "bold", letterSpacing: 1 }}>
+                        {getVal(data, "PartyName", "partyName")}
+                      </span>
+                      <br />
+                      <span style={{ fontSize: 10 }}>{getVal(data, "AddressLine1", "addressLine1")}</span>
+                      <br />
+                      <span style={{ fontSize: 10 }}>{getVal(data, "AddressLine2", "addressLine2")}</span>
+                      <br />
+                      <span style={{ fontSize: 10 }}>{getVal(data, "AddressLine3", "addressLine3")}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td style={{ width: "8%" }} />
+            <td style={{ width: "42%", verticalAlign: "top", textAlign: "center" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #A2A1A1" }}>
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        width: "50%",
+                        border: "1px solid #A2A1A1",
+                        background: "#ccc",
+                        padding: 3,
+                        fontSize: 12,
+                        textAlign: "center"
+                      }}
+                    >
+                      Ship Via
+                    </th>
+                    <th
+                      style={{
+                        width: "50%",
+                        border: "1px solid #A2A1A1",
+                        background: "#ccc",
+                        padding: 3,
+                        fontSize: 12,
+                        textAlign: "center"
+                      }}
+                    >
+                      Tracking No
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ height: 20 }}>
+                    <td style={{ border: "1px solid #A2A1A1", padding: 3 }}>{getVal(data, "ShipVia", "shipVia")}</td>
+                    <td style={{ border: "1px solid #A2A1A1", padding: 3 }}>{getVal(data, "Tracking", "tracking")}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Items table */}
+      <div style={{ marginTop: 3 }}>
+        <table
+          className="classic-main-table"
+          style={{
+            fontFamily: "Verdana, Arial, sans-serif",
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: 9,
+            tableLayout: "fixed"
+          }}
+        >
+          <thead>
+            <tr style={{ background: "#c0c0c0", height: 18 }}>
+              <th style={{ border: "1px solid #999", width: "4%", textAlign: "center" }}>Sr No</th>
+              <th style={{ border: "1px solid #999", width: "9%", textAlign: "center" }}>StoneID</th>
+              <th style={{ border: "1px solid #999", width: "6%", textAlign: "center" }}>Lab</th>
+              <th style={{ border: "1px solid #999", width: "10%", textAlign: "left" }}>CertNo</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Shp</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Col</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Cla</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Cut</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Pol</th>
+              <th style={{ border: "1px solid #999", width: "5%", textAlign: "center" }}>Sym</th>
+              <th style={{ border: "1px solid #999", width: "4%", textAlign: "center" }}>FL</th>
+              <th style={{ border: "1px solid #999", width: "6%", textAlign: "center" }}>Cts</th>
+              <th style={{ border: "1px solid #999", width: "7%", textAlign: "center" }}>Rate</th>
+              <th style={{ border: "1px solid #999", width: "6%", textAlign: "center" }}>Back</th>
+              <th style={{ border: "1px solid #999", width: "12%", textAlign: "center" }}>Amt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageItems.map((item, idx) => {
+              const no = ++srNo;
+              const backRaw = getVal(item, "Back", "back", "discount");
+              const back =
+                backRaw === "" || backRaw === null || backRaw === undefined
+                  ? "0.00"
+                  : fmt(backRaw, 2);
+              return (
+                <tr key={idx} style={{ height: 18, fontSize: 10 }}>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>{no}</td>
+                  <td style={{ border: "1px solid #999", textAlign: "left", paddingLeft: 4 }}>
+                    {getVal(item, "Lotno", "lotNo", "StockNo", "stockNo")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "CertId", "certId", "lab")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "CertificateNo", "certificateNo")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "ShapeId", "shapeId", "shape")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "ColorId", "colorId", "color")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "ClarityId", "clarityId", "clarity")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "PropId", "propId", "cut")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "PolishId", "polishId", "polish")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "SymId", "symId", "symmetry")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "center" }}>
+                    {getVal(item, "FLId", "flId", "fl")}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
+                    {fmt(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
+                    {fmtNum(getVal(item, "Rate", "rate"), 2)}
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{back}</td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
+                    {fmtNum(lineAmt(item), 2)}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {Array.from({ length: emptyCount }).map((_, i) => (
+              <tr
+                key={`empty-${i}`}
+                className="classic-empty-row"
+                style={{ height: 20, borderLeft: "1px solid #A2A1A1", borderRight: "1px solid #A2A1A1" }}
+              >
+                {Array.from({ length: 14 }).map((__, j) => (
+                  <td key={j} style={{ border: "none" }} />
+                ))}
+                <td style={{ border: "none", borderLeft: "1px solid #A2A1A1" }} />
+              </tr>
+            ))}
+
+            {isLastPage && (
+              <>
+                <tr
+                  style={{
+                    fontWeight: "bold",
+                    height: 24,
+                    fontSize: 11,
+                    borderTop: "2px solid #A2A1A1"
+                  }}
+                >
+                  <td colSpan={11} style={{ border: "1px solid #999", textAlign: "left", paddingLeft: 25 }}>
+                    Total Carats :
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
+                    {fmt(totals.wt, 2)}
+                  </td>
+                  <td colSpan={2} style={{ border: "1px solid #999", textAlign: "right", paddingRight: 15 }}>
+                    US $ :
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
+                    {fmtNum(totals.amount, 2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={14} style={{ border: "none" }} />
+                  <td style={{ border: "1px solid #999", padding: 4 }}>
+                    <div style={{ overflow: "hidden" }}>
+                      <span style={{ float: "left" }}>+/- Amt</span>
+                      <span style={{ fontWeight: "bold", float: "right" }}>{fmtNum(plusMinus, 2)}</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr style={{ height: 24, fontSize: 11, fontWeight: "bold" }}>
+                  <td colSpan={14} style={{ border: "none" }} />
+                  <td
+                    style={{
+                      borderLeft: "1px solid #999",
+                      borderRight: "1px solid #999",
+                      borderTop: "1px solid #999",
+                      borderBottom: "1px solid #A2A1A1",
+                      textAlign: "right",
+                      paddingRight: 5
+                    }}
+                  >
+                    {fmtNum(finalAmt, 2)}
+                  </td>
+                </tr>
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer: QR | Powered by | Signature */}
+      <table
+        className={`classic-footer-wrap${footerMarginTop > 0 ? " classic-footer-customer" : ""}`}
+        style={{ width: "100%", marginTop: footerMarginTop, borderCollapse: "collapse" }}
+      >
+        <tbody>
+          <tr>
+            <td style={{ width: "35%", verticalAlign: "bottom", textAlign: "left" }}>
+              <img src={deltaQr} alt="QR" className="classic-qr" style={{ height: 50, marginRight: 5 }} />
+              <img src={deltaInstaQr} alt="Insta QR" className="classic-qr" style={{ height: 50 }} />
+            </td>
+            <td
+              style={{
+                width: "30%",
+                verticalAlign: "middle",
+                textAlign: "center",
+                color: "gray",
+                fontSize: 9
+              }}
+            >
+              {companyFooter}
+            </td>
+            <td
+              style={{
+                width: "35%",
+                verticalAlign: "middle",
+                fontFamily: "Verdana, Arial, sans-serif",
+                textAlign: "right",
+                fontWeight: "bold",
+                fontSize: 14,
+                whiteSpace: "nowrap"
+              }}
+            >
+              Signature&nbsp;&nbsp;&nbsp;______________________
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const ClassicFormat = ({ data, items, totals, company, logoUrl }) => {
+  const list = items || [];
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE) || 1);
+
+  // Prefer MasterCurrencyAmount for totals (MVC)
+  let totalWt = 0;
+  let totalAmt = 0;
+  list.forEach((it) => {
+    totalWt += Number(getVal(it, "Carats", "carats", "Weight", "weight")) || 0;
+    totalAmt += lineAmt(it);
+  });
+  const pageTotals = {
+    wt: totalWt || totals?.wt || 0,
+    amount: totalAmt || totals?.amount || 0,
+    qty: totals?.qty || 0
+  };
+
+  return (
+    <div className="classic-print-container">
+      <style>{`
+        .classic-print-container {
+          font-family: "Segoe UI", Arial, sans-serif;
+          font-size: 13px;
+          color: #000;
+          background: #fff;
+          box-sizing: border-box;
+        }
+        @media screen {
+          .classic-print-container {
+            width: 8.5in;
+            max-width: 100%;
+            margin: 0 auto 24px;
+            padding: 10mm;
+            border: 1px solid #c8c8c8;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+          }
+        }
+        @media print {
+          .classic-print-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            /* Scale whole sheet so OFFICE + CUSTOMER fit one Letter page */
+            zoom: 0.72 !important;
+          }
+          .classic-print-container .classic-sheet {
+            page-break-after: always !important;
+            break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .classic-print-container .classic-sheet-last {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+          }
+          /* Do NOT avoid-break on each copy — that forces 2 pages */
+          .classic-print-container .classic-copy {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+          }
+          .classic-print-container .classic-cut-gap {
+            margin-top: 36px !important;
+            height: 0 !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+          }
+          .classic-print-container .classic-empty-row {
+            height: 14px !important;
+          }
+          .classic-print-container .classic-logo {
+            max-height: 72px !important;
+            width: 90px !important;
+          }
+          .classic-print-container .classic-qr {
+            height: 40px !important;
+          }
+          .classic-print-container th {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+        /* MVC SoMemoOutPrintInv cut gap (screen preview) */
+        .classic-print-container .classic-cut-gap {
+          margin-top: 70px;
+          height: 0;
+        }
+      `}</style>
+
+      {Array.from({ length: totalPages }).map((_, pageIdx) => {
+        const isLastPage = pageIdx === totalPages - 1;
+        const skip = pageIdx * PAGE_SIZE;
+        const pageItems = list.slice(skip, skip + PAGE_SIZE);
+        const srNoStart = skip;
 
         return (
           <div
             key={pageIdx}
-            className={isLastPage ? "" : "page-break"}
-            style={{
-              background: "#fff",
-              padding: 16,
-              border: "1px solid #dee2e6",
-              borderRadius: 8,
-              width: "100%",
-              maxWidth: 900,
-              margin: "0 auto 30px auto"
-            }}
+            className={`classic-sheet${isLastPage ? " classic-sheet-last" : ""}`}
           >
-            {pageIdx === 0 && (
-              <table style={{ width: "100%", marginBottom: 14, tableLayout: "fixed" }}>
-                <tbody>
-                  <tr>
-                    <td style={{ width: "12%", verticalAlign: "top" }}>
-                      {logoUrl ? <img src={logoUrl} alt="logo" style={{ width: 80, maxWidth: "100%" }} /> : null}
-                    </td>
-                    <td style={{ width: "53%", verticalAlign: "top", fontSize: 11, paddingLeft: 8 }}>
-                      <div style={{ fontWeight: "bold", fontSize: 13 }}>{company.companyName}</div>
-                      <div style={{ marginTop: 3, lineHeight: 1.4 }}>{company.companyAddress}</div>
-                      <div style={{ lineHeight: 1.4 }}>{company.companyAddress1}</div>
-                      <div style={{ lineHeight: 1.4 }}>{company.companyAddress2}</div>
-                      <div style={{ marginTop: 6 }}>
-                        <b>Tel:</b>&nbsp;{company.companyPhone}
-                      </div>
-                      <div>
-                        <b>Email:</b>&nbsp;{company.companyEmail}
-                      </div>
-                    </td>
-                    <td style={{ width: "35%", verticalAlign: "top" }}>
-                      <div style={{ fontWeight: "bold", fontSize: 20 }}>MEMO OUT</div>
-                      <table style={{ width: "100%", fontSize: 12, marginTop: 8 }}>
-                        <tbody>
-                          <tr>
-                            <td style={{ padding: "4px 0" }}>
-                              <b>Date :</b>
-                            </td>
-                            <td style={{ textAlign: "right" }}>{fmtDate(getVal(data, "TrnDate", "trnDate"))}</td>
-                          </tr>
-                          <tr>
-                            <td style={{ padding: "4px 0" }}>
-                              <b>Memo #</b>
-                            </td>
-                            <td style={{ textAlign: "right" }}>{getVal(data, "InvNo", "invNo")}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
+            <MemoCopy
+              copyTitle="OFFICE COPY"
+              data={data}
+              pageItems={pageItems}
+              srNoStart={srNoStart}
+              isLastPage={isLastPage}
+              company={company}
+              logoUrl={logoUrl}
+              totals={pageTotals}
+              footerMarginTop={0}
+            />
 
-            {pageIdx === 0 && (
-              <div
-                style={{
-                  border: "1px solid #000",
-                  borderRadius: 10,
-                  padding: "10px 12px",
-                  width: "48%",
-                  minWidth: 220,
-                  maxWidth: 400,
-                  marginBottom: 14
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: 6 }}>Memo To:</div>
-                <div style={{ fontSize: 13, marginBottom: 2 }}>{getVal(data, "PartyName", "partyName")}</div>
-                <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
-                <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine2", "addressLine2")}</div>
-                <div style={{ lineHeight: 1.45, fontSize: 11 }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
-              </div>
-            )}
+            <div className="classic-cut-gap" />
 
-            {pageIdx === 0 && (
-              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14, tableLayout: "fixed" }}>
-                <thead>
-                  <tr>
-                    {["BILL NO", "TERMS"].map((h) => (
-                      <th key={h} style={{ ...th, width: "50%" }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "BillNo", "billNo")}</td>
-                    <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "DueDays", "dueDays")}</td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-
-            {pageIdx === 0 && (
-              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14, tableLayout: "fixed" }}>
-                <thead>
-                  <tr>
-                    {["SHIP VIA", "TRACKING NO"].map((h) => (
-                      <th key={h} style={{ ...th, width: "50%" }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "ShipVia", "shipVia")}</td>
-                    <td style={{ ...cell, textAlign: "center" }}>{getVal(data, "Tracking", "tracking")}</td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-
-            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 11 }}>
-              <colgroup>
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "28%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "18%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  {["Sr No", "Stock #", "DESCRIPTION", "QTY", "WT.", "Price/Carat", "Amount US $"].map((h) => (
-                    <th key={h} style={th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((it, idx) => (
-                  <tr key={idx}>
-                    <td style={{ ...cell, textAlign: "center" }}>{startRowNo + idx}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "Lotno", "lotNo", "stockNo")}</td>
-                    <td style={{ ...cell, wordBreak: "break-word" }}>{getVal(it, "ItemName", "itemName", "description")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{getVal(it, "Pcs", "pcs", "Qty", "qty")}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Carats", "carats", "weight"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Rate", "rate"))}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(getVal(it, "Amount", "amount"))}</td>
-                  </tr>
-                ))}
-                {isLastPage && (
-                  <tr style={{ fontWeight: "bold" }}>
-                    <td style={cell} colSpan={3} />
-                    <td style={{ ...cell, textAlign: "right" }}>{totals.qty}</td>
-                    <td style={{ ...cell, textAlign: "right" }}>{fmt(totals.wt)}</td>
-                    <td style={{ ...cell, lineHeight: 1.6 }}>
-                      <div>Sub Total</div>
-                      <div style={{ marginTop: 4 }}>TOTAL</div>
-                    </td>
-                    <td style={{ ...cell, textAlign: "right", lineHeight: 1.6 }}>
-                      <div>{fmt(totals.amount)}</div>
-                      <div style={{ marginTop: 4 }}>{fmt(totals.amount)}</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-
-            {isLastPage && (
-              <>
-                <div style={{ marginTop: 20 }}>
-                  <span>Signature:</span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      borderBottom: "1px solid #000",
-                      width: 260,
-                      marginLeft: 8
-                    }}
-                  />
-                </div>
-                <div style={{ fontSize: 9.5, marginTop: 12, whiteSpace: "pre-line", border: "1px solid #ddd", padding: 8, borderRadius: 6 }}>
-                  {company.memoConditions || FALLBACK_MEMO_CONDITIONS}
-                </div>
-              </>
-            )}
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 18,
-                fontSize: 11,
-                gap: 12
-              }}
-            >
-              <span>{company.companyFooter || "Powered by SoftOnCloud"}</span>
-              <span>{pageIdx + 1}</span>
-            </div>
+            <MemoCopy
+              copyTitle="CUSTOMER COPY"
+              data={data}
+              pageItems={pageItems}
+              srNoStart={srNoStart}
+              isLastPage={isLastPage}
+              company={company}
+              logoUrl={logoUrl}
+              totals={pageTotals}
+              footerMarginTop={15}
+            />
           </div>
         );
       })}

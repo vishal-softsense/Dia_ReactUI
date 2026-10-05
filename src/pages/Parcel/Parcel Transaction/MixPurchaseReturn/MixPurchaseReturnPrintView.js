@@ -13,6 +13,7 @@ import {
 import MixPurPrintUsaFormat from "../../../../printFormats/mixPurchase/MixPurPrintUsaFormat";
 import { getVal } from "../../../../printFormats/shared/printUtils";
 
+// MVC MixPurchaseReturn/MixPurRtnPrintInv → MixPurRtnPrint_USA.cshtml
 const MixPurchaseReturnPrintView = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -28,7 +29,8 @@ const MixPurchaseReturnPrintView = () => {
 
   useEffect(() => {
     const load = async () => {
-      const c = await getReportCompanySettings({ forceRefresh: true });
+      // persist:false — print must not overwrite shared company/report settings cache
+      const c = await getReportCompanySettings({ forceRefresh: true, persist: false });
       setCompany(c);
     };
     load();
@@ -47,11 +49,11 @@ const MixPurchaseReturnPrintView = () => {
         if (res?.success || res?.Success) {
           setData(res.Data || res.data || null);
         } else {
-          toast.error(res?.Data || res?.data || t("Failed to load print view."));
+          toast.error(res?.Data || res?.data || t("No data found for this Invoice."));
         }
       } catch (err) {
         console.error(err);
-        toast.error(t("Failed to load print view."));
+        toast.error(err?.response?.data?.Data || err?.message || t("No data found for this Invoice."));
       } finally {
         setLoading(false);
       }
@@ -67,25 +69,55 @@ const MixPurchaseReturnPrintView = () => {
     items.forEach((it) => {
       qty += Number(getVal(it, "Qty", "qty", "Pcs", "pcs")) || 0;
       wt += Number(getVal(it, "Weight", "weight", "Carats", "carats")) || 0;
-      amount += Number(getVal(it, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount")) || 0;
+      // MVC MixPurRtnPrint_USA: MasterCurrencyAmount (API maps Amount from that)
+      amount += Number(getVal(it, "Amount", "amount")) || 0;
     });
     return { qty, wt, amount };
   }, [items]);
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
   const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
+  const partyDisplay = String(getVal(data, "PartyName", "partyName") || "")
+    .replace(/ /g, "_")
+    .replace(/\//g, "")
+    .replace(/\\/g, "");
+  // Save as PDF: MixPurRtn_{InvNo}_{Party}.pdf
+  const pdfFileName = partyDisplay
+    ? `MixPurRtn_${invDisplay}_${partyDisplay}`
+    : `MixPurRtn_${invDisplay || "Print"}`;
 
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = pdfFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
-  document.title = `MixPurRtnPrint_${invDisplay} | Admin`;
+  document.title = pdfFileName;
 
   if (loading) {
     return (
       <div className="page-content">
         <Container fluid>
           <div className="text-center text-muted py-5">{t("Loading...")}</div>
+        </Container>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="page-content">
+        <Container fluid>
+          <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <Link to="/MixPurchaseReturn/mixpurchasereturnlist" className="btn btn-soft-secondary btn-sm">
+              {t("Back to List")}
+            </Link>
+          </div>
+          <div className="text-center text-muted py-5">{t("No data found for this Invoice.")}</div>
+          <ToastContainer autoClose={2000} />
         </Container>
       </div>
     );
@@ -125,16 +157,33 @@ const MixPurchaseReturnPrintView = () => {
               company={company}
               logoUrl={logoUrl}
               heading="GENERAL PUR RETURN"
+              variant="usa"
             />
           </div>
         </Container>
 
         <style>{`
-          .page-break { page-break-after: always; }
+          .page-break { page-break-after: always; break-after: page; }
+          .mix-pur-print-page-next {
+            margin-top: 24px;
+            padding-top: 10px;
+          }
+          /* MVC MixPurRtnPrint_USA — Verdana 13px */
+          .mix-pur-rtn-print-sheet,
+          .mix-pur-rtn-print-sheet * {
+            font-family: Verdana, Arial, sans-serif !important;
+          }
+          .mix-pur-rtn-print-sheet {
+            font-size: 13px;
+            color: #000;
+          }
           @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            /* Match MVC Rotativa Letter + 10mm margins; margin:0 avoids browser chrome */
+            @page { size: Letter portrait; margin: 0; }
             html, body {
               background: #fff !important;
+              margin: 0 !important;
+              padding: 0 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
@@ -150,12 +199,64 @@ const MixPurchaseReturnPrintView = () => {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              padding: 0 !important;
+              padding: 10mm !important;
               border: none !important;
               border-radius: 0 !important;
               box-shadow: none !important;
               background: #fff !important;
               color: #000 !important;
+              box-sizing: border-box !important;
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 13px !important;
+            }
+            #mix-pur-rtn-print-area,
+            #mix-pur-rtn-print-area * {
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 13px !important;
+            }
+            /* MVC return title is 24px */
+            #mix-pur-rtn-print-area .mix-pur-title {
+              font-size: 24px !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-company-name {
+              font-size: 14px !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-company-detail {
+              font-size: 12px !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-addr-line {
+              font-size: 12px !important;
+            }
+            #mix-pur-rtn-print-area table {
+              border-collapse: collapse !important;
+            }
+            #mix-pur-rtn-print-area th {
+              background-color: #c0c0c0 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #mix-pur-rtn-print-area td,
+            #mix-pur-rtn-print-area th {
+              box-sizing: border-box !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-item-row td,
+            #mix-pur-rtn-print-area .mix-pur-empty-row td {
+              height: 18px !important;
+              max-height: 18px !important;
+              line-height: 18px !important;
+              padding-top: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-address-box {
+              height: 120px !important;
+            }
+            #mix-pur-rtn-print-area .mix-pur-footer {
+              margin-top: 24px !important;
+            }
+            /* Second+ pages top margin */
+            #mix-pur-rtn-print-area .mix-pur-print-page-next {
+              margin-top: 0 !important;
+              padding-top: 10mm !important;
             }
             .d-print-none,
             .navbar-menu,
@@ -166,6 +267,7 @@ const MixPurchaseReturnPrintView = () => {
             #page-topbar,
             .page-title-box {
               display: none !important;
+              visibility: hidden !important;
             }
           }
           @media (max-width: 767px) {

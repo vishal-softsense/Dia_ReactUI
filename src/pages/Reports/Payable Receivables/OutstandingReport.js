@@ -6,14 +6,10 @@ import {
   CardBody,
   Col,
   Container,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
   FormGroup,
   Input,
   Label,
-  Row,
-  UncontrolledDropdown
+  Row
 } from "reactstrap";
 import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
@@ -135,16 +131,17 @@ const ALL_COLUMNS = [
   { key: "Rate", header: "Rate", align: "right" },
   { key: "Remarks", header: "Remarks", align: "left" },
   { key: "UserName", header: "UserName", align: "left" },
-  { key: "ExpPartyName", header: "ExpParty", align: "left" }
+  { key: "ExpPartyName", header: "ExpParty", align: "left" },
+  { key: "SalesPerson", header: "Sales Person", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const PARTYWISE_COLUMNS = [
-  { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
+  { key: "Date", header: "Date", align: "center" },
+  { key: "InvoiceNo", header: "InvNo", align: "center" },
   { key: "TrnType", header: "TrnType", align: "left", requiredExclude: true },
   { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
-  { key: "DueDays", header: "Due", align: "left" },
+  { key: "DueDate", header: "DueDate", align: "center" },
+  { key: "DueDays", header: "Due", align: "center" },
   { key: "Totcts", header: "Weight", align: "right", sum: true, altKeys: ["totcts"] },
   { key: "Amount", header: "Amount", align: "right", sum: true },
   { key: "PaidAmount", header: "PaidAmount", align: "right", sum: true },
@@ -162,7 +159,9 @@ const PARTYWISE_COLUMNS = [
   { key: "Rate", header: "Rate", align: "right", requiredExclude: true },
   { key: "Remarks", header: "Remarks", align: "left", requiredExclude: true },
   { key: "UserName", header: "UserName", align: "left", requiredExclude: true },
-  { key: "ExpPartyName", header: "ExpParty", align: "left", requiredExclude: true }
+  { key: "ExpPartyName", header: "ExpParty", align: "left", requiredExclude: true },
+  // MVC partywise: after ExpParty; excluded from Required Print only (not Required Excel)
+  { key: "SalesPerson", header: "SalesPerson", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const STATEMENT_COLUMNS = [
@@ -185,6 +184,8 @@ const OutstandingReport = () => {
   const [loadingMode, setLoadingMode] = useState(""); // all | party | invoiceByParty
   const [hasSearched, setHasSearched] = useState(false);
   const [reportMode, setReportMode] = useState(""); // all | party | invoiceByParty
+  /** MVC #ddl-excel-type — Full Excel | Required Filled Excel (Invoice by Party) */
+  const [excelExportType, setExcelExportType] = useState("full");
   const [dropdownData, setDropdownData] = useState({});
   const [reportRows, setReportRows] = useState([]);
   const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
@@ -528,6 +529,7 @@ const OutstandingReport = () => {
     const d = await getDates();
     setHasSearched(false);
     setReportMode("");
+    setExcelExportType("full");
     setReportRows([]);
     setSelectedParty(null);
     setSelectedCommission(null);
@@ -568,6 +570,7 @@ const OutstandingReport = () => {
   const handleNewSelection = () => {
     setHasSearched(false);
     setReportMode("");
+    setExcelExportType("full");
     setReportRows([]);
     setGlobalSearch("");
     setColumnFilters({});
@@ -638,18 +641,18 @@ const OutstandingReport = () => {
     if (sortConfig.key && sortConfig.direction) {
       rows.sort((a, b) => {
         const col = STATEMENT_COLUMNS.find((c) => c.key === sortConfig.key) ||
-                    ALL_COLUMNS.find((c) => c.key === sortConfig.key) ||
-                    PARTYWISE_COLUMNS.find((c) => c.key === sortConfig.key);
+          ALL_COLUMNS.find((c) => c.key === sortConfig.key) ||
+          PARTYWISE_COLUMNS.find((c) => c.key === sortConfig.key);
         const altKeys = col ? col.altKeys || [] : [];
         let valA = getRowVal(a, sortConfig.key, ...altKeys);
         let valB = getRowVal(b, sortConfig.key, ...altKeys);
 
         const isNumeric = col && (
-          col.sum || 
-          sortConfig.key === "Code" || 
-          sortConfig.key === "DueDays" || 
-          sortConfig.key === "Rate" || 
-          sortConfig.key === "Disc" || 
+          col.sum ||
+          sortConfig.key === "Code" ||
+          sortConfig.key === "DueDays" ||
+          sortConfig.key === "Rate" ||
+          sortConfig.key === "Disc" ||
           sortConfig.key === "Pcs" ||
           sortConfig.key === "Amount" ||
           sortConfig.key === "PaidAmount" ||
@@ -877,6 +880,8 @@ const OutstandingReport = () => {
     }
 
     const isInvoiceParty = reportMode === "invoiceByParty";
+    // MVC: ddl-excel-type === 'required' → printReportRequired (hide .required-exclude + BillNo)
+    const isRequiredPrint = isInvoiceParty && excelExportType === "required";
     const pageSizeCss = isInvoiceParty ? "A4 landscape" : "A4 portrait";
     const pageMargin = isInvoiceParty ? "6mm" : "10mm";
     const tableFontSize = isInvoiceParty ? "7.5px" : "11px";
@@ -913,6 +918,51 @@ const OutstandingReport = () => {
         if (firstTh) firstTh.remove();
         else if (firstTd) firstTd.remove();
       });
+
+      if (isRequiredPrint) {
+        // MVC printReportRequired: hide .required-exclude, then drop BillNo and SalesPerson
+        const removeIndexes = [];
+        const headerCells = clone.querySelectorAll("thead tr:first-child th, thead tr:first-child td");
+        headerCells.forEach((cell, index) => {
+          const text = (cell.textContent || "").trim();
+          if (
+            cell.classList.contains("required-exclude") ||
+            text === "BillNo" ||
+            text === t("BillNo") ||
+            text === "SalesPerson" ||
+            text === "Sales Person" ||
+            text === t("SalesPerson") ||
+            text === t("Sales Person")
+          ) {
+            removeIndexes.push(index);
+          }
+        });
+        // Also mark required-exclude body cells by class (same indexes as headers)
+        clone.querySelectorAll(".required-exclude").forEach((el) => {
+          const parent = el.closest("tr");
+          if (!parent || parent.classList.contains("or-group-header")) return;
+          const cells = [...parent.children];
+          const idx = cells.indexOf(el);
+          if (idx >= 0 && !removeIndexes.includes(idx)) removeIndexes.push(idx);
+        });
+
+        removeIndexes
+          .sort((a, b) => b - a)
+          .forEach((colIndex) => {
+            clone.querySelectorAll("tr").forEach((tr) => {
+              if (tr.classList.contains("or-group-header")) {
+                const td = tr.querySelector("td");
+                if (td) {
+                  const span = parseInt(td.getAttribute("colspan") || "1", 10);
+                  td.setAttribute("colspan", String(Math.max(1, span - 1)));
+                }
+                return;
+              }
+              const cell = tr.children[colIndex];
+              if (cell) cell.remove();
+            });
+          });
+      }
     }
 
     const printWindow = window.open("", "", isInvoiceParty ? "height=900,width=1400" : "height=1000,width=1200");
@@ -1148,8 +1198,95 @@ const OutstandingReport = () => {
           padding: 10px 12px;
           min-height: 96px;
         }
-        [data-layout-mode="dark"] .or-group-header td {
-          background: #2b2c32;
+
+        /* Dark mode — keep pastel amount highlights readable (light bg + dark text) */
+        [data-layout-mode="dark"] .or-amt-total,
+        [data-bs-theme="dark"] .or-amt-total,
+        [data-layout-mode="dark"] .or-amt-paid,
+        [data-bs-theme="dark"] .or-amt-paid,
+        [data-layout-mode="dark"] .or-amt-remain,
+        [data-bs-theme="dark"] .or-amt-remain {
+          color: #212529 !important;
+        }
+        [data-layout-mode="dark"] .or-group-header td,
+        [data-bs-theme="dark"] .or-group-header td {
+          background: var(--vz-tertiary-bg, #2b2c32) !important;
+          color: var(--vz-body-color, #e9ecef) !important;
+          border-top-color: var(--vz-border-color, #32383e) !important;
+          border-bottom-color: var(--vz-border-color, #32383e) !important;
+        }
+        [data-layout-mode="dark"] .or-subtotal td,
+        [data-bs-theme="dark"] .or-subtotal td,
+        [data-layout-mode="dark"] .or-grand-total td,
+        [data-bs-theme="dark"] .or-grand-total td {
+          border-top-color: var(--vz-border-color, #32383e) !important;
+          border-bottom-color: var(--vz-border-color, #32383e) !important;
+          color: var(--vz-body-color, #e9ecef) !important;
+          background-color: var(--vz-tertiary-bg, #2b2c32) !important;
+        }
+        [data-layout-mode="dark"] .or-party-box,
+        [data-bs-theme="dark"] .or-party-box,
+        [data-layout-mode="dark"] .or-period-box,
+        [data-bs-theme="dark"] .or-period-box {
+          border-color: var(--vz-border-color, #32383e) !important;
+          background-color: var(--vz-secondary-bg, #212529) !important;
+          color: var(--vz-body-color, #e9ecef) !important;
+        }
+        [data-layout-mode="dark"] .or-report-table thead.table-light,
+        [data-bs-theme="dark"] .or-report-table thead.table-light,
+        [data-layout-mode="dark"] .or-report-table thead.table-light th,
+        [data-bs-theme="dark"] .or-report-table thead.table-light th,
+        [data-layout-mode="dark"] .or-report-table tfoot.table-light,
+        [data-bs-theme="dark"] .or-report-table tfoot.table-light,
+        [data-layout-mode="dark"] .or-report-table tfoot.table-light td,
+        [data-bs-theme="dark"] .or-report-table tfoot.table-light td {
+          background-color: var(--vz-tertiary-bg, #2b2c32) !important;
+          color: var(--vz-body-color, #e9ecef) !important;
+          border-color: var(--vz-border-color, #32383e) !important;
+        }
+        [data-layout-mode="dark"] .or-report-table,
+        [data-bs-theme="dark"] .or-report-table {
+          --bs-table-bg: var(--vz-card-bg, #212529);
+          --bs-table-color: var(--vz-body-color, #e9ecef);
+          --bs-table-border-color: var(--vz-border-color, #32383e);
+          color: var(--vz-body-color, #e9ecef);
+          border-color: var(--vz-border-color, #32383e);
+        }
+        [data-layout-mode="dark"] .or-report-table > :not(caption) > * > *,
+        [data-bs-theme="dark"] .or-report-table > :not(caption) > * > * {
+          border-color: var(--vz-border-color, #32383e);
+          color: inherit;
+        }
+        [data-layout-mode="dark"] .or-report-table tbody td,
+        [data-bs-theme="dark"] .or-report-table tbody td {
+          background-color: var(--vz-card-bg, #212529);
+          color: var(--vz-body-color, #e9ecef);
+        }
+        /* Re-apply amount highlight bg + dark text after generic tbody rule */
+        [data-layout-mode="dark"] .or-report-table tbody td.or-amt-total,
+        [data-bs-theme="dark"] .or-report-table tbody td.or-amt-total {
+          background-color: #fed49c !important;
+          color: #212529 !important;
+        }
+        [data-layout-mode="dark"] .or-report-table tbody td.or-amt-paid,
+        [data-bs-theme="dark"] .or-report-table tbody td.or-amt-paid {
+          background-color: #98ecc2 !important;
+          color: #212529 !important;
+        }
+        [data-layout-mode="dark"] .or-report-table tbody td.or-amt-remain,
+        [data-bs-theme="dark"] .or-report-table tbody td.or-amt-remain {
+          background-color: #FFCCCB !important;
+          color: #212529 !important;
+        }
+        [data-layout-mode="dark"] .or-filter-input,
+        [data-bs-theme="dark"] .or-filter-input {
+          background-color: var(--vz-input-bg, #2a2f34) !important;
+          color: var(--vz-body-color, #e9ecef) !important;
+          border-color: var(--vz-input-border, #32383e) !important;
+        }
+        [data-layout-mode="dark"] .or-filter-input::placeholder,
+        [data-bs-theme="dark"] .or-filter-input::placeholder {
+          color: var(--vz-secondary-color, #878a99) !important;
         }
       `}</style>
       <div className="page-content">
@@ -1200,9 +1337,6 @@ const OutstandingReport = () => {
                 </>
               ) : (
                 <>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleNewSelection}>
-                    {t("New Selection")}
-                  </Button>
                   {reportMode === "all" && (
                     <Button color="soft-success" className="btn-sm rounded-2 px-3 py-1" onClick={exportAllExcel}>
                       <i className="ri-file-excel-2-line align-middle me-1" />
@@ -1211,25 +1345,37 @@ const OutstandingReport = () => {
                   )}
                   {reportMode === "invoiceByParty" && (
                     <>
-                      <UncontrolledDropdown>
-                        <DropdownToggle color="success" className="btn-sm rounded-2 px-3 py-1" caret>
-                          <i className="ri-file-excel-2-line align-middle me-1" />
-                          {t("Excel")}
-                        </DropdownToggle>
-                        <DropdownMenu style={{ minWidth: "180px", zIndex: 1050 }}>
-                          <DropdownItem onClick={() => exportInvoiceByPartyExcel("full")}>
-                            {t("Full Excel")}
-                          </DropdownItem>
-                          <DropdownItem onClick={() => exportInvoiceByPartyExcel("required")}>
-                            {t("Required Filled Excel")}
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </UncontrolledDropdown>
-                      <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handlePrint}>
-                        <i className="ri-printer-line align-middle me-1" />
-                        {t("Print")}
+                      {/* MVC: #btn-export + #ddl-excel-type (Full Excel | Required Filled Excel) */}
+                      <Button
+                        color="soft-success"
+                        className="btn-sm rounded-2 px-3 py-1"
+                        onClick={() => exportInvoiceByPartyExcel(excelExportType)}
+                      >
+                        <i className="ri-file-excel-2-line align-middle me-1" />
+                        {t("Excel")}
                       </Button>
+                      <Input
+                        type="select"
+                        bsSize="sm"
+                        className="form-select form-select-sm w-auto"
+                        style={{ minWidth: "180px" }}
+                        value={excelExportType}
+                        onChange={(e) => setExcelExportType(e.target.value)}
+                        aria-label={t("Excel export type")}
+                      >
+                        <option value="full">{t("Full Excel")}</option>
+                        <option value="required">{t("Required Filled Excel")}</option>
+                      </Input>
                     </>
+                  )}
+                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleNewSelection}>
+                    {t("New Selection")}
+                  </Button>
+                  {reportMode === "invoiceByParty" && (
+                    <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handlePrint}>
+                      <i className="ri-printer-line align-middle me-1" />
+                      {t("Print")}
+                    </Button>
                   )}
                   {reportMode === "party" && (
                     <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handlePrint}>
@@ -1646,7 +1792,7 @@ const OutstandingReport = () => {
                 </Row>
 
                 <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
-                  <table className="table table-bordered table-hover table-sm align-middle mb-0">
+                  <table className="table table-bordered table-hover table-sm align-middle mb-0 or-report-table">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>
                         {ALL_COLUMNS.map(renderHeader)}
@@ -1657,7 +1803,7 @@ const OutstandingReport = () => {
                             {col.key === "view" ? null : (
                               <Input
                                 type="text"
-                                className="form-control form-control-sm"
+                                className="form-control form-control-sm or-filter-input"
                                 value={columnFilters[col.key] || ""}
                                 onChange={(e) => {
                                   setColumnFilters((p) => ({ ...p, [col.key]: e.target.value }));
@@ -1685,7 +1831,7 @@ const OutstandingReport = () => {
                               if (col.key === "PaidAmount") cls += " or-amt-paid";
                               if (col.key === "RemainAmount") cls += " or-amt-remain";
                               return (
-                                <td key={col.key} className={cls} style={col.bg ? { backgroundColor: col.bg } : undefined}>
+                                <td key={col.key} className={cls}>
                                   {renderCellValue(row, col)}
                                 </td>
                               );
@@ -1694,7 +1840,16 @@ const OutstandingReport = () => {
                         ))
                       )}
                     </tbody>
-                    <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
+                    <tfoot
+                      className="table-light"
+                      style={{
+                        position: "sticky",
+                        bottom: 0,
+                        backgroundColor: "var(--vz-tertiary-bg, var(--vz-light, #f2f2f2))",
+                        zIndex: 2,
+                        borderTop: "2px solid var(--vz-border-color)"
+                      }}
+                    >
                       <tr className="or-grand-total">
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
@@ -1839,7 +1994,7 @@ const OutstandingReport = () => {
                   </Row>
 
                   <div className="table-responsive or-print-table-wrap">
-                    <table className="table table-bordered table-sm align-middle mb-0">
+                    <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
                       <thead className="table-light">
                         <tr>
                           {STATEMENT_COLUMNS.map(renderHeader)}
@@ -1923,7 +2078,7 @@ const OutstandingReport = () => {
                       ) : null}
                     </div>
                     <div className="text-lg-end">
-                      <div className="fw-bold fs-5 text-body">{t("Payable Receivable Report")}</div>
+                      <div className="fw-bold fs-5 text-body">{t("Outstanding Report")}</div>
                       <div className="small text-muted">
                         {t("Date")}: {todayLabel}
                       </div>
@@ -1931,11 +2086,19 @@ const OutstandingReport = () => {
                   </div>
 
                   <div className="table-responsive or-print-table-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
-                    <table className="table table-bordered table-sm align-middle mb-0">
+                    <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>
                           <th className="text-center text-nowrap small fw-semibold no-print" />
-                          {PARTYWISE_COLUMNS.map(renderHeader)}
+                          {PARTYWISE_COLUMNS.map((col) => (
+                            <th
+                              key={col.key}
+                              className={`text-center text-nowrap small fw-semibold${col.requiredExclude ? " required-exclude" : ""
+                                }`}
+                            >
+                              {t(col.header)}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -1971,10 +2134,18 @@ const OutstandingReport = () => {
                                   {PARTYWISE_COLUMNS.map((col) => (
                                     <td
                                       key={col.key}
-                                      className={`text-nowrap small ${col.align === "right" ? "text-end" : "text-start"}`}
+                                      className={`text-nowrap small ${col.align === "right"
+                                        ? "text-end"
+                                        : col.align === "center"
+                                          ? "text-center"
+                                          : "text-start"
+                                        }${col.requiredExclude ? " required-exclude" : ""}`}
                                     >
                                       {col.sum || col.key === "Rate"
-                                        ? fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), col.key === "Totcts" ? 3 : 2)
+                                        ? fmtFixed(
+                                          numVal(row, col.key, ...(col.altKeys || [])),
+                                          col.key === "Totcts" ? 3 : 2
+                                        )
                                         : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
                                     </td>
                                   ))}
@@ -1984,7 +2155,10 @@ const OutstandingReport = () => {
                                 <td className="no-print" />
                                 <td className="fw-bold">{t("Total")} :</td>
                                 {PARTYWISE_COLUMNS.slice(1).map((col) => (
-                                  <td key={`sub-${col.key}`} className="text-end fw-bold">
+                                  <td
+                                    key={`sub-${col.key}`}
+                                    className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
+                                  >
                                     {col.sum
                                       ? fmtFixed(subtotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
                                       : ""}
@@ -1996,12 +2170,24 @@ const OutstandingReport = () => {
                         )}
                       </tbody>
                       {partyGrouped.length > 0 ? (
-                        <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
+                        <tfoot
+                          className="table-light"
+                          style={{
+                            position: "sticky",
+                            bottom: 0,
+                            backgroundColor: "var(--vz-tertiary-bg, var(--vz-light, #f2f2f2))",
+                            zIndex: 2,
+                            borderTop: "2px solid var(--vz-border-color)"
+                          }}
+                        >
                           <tr className="or-grand-total">
                             <td className="no-print" />
                             <td className="fw-bold">{t("Grand Total")} :</td>
                             {PARTYWISE_COLUMNS.slice(1).map((col) => (
-                              <td key={`grand-${col.key}`} className="text-end fw-bold">
+                              <td
+                                key={`grand-${col.key}`}
+                                className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
+                              >
                                 {col.sum
                                   ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
                                   : ""}

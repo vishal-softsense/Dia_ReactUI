@@ -645,6 +645,23 @@ export const getMixPurchaseLots = (searchby) => {
   return api.get(`${url.MIX_PURCHASE_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
 };
 export const getMixPurchaseMixLotNoDI = () => api.get(url.MIX_PURCHASE_GET_MIX_LOT_NO_DI);
+export const importMixPurchaseExcel = (payload) => {
+  const formData = new FormData();
+  if (payload?.ImportFile) formData.append("ImportFile", payload.ImportFile);
+  formData.append("Less1", payload?.Less1 ?? 0);
+  formData.append("Less2", payload?.Less2 ?? 0);
+  formData.append("Less3", payload?.Less3 ?? 0);
+  formData.append("CurCode", payload?.CurCode ?? "");
+  if (payload?.ExistingItems) {
+    formData.append("ExistingItems", typeof payload.ExistingItems === "string"
+      ? payload.ExistingItems
+      : JSON.stringify(payload.ExistingItems));
+  }
+  return api.create(url.MIX_PURCHASE_IMPORT_EXCEL, formData, {
+    headers: { "Content-Type": undefined },
+    timeout: 600000,
+  });
+};
 
 // Mix Sale / MixForm (CSALE)
 export const getMixSaleList = () => api.get(url.MIX_SALE_LIST);
@@ -679,6 +696,8 @@ export const getMixConsignmentLotDetail = (lotNo) => api.create(url.MIX_CONSIGNM
 export const addMixConsignmentSingleLot = (payload) => api.create(url.MIX_CONSIGNMENT_ADD_SINGLE_LOT, payload);
 export const getMixConsignmentPrintView = (invNo) => api.get(`${url.MIX_CONSIGNMENT_PRINT_VIEW}/${invNo}`);
 export const getMixConsignmentCurrentStatus = (invNo) => api.get(`${url.MIX_CONSIGNMENT_CURRENT_STATUS}/${invNo}`);
+export const getMixConsignmentCurrentStatusPrint = (invNo) =>
+  api.get(`${url.MIX_CONSIGNMENT_CURRENT_STATUS_PRINT}/${encodeURIComponent(invNo)}`);
 export const getMixConsignmentLots = (searchby) => {
   const s = encodeURIComponent(searchby || "");
   return api.get(`${url.MIX_CONSIGNMENT_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);
@@ -735,6 +754,8 @@ export const addMixMemoOutSingleLot = (payload) => api.create(url.MIX_MEMO_OUT_A
 export const getMixMemoOutItemFromList = (payload) => api.create(url.MIX_MEMO_OUT_GET_ITEM_FROM_LIST, payload);
 export const refreshMixMemoOutBack = (payload) => api.create(url.MIX_MEMO_OUT_REFRESH_BACK, payload);
 export const getMixMemoOutPrintView = (invNo) => api.get(`${url.MIX_MEMO_OUT_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
+export const getMixMemoOutCurrentStatus = (invNo) =>
+  api.get(`${url.MIX_MEMO_OUT_CURRENT_STATUS}/${encodeURIComponent(invNo)}`);
 export const getMixMemoOutShipVia = (searchby) =>
   api.get(`${url.MIX_MEMO_OUT_SHIP_VIA}?searchby=${encodeURIComponent(searchby || "")}`);
 export const getMixMemoOutLots = (searchby) =>
@@ -842,6 +863,7 @@ export const getPaymentJvEntries = (transDate) =>
   api.get(`${url.PAYMENT_JV_ENTRIES}${transDate ? `?transDate=${encodeURIComponent(transDate)}` : ""}`);
 export const getPaymentPendingInv = (data) => api.create(url.PAYMENT_PENDING_INV, data);
 export const getPaymentDetail = (id) => api.get(`${url.PAYMENT_DETAIL}/${id}`);
+export const getPaymentJvDetail = (id) => api.get(`${url.PAYMENT_JV_DETAIL}/${id}`);
 export const addPayment = (data) => api.create(url.PAYMENT_ADD, data);
 export const editPayment = (data) => api.create(url.PAYMENT_EDIT, data);
 export const getPaymentEditDetails = (gcode, adjustmentType = "Payment") =>

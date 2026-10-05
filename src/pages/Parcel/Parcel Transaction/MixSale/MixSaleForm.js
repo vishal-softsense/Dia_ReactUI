@@ -20,6 +20,7 @@ import {
 } from "reactstrap";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import CreatableSelect from "react-select/creatable";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
@@ -28,6 +29,7 @@ import {
   editMixSale,
   getAccGrpMasters,
   getCurrencyRates,
+  getMixMemoOutShipVia,
   getMixSaleLots,
   getMixSaleConsignment,
   getMixSaleDetail,
@@ -513,6 +515,12 @@ const MixSaleForm = ({ mode = "add" }) => {
   const [brokerLoading, setBrokerLoading] = useState(false);
   const [broker, setBroker] = useState(null);
 
+  // MVC mix-data.js #ShipVia select2 → /saleParcel/get-shipvia (GetShipViaForDropdown)
+  const [shipViaInput, setShipViaInput] = useState("");
+  const [shipViaOpts, setShipViaOpts] = useState([]);
+  const [shipViaLoading, setShipViaLoading] = useState(false);
+  const [shipVia, setShipVia] = useState(null);
+
   const [lotSel, setLotSel] = useState(null);
 
   const [mOp, setMOp] = useState("*");
@@ -671,6 +679,34 @@ const MixSaleForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [brokerInput, searchAccounts]);
 
+  // MVC: minimumInputLength 2 → GetShipViaForDropdown
+  useEffect(() => {
+    if (!shipViaInput || shipViaInput.trim().length < 2) {
+      setShipViaOpts([]);
+      return;
+    }
+    const tmr = setTimeout(async () => {
+      setShipViaLoading(true);
+      try {
+        const res = await getMixMemoOutShipVia(shipViaInput);
+        const raw = res?.Data || res?.data || [];
+        setShipViaOpts(
+          (Array.isArray(raw) ? raw : [])
+            .map((item) => ({
+              value: String(item.text || item.id || item.Text || item.Id || ""),
+              label: String(item.text || item.id || item.Text || item.Id || "")
+            }))
+            .filter((o) => o.value)
+        );
+      } catch {
+        setShipViaOpts([]);
+      } finally {
+        setShipViaLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(tmr);
+  }, [shipViaInput]);
+
   const loadLotOptions = useCallback((inputValue, callback) => {
     const term = (inputValue || "").trim();
     if (term.length < 2) {
@@ -773,6 +809,8 @@ const MixSaleForm = ({ mode = "add" }) => {
       setParty(partyOpt);
       setCommission(commOpt);
       setBroker(broOpt);
+      const shipViaText = getVal(h, "ShipVia", "Shipvia");
+      setShipVia(shipViaText ? { value: shipViaText, label: shipViaText } : null);
 
       const trn = getVal(h, "TrnDate");
       const due = getVal(h, "DueDate");
@@ -808,14 +846,14 @@ const MixSaleForm = ({ mode = "add" }) => {
         chkoldsale: !!(getVal(h, "chkoldsale") === true || getVal(h, "chkoldsale") === "true" || getVal(h, "chkoldpur") === true || getVal(h, "chkoldpur") === "true"),
         plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
         roundAmount: toNum(getVal(h, "RoundAmount")),
-        vatPer: toNum(getVal(h, "VatPer")),
-        cgstPer: toNum(getVal(h, "CGSTPer")),
-        sgstPer: toNum(getVal(h, "SGSTPer")),
-        igstPer: toNum(getVal(h, "IGSTPer")),
-        vatAmount: toNum(getVal(h, "VatAmount")),
-        cgstAmt: toNum(getVal(h, "CGSTAmt")),
-        sgstAmt: toNum(getVal(h, "SGSTAmt")),
-        igstAmt: toNum(getVal(h, "IGSTAmt")),
+        vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
+        cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "CGST", "CgstPercentage", "CGSTRate"),
+        sgstPer: getNumVal(h, "SGSTPer", "SgstPer", "SGST", "SgstPercentage", "SGSTRate"),
+        igstPer: getNumVal(h, "IGSTPer", "IgstPer", "IGST", "IgstPercentage", "IGSTRate"),
+        vatAmount: getNumVal(h, "VatAmount", "VatAmt", "VATAmount"),
+        cgstAmt: getNumVal(h, "CGSTAmt", "CGSTAmount", "CgstAmt", "CgstAmount"),
+        sgstAmt: getNumVal(h, "SGSTAmt", "SGSTAmount", "SgstAmt", "SgstAmount"),
+        igstAmt: getNumVal(h, "IGSTAmt", "IGSTAmount", "IgstAmt", "IgstAmount"),
         decimalPlaces: 2
       });
 
@@ -1305,7 +1343,10 @@ const MixSaleForm = ({ mode = "add" }) => {
         const trackingText = getStrVal(first, "Tracking", "tracking");
         const salesPersonText = getStrVal(first, "SalesPerson", "salesPerson");
         const curCode = getVal(first, "CurCode", "curCode");
-        if (shipViaText) setHeaderField("shipVia", shipViaText);
+        if (shipViaText) {
+          setShipVia({ value: shipViaText, label: shipViaText });
+          setHeaderField("shipVia", shipViaText);
+        }
         if (trackingText) setHeaderField("tracking", trackingText);
         if (salesPersonText) setHeaderField("salesPerson", salesPersonText);
         if (curCode) {
@@ -1599,7 +1640,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       Description: header.description,
       InvDisc: header.description,
       MemoNo: header.memoNo,
-      ShipVia: header.shipVia,
+      ShipVia: shipVia?.label || shipVia?.value || header.shipVia || "",
       Tracking: header.tracking,
       SalesPerson: header.salesPerson,
       Address: toNum(header.address, 1),
@@ -1710,6 +1751,8 @@ const MixSaleForm = ({ mode = "add" }) => {
       setParty(null);
       setCommission(null);
       setBroker(null);
+      setShipVia(null);
+      setShipViaOpts([]);
       setLotSel(null);
       setEditIndex(-1);
       toast.info(t("Form reset for new transaction."));
@@ -2111,12 +2154,26 @@ const MixSaleForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={6} md={4} lg={4}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("SHIP VIA")}</Label>
-                          <Input
-                            className="form-control-sm"
-                            style={fieldH}
+                          <CreatableSelect
+                            styles={customStyles}
+                            options={shipViaOpts}
+                            value={shipVia}
+                            onChange={(sel) => {
+                              setShipVia(sel);
+                              setHeaderField("shipVia", sel?.label || sel?.value || "");
+                            }}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setShipViaInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setShipViaInput("");
+                                setShipViaOpts([]);
+                              }
+                            }}
+                            isLoading={shipViaLoading}
                             placeholder={t("Search ShipVia")}
-                            value={header.shipVia}
-                            onChange={(e) => setHeaderField("shipVia", e.target.value)}
+                            isClearable
+                            isDisabled={readOnly}
+                            menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                           />
                         </FormGroup>
                       </Col>
@@ -2629,6 +2686,23 @@ const MixSaleForm = ({ mode = "add" }) => {
                       </Button>
                     </>
                   )}
+                  {isEdit && (header.code || editId) && (
+                    <Button
+                      color="primary"
+                      outline
+                      size="sm"
+                      className="w-100 mb-3"
+                      onClick={() =>
+                        window.open(
+                          `/mixsale/MixSaleCurStatusPrintInv?ID=${encodeURIComponent(header.code || editId)}`,
+                          "_blank"
+                        )
+                      }
+                    >
+                      <i className="ri-printer-line me-1" />
+                      {t("Current Status Invoice")}
+                    </Button>
+                  )}
                   <fieldset disabled={readOnly} className="border-0 m-0 p-0" style={{ minWidth: 0 }}>
                     <FormGroup className="mb-2">
                       <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ADDRESS")}</Label>
@@ -2724,7 +2798,7 @@ const MixSaleForm = ({ mode = "add" }) => {
                         <th style={{ whiteSpace: "nowrap" }}>{t("MemoNo")}</th>
                         <th style={{ whiteSpace: "nowrap" }}>{t("LotNo")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Cts")}</th>
-                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Purchase")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Sale")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Return")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("BalCts")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Rate")}</th>

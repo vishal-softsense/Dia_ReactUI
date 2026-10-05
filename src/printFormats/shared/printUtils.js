@@ -3,6 +3,10 @@ import { api } from "../../config";
 export const FALLBACK_MEMO_CONDITIONS =
   "The diamonds invoiced herein are purchased from legitimate sources, not involved in funding conflict & in compliance with the United Nations resolutions. The seller hereby agrees the assurances are based on personal knowledge and /or written assurances given by the supplier of these diamonds";
 
+/** MVC USA Memorandum Session["Information"] default body (between address boxes and meta table). */
+export const FALLBACK_USA_MEMO_INFORMATION =
+  "The goods described and valued as below are delivered to you for examination and inspection only and remain our property and shall be returned to us on demand and in any event, such merchandise, until returned to us and actually received by us, is at your risk from all hazards, no right or power is given to you to sell, pledge, hypothetical or otherwise dispose of this merchandise regardless of prior transactions. A sale of this merchandise can only be effected and title will pass only if as and when we the said owners shall agree to such sale in writing and shall have billed you for the merchandise. All money received by you on the sale of the merchandise shall be held in trust for us until the full amount invoiced has been paid to us. The undersigned personally guarantee the below obligations on behalf of the company.";
+
 export const getVal = (row, ...keys) => {
   if (!row) return "";
   for (const key of keys) {
@@ -59,11 +63,32 @@ export const fmtDateMMM = (val) => {
 export const fmtDateSlash = (val) => {
   if (!val) return "";
   try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
+    if (val instanceof Date) {
+      if (isNaN(val.getTime())) return "";
+      return `${String(val.getMonth() + 1).padStart(2, "0")}/${String(val.getDate()).padStart(2, "0")}/${val.getFullYear()}`;
+    }
+    const text = String(val).trim();
+    // Drop time: "24-01-2026 12:00:00 AM" → "24-01-2026"
+    const dateOnly = text.replace(/\s+\d{1,2}:\d{2}(:\d{2})?(\s*[AaPp][Mm])?$/, "").split("T")[0].trim();
+
+    const d = new Date(dateOnly);
+    if (!isNaN(d.getTime())) {
+      return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
+    }
+
+    // Fallback DD-MM-YYYY (GetMemoReportData) when JS Date cannot parse
+    const dmy = dateOnly.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (dmy) {
+      const day = Number(dmy[1]);
+      const month = Number(dmy[2]);
+      const year = Number(dmy[3]);
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
+      }
+    }
+    return dateOnly;
   } catch {
-    return val;
+    return String(val).split(/[\sT]/)[0] || "";
   }
 };
 
@@ -171,9 +196,8 @@ export const resolveImageFullPath = (item) => {
 };
 
 /**
- * MVC print amount column heading:
- * Currency is resolved invoice currency (SSymbol or MSymbol).
- * Display: "Amount USD" / "Amount INR" (Amount {Currency}).
+ * MVC print amount column heading (MixPurchasePrint_USA, PrintInvoice, etc.):
+ * When invoice currency is stock → "Amount US {SSymbol}"; else → "Amount {MSymbol}".
  */
 export const getPrintAmountHeader = (data, company = {}) => {
   let auth = {};
@@ -201,22 +225,11 @@ export const getPrintAmountHeader = (data, company = {}) => {
     auth?.MSymbol ||
     "INR";
 
-  let currency = String(getVal(data, "Currency", "currency") || "").trim();
-  if (!currency) {
-    currency = stockSymbol;
-  }
+  const currency = String(getVal(data, "Currency", "currency") || stockSymbol).trim();
 
-  // Prefer the resolved invoice currency symbol (USD / INR / …) — never hard-code.
-  const upper = currency.toUpperCase();
-  const stockUpper = String(stockSymbol).trim().toUpperCase();
-  const masterUpper = String(masterSymbol).trim().toUpperCase();
-
-  if (upper === stockUpper || upper === "USD") {
-    return `Amount ${stockSymbol}`;
+  // MVC: Session["SSymbol"] == Model.Currency → Amount US {SSymbol}
+  if (currency === stockSymbol) {
+    return `Amount US ${stockSymbol}`;
   }
-  if (upper === masterUpper) {
-    return `Amount ${masterSymbol}`;
-  }
-  // Currency already a symbol name from API
-  return `Amount ${currency}`;
+  return `Amount ${masterSymbol}`;
 };

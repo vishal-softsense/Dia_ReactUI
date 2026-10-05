@@ -90,8 +90,18 @@ const IGI_COLUMNS = [
     { key: "Inscription", title: "Inscription" },
     { key: "Measurement1", title: "Measurement1" },
     { key: "Measurement2", title: "Measurement2" },
-    { key: "Measurement3", title: "Measurement3" }
+    { key: "Measurement3", title: "Measurement3" },
+    { key: "Comments", title: "LabComments" },
+    { key: "LotNo", title: "LotNo" }
 ];
+
+/** sessionStorage key — mirrors MVC Session["IgiLabToPurchase"] */
+const IGI_LAB_TO_PURCHASE_KEY = "IgiLabToPurchase";
+
+const parseLabWeight = (value) => {
+    const n = parseFloat(String(value ?? "").replace(/[^\d.-]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+};
 
 const MvcSwalResult = ({ open, type, title, text, confirmText, onClose }) => {
     const isSuccess = type === "success";
@@ -181,6 +191,7 @@ const GetLabData = () => {
     const [igiRows, setIgiRows] = useState([]);
     const [showGiaTable, setShowGiaTable] = useState(false);
     const [showIgiTable, setShowIgiTable] = useState(false);
+    const [lastLoadedLabType, setLastLoadedLabType] = useState("");
     const [resultModal, setResultModal] = useState({
         open: false,
         type: "success",
@@ -348,6 +359,7 @@ const GetLabData = () => {
             if (response?.success === true || response?.Success === true) {
                 setGiaRows(response?.Data || response?.data || []);
                 setShowGiaTable(true);
+                setLastLoadedLabType("GIA");
                 setResultModal({
                     open: true,
                     type: "success",
@@ -384,8 +396,15 @@ const GetLabData = () => {
         try {
             const response = await getLabIgiData(buildCertPayload());
             if (response?.success === true || response?.Success === true) {
-                setIgiRows(response?.Data || response?.data || []);
+                const rows = (response?.Data || response?.data || []).map((row, idx) => ({
+                    ...row,
+                    SrNo: row.SrNo ?? row.srNo ?? idx + 1,
+                    Comments: row.Comments ?? row.comments ?? row.LabComments ?? row.labComments ?? "",
+                    LotNo: row.LotNo ?? row.lotNo ?? ""
+                }));
+                setIgiRows(rows);
                 setShowIgiTable(true);
+                setLastLoadedLabType("IGI");
                 setResultModal({
                     open: true,
                     type: "success",
@@ -409,6 +428,94 @@ const GetLabData = () => {
             });
         } finally {
             setBusy(false);
+        }
+    };
+
+    /** CertificateNo → LotNo from ImportCertificate / Get Item From List (MVC getImportCertLotMap). */
+    const getImportCertLotMap = () => {
+        const map = {};
+        certRows.forEach((row) => {
+            const cert = String(row.CertificateNo || "").trim();
+            const lot = String(row.LotNo || "").trim();
+            if (cert) map[cert] = lot;
+        });
+        return map;
+    };
+
+    /** MVC AddtoList → AddIgiLabDataToPurchaseList → purchase/add-purchase Fill DataTable. */
+    const handleAddToList = () => {
+        const labType =
+            (lastLoadedLabType === "IGI" && igiRows.length && showIgiTable && "IGI") ||
+            (lastLoadedLabType === "GIA" && giaRows.length && showGiaTable && "GIA") ||
+            (igiRows.length && showIgiTable && "IGI") ||
+            (giaRows.length && showGiaTable && "GIA") ||
+            "";
+
+        if (labType === "HRD") {
+            toast.warning(t("Get HRD Data is not available."));
+            return;
+        }
+
+        if (labType === "GIA") {
+            toast.warning(t("Please use Get IGI Data for Add to List, or export PRINT then Import Excel on Purchase."));
+            return;
+        }
+
+        if (labType !== "IGI" || !igiRows.length) {
+            toast.warning(t("Please Get Lab Data First"));
+            return;
+        }
+
+        const lotMap = getImportCertLotMap();
+        const igiList = [];
+        igiRows.forEach((row) => {
+            if (!row) return;
+            const weight = parseLabWeight(row.Weight);
+            if (weight <= 0) return;
+            const reportNumber = String(row.ReportNumber || "").trim();
+            const lotNo = String(row.LotNo || "").trim() || lotMap[reportNumber] || "";
+            igiList.push({
+                SrNo: row.SrNo,
+                ReportNumber: reportNumber,
+                ReportDate: row.ReportDate || "",
+                Description: row.Description || "",
+                Shape: row.Shape || "",
+                Weight: row.Weight || "",
+                Color: row.Color || "",
+                Clarity: row.Clarity || "",
+                CutProp: row.CutProp || "",
+                Sym: row.Sym || "",
+                Pol: row.Pol || "",
+                TableDiameter: row.TableDiameter || "",
+                CrownHeight: row.CrownHeight || "",
+                CrownAngel: row.CrownAngel || "",
+                PavilionDepth: row.PavilionDepth || "",
+                PavilionAngel: row.PavilionAngel || "",
+                GirdleName: row.GirdleName || "",
+                CuletSize: row.CuletSize || "",
+                TotalDepth: row.TotalDepth || "",
+                Fluorescence: row.Fluorescence || "",
+                Inscription: row.Inscription || "",
+                Measurement1: row.Measurement1 || "",
+                Measurement2: row.Measurement2 || "",
+                Measurement3: row.Measurement3 || "",
+                Cert: "IGI",
+                Comments: row.Comments || row.LabComments || "",
+                LotNo: lotNo
+            });
+        });
+
+        if (!igiList.length) {
+            toast.warning(t("Please Get Lab Data First"));
+            return;
+        }
+
+        try {
+            sessionStorage.setItem(IGI_LAB_TO_PURCHASE_KEY, JSON.stringify(igiList));
+            window.open(`${process.env.PUBLIC_URL || ""}/purchase/add-purchase`, "_blank");
+        } catch (err) {
+            console.error(err);
+            toast.error(t("Failed to add IGI data to purchase."));
         }
     };
 
@@ -565,7 +672,7 @@ const GetLabData = () => {
                                         </div>
                                     </Col>
 
-                                    <Col xs={12} sm={6} lg={2} className="d-flex align-items-start" style={{ marginTop: "1.75rem" }}>
+                                    <Col xs={12} sm={6} lg={2} className="d-flex flex-column align-items-stretch gap-2" style={{ marginTop: "1.75rem" }}>
                                         <Button
                                             color="primary"
                                             className="w-100"
@@ -573,6 +680,14 @@ const GetLabData = () => {
                                             onClick={handlePrint}
                                         >
                                             {busy ? <Spinner size="sm" /> : t("PRINT")}
+                                        </Button>
+                                        <Button
+                                            color="primary"
+                                            className="w-100"
+                                            disabled={busy}
+                                            onClick={handleAddToList}
+                                        >
+                                            {t("Add to List")}
                                         </Button>
                                     </Col>
                                 </Row>

@@ -35,6 +35,15 @@ const PrintFormatPreview = () => {
   const sample = getPrintFormatSample(moduleKey);
   const FormatComponent = resolvePrintComponent(moduleKey, formatName, { itemCount: sample.items.length });
   const isLandscape = isLandscapePrintFormat(formatName);
+  const isLetterMemoFormat =
+    formatName === "Solitaire Memo India_Single Format" ||
+    formatName === "Solitaire Memo USA_SiglePage Format" ||
+    formatName === "Solitaire Memo";
+  const printPageSize = isLetterMemoFormat ? "Letter" : "A4";
+  const isUsaSingle = formatName === "Solitaire Memo USA_SiglePage Format";
+  const isClassic = formatName === "Solitaire Memo";
+  const isClassicSinglePage = isClassic && sample.items.length >= 11;
+  const isClassicDual = isClassic && !isClassicSinglePage;
   const logoUrl = resolveCompanyLogoUrl(company.companyLogo);
 
   document.title = `Preview | ${formatName || "Print Format"}`;
@@ -58,7 +67,18 @@ const PrintFormatPreview = () => {
             </Button>
           </div>
 
-          <div id="print-format-preview-area">
+          <div
+            id="print-format-preview-area"
+            className={
+              isUsaSingle
+                ? "usa-single-print-host"
+                : isClassicSinglePage
+                  ? "single-page-print-host"
+                  : isClassicDual
+                    ? "classic-print-host"
+                    : undefined
+            }
+          >
             {FormatComponent ? (
               <FormatComponent
                 data={sample.data}
@@ -74,7 +94,51 @@ const PrintFormatPreview = () => {
             )}
           </div>
         </Container>
-        <PrintDocumentStyles printAreaId="print-format-preview-area" landscape={isLandscape} />
+        <PrintDocumentStyles
+          printAreaId="print-format-preview-area"
+          landscape={isLandscape}
+          pageSize={printPageSize}
+          extraPrintCss={
+            isUsaSingle
+              ? `
+            #print-format-preview-area .invoice-top-table th,
+            #print-format-preview-area .invoice-item-table th {
+              background-color: #BFBFBF !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          `
+              : isClassicSinglePage
+                ? `
+            @page {
+              size: Letter portrait;
+              margin: 10mm;
+            }
+            #print-format-preview-area .sp-data-table th,
+            #print-format-preview-area .sp-memo-box th,
+            #print-format-preview-area th {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          `
+                : ""
+          }
+        />
+        {isUsaSingle || isClassic ? (
+          <style>{`
+            @media screen {
+              .usa-single-print-host,
+              .classic-print-host,
+              .single-page-print-host {
+                display: flex;
+                justify-content: center;
+                background: #e9eef2;
+                padding: 16px 12px 28px;
+                border-radius: 4px;
+              }
+            }
+          `}</style>
+        ) : null}
       </div>
     </React.Fragment>
   );

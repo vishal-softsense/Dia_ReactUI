@@ -945,6 +945,16 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     navigate(`/mix-memo/MixMemoOutPrintInv?${qs}`);
   };
 
+  /** MVC: PrintMemoParcelInvCurrent → mixmemoform/parcelmixprintinvcurrent */
+  const handlePrintMemoCurrentStatus = () => {
+    if (!header.code && !header.invNo) {
+      toast.warning(t("Invoice number is required."));
+      return;
+    }
+    const qs = `ID=${encodeURIComponent(header.code || "")}&InvNo=${encodeURIComponent(header.invNo || "")}&currentStatus=1`;
+    window.open(`/mixmemoform/parcelmixprintinvcurrent?${qs}`, "_blank");
+  };
+
   const title = isView ? t("View Mix Memo Out") : isEdit ? t("Edit Mix Memo Out") : t("Add Mix Memo Out");
   document.title = `${title} | ${t("Admin")}`;
 
@@ -983,6 +993,9 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                         </Link>
                         <Button color="primary" size="sm" onClick={handlePrintMemo}>
                           {t("Print Mix Memo")}
+                        </Button>
+                        <Button color="primary" outline size="sm" onClick={handlePrintMemoCurrentStatus}>
+                          {t("Print Memo Current Status")}
                         </Button>
                       </>
                     )}

@@ -505,6 +505,7 @@ export const MIX_PURCHASE_PRINT_VIEW = "/api/MixPurchase/print-view"; // append 
 export const MIX_PURCHASE_CURRENT_STATUS = "/api/MixPurchase/current-status"; // append /{id or invNo}
 export const MIX_PURCHASE_LOTS = "/api/MixPurchase/lots";
 export const MIX_PURCHASE_GET_MIX_LOT_NO_DI = "/api/MixPurchase/GetMixLotNoDI";
+export const MIX_PURCHASE_IMPORT_EXCEL = "/api/MixPurchase/import-excel-data";
 
 // Mix Sale / MixForm (Parcel Transaction) — MVC: /mixform/mixformlist, TrnType CSALE
 export const MIX_SALE_LIST = "/api/MixSale/list";
@@ -531,6 +532,7 @@ export const MIX_CONSIGNMENT_LOT_DETAIL = "/api/MixConsignment/lot-detail";
 export const MIX_CONSIGNMENT_ADD_SINGLE_LOT = "/api/MixConsignment/add-single-lot";
 export const MIX_CONSIGNMENT_PRINT_VIEW = "/api/MixConsignment/print-view"; // append /{id or invNo}
 export const MIX_CONSIGNMENT_CURRENT_STATUS = "/api/MixConsignment/current-status"; // append /{id or invNo}
+export const MIX_CONSIGNMENT_CURRENT_STATUS_PRINT = "/api/MixConsignment/current-status-print"; // Mix Memo In Cur Status
 export const MIX_CONSIGNMENT_LOTS = "/api/MixConsignment/lots";
 export const MIX_CONSIGNMENT_GET_MIX_LOT_NO_LM = "/api/MixConsignment/GetMixLotNoLM";
 
@@ -551,6 +553,7 @@ export const MIX_MEMO_OUT_ADD_SINGLE_LOT = "/api/MixMemoOut/add-single-lot";
 export const MIX_MEMO_OUT_GET_ITEM_FROM_LIST = "/api/MixMemoOut/get-item-from-list";
 export const MIX_MEMO_OUT_REFRESH_BACK = "/api/MixMemoOut/refresh-back";
 export const MIX_MEMO_OUT_PRINT_VIEW = "/api/MixMemoOut/print-view"; // append /{id or invNo}
+export const MIX_MEMO_OUT_CURRENT_STATUS = "/api/MixMemoOut/current-status"; // append /{id or invNo}
 export const MIX_MEMO_OUT_SHIP_VIA = "/api/MixMemoOut/ship-via"; // ?searchby=
 export const MIX_MEMO_OUT_LOTS = "/api/MixMemoOut/lots"; // ?searchby= — MVC: /common/get-Mixno-list
 
@@ -745,6 +748,7 @@ export const PAYMENT_PAGE_DATA = "/api/Payment/pagedata";
 export const PAYMENT_JV_ENTRIES = "/api/Payment/jventries";
 export const PAYMENT_PENDING_INV = "/api/Payment/pending-inv";
 export const PAYMENT_DETAIL = "/api/Payment/detail"; // append /{id}
+export const PAYMENT_JV_DETAIL = "/api/Payment/jv-detail"; // append /{id}
 export const PAYMENT_ADD = "/api/Payment/add";
 export const PAYMENT_EDIT = "/api/Payment/edit";
 export const PAYMENT_EDIT_DETAILS = "/api/Payment/edit-details";

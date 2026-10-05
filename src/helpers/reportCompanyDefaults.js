@@ -135,7 +135,7 @@ export function setCachedReportCompany(company, { dispatchEvent = true } = {}) {
   return merged;
 }
 
-export async function getReportCompanySettings({ forceRefresh = true } = {}) {
+export async function getReportCompanySettings({ forceRefresh = true, persist = true } = {}) {
   const fallback = getCachedReportCompany();
 
   if (!forceRefresh && fallback.companyName) {
@@ -171,7 +171,11 @@ export async function getReportCompanySettings({ forceRefresh = true } = {}) {
     }
 
     const company = {
-      companyName: pickSettingValue(rows, "Company") || fallback.companyName,
+      companyName:
+        pickSettingValue(rows, "CompanyNameforInvoice") ||
+        pickSettingValue(rows, "CompanyNameInvoice") ||
+        pickSettingValue(rows, "Company") ||
+        fallback.companyName,
       companyAddress: pickSettingValue(rows, "CompanyAddress") || fallback.companyAddress,
       companyAddress1: pickSettingValue(rows, "CompanyAddress1") || fallback.companyAddress1,
       companyAddress2: pickSettingValue(rows, "CompanyAddress2") || fallback.companyAddress2,
@@ -194,6 +198,9 @@ export async function getReportCompanySettings({ forceRefresh = true } = {}) {
       saleConditions: pickSettingValue(rows, "SaleConditions") || fallback.saleConditions,
       information: pickSettingValue(rows, "Information") || fallback.information
     };
+    if (!persist) {
+      return { ...DEFAULT_COMPANY, ...company };
+    }
     return setCachedReportCompany(company, { dispatchEvent: false });
   } catch (error) {
     console.error("Failed to load report company settings:", error);

@@ -67,10 +67,19 @@ const fmtDate = (value) => {
 };
 
 const toLocalDateStr = (val) => {
-  if (!val) return "";
+  if (val == null || val === "") return "";
+  const s = String(val).trim();
+  // Prefer calendar prefix from API string to avoid UTC day shift via toISOString
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dmy = s.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().substr(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
 
 const fieldH = { height: 31 };
@@ -403,7 +412,7 @@ const PayWithExDiffEditForm = () => {
           currency: cur ? String(cur) : "",
           mBaseRate: fmtNum(mRate),
           sBaseRate: fmtNum(sRate),
-          desc: getVal(d, "disc", "Disc") || "",
+          desc: getVal(d, "disc", "Disc", "Desc", "desc", "Description", "description") || "",
           autoAdjust: false,
           payType: adjType,
           vtype,

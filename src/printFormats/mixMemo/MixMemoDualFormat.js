@@ -1,87 +1,182 @@
 import React from "react";
-import { fmt, fmtDate, getVal, paginateFixed } from "../shared/printUtils";
+import { fmt, fmtDate, fmtNum, getVal, paginateFixed } from "../shared/printUtils";
 import deltaQr from "../../assets/images/print/deltaqr.png";
 import deltaInstaQr from "../../assets/images/print/delta.png";
 
+const PAGE_SIZE = 10;
 const border = "1px solid #A2A1A1";
-const thGray = { background: "#ccc", border, padding: 3, textAlign: "center", fontWeight: "bold" };
+const thGray = {
+  background: "#ccc",
+  border,
+  padding: "1px 2px",
+  textAlign: "center",
+  fontWeight: "bold",
+  fontFamily: "Verdana, Arial, sans-serif",
+  fontSize: 9,
+  lineHeight: 1.15
+};
 
+/**
+ * MVC MixMemoDualPrint — OFFICE + CUSTOMER on one Letter page.
+ * 10 records per page (both copies share the same 10 lines).
+ */
 const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentStatus }) => {
-  const pages = paginateFixed(items, 10);
-  const plusMinus = (Number(getVal(data, "PlusMinusAmount", "plusMinusAmount")) || 0) *
+  const pages = paginateFixed(items, PAGE_SIZE);
+  const plusMinus =
+    (Number(getVal(data, "PlusMinusAmount", "plusMinusAmount")) || 0) *
     (Number(getVal(data, "BaseRate", "baseRate")) || 0);
-  const finalAmount = Number(getVal(data, "FinalAmount", "finalAmount")) || totals.amount;
+  const finalRaw = getVal(data, "FinalAmount", "finalAmount");
+  const finalAmount =
+    finalRaw === "" || finalRaw == null ? totals.amount : Number(finalRaw) || totals.amount;
 
-  const renderCopy = (copyTitle, pageItems, pageIdx, isLastPage) => {
-    let srNo = pageIdx * 10 + 1;
+  const renderCopy = (copyTitle, pageItems, pageIdx, isLastPage, isOffice) => {
+    let srNo = pageIdx * PAGE_SIZE;
     return (
-      <div style={{ marginBottom: copyTitle === "OFFICE COPY" || copyTitle === "OFFICE COPY - CURRENT STATUS" ? 70 : 0 }}>
-        <table style={{ width: "100%", marginBottom: 8 }}>
+      <div className="mix-memo-dual-copy" style={{ marginBottom: isOffice ? 28 : 0 }}>
+        <table style={{ width: "100%", marginBottom: 2, borderCollapse: "collapse" }}>
           <tbody>
             <tr>
-              <td style={{ width: "16%", verticalAlign: "top" }}>
-                {logoUrl ? <img src={logoUrl} alt="Logo" style={{ width: 120, maxHeight: 95, objectFit: "contain" }} /> : null}
+              <td style={{ width: "14%", verticalAlign: "top", paddingRight: 0 }}>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="mix-memo-dual-logo"
+                    style={{ width: 90, maxHeight: 52, objectFit: "contain" }}
+                  />
+                ) : null}
               </td>
-              <td style={{ width: "42%", verticalAlign: "top", fontSize: 11, letterSpacing: 1 }}>
-                <div style={{ fontWeight: "bold", fontSize: 14, fontFamily: "Verdana", letterSpacing: 0 }}>{company.companyName}</div>
-                <div style={{ margin: "1px 0" }}>{company.companyAddress}</div>
+              <td
+                style={{
+                  width: "44%",
+                  verticalAlign: "top",
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                  paddingLeft: 4,
+                  lineHeight: 1.2
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 12,
+                    fontFamily: "Verdana, Arial, sans-serif",
+                    letterSpacing: 0,
+                    lineHeight: 1.2
+                  }}
+                >
+                  {company.companyName}
+                </div>
+                <div>{company.companyAddress}</div>
                 <div>{company.companyAddress1}</div>
-                <div style={{ margin: "1px 0" }}>{company.companyAddress2}</div>
+                <div>{company.companyAddress2}</div>
                 <div>{company.companyPhone}</div>
                 <div>{company.companyEmail}</div>
               </td>
               <td style={{ width: "42%", verticalAlign: "top", textAlign: "right" }}>
-                <div style={{ fontWeight: "bold", fontSize: 22, fontFamily: "Verdana", marginTop: 10 }}>{copyTitle}</div>
-                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 5 }}>
+                <div
+                  className="mix-memo-dual-copy-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 18,
+                    fontFamily: "Verdana, Arial, sans-serif",
+                    marginTop: 2,
+                    marginBottom: 0,
+                    textAlign: "right",
+                    lineHeight: 1.1
+                  }}
+                >
+                  {copyTitle}
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 3 }}>
                   <thead>
-                    <tr>
-                      <th style={thGray}>Date</th>
-                      <th style={thGray}>Memo #</th>
+                    <tr style={{ height: 16 }}>
+                      <th style={{ ...thGray, width: "50%" }}>Date</th>
+                      <th style={{ ...thGray, width: "50%" }}>Memo #</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ border, padding: 3, textAlign: "center" }}>{fmtDate(getVal(data, "TrnDate", "trnDate"))}</td>
-                      <td style={{ border, padding: 3, textAlign: "center" }}>{getVal(data, "InvNo", "invNo")}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <table style={{ width: "100%", marginBottom: 6 }}>
-          <tbody>
-            <tr>
-              <td style={{ width: "50%", verticalAlign: "top", paddingRight: 12 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr><th style={{ ...thGray, background: "#c0c0c0" }}>Memo To</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ border, padding: 8 }}>
-                        <div style={{ fontSize: 13, fontWeight: "bold", letterSpacing: 1 }}>{getVal(data, "PartyName", "partyName")}</div>
-                        <div style={{ fontSize: 10 }}>{getVal(data, "AddressLine1", "addressLine1")}</div>
-                        <div style={{ fontSize: 10 }}>{getVal(data, "AddressLine2", "addressLine2")}</div>
-                        <div style={{ fontSize: 10 }}>{getVal(data, "AddressLine3", "addressLine3")}</div>
+                      <td style={{ border, padding: "1px 2px", textAlign: "center", fontSize: 10 }}>
+                        {fmtDate(getVal(data, "TrnDate", "trnDate"))}
+                      </td>
+                      <td style={{ border, padding: "1px 2px", textAlign: "center", fontSize: 10 }}>
+                        {getVal(data, "InvNo", "invNo")}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table
+          style={{
+            width: "100%",
+            marginTop: 1,
+            marginBottom: 2,
+            borderCollapse: "collapse",
+            fontFamily: "Verdana, Arial, sans-serif"
+          }}
+        >
+          <tbody>
+            <tr>
               <td style={{ width: "50%", verticalAlign: "top" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", border }}>
                   <thead>
                     <tr>
-                      <th style={thGray}>Ship Via</th>
-                      <th style={thGray}>Tracking No</th>
+                      <th
+                        style={{
+                          background: "#c0c0c0",
+                          border,
+                          padding: "2px 4px",
+                          fontWeight: "bold",
+                          textAlign: "center",
+                          fontSize: 10
+                        }}
+                      >
+                        Memo To
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ border, padding: 3, textAlign: "center" }}>{getVal(data, "ShipVia", "shipVia")}</td>
-                      <td style={{ border, padding: 3, textAlign: "center" }}>{getVal(data, "Tracking", "tracking")}</td>
+                      <td style={{ border, padding: "3px 6px", textAlign: "left", lineHeight: 1.2 }}>
+                        <div style={{ fontSize: 11, fontWeight: "bold", letterSpacing: 0.5 }}>
+                          {getVal(data, "PartyName", "partyName")}
+                        </div>
+                        <div className="mix-memo-dual-addr" style={{ fontSize: 9 }}>
+                          {getVal(data, "AddressLine1", "addressLine1")}
+                        </div>
+                        <div className="mix-memo-dual-addr" style={{ fontSize: 9 }}>
+                          {getVal(data, "AddressLine2", "addressLine2")}
+                        </div>
+                        <div className="mix-memo-dual-addr" style={{ fontSize: 9 }}>
+                          {getVal(data, "AddressLine3", "addressLine3")}
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td style={{ width: "8%" }} />
+              <td style={{ width: "42%", verticalAlign: "top", textAlign: "center" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...thGray, width: "50%" }}>Ship Via</th>
+                      <th style={{ ...thGray, width: "50%" }}>Tracking No</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ height: 16 }}>
+                      <td style={{ border, padding: "1px 2px", textAlign: "center", fontSize: 10 }}>
+                        {getVal(data, "ShipVia", "shipVia")}
+                      </td>
+                      <td style={{ border, padding: "1px 2px", textAlign: "center", fontSize: 10 }}>
+                        {getVal(data, "Tracking", "tracking")}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -89,82 +184,188 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
             </tr>
           </tbody>
         </table>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 9, tableLayout: "fixed" }}>
+
+        <table
+          className="mix-memo-dual-main"
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: 8,
+            tableLayout: "fixed",
+            fontFamily: "Verdana, Arial, sans-serif",
+            marginTop: 1
+          }}
+        >
           <colgroup>
-            <col style={{ width: "5%" }} /><col style={{ width: "25%" }} /><col style={{ width: "8%" }} />
-            <col style={{ width: "12%" }} /><col style={{ width: "10%" }} /><col style={{ width: "10%" }} />
-            <col style={{ width: "10%" }} /><col style={{ width: "20%" }} />
+            <col style={{ width: "5%" }} />
+            <col style={{ width: "25%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "20%" }} />
           </colgroup>
           <thead>
-            <tr style={{ background: "#c0c0c0", height: 18 }}>
-              {["Sr No", "DESCRIPTION", "Pcs", "Carat / Qty.", "Price / Carat", "Return Cts", "Kept Cts", "Amount US $"].map((h) => (
-                <th key={h} style={{ ...thGray, background: "#c0c0c0" }}>{h}</th>
+            <tr style={{ background: "#c0c0c0", height: 15 }}>
+              {[
+                "Sr No",
+                "DESCRIPTION",
+                "Pcs",
+                "Carat / Qty.",
+                "Price / Carat",
+                "Return Cts",
+                "Kept Cts",
+                "Amount US $"
+              ].map((h) => (
+                <th key={h} style={{ ...thGray, background: "#c0c0c0", whiteSpace: "nowrap" }}>
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {pageItems.map((item, idx) => {
+              srNo += 1;
               const ret = Number(getVal(item, "ReturnCarats", "returnCarats")) || 0;
-              const kept = Number(getVal(item, "IssueCarats", "issueCarats", "SpCarats", "spCarats")) || 0;
-              // Print API maps: Description, Qty, Weight (not ItemName/Pcs/Carats)
+              const kept =
+                Number(getVal(item, "IssueCarats", "issueCarats", "SpCarats", "spCarats")) || 0;
               const description =
-                getVal(item, "Description", "description", "ItemName", "itemName", "StockNo", "stockNo", "LotNo", "lotNo") || "";
+                getVal(
+                  item,
+                  "Description",
+                  "description",
+                  "ItemName",
+                  "itemName",
+                  "StockNo",
+                  "stockNo",
+                  "LotNo",
+                  "lotNo"
+                ) || "";
               const pcs = getVal(item, "Qty", "qty", "Pcs", "pcs");
               const carats = getVal(item, "Weight", "weight", "Carats", "carats");
               const rate = getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate");
-              const amount = getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount");
+              const amount = getVal(
+                item,
+                "MasterCurrencyAmount",
+                "masterCurrencyAmount",
+                "Amount",
+                "amount"
+              );
+              const cell = {
+                border,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                padding: "0 2px",
+                height: 14,
+                lineHeight: "14px",
+                fontSize: 9
+              };
               return (
-                <tr key={idx} style={{ height: 18, fontSize: 10 }}>
-                  <td style={{ border, textAlign: "center" }}>{srNo++}</td>
-                  <td style={{ border, textAlign: "center" }}>{description}</td>
-                  <td style={{ border, textAlign: "center" }}>{pcs === "" || pcs == null ? "" : pcs}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 10 }}>{fmt(carats, 2)}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(rate, 2)}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{ret ? fmt(ret, 2) : ""}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{kept ? fmt(kept, 2) : ""}</td>
-                  <td style={{ border, textAlign: "right", paddingRight: 3 }}>{fmt(amount, 2)}</td>
+                <tr key={idx} className="mix-memo-dual-item-row" style={{ height: 14 }}>
+                  <td style={{ ...cell, textAlign: "center" }}>{srNo}</td>
+                  <td style={{ ...cell, textAlign: "center" }}>{description}</td>
+                  <td style={{ ...cell, textAlign: "center" }}>
+                    {pcs === "" || pcs == null ? "" : pcs}
+                  </td>
+                  <td style={{ ...cell, textAlign: "right", paddingRight: 6 }}>{fmt(carats, 2)}</td>
+                  <td style={{ ...cell, textAlign: "right" }}>{fmtNum(rate, 2)}</td>
+                  <td style={{ ...cell, textAlign: "right" }}>{ret ? fmt(ret, 2) : ""}</td>
+                  <td style={{ ...cell, textAlign: "right" }}>{kept ? fmt(kept, 2) : ""}</td>
+                  <td style={{ ...cell, textAlign: "right" }}>{fmtNum(amount, 2)}</td>
                 </tr>
               );
             })}
-            {Array.from({ length: Math.max(0, 10 - pageItems.length) }).map((_, i) => (
-              <tr key={`e-${i}`} style={{ height: 20 }}>
-                {Array.from({ length: 8 }).map((__, c) => <td key={c} style={{ border }}>&nbsp;</td>)}
+
+            {Array.from({ length: Math.max(0, PAGE_SIZE - pageItems.length) }).map((_, i) => (
+              <tr
+                key={`e-${i}`}
+                className="mix-memo-dual-empty-row"
+                style={{ height: 14, borderLeft: border, borderRight: border }}
+              >
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", height: 14, padding: 0 }} />
+                <td style={{ border: "none", borderLeft: border, height: 14, padding: 0 }} />
               </tr>
             ))}
+
             {isLastPage && (
               <>
-                <tr style={{ fontWeight: "bold", height: 24, fontSize: 11 }}>
-                  <td colSpan={3} style={{ border: "1px solid #999", textAlign: "left", paddingLeft: 25 }}>Total Carats :</td>
-                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmt(totals.wt, 2)}</td>
-                  <td colSpan={3} style={{ border: "1px solid #999", textAlign: "right", paddingRight: 15 }}>US $ :</td>
-                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmt(totals.amount, 2)}</td>
-                </tr>
-                <tr>
-                  <td colSpan={7} style={{ border: "none" }}></td>
-                  <td style={{ border: "1px solid #999", padding: 4 }}>
-                    <span style={{ float: "left" }}>Round Off</span>
-                    <span style={{ float: "right", fontWeight: "bold" }}>{fmt(plusMinus, 2)}</span>
+                <tr style={{ fontWeight: "bold", height: 16, fontSize: 9 }}>
+                  <td colSpan={3} style={{ border: "1px solid #999", textAlign: "left", paddingLeft: 12 }}>
+                    Total Carats :
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 4 }}>
+                    {fmt(totals.wt, 2)}
+                  </td>
+                  <td colSpan={3} style={{ border: "1px solid #999", textAlign: "right", paddingRight: 10 }}>
+                    US $ :
+                  </td>
+                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 4 }}>
+                    {fmtNum(totals.amount, 2)}
                   </td>
                 </tr>
-                <tr style={{ height: 24, fontSize: 11, fontWeight: "bold" }}>
-                  <td colSpan={7} style={{ border: "none" }}></td>
-                  <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmt(finalAmount, 2)}</td>
+                <tr>
+                  <td colSpan={7} style={{ border: "none", padding: 0 }} />
+                  <td style={{ border: "1px solid #999", padding: "1px 3px", fontSize: 9 }}>
+                    <div style={{ overflow: "hidden" }}>
+                      <span style={{ float: "left" }}>Round Off</span>
+                      <span style={{ float: "right", fontWeight: "bold" }}>{fmtNum(plusMinus, 2)}</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr style={{ height: 16, fontSize: 9, fontWeight: "bold" }}>
+                  <td colSpan={7} style={{ border: "none", padding: 0 }} />
+                  <td
+                    style={{
+                      border: "1px solid #999",
+                      textAlign: "right",
+                      paddingRight: 4
+                    }}
+                  >
+                    {fmtNum(finalAmount, 2)}
+                  </td>
                 </tr>
               </>
             )}
           </tbody>
         </table>
-        <table style={{ width: "100%", marginTop: 6 }}>
+
+        <table style={{ width: "100%", marginTop: isOffice ? 2 : 4 }}>
           <tbody>
             <tr>
               <td style={{ width: "35%", verticalAlign: "bottom", textAlign: "left" }}>
-                {/* MVC MixMemoDualPrint: deltaqr.png + delta.png */}
-                <img src={deltaQr} alt="QR" style={{ height: 50, marginRight: 5 }} />
-                <img src={deltaInstaQr} alt="Insta QR" style={{ height: 50 }} />
+                <img src={deltaQr} alt="QR" className="mix-memo-dual-qr" style={{ height: 36, marginRight: 4 }} />
+                <img src={deltaInstaQr} alt="Insta QR" className="mix-memo-dual-qr" style={{ height: 36 }} />
               </td>
-              <td style={{ width: "30%", textAlign: "center", color: "gray", fontSize: 9, verticalAlign: "middle" }}>{company.companyFooter}</td>
-              <td style={{ width: "35%", textAlign: "right", fontWeight: "bold", fontSize: 14, verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                Signature &nbsp;&nbsp; ______________________
+              <td
+                style={{
+                  width: "30%",
+                  textAlign: "center",
+                  color: "gray",
+                  fontSize: 8,
+                  verticalAlign: "middle"
+                }}
+              >
+                {company.companyFooter}
+              </td>
+              <td
+                style={{
+                  width: "35%",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                  fontSize: 11,
+                  verticalAlign: "middle",
+                  whiteSpace: "nowrap",
+                  fontFamily: "Verdana, Arial, sans-serif"
+                }}
+              >
+                Signature &nbsp;&nbsp; ______________
               </td>
             </tr>
           </tbody>
@@ -174,13 +375,23 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
   };
 
   return (
-    <div style={{ fontFamily: '"Segoe UI", Arial, sans-serif', fontSize: 13, color: "#000" }}>
+    <div
+      className="mix-memo-dual-root"
+      style={{ fontFamily: '"Segoe UI", Arial, sans-serif', fontSize: 11, color: "#000" }}
+    >
       {pages.map((pageItems, pageIdx) => {
         const isLastPage = pageIdx === pages.length - 1;
+        const officeTitle = isCurrentStatus ? "OFFICE COPY - CURRENT STATUS" : "OFFICE COPY";
+        const customerTitle = isCurrentStatus
+          ? "CUSTOMER COPY - CURRENT STATUS"
+          : "CUSTOMER COPY";
         return (
-          <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
-            {renderCopy(isCurrentStatus ? "OFFICE COPY - CURRENT STATUS" : "OFFICE COPY", pageItems, pageIdx, isLastPage)}
-            {renderCopy(isCurrentStatus ? "CUSTOMER COPY - CURRENT STATUS" : "CUSTOMER COPY", pageItems, pageIdx, isLastPage)}
+          <div
+            key={pageIdx}
+            className={`mix-memo-dual-page${isLastPage ? "" : " page-break"}`}
+          >
+            {renderCopy(officeTitle, pageItems, pageIdx, isLastPage, true)}
+            {renderCopy(customerTitle, pageItems, pageIdx, isLastPage, false)}
           </div>
         );
       })}

@@ -77,12 +77,25 @@ const MixSalePrintView = () => {
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
   const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
+  const partyDisplay = String(getVal(data, "PartyName", "partyName") || "")
+    .replace(/ /g, "_")
+    .replace(/\//g, "")
+    .replace(/\\/g, "");
+  // Save as PDF: MixSale_{InvNo}_{Party}.pdf
+  const pdfFileName = partyDisplay
+    ? `MixSale_${invDisplay}_${partyDisplay}`
+    : `MixSale_${invDisplay || "Print"}`;
 
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = pdfFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
-  document.title = `MixSale_${invDisplay} | Admin`;
+  document.title = pdfFileName;
 
   if (loading) {
     return (
@@ -132,13 +145,27 @@ const MixSalePrintView = () => {
         </Container>
 
         <style>{`
-          .page-break { page-break-after: always; }
+          .page-break { page-break-after: always; break-after: page; }
+          .mix-sale-print-page-next { margin-top: 24px; }
           @media print {
-            @page { size: Letter portrait; margin: 10mm; }
+            @page { size: Letter portrait; margin: 0; }
             html, body {
               background: #fff !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              height: auto !important;
+              overflow: hidden !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+            }
+            .page-content,
+            .mix-sale-print-page,
+            .main-content,
+            .container-fluid {
+              padding: 0 !important;
+              margin: 0 !important;
+              max-width: 100% !important;
+              width: 100% !important;
             }
             body * { visibility: hidden !important; }
             #mix-sale-print-area,
@@ -152,12 +179,35 @@ const MixSalePrintView = () => {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              padding: 0 !important;
+              padding: 8mm 10mm !important;
               border: none !important;
               border-radius: 0 !important;
               box-shadow: none !important;
               background: #fff !important;
               color: #000 !important;
+              box-sizing: border-box !important;
+              /* MVC MixSalePrint_USA body zoom */
+              zoom: 0.9;
+            }
+            #mix-sale-print-area th {
+              background-color: #BFBFBF !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #mix-sale-print-area .mix-sale-print-page-next {
+              margin-top: 10px !important;
+            }
+            #mix-sale-print-area .mix-sale-usa-page:last-child {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+            #mix-sale-print-area .mix-sale-usa-footer-block {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .page-break {
+              page-break-after: always !important;
+              break-after: page !important;
             }
             .d-print-none,
             .navbar-menu,
@@ -166,8 +216,13 @@ const MixSalePrintView = () => {
             .footer,
             .vertical-menu,
             #page-topbar,
-            .page-title-box {
+            .page-title-box,
+            .Toastify {
               display: none !important;
+              visibility: hidden !important;
+              height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
           }
           @media (max-width: 767px) {

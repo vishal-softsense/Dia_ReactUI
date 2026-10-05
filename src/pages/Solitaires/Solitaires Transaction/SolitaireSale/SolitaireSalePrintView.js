@@ -78,11 +78,26 @@ const SolitaireSalePrintView = () => {
   const FormatComponent = resolvePrintComponent("solitaireSale", saleFormat);
   const isLandscape = isLandscapePrintFormat(saleFormat);
 
+  const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
+  const partyDisplay = String(getVal(data, "PartyName", "partyName", "Party", "party") || "")
+    .replace(/ /g, "_")
+    .replace(/\//g, "")
+    .replace(/\\/g, "");
+  // Save as PDF: Sale_{InvNo}_{Party}.pdf (MVC SaleController / Dubai NBF)
+  const pdfFileName = partyDisplay
+    ? `Sale_${invDisplay}_${partyDisplay}`
+    : `Sale_${invDisplay || "Print"}`;
+
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = pdfFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
-  document.title = `Sale_${invNo} | Admin`;
+  document.title = pdfFileName;
 
   if (loading || !company) {
     return (
@@ -123,7 +138,33 @@ const SolitaireSalePrintView = () => {
           </div>
         </Container>
 
-        <PrintDocumentStyles printAreaId="sale-print-area" landscape={isLandscape} />
+        <PrintDocumentStyles
+          printAreaId="sale-print-area"
+          landscape={isLandscape}
+          extraPrintCss={`
+            #sale-print-area .sale-dubai-nbf-root {
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              border-radius: 0 !important;
+              background: #fff !important;
+              overflow: visible !important;
+              box-sizing: border-box !important;
+            }
+            #sale-print-area .sale-dubai-nbf-edge {
+              width: 2px !important;
+              min-width: 2px !important;
+              max-width: 2px !important;
+              padding: 0 !important;
+              background: #454545 !important;
+              border: none !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          `}
+        />
         <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>
