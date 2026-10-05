@@ -13,6 +13,7 @@ import {
 import { getVal } from "../../../../printFormats/shared/printUtils";
 import MixSaleRtnPrintUsaFormat from "../../../../printFormats/mixSaleReturn/MixSaleRtnPrintUsaFormat";
 
+// MVC MixSaleReturnPartial/MixSaleRtnPrintInv → MixSaleRtnPrint_USA
 const MixSaleReturnPrintView = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -73,18 +74,47 @@ const MixSaleReturnPrintView = () => {
 
   const logoUrl = resolveCompanyLogoUrl(company?.companyLogo);
   const invDisplay = getVal(data, "InvNo", "invNo") || invNo;
+  const partyDisplay = String(getVal(data, "PartyName", "partyName") || "")
+    .replace(/ /g, "_")
+    .replace(/\//g, "")
+    .replace(/\\/g, "");
+  // Save as PDF: MixSaleRtn_{InvNo}_{Party}.pdf
+  const pdfFileName = partyDisplay
+    ? `MixSaleRtn_${invDisplay}_${partyDisplay}`
+    : `MixSaleRtn_${invDisplay || "Print"}`;
 
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = pdfFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
-  document.title = `MixSaleRtn_${invDisplay} | Admin`;
+  document.title = pdfFileName;
 
   if (loading) {
     return (
       <div className="page-content">
         <Container fluid>
           <div className="text-center text-muted py-5">{t("Loading...")}</div>
+        </Container>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="page-content">
+        <Container fluid>
+          <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <Link to="/MixSaleReturn/mixsalereturnlist" className="btn btn-soft-secondary btn-sm">
+              {t("Back to List")}
+            </Link>
+          </div>
+          <div className="text-center text-muted py-5">{t("No data found for this Invoice.")}</div>
+          <ToastContainer autoClose={2000} />
         </Container>
       </div>
     );
@@ -128,13 +158,31 @@ const MixSaleReturnPrintView = () => {
         </Container>
 
         <style>{`
-          .page-break { page-break-after: always; }
+          .page-break { page-break-after: always; break-after: page; }
+          .mix-sale-rtn-print-page-next { margin-top: 24px; }
+          .mix-sale-rtn-print-sheet,
+          .mix-sale-rtn-print-sheet * {
+            font-family: Verdana, Arial, sans-serif !important;
+          }
           @media print {
-            @page { size: Letter portrait; margin: 10mm; }
+            @page { size: Letter portrait; margin: 0; }
             html, body {
               background: #fff !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              height: auto !important;
+              overflow: hidden !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+            }
+            .page-content,
+            .mix-sale-rtn-print-page,
+            .main-content,
+            .container-fluid {
+              padding: 0 !important;
+              margin: 0 !important;
+              max-width: 100% !important;
+              width: 100% !important;
             }
             body * { visibility: hidden !important; }
             #mix-sale-rtn-print-area,
@@ -148,12 +196,53 @@ const MixSaleReturnPrintView = () => {
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              padding: 0 !important;
+              padding: 6mm 8mm !important;
               border: none !important;
               border-radius: 0 !important;
               box-shadow: none !important;
               background: #fff !important;
               color: #000 !important;
+              box-sizing: border-box !important;
+              zoom: 0.88;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-usa-page {
+              min-height: 0 !important;
+              page-break-inside: auto !important;
+              break-inside: auto !important;
+              margin: 0 !important;
+              padding-top: 0 !important;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-item-row td,
+            #mix-sale-rtn-print-area .mix-sale-rtn-empty-row td {
+              height: 20px !important;
+              max-height: 20px !important;
+              line-height: 20px !important;
+              padding-top: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            #mix-sale-rtn-print-area th {
+              background-color: #BFBFBF !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-print-page-next {
+              margin-top: 10px !important;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-usa-page:last-child {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-footer-block {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            #mix-sale-rtn-print-area .mix-sale-rtn-usa-root {
+              margin-bottom: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            .page-break {
+              page-break-after: always !important;
+              break-after: page !important;
             }
             .d-print-none,
             .navbar-menu,
@@ -162,8 +251,13 @@ const MixSaleReturnPrintView = () => {
             .footer,
             .vertical-menu,
             #page-topbar,
-            .page-title-box {
+            .page-title-box,
+            .Toastify {
               display: none !important;
+              visibility: hidden !important;
+              height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
           }
           @media (max-width: 767px) {

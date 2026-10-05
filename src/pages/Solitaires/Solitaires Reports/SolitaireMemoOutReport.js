@@ -7,17 +7,21 @@ import {
   CardBody,
   Col,
   Container,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
   FormGroup,
   Input,
   Label,
-  Row
+  Row,
+  UncontrolledDropdown
 } from "reactstrap";
 import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
-import { exportToExcel } from "../../../helpers/excel_helper";
+import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
 
 import {
   getSolitaireMemoOutDropdowns,
@@ -674,9 +678,9 @@ const SolitaireMemoOutReport = () => {
           <td></td>
           <td></td>
           ${GROUPED_SUM_COLUMNS.map(
-            (colKey) =>
-              `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
-          ).join("")}
+        (colKey) =>
+          `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+      ).join("")}
         </tr>
       `;
     });
@@ -687,9 +691,9 @@ const SolitaireMemoOutReport = () => {
         <td></td>
         <td></td>
         ${GROUPED_SUM_COLUMNS.map(
-          (colKey) =>
-            `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
-        ).join("")}
+      (colKey) =>
+        `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+    ).join("")}
       </tr>
     `;
 
@@ -817,9 +821,9 @@ const SolitaireMemoOutReport = () => {
               <td key={cell.id} className={column.columnDef.className || ""}>
                 {column.columnDef.cell
                   ? flexRender(column.columnDef.cell, {
-                      ...cell.getContext(),
-                      row: { ...row, original: { ...child, isParent: false } }
-                    })
+                    ...cell.getContext(),
+                    row: { ...row, original: { ...child, isParent: false } }
+                  })
                   : dashText(child[column.columnDef.accessorKey])}
               </td>
             );
@@ -1031,6 +1035,146 @@ const SolitaireMemoOutReport = () => {
     if (!res?.success) toast.error(t("Excel export failed."));
   };
 
+  /** MVC ReportController.MemoExcelGenerate → MemoReportList.xlsx (PrintName = MR) */
+  const handleMemoReportPrintExcel = async () => {
+    if (!reportRows || reportRows.length === 0) {
+      toast.warning(t("No data available to export."));
+      return;
+    }
+
+    try {
+      const ExcelJS = await loadExcelJS();
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet("GetMemoReportData");
+
+      ws.views = [{ state: "frozen", xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft" }];
+
+      const headers = [
+        "Date", "DateDiff", "MemoNo", "BillNo", "Party", "Broker", "Item", "ItemName",
+        "Carats", "Price", "Amount", "Estimate", "Return", "Rtn Date", "Balance", "BalanceAmt",
+        "rap.Rate", "Dwn%", "IssUser", "Seller", "ReturnUser", "Remarks", "Symbol", "ColorId",
+        "ClarityId", "Prio", "CaratsCI", "Per", "MemoTime", "MemoReturnDate", "MemoReturnTime", "KapanNo"
+      ];
+
+      const headerRow = ws.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, name: "Calibri", size: 11, color: { argb: "FF000000" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FF000000" } },
+          left: { style: "thin", color: { argb: "FF000000" } },
+          bottom: { style: "thin", color: { argb: "FF000000" } },
+          right: { style: "thin", color: { argb: "FF000000" } }
+        };
+      });
+
+      const colWidths = [13, 10, 11, 8, 15, 10, 11, 20, 12, 8, 10, 8, 7, 11, 9, 12, 8, 8, 8, 6, 12, 8, 8, 7, 8, 7, 10, 6, 28, 18, 18, 10];
+      colWidths.forEach((w, i) => {
+        ws.getColumn(i + 1).width = w;
+      });
+
+      const toNum = (v) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      reportRows.forEach((r) => {
+        const row = ws.addRow([
+          getRowVal(r, "ConDATE", "conDATE") || "",
+          getRowVal(r, "DateDiff", "dateDiff") ?? "",
+          getRowVal(r, "MemoNo", "memoNo") || "",
+          getRowVal(r, "BillNo", "billNo") || "",
+          getRowVal(r, "Party", "party") || "",
+          getRowVal(r, "Broker", "broker") || "",
+          getRowVal(r, "Lotno", "LotNo", "lotno") || "",
+          getRowVal(r, "ItemName", "itemName") || "",
+          null, // Carats
+          null, // Price
+          null, // Amount
+          getRowVal(r, "Estimate", "estimate") ?? "",
+          getRowVal(r, "Return", "return") ?? "",
+          getRowVal(r, "MemoReturnDate", "memoReturnDate", "ReturnDate", "returnDate") || "",
+          null, // Balance
+          null, // BalanceAmt
+          "", // rap.Rate (MVC leaves blank)
+          null, // Dwn%
+          getRowVal(r, "IssUser", "issUser") || "",
+          getRowVal(r, "Seller", "seller") || "",
+          getRowVal(r, "RtnUser", "rtnUser") || "",
+          getRowVal(r, "Remarks", "remarks") || "",
+          getRowVal(r, "Symbol", "symbol") || "",
+          getRowVal(r, "ColorId", "colorId", "Colorid") || "",
+          getRowVal(r, "ClarityId", "clarityId") || "",
+          getRowVal(r, "Prio", "prio") || "",
+          "", // CaratsCI
+          "", // Per
+          getRowVal(r, "MemoTime", "memoTime") || "",
+          getRowVal(r, "MemoReturnDate", "memoReturnDate") || "",
+          getRowVal(r, "MemoReturnTime", "memoReturnTime") || "",
+          "" // KapanNo
+        ]);
+
+        row.alignment = { horizontal: "center", vertical: "middle" };
+        row.font = { name: "Calibri", size: 10 };
+
+        const setNum = (col, value, format) => {
+          const n = toNum(value);
+          if (n === null) return;
+          const cell = row.getCell(col);
+          cell.value = n;
+          cell.numFmt = format;
+          cell.alignment = { horizontal: "right", vertical: "middle" };
+        };
+
+        setNum(9, getRowVal(r, "Carats", "carats"), "0.000");
+        setNum(10, getRowVal(r, "Price", "price"), "0.000");
+        setNum(11, getRowVal(r, "Amount", "amount"), "0.00");
+        setNum(15, getRowVal(r, "Balance", "balance"), "0.00");
+        setNum(16, getRowVal(r, "BalanceAmt", "balanceAmt"), "0.00");
+        setNum(18, getRowVal(r, "Discount", "discount"), "0.00");
+      });
+
+      const dataEnd = reportRows.length + 1;
+      const totalRow = dataEnd + 1;
+      const redFont = { color: { argb: "FFFF0000" }, name: "Calibri", size: 10 };
+
+      ws.getCell(`E${totalRow}`).value = { formula: `"Total: " & COUNTA(E2:E${dataEnd})` };
+      ws.getCell(`E${totalRow}`).font = redFont;
+
+      const sumCell = (col, format) => {
+        const cell = ws.getCell(`${col}${totalRow}`);
+        cell.value = { formula: `SUM(${col}2:${col}${dataEnd})` };
+        cell.font = redFont;
+        cell.numFmt = format;
+        cell.alignment = { horizontal: "right", vertical: "middle" };
+      };
+
+      sumCell("I", "0.00");
+      sumCell("K", "0.00");
+      sumCell("O", "0.00");
+      sumCell("P", "0.00");
+
+      const avgPrice = ws.getCell(`J${totalRow}`);
+      avgPrice.value = { formula: `IF(I${totalRow}=0,0,K${totalRow}/I${totalRow})` };
+      avgPrice.font = redFont;
+      avgPrice.numFmt = "0.00";
+      avgPrice.alignment = { horizontal: "right", vertical: "middle" };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "MemoReportList.xlsx";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err) {
+      console.error("MemoReport Print Excel failed:", err);
+      toast.error(t("Excel export failed."));
+    }
+  };
+
   document.title = `${t("Memo Report")} | ${t("Reports")}`;
 
   const typeOptions = [
@@ -1112,14 +1256,25 @@ const SolitaireMemoOutReport = () => {
                     </Button>
                   )}
                   {viewType === "table" && (
-                    <Button
-                      color="success"
-                      className="btn-sm rounded-2 px-3 py-1"
-                      onClick={handleExcel}
-                      disabled={reportRows.length === 0}
-                    >
-                      {t("Excel")}
-                    </Button>
+                    <UncontrolledDropdown>
+                      <DropdownToggle
+                        color="success"
+                        className="btn-sm rounded-2 px-3 py-1"
+                        caret
+                        disabled={reportRows.length === 0}
+                      >
+                        <i className="ri-file-excel-2-line align-middle me-1" />
+                        {t("Excel")} / {t("Print")}
+                      </DropdownToggle>
+                      <DropdownMenu style={{ minWidth: "180px", zIndex: 1050 }}>
+                        <DropdownItem onClick={handleExcel}>
+                          {t("Direct Print")}
+                        </DropdownItem>
+                        <DropdownItem onClick={handleMemoReportPrintExcel}>
+                          {t("MemoReport Print")}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
                   )}
                 </>
               )}

@@ -1910,20 +1910,35 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                       </Button>
                     )}
                     {isEdit && header.invNo && (
-                      <Button
-                        color="soft-info"
-                        size="sm"
-                        className="flex-fill flex-sm-grow-0 text-nowrap"
-                        onClick={() =>
-                          window.open(
-                            `/MixConsignment/MixConsignmentPrintInv?ID=${encodeURIComponent(header.code || editId)}`,
-                            "_blank"
-                          )
-                        }
-                      >
-                        <i className="ri-printer-line me-1" />
-                        {t("Current Status Invoice")}
-                      </Button>
+                      <>
+                        <Button
+                          color="primary"
+                          size="sm"
+                          className="flex-fill flex-sm-grow-0 text-nowrap"
+                          onClick={() =>
+                            window.open(
+                              `/MixConsignment/MixConsignmentPrintInv?ID=${encodeURIComponent(header.code || editId)}`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          <i className="ri-printer-line me-1" />
+                          {t("Print Mix Memo In")}
+                        </Button>
+                        <Button
+                          color="primary"
+                          outline
+                          size="sm"
+                          className="flex-fill flex-sm-grow-0 text-nowrap"
+                          onClick={() => {
+                            const qs = `ID=${encodeURIComponent(header.code || editId || "")}&InvNo=${encodeURIComponent(header.invNo || "")}&currentStatus=1`;
+                            window.open(`/MixConsignment/parmixconsignmentcurrent?${qs}`, "_blank");
+                          }}
+                        >
+                          <i className="ri-printer-line me-1" />
+                          {t("Print Consignment Current Status")}
+                        </Button>
+                      </>
                     )}
                     <Link to="/mixconsignmentform/mixconsignmentformlist" className="btn btn-soft-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center">
                       {t("Back")}

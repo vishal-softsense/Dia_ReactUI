@@ -111,6 +111,22 @@ export function summarizeTableRows(rows) {
   };
 }
 
+/** Display/store formats — Carat 3dp, Price/Amount 2dp (MVC parity). */
+export function formatCarat(value) {
+  const n = parseFloat(value);
+  return Number.isNaN(n) ? "0.000" : n.toFixed(3);
+}
+
+export function formatPrice(value) {
+  const n = parseFloat(value);
+  return Number.isNaN(n) ? "0.00" : n.toFixed(2);
+}
+
+export function formatAmount(value) {
+  const n = parseFloat(value);
+  return Number.isNaN(n) ? "0.00" : n.toFixed(2);
+}
+
 export function mapDiamondListToRows(diamondList, idOffset = 0) {
   return (Array.isArray(diamondList) ? diamondList : []).map((item, idx) => ({
     id: idOffset + idx + 1,
@@ -122,9 +138,9 @@ export function mapDiamondListToRows(diamondList, idOffset = 0) {
     color: item.color || item.Color || "",
     clarity: item.clarity || item.Clarity || "",
     pcs: item.pcs || item.Pcs || 0,
-    carats: item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0,
-    rate: item.price || item.Price || item.rate || item.Rate || 0,
-    amount: item.amount || item.Amount || 0,
+    carats: formatCarat(item.carat || item.Carat || item.issueCarats || item.IssueCarats || 0),
+    rate: formatPrice(item.price || item.Price || item.rate || item.Rate || 0),
+    amount: formatAmount(item.amount || item.Amount || 0),
     lab: item.lab || item.Lab || item.cert || item.Cert || "",
   }));
 }

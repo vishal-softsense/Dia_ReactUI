@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -16,7 +16,8 @@ import {
   ModalFooter,
   ModalHeader,
   Row,
-  Table
+  Table,
+  Spinner
 } from "reactstrap";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
@@ -28,6 +29,8 @@ import {
   editSolitairePurchase,
   getAccGrpMasters,
   getCurrencyRates,
+  getLabGiaData,
+  getLabIgiData,
   getSolitaireLots,
   getSolitairePurchaseConsignment,
   getSolitairePurchaseDetail,
@@ -342,6 +345,14 @@ const calcItemAmount = (weight, rate, less1, less2, less3) => {
   return Math.round(amount * 100) / 100;
 };
 
+/** MVC Session["IgiLabToPurchase"] — set by Get Lab Data → Add to List. */
+const IGI_LAB_TO_PURCHASE_KEY = "IgiLabToPurchase";
+
+const parseLabNumeric = (value) => {
+  const n = parseFloat(String(value ?? "").replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
 const emptyItem = () => ({
   lotNo: "",
   itemName: "",
@@ -362,6 +373,154 @@ const emptyItem = () => ({
   rtnCarats: 0,
   ...mapGradingFromSource({})
 });
+
+const LAB_SELECT_OPTIONS = [
+  { value: "GIA", label: "GIA" },
+  { value: "IGI", label: "IGI" },
+  { value: "HRD", label: "HRD" }
+];
+
+/** MVC DetectCertLabFromCertNo — format-based lab detection before API call. */
+const detectCertLabFromCertNo = (certNo) => {
+  const c = String(certNo || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+  if (!c) return "";
+  if (c.indexOf("IGI") === 0 || /[A-Z]/.test(c)) return "IGI";
+  if (/^\d{10}$/.test(c)) return "GIA";
+  if (/^\d+$/.test(c) && c.length !== 10) return "IGI";
+  return "";
+};
+
+/** MVC PurchaseController.MapIgiDataToImportExcel → Purchase Fill row shape. */
+const mapIgiLabRowsToPurchaseItems = (igiList = []) => {
+  const rows = [];
+  (Array.isArray(igiList) ? igiList : []).forEach((tm) => {
+    const weight = parseLabNumeric(tm.Weight);
+    if (weight <= 0) return;
+    const certNo = String(tm.ReportNumber || "").trim();
+    const lotNo = String(tm.LotNo || "").trim();
+    const shape = String(tm.Shape || "").trim();
+    const color = String(tm.Color || "").trim();
+    const clarity = String(tm.Clarity || "").trim();
+    const cutProp = String(tm.CutProp || "").trim();
+    const roundedWeight = Math.round(weight * 1000) / 1000;
+    rows.push({
+      ...emptyItem(),
+      lotNo,
+      itemName: `${shape} | ${clarity} ${certNo}`.replace(/\s+/g, " ").trim(),
+      weight: roundedWeight,
+      pcs: 1,
+      mrp: 0,
+      back: 0,
+      rate: 0,
+      less1: 0,
+      less2: 0,
+      less3: 0,
+      amount: 0,
+      shape,
+      color,
+      clarity,
+      cut: cutProp,
+      proportion: cutProp,
+      polish: String(tm.Pol || "").trim(),
+      symmetry: String(tm.Sym || "").trim(),
+      fl: String(tm.Fluorescence || "").trim(),
+      length: parseLabNumeric(tm.Measurement1),
+      width: parseLabNumeric(tm.Measurement2),
+      depth: parseLabNumeric(tm.Measurement3),
+      totDep: parseLabNumeric(tm.TotalDepth),
+      tablePer: parseLabNumeric(tm.TableDiameter),
+      culet: String(tm.CuletSize || "").trim(),
+      gMin: String(tm.GirdleName || "").trim(),
+      lab: "IGI",
+      certificateNo: certNo,
+      inscriptionText: String(tm.Inscription || "").trim(),
+      ch: parseLabNumeric(tm.CrownHeight),
+      ca: parseLabNumeric(tm.CrownAngel),
+      pa: parseLabNumeric(tm.PavilionAngel),
+      ph: parseLabNumeric(tm.PavilionDepth),
+      labComments: String(tm.Comments || tm.LabComments || "").trim(),
+      reportDate: String(tm.ReportDate || "").trim(),
+      igiCut: cutProp,
+      memoTransCode: 0,
+      rtnCarats: 0
+    });
+  });
+  return rows;
+};
+
+/** MVC PurchaseController.MapGiaDataToImportExcel → Purchase Fill row shape. */
+const mapGiaLabRowsToPurchaseItems = (giaList = [], fallbackLotNo = "") => {
+  const rows = [];
+  (Array.isArray(giaList) ? giaList : []).forEach((tm) => {
+    let weightRaw = String(tm.carat_weight || tm.Carat_weight || "").trim();
+    if (weightRaw.includes(" ")) weightRaw = weightRaw.split(" ")[0];
+    const weight = parseLabNumeric(weightRaw);
+    if (weight <= 0) return;
+    const certNo = String(tm.report_number || tm.Report_number || "").trim();
+    const lotNo = String(tm.lotno || tm.LotNo || tm.lotNo || fallbackLotNo || "").trim();
+    const shape = String(tm.shape_and_cutting_style || tm.Shape || "").trim();
+    const color = String(tm.Color || tm.color_grade || "").trim();
+    const clarity = String(tm.clarity_grade || tm.Clarity || "").trim();
+    const cutProp = String(tm.cut_grade || tm.Cut || "").trim();
+    const roundedWeight = Math.round(weight * 1000) / 1000;
+    rows.push({
+      ...emptyItem(),
+      lotNo,
+      itemName: `${shape} | ${clarity} ${certNo}`.replace(/\s+/g, " ").trim(),
+      weight: roundedWeight,
+      pcs: 1,
+      mrp: 0,
+      back: 0,
+      rate: 0,
+      less1: 0,
+      less2: 0,
+      less3: 0,
+      amount: 0,
+      shape,
+      color,
+      clarity,
+      cut: cutProp,
+      proportion: cutProp,
+      polish: String(tm.polish || tm.Polish || "").trim(),
+      symmetry: String(tm.symmetry || tm.Symmetry || "").trim(),
+      fl: String(tm.fluorescence || tm.FL || "").trim(),
+      length: parseLabNumeric(tm.L),
+      width: parseLabNumeric(tm.W),
+      depth: parseLabNumeric(tm.D),
+      totDep: parseLabNumeric(tm.depth_pct),
+      tablePer: parseLabNumeric(tm.table_pct),
+      culet: String(tm.culet || tm.Culet || "").trim(),
+      gMin: String(tm.girdle || tm.Girdle || "").trim(),
+      lab: "GIA",
+      certificateNo: certNo,
+      inscriptionText: String(tm.inscriptions || tm.InscriptionText || "").trim(),
+      ch: parseLabNumeric(tm.crown_height),
+      ca: parseLabNumeric(tm.crown_angle),
+      pa: parseLabNumeric(tm.pavilion_angle),
+      ph: parseLabNumeric(tm.pavilion_depth),
+      strLn: parseLabNumeric(tm.star_length),
+      lrHalf: parseLabNumeric(tm.lower_half),
+      labComments: String(tm.report_comments || tm.LabComments || "").trim(),
+      reportDate: String(tm.report_date || tm.ReportDate || "").trim(),
+      countryOfOrigin: String(tm.country_of_origin || tm.CountryOfOrigin || "").trim(),
+      memoTransCode: 0,
+      rtnCarats: 0
+    });
+  });
+  return rows;
+};
+
+const extractLabApiMessage = (errOrRes, fallbackMsg) => {
+  if (!errOrRes) return fallbackMsg;
+  if (typeof errOrRes === "string") return errOrRes;
+  const data = errOrRes.Data ?? errOrRes.data ?? errOrRes.message ?? errOrRes.Message;
+  if (typeof data === "string" && data.trim()) return data;
+  if (errOrRes?.response?.data) return extractLabApiMessage(errOrRes.response.data, fallbackMsg);
+  return fallbackMsg;
+};
 
 const mapBasic = (list = []) =>
   (list || []).map((x) => ({
@@ -436,6 +595,12 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
   const [entry, setEntry] = useState(emptyItem());
+  const [selectedLab, setSelectedLab] = useState("GIA");
+  const [certNo, setCertNo] = useState("");
+  const [labCertBusy, setLabCertBusy] = useState(false);
+  const labCertInFlightRef = useRef(false);
+  const lastLabCertFetchedRef = useRef("");
+  const labCertFetchFromTabRef = useRef(false);
 
   const [excelOpen, setExcelOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
@@ -840,6 +1005,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const onEntryChange = (key, value) => {
     setEntry((prev) => {
       let next = { ...prev, [key]: value };
+      // MVC CalcRateFromBack / CalcBackFromRate
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -848,9 +1014,65 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       if (key === "rate") {
         const mrp = toNum(next.mrp);
         const rate = toNum(value);
-        if (mrp !== 0) next.back = fmt((rate / mrp) * 100 - 100);
+        next.back = mrp !== 0 ? fmt((rate * 100) / mrp - 100) : fmt(0);
       }
       return recalcEntryAmount(next);
+    });
+  };
+
+  /** MVC RecalcPurGridRow — Fill DataTable: only mrp / back / rate editable. */
+  const onFillGridFieldChange = (idx, field, rawValue) => {
+    if (readOnly) return;
+    setItems((prev) => {
+      if (idx < 0 || idx >= prev.length) return prev;
+      const copy = [...prev];
+      const row = { ...copy[idx] };
+      row[field] = rawValue;
+
+      const mrp = toNum(field === "mrp" ? rawValue : row.mrp);
+      const back = toNum(field === "back" ? rawValue : row.back);
+      let rate = toNum(field === "rate" ? rawValue : row.rate);
+
+      if (field === "mrp" || field === "back") {
+        rate = ((100 + back) * mrp) / 100;
+        row.rate = rate.toFixed(2);
+      } else if (field === "rate") {
+        const newBack = mrp !== 0 ? (rate * 100) / mrp - 100 : 0;
+        row.back = newBack.toFixed(2);
+      }
+
+      row.amount = calcItemAmount(row.weight, row.rate, row.less1, row.less2, row.less3);
+      copy[idx] = row;
+      return copy;
+    });
+  };
+
+  /** MVC blur formatting: MRP → toString(), Back/Rate → toFixed(2). */
+  const onFillGridFieldBlur = (idx, field) => {
+    if (readOnly) return;
+    setItems((prev) => {
+      if (idx < 0 || idx >= prev.length) return prev;
+      const copy = [...prev];
+      const row = { ...copy[idx] };
+      const num = toNum(row[field]);
+      if (field === "mrp") {
+        row.mrp = String(num);
+      } else {
+        row[field] = num.toFixed(2);
+      }
+
+      const mrp = toNum(row.mrp);
+      const back = toNum(row.back);
+      let rate = toNum(row.rate);
+      if (field === "mrp" || field === "back") {
+        rate = ((100 + back) * mrp) / 100;
+        row.rate = rate.toFixed(2);
+      } else if (field === "rate") {
+        row.back = (mrp !== 0 ? (rate * 100) / mrp - 100 : 0).toFixed(2);
+      }
+      row.amount = calcItemAmount(row.weight, row.rate, row.less1, row.less2, row.less3);
+      copy[idx] = row;
+      return copy;
     });
   };
 
@@ -978,6 +1200,14 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       setLotSel(null);
     }
   };
+
+  /** MVC ClearPurchaseInputsKeepCertNo — clear item boxes; keep Cert No + Lab. */
+  const clearEntryKeepCertLab = useCallback(() => {
+    setLotSel(null);
+    setLotInput("");
+    setEditIndex(-1);
+    setEntry(emptyItem());
+  }, []);
 
   const totals = useMemo(() => {
     let totCts = 0;
@@ -1355,6 +1585,213 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     return list;
   };
 
+  /** MVC FetchLabDataByCertNoForPurchase — Tab/Enter/blur → Get IGI / Get GIA. */
+  const fetchLabDataByCertNoForPurchase = async (rawCert) => {
+    const trimmed = String(rawCert || "").trim();
+    if (!trimmed || readOnly) return;
+
+    // Prevent duplicate calls while loader/API request is running
+    if (labCertInFlightRef.current || labCertBusy) return;
+
+    const lab = String(selectedLab || "")
+      .trim()
+      .toUpperCase();
+    if (!lab) {
+      toast.warning(t("Please select Lab first."));
+      return;
+    }
+
+    const detectedLab = detectCertLabFromCertNo(trimmed);
+    if (detectedLab === "GIA" && lab === "IGI") {
+      toast.warning(t("This is a GIA Certificate Number. Please select GIA Lab."));
+      return;
+    }
+    if (detectedLab === "IGI" && lab === "GIA") {
+      toast.warning(t("This is an IGI Certificate Number. Please select IGI Lab."));
+      return;
+    }
+
+    const fetchKey = `${lab}|${trimmed}`;
+    if (fetchKey === lastLabCertFetchedRef.current) return;
+
+    if (lab === "HRD") {
+      lastLabCertFetchedRef.current = fetchKey;
+      toast.warning(t("Get HRD Data is not available."));
+      return;
+    }
+
+    if (lab !== "GIA" && lab !== "IGI") {
+      toast.warning(t("Unsupported Lab selection."));
+      return;
+    }
+
+    const lotNo = String(lotSel?.value || entry.lotNo || "").trim();
+    const payload = {
+      Item: [{ GetCertNo: trimmed, Lotno: lotNo, Carats: 0 }]
+    };
+
+    // Show existing project loader immediately before API call
+    labCertInFlightRef.current = true;
+    setLabCertBusy(true);
+    try {
+      const response =
+        lab === "GIA" ? await getLabGiaData(payload) : await getLabIgiData(payload);
+      const ok = response?.success === true || response?.Success === true;
+      const data = response?.Data ?? response?.data;
+
+      if (!ok || !Array.isArray(data) || !data.length) {
+        clearEntryKeepCertLab();
+        toast.warning(
+          extractLabApiMessage(
+            response,
+            lab === "GIA"
+              ? t("No GIA data found for this certificate.")
+              : t("No IGI data found for this certificate.")
+          )
+        );
+        return;
+      }
+
+      const tagged = data.map((row) =>
+        lab === "GIA"
+          ? { ...row, lotno: String(row.lotno || row.LotNo || lotNo || "").trim(), Cert: "GIA" }
+          : { ...row, LotNo: String(row.LotNo || row.lotNo || lotNo || "").trim(), Cert: "IGI" }
+      );
+
+      let rows =
+        lab === "GIA"
+          ? mapGiaLabRowsToPurchaseItems(tagged, lotNo)
+          : mapIgiLabRowsToPurchaseItems(tagged);
+
+      clearEntryKeepCertLab();
+
+      if (!rows.length) {
+        toast.warning(
+          lab === "GIA"
+            ? t("No GIA data found for this certificate.")
+            : t("No IGI data found for this certificate.")
+        );
+        return;
+      }
+
+      const dupInNew = rows.find((r) => {
+        const c = String(r.certificateNo || "").trim().toLowerCase();
+        return (
+          c &&
+          items.some((x) => String(x.certificateNo || "").trim().toLowerCase() === c)
+        );
+      });
+      if (dupInNew) {
+        toast.warning(t(`Certificate ${dupInNew.certificateNo} already exists in the list.`));
+        return;
+      }
+
+      rows = await enrichImportRowsWithRapRate(rows);
+      lastLabCertFetchedRef.current = fetchKey;
+      let added = false;
+      setItems((prev) => {
+        const exists = rows.find((r) => {
+          const c = String(r.certificateNo || "").trim().toLowerCase();
+          return (
+            c &&
+            prev.some((x) => String(x.certificateNo || "").trim().toLowerCase() === c)
+          );
+        });
+        if (exists) {
+          toast.warning(t(`Certificate ${exists.certificateNo} already exists in the list.`));
+          return prev;
+        }
+        added = true;
+        return [...prev, ...rows];
+      });
+      if (added) {
+        toast.success(
+          lab === "GIA"
+            ? t("GIA lab data added to purchase list.")
+            : t("IGI lab data added to purchase list.")
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      clearEntryKeepCertLab();
+      toast.error(extractLabApiMessage(err, t("Server Connection Problem..")));
+    } finally {
+      // Hide loader after success, error, invalid cert, or mismatch processing
+      labCertInFlightRef.current = false;
+      setLabCertBusy(false);
+    }
+  };
+
+  const onCertNoKeyDown = (e) => {
+    if (e.key === "Tab" || e.key === "Enter") {
+      if (e.key === "Enter") e.preventDefault();
+      labCertFetchFromTabRef.current = true;
+      fetchLabDataByCertNoForPurchase(e.target.value);
+    }
+  };
+
+  const onCertNoBlur = (e) => {
+    if (labCertFetchFromTabRef.current) {
+      labCertFetchFromTabRef.current = false;
+      return;
+    }
+    fetchLabDataByCertNoForPurchase(e.target.value);
+  };
+
+  const onCertNoChange = (e) => {
+    setCertNo(e.target.value);
+    lastLabCertFetchedRef.current = "";
+  };
+
+  const onSelectedLabChange = (e) => {
+    setSelectedLab(e.target.value);
+    lastLabCertFetchedRef.current = "";
+  };
+
+  // MVC LoadPendingIgiLabData — Get Lab Data → Add to List → Fill DataTable
+  useEffect(() => {
+    if (isEdit || isView || loading) return;
+    let raw = "";
+    try {
+      raw = sessionStorage.getItem(IGI_LAB_TO_PURCHASE_KEY) || "";
+    } catch {
+      return;
+    }
+    if (!raw) return;
+    try {
+      sessionStorage.removeItem(IGI_LAB_TO_PURCHASE_KEY);
+    } catch {
+      /* ignore */
+    }
+
+    (async () => {
+      try {
+        const igiList = JSON.parse(raw);
+        let rows = mapIgiLabRowsToPurchaseItems(igiList);
+        if (!rows.length) {
+          toast.warning(t("No valid IGI rows to add."));
+          return;
+        }
+        rows = await enrichImportRowsWithRapRate(rows);
+        setItems((prev) => {
+          const map = new Map(
+            prev.map((x) => [String(x.lotNo || x.certificateNo || "").toLowerCase(), x])
+          );
+          rows.forEach((r) => {
+            const key = String(r.lotNo || r.certificateNo || "").toLowerCase();
+            if (!key) return;
+            map.set(key, r);
+          });
+          return Array.from(map.values());
+        });
+        toast.success(t("IGI lab data added to purchase list."));
+      } catch (err) {
+        console.error(err);
+        toast.error(t("Failed to load pending IGI lab data."));
+      }
+    })();
+  }, [isEdit, isView, loading, t]);
+
   const parseCsv = (text) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
     if (lines.length < 2) return { rows: [] };
@@ -1731,7 +2168,10 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
     return (
       <div className="page-content">
         <Container fluid>
-          <div className="text-center text-muted py-5">{t("Loading...")}</div>
+          <div className="text-center my-5">
+            <Spinner color="primary" />
+            <p className="mt-2 text-muted">{t("Loading...")}</p>
+          </div>
         </Container>
       </div>
     );
@@ -1739,6 +2179,20 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
 
   return (
     <React.Fragment>
+      {labCertBusy && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ zIndex: 1055, background: "rgba(255, 255, 255, 0.55)" }}
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <div className="bg-white rounded-3 shadow-sm p-4">
+            <div className="spinner-border text-primary avatar-sm" role="status">
+              <span className="visually-hidden">{t("Loading...")}</span>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="page-content">
         <Container fluid>
           <BreadCrumb title={title} pageTitle={isConsignmentMode ? t("Consignment In") : t("Purchases")} />
@@ -2128,134 +2582,174 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                 </CardHeader>
                 <CardBody>
                   {!readOnly && (
-                    <Row className="g-2 align-items-end">
-                      <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">
-                          {t("Lot Number")}
-                          <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
-                            {t("Add Item")}
-                          </Link>
-                        </Label>
-                        <CreatableSelect
-                          styles={customStyles}
-                          options={lotOpts}
-                          value={lotSel}
-                          onChange={(o) => {
-                            setLotSel(o);
-                            onEntryChange("lotNo", o?.value || "");
-                            if (o?.value) fillFromLot(o.value);
-                          }}
-                          onInputChange={(v, meta) => {
-                            if (meta.action === "input-change") setLotInput(v);
-                            else if (meta.action === "input-blur" || meta.action === "menu-close") {
-                              setLotInput("");
-                              setLotOpts([]);
-                            }
-                          }}
-                          isLoading={lotLoading}
-                          placeholder={t("Lot...")}
-                          isClearable
-                        />
-                      </Col>
-                      <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Item Name")}</Label>
-                        <Input
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.itemName}
-                          onChange={(e) => onEntryChange("itemName", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.weight}
-                          onChange={(e) => onEntryChange("weight", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Pcs")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.pcs}
-                          onChange={(e) => onEntryChange("pcs", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("MRP")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.mrp}
-                          onChange={(e) => onEntryChange("mrp", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Back")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.back}
-                          onChange={(e) => onEntryChange("back", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Rate")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.rate}
-                          onChange={(e) => onEntryChange("rate", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less1")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.less1}
-                          onChange={(e) => onEntryChange("less1", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less2")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.less2}
-                          onChange={(e) => onEntryChange("less2", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less3")}</Label>
-                        <Input
-                          type="number"
-                          className="form-control-sm"
-                          style={fieldH}
-                          value={entry.less3}
-                          onChange={(e) => onEntryChange("less3", e.target.value)}
-                        />
-                      </Col>
-                      <Col xs={6} sm={4} md={2}>
-                        <Label className="form-label mb-1">{t("Amount")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
-                      </Col>
-                      <Col xs={12} sm={4} md={2}>
-                        <Button color="primary" size="sm" className="w-100" style={fieldH} onClick={handleAddItem}>
-                          {editIndex >= 0 ? t("Update Item") : t("Add Item")}
-                        </Button>
-                      </Col>
-                    </Row>
+                    <>
+                      <Row className="g-2 align-items-end">
+                        <Col xs={12} sm={6} md={2}>
+                          <Label className="form-label mb-1">
+                            {t("Lot Number")}
+                            <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
+                              {t("Add Item")}
+                            </Link>
+                          </Label>
+                          <CreatableSelect
+                            styles={customStyles}
+                            options={lotOpts}
+                            value={lotSel}
+                            onChange={(o) => {
+                              setLotSel(o);
+                              onEntryChange("lotNo", o?.value || "");
+                              if (o?.value) fillFromLot(o.value);
+                            }}
+                            onInputChange={(v, meta) => {
+                              if (meta.action === "input-change") setLotInput(v);
+                              else if (meta.action === "input-blur" || meta.action === "menu-close") {
+                                setLotInput("");
+                                setLotOpts([]);
+                              }
+                            }}
+                            isLoading={lotLoading}
+                            placeholder={t("Lot...")}
+                            isClearable
+                          />
+                        </Col>
+                        <Col xs={12} sm={6} md={2}>
+                          <Label className="form-label mb-1">{t("Item Name")}</Label>
+                          <Input
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.itemName}
+                            onChange={(e) => onEntryChange("itemName", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={2}>
+                          <Label className="form-label mb-1">{t("Select LAB")}</Label>
+                          <Input
+                            type="select"
+                            className="form-control-sm"
+                            style={{
+                              ...fieldH,
+                              paddingTop: 0,
+                              paddingBottom: 0,
+                              lineHeight: "31px"
+                            }}
+                            value={selectedLab}
+                            onChange={onSelectedLabChange}
+                            disabled={labCertBusy}
+                          >
+                            {LAB_SELECT_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </Input>
+                        </Col>
+                        <Col xs={6} sm={4} md={2}>
+                          <Label className="form-label mb-1">{t("Cert No")}</Label>
+                          <Input
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={certNo}
+                            placeholder={t("Cert No")}
+                            onChange={onCertNoChange}
+                            onKeyDown={onCertNoKeyDown}
+                            onBlur={onCertNoBlur}
+                            disabled={labCertBusy}
+                          />
+                        </Col>
+                        <Col xs={12} sm={4} md={2} className="ms-md-auto">
+                          <Label className="form-label mb-1 d-none d-md-block">&nbsp;</Label>
+                          <Button color="primary" size="sm" className="w-100" style={fieldH} onClick={handleAddItem}>
+                            {editIndex >= 0 ? t("Update Item") : t("Add Item")}
+                          </Button>
+                        </Col>
+                      </Row>
+                      <Row className="g-2 align-items-end mt-1">
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Weight")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.weight}
+                            onChange={(e) => onEntryChange("weight", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Pcs")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.pcs}
+                            onChange={(e) => onEntryChange("pcs", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("MRP")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.mrp}
+                            onChange={(e) => onEntryChange("mrp", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Back")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.back}
+                            onChange={(e) => onEntryChange("back", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Rate")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.rate}
+                            onChange={(e) => onEntryChange("rate", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Less1")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.less1}
+                            onChange={(e) => onEntryChange("less1", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Less2")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.less2}
+                            onChange={(e) => onEntryChange("less2", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={1}>
+                          <Label className="form-label mb-1">{t("Less3")}</Label>
+                          <Input
+                            type="number"
+                            className="form-control-sm"
+                            style={fieldH}
+                            value={entry.less3}
+                            onChange={(e) => onEntryChange("less3", e.target.value)}
+                          />
+                        </Col>
+                        <Col xs={6} sm={4} md={2}>
+                          <Label className="form-label mb-1">{t("Amount")}</Label>
+                          <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
+                        </Col>
+                      </Row>
+                    </>
                   )}
 
                   {items.length > 0 && (
@@ -2307,7 +2801,32 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                                     className={col.align === "end" ? "text-end" : ""}
                                     style={{ whiteSpace: "nowrap" }}
                                   >
-                                    {renderItemCell(r, col)}
+                                    {!readOnly && (col.key === "mrp" || col.key === "back" || col.key === "rate") ? (
+                                      <Input
+                                        type="text"
+                                        inputMode="decimal"
+                                        className={`form-control-sm text-end pur-edit-${col.key === "back" ? "back" : col.key}`}
+                                        style={{
+                                          height: 28,
+                                          minWidth: col.key === "back" ? 70 : 80,
+                                          maxWidth: 110,
+                                          padding: "1px 5px",
+                                          fontSize: "11px",
+                                          display: "inline-block"
+                                        }}
+                                        value={r[col.key] ?? ""}
+                                        onChange={(e) => onFillGridFieldChange(idx, col.key, e.target.value)}
+                                        onBlur={() => onFillGridFieldBlur(idx, col.key)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            e.currentTarget.blur();
+                                          }
+                                        }}
+                                      />
+                                    ) : (
+                                      renderItemCell(r, col)
+                                    )}
                                   </td>
                                 ))}
                               </tr>

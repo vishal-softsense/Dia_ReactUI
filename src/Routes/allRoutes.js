@@ -910,6 +910,8 @@ const authProtectedRoutes = [
   { path: "/MixConsignment/add-MixConsignment", component: <MixConsignmentAdd /> },
   { path: "/MixConsignment/edit-MixConsignment", component: <MixConsignmentEdit /> },
   { path: "/MixConsignment/MixConsignmentPrintInv", component: <MixConsignmentPrintView /> },
+  // MVC: MixConsignment/parmixconsignmentcurrent → Mix Memo In Current Status (ParcelConsignmentPending.rpt)
+  { path: "/MixConsignment/parmixconsignmentcurrent", component: <MixConsignmentPrintView /> },
 
   // Mix Consignment Return (MVC: /MixConsignment/add-mix-Consignment-return)
   { path: "/MixConsignment/add-mix-Consignment-return", component: <MixConsignmentReturn /> },
@@ -930,6 +932,8 @@ const authProtectedRoutes = [
   { path: "/mixmemoform/add-mixmemo", component: <MixMemoOutAdd /> },
   { path: "/mix-memo/edit-mixmemo", component: <MixMemoOutEdit /> },
   { path: "/mix-memo/MixMemoOutPrintInv", component: <MixMemoOutPrintView /> },
+  // MVC: mixmemoform/parcelmixprintinvcurrent → Mix Memo Current Status (Crystal MemoRandumPending.rpt)
+  { path: "/mixmemoform/parcelmixprintinvcurrent", component: <MixMemoOutPrintView /> },
 
   // Mix Memo Out Return (MVC: /mixmemoreturnform/add-mixmemoreturnformlist)
   { path: "/mixmemoreturnform/add-mixmemoreturnformlist", component: <MixMemoOutReturn /> },

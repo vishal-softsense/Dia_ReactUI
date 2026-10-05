@@ -8,8 +8,14 @@ import {
   resolveImageFullPath
 } from "../shared/printUtils";
 
-// MVC Views/Mix/MixSalePrint_USA.cshtml + ITEM image column
+// MVC Views/Mix/MixSalePrint_USA.cshtml
 const COL_COUNT = 10;
+const SINGLE_PAGE = 20;
+const FIRST_PAGE = 20;
+const MIDDLE_PAGE = 20;
+const LAST_PAGE = 14;
+/** Non-last pages only — fill table height (MVC pageFillRows) */
+const PAGE_FILL_ROWS = 28;
 
 const th = {
   background: "#BFBFBF",
@@ -84,7 +90,12 @@ const formatTdc = (item) => {
 };
 
 const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
-  const pages = paginateVariable(items, { single: 14, first: 23, middle: 23, last: 13 });
+  const pages = paginateVariable(items, {
+    single: SINGLE_PAGE,
+    first: FIRST_PAGE,
+    middle: MIDDLE_PAGE,
+    last: LAST_PAGE
+  });
   const totalAmount = totals.amount;
   const finalTotal =
     Number(getVal(data, "FinalAmount", "finalAmount")) > 0
@@ -94,11 +105,12 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
   const printedOn =
     fmtDateSlash(getVal(data, "RoundDate", "roundDate")) || fmtDateSlash(new Date().toISOString());
 
-  const getPageCapacity = (pageIdx) => {
-    if (pages.length === 1) return 14;
-    if (pageIdx === 0) return 23;
-    if (pageIdx === pages.length - 1) return 13;
-    return 23;
+  const displayOrBlank = (...keys) => {
+    const v = getVal(data, ...keys);
+    if (v === null || v === undefined) return "";
+    const s = String(v).trim();
+    if (!s || s.toLowerCase() === "null") return "";
+    return s;
   };
 
   const renderHeader = () => (
@@ -204,10 +216,20 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
       </table>
 
       {company.information ? (
-        <div style={{ fontSize: 11, textAlign: "justify", margin: "7px 0", fontFamily: "Segoe UI" }}>
+        <div
+          style={{
+            fontSize: 11,
+            textAlign: "justify",
+            margin: "7px 0",
+            fontFamily: "Segoe UI"
+            
+          }}
+        >
           {company.information}
         </div>
-      ) : null}
+      ) : (
+        <div style={{ margin: "7px 0", minHeight: 14 }} />
+      )}
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 10, fontSize: 11 }}>
         <thead>
@@ -222,12 +244,12 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
         <tbody>
           <tr>
             <td style={{ ...topCell, textAlign: "left" }}>
-              {getVal(data, "InvDisc", "invDisc", "Description", "description")}
+              {displayOrBlank("InvDisc", "invDisc", "Description", "description")}
             </td>
-            <td style={topCell}>{getVal(data, "SalesPersons", "salesPersons", "SalesPerson", "salesPerson")}</td>
+            <td style={topCell}>{displayOrBlank("SalesPersons", "salesPersons", "SalesPerson", "salesPerson")}</td>
             <td style={topCell} />
-            <td style={topCell}>{getVal(data, "ShipVia", "shipVia")}</td>
-            <td style={topCell}>{getVal(data, "Tracking", "tracking")}</td>
+            <td style={topCell}>{displayOrBlank("ShipVia", "shipVia")}</td>
+            <td style={topCell}>{displayOrBlank("Tracking", "tracking")}</td>
           </tr>
         </tbody>
       </table>
@@ -235,17 +257,20 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
   );
 
   return (
-    <div style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
+    <div className="mix-sale-usa-root" style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
       {pages.map((pageItems, pageIdx) => {
         const isLastPage = pageIdx === pages.length - 1;
-        const pageCapacity = getPageCapacity(pageIdx);
-        let srNo = items.indexOf(pageItems[0]) + 1 || 1;
+        const srNoStart = pages.slice(0, pageIdx).reduce((sum, p) => sum + p.length, 0) + 1;
+        let srNo = srNoStart;
 
         return (
-          <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
+          <div
+            key={pageIdx}
+            className={`mix-sale-usa-page${isLastPage ? "" : " page-break"}${pageIdx > 0 ? " mix-sale-print-page-next" : ""}`}
+          >
             {renderHeader()}
 
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="mix-sale-usa-items" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ fontSize: 12 }}>
                   {[
@@ -268,7 +293,7 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
               </thead>
               <tbody>
                 {pageItems.map((item, idx) => (
-                  <tr key={idx} style={{ fontSize: 11 }}>
+                  <tr key={idx} className="mix-sale-item-row" style={{ fontSize: 11 }}>
                     <td style={itemCell}>{srNo++}</td>
                     <td style={{ ...itemCell, padding: "2px 0", verticalAlign: "middle" }}>{renderItemImage(item)}</td>
                     <td style={itemCell}>{getVal(item, "MemoNo", "memoNo", "ExportNo", "exportNo")}</td>
@@ -292,24 +317,26 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                   </tr>
                 ))}
 
-                {Array.from({ length: Math.max(0, pageCapacity - pageItems.length) }).map((_, i) => (
-                  <tr key={`empty-${i}`}>
-                    {Array.from({ length: COL_COUNT }).map((__, col) => (
-                      <td
-                        key={col}
-                        style={{
-                          ...itemCell,
-                          borderLeft: "1px solid #000",
-                          borderRight: "1px solid #000",
-                          borderTop: "none",
-                          borderBottom: "none"
-                        }}
-                      >
-                        &nbsp;
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {/* Empty rows on non-last pages only (MVC) — last/single page skips fillers so totals+payment fit */}
+                {!isLastPage &&
+                  Array.from({ length: Math.max(0, PAGE_FILL_ROWS - pageItems.length) }).map((_, i) => (
+                    <tr key={`empty-${i}`} className="mix-sale-empty-row">
+                      {Array.from({ length: COL_COUNT }).map((__, col) => (
+                        <td
+                          key={col}
+                          style={{
+                            ...itemCell,
+                            borderLeft: "1px solid #000",
+                            borderRight: "1px solid #000",
+                            borderTop: "none",
+                            borderBottom: "none"
+                          }}
+                        >
+                          &nbsp;
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
 
                 {!isLastPage && (
                   <tr>
@@ -417,84 +444,95 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
             </table>
 
             {isLastPage && (
-              <table
-                style={{
-                  width: "100%",
-                  fontFamily: "Verdana",
-                  fontSize: 13,
-                  borderCollapse: "collapse",
-                  marginTop: 10
-                }}
-              >
-                <tbody>
-                  <tr>
-                    <td colSpan={2} style={{ fontWeight: "bold", color: "red", paddingBottom: 6 }}>
-                      {getVal(data, "InvFeesDescription", "invFeesDescription")}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2} style={{ fontWeight: "bold", paddingBottom: 6 }}>
-                      Payment Instruction:
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2}>{company.companyName}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2}>{company.companyAddress}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ width: 140, paddingTop: 6 }}>Bank Name :</td>
-                    <td style={{ paddingLeft: 40 }}>{getVal(data, "bnm", "Bnm")}</td>
-                  </tr>
-                  <tr>
-                    <td>Account No :</td>
-                    <td style={{ paddingLeft: 40 }}>
-                      <b>{getVal(data, "BankAccNo", "bankAccNo")}</b>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Routing Number :</td>
-                    <td style={{ paddingLeft: 40 }}>
-                      <b>{getVal(data, "ABARoutingNumber", "abaRoutingNumber")}</b>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <b>Swift Code :</b>
-                    </td>
-                    <td style={{ paddingLeft: 40 }}>
-                      <b>{getVal(data, "SwiftCode", "swiftCode")}</b>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <b>ZELLE Id :</b>
-                    </td>
-                    <td style={{ paddingLeft: 40 }}>
-                      <b>{getVal(data, "ZelleID", "zelleID")}</b>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="mix-sale-usa-footer-block">
+                <table
+                  style={{
+                    width: "100%",
+                    fontFamily: "Verdana",
+                    fontSize: 13,
+                    borderCollapse: "collapse",
+                    marginTop: 10
+                  }}
+                >
+                  <tbody>
+                    <tr>
+                      <td colSpan={2} style={{ fontWeight: "bold", color: "red", paddingBottom: 6 }}>
+                        {getVal(data, "InvFeesDescription", "invFeesDescription")}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2} style={{ fontWeight: "bold", paddingBottom: 6 }}>
+                        Payment Instruction:
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>{company.companyName}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>{company.companyAddress}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ width: 140, paddingTop: 6 }}>Bank Name :</td>
+                      <td style={{ paddingLeft: 40 }}>{getVal(data, "bnm", "Bnm")}</td>
+                    </tr>
+                    <tr>
+                      <td>Account No :</td>
+                      <td style={{ paddingLeft: 40 }}>
+                        <b>{getVal(data, "BankAccNo", "bankAccNo")}</b>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Routing Number :</td>
+                      <td style={{ paddingLeft: 40 }}>
+                        <b>{getVal(data, "ABARoutingNumber", "abaRoutingNumber")}</b>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <b>Swift Code :</b>
+                      </td>
+                      <td style={{ paddingLeft: 40 }}>
+                        <b>{getVal(data, "SwiftCode", "swiftCode")}</b>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <b>ZELLE Id :</b>
+                      </td>
+                      <td style={{ paddingLeft: 40 }}>
+                        <b>{getVal(data, "ZelleID", "zelleID")}</b>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ marginTop: 15 }}>
+                  <span style={{ fontSize: 13 }}>Signature:</span>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      borderBottom: "1px solid #000",
+                      width: 300,
+                      marginLeft: 10
+                    }}
+                  />
+                </div>
+
+                {company.saleConditions ? (
+                  <div style={{ fontSize: 11, textAlign: "justify", margin: "10px 0", fontFamily: "Segoe UI" }}>
+                    {company.saleConditions}
+                  </div>
+                ) : null}
+              </div>
             )}
 
-            <div style={{ marginTop: 15 }}>
-              <span style={{ fontSize: 13 }}>Signature:</span>
-              <span style={{ display: "inline-block", borderBottom: "1px solid #000", width: 300, marginLeft: 10 }} />
-            </div>
-
-            {company.saleConditions ? (
-              <div style={{ fontSize: 11, textAlign: "justify", margin: "10px 0", fontFamily: "Segoe UI" }}>
-                {company.saleConditions}
-              </div>
-            ) : null}
-
-            <table style={{ width: "100%", marginTop: 10 }}>
+            <table style={{ width: "100%", marginTop: 6 }}>
               <tbody>
                 <tr>
                   <td style={{ width: "50%", textAlign: "left" }}>{company.companyFooter || "Powered by SoftOnCloud"}</td>
-                  <td style={{ width: "50%", textAlign: "right" }}>{pageIdx + 1}</td>
+                  <td style={{ width: "50%", textAlign: "right" }}>
+                    {pageIdx + 1} / {pages.length}
+                  </td>
                 </tr>
               </tbody>
             </table>

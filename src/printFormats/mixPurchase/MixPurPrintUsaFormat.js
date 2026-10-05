@@ -1,17 +1,30 @@
 import React from "react";
 import { fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
 
-// MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml + SoftSense GENERAL PURCHASE NOTE layout
-const ITEMS_PER_PAGE = 29;
-const LAST_PAGE_ITEMS = 26;
+// MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml — match MVC PDF visual font sizes
+// Purchase/return: 20 per page. Mix Consignment (GENERAL MEMO IN): MVC 29 / last+single 27.
+const ITEMS_PER_PAGE_DEFAULT = 20;
+const LAST_PAGE_ITEMS_DEFAULT = 20;
+const ITEMS_PER_PAGE_CONSIGNMENT = 29;
+const LAST_PAGE_ITEMS_CONSIGNMENT = 27;
 const COL_COUNT = 7;
+
+/** MVC body: Verdana — one size for tables/body so React matches MVC PDF look */
+const FONT_BODY = "Verdana, Arial, sans-serif";
+const FS = 13; // unified body/table size (MVC PDF visual)
+const FS_COMPANY = 14; // MVC company name
+const FS_TITLE_NOTE = 18; // MVC MixPurchasePrint_USA "GENERAL PURCHASE NOTE"
+const FS_TITLE_RETURN = 24; // MVC MixPurRtnPrint_USA "GENERAL PUR RETURN"
+const FS_ADDR = 12; // MVC .address-box div / company address lines
 
 const th = {
   background: "#c0c0c0",
   border: "1px solid #000",
   padding: "6px 0",
   textAlign: "center",
-  fontWeight: "bold"
+  fontWeight: "bold",
+  fontFamily: FONT_BODY,
+  fontSize: FS
 };
 
 const topCell = {
@@ -19,7 +32,9 @@ const topCell = {
   padding: "0 6px",
   textAlign: "center",
   verticalAlign: "middle",
-  height: 28
+  height: 24,
+  fontFamily: FONT_BODY,
+  fontSize: FS
 };
 
 const itemCell = {
@@ -30,33 +45,19 @@ const itemCell = {
   padding: "0 6px",
   textAlign: "center",
   verticalAlign: "middle",
-  height: 24
+  height: 24,
+  fontFamily: FONT_BODY,
+  fontSize: FS
 };
 
 const ITEM_COL_WIDTHS = ["6%", "12%", "34%", "8%", "10%", "14%", "16%"];
 
-/** Due Date = TrnDate + DueDays (matches SoftSense MixPur NOTE sample). */
-const computeDueDate = (trnDate, dueDays) => {
-  if (!trnDate && trnDate !== 0) return "";
-  const days = Number(dueDays);
-  if (!Number.isFinite(days) || days < 0) {
-    return fmtDateSlash(trnDate);
-  }
-  try {
-    const raw = String(trnDate).trim();
-    let d;
-    const mdy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (mdy) {
-      d = new Date(Number(mdy[3]), Number(mdy[1]) - 1, Number(mdy[2]));
-    } else {
-      d = new Date(trnDate);
-    }
-    if (isNaN(d.getTime())) return fmtDateSlash(trnDate);
-    d.setDate(d.getDate() + days);
-    return fmtDateSlash(d);
-  } catch {
-    return "";
-  }
+/** Keep MM/dd/yyyy from API; otherwise format like MVC ToString("MM/dd/yyyy"). */
+const fmtDateSlashOrRaw = (val) => {
+  if (!val) return "";
+  const raw = String(val).trim();
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(raw)) return raw;
+  return fmtDateSlash(val);
 };
 
 const MixPurPrintUsaFormat = ({
@@ -66,37 +67,60 @@ const MixPurPrintUsaFormat = ({
   company,
   logoUrl,
   heading = "GENERAL PURCHASE",
-  /** "note" = MVC MixPurchasePrint_USA (GENERAL PURCHASE NOTE). Default keeps Return USA layout. */
+  /**
+   * "note" = MixPurchasePrint_USA (GENERAL PURCHASE NOTE)
+   * "usa" = MixPurRtnPrint_USA (GENERAL PUR RETURN)
+   * "consignment" = MixConsignmentPrint_USA (GENERAL MEMO IN)
+   */
   variant = "usa"
 }) => {
   const isNote = variant === "note";
-  const pages = paginateStella(items, ITEMS_PER_PAGE, LAST_PAGE_ITEMS);
+  const isConsignment = variant === "consignment";
+  const itemsPerPage = isConsignment ? ITEMS_PER_PAGE_CONSIGNMENT : ITEMS_PER_PAGE_DEFAULT;
+  const lastPageItems = isConsignment ? LAST_PAGE_ITEMS_CONSIGNMENT : LAST_PAGE_ITEMS_DEFAULT;
+  const pages = paginateStella(items, itemsPerPage, lastPageItems);
   const trnDate = getVal(data, "TrnDate", "trnDate");
   const dueDays = getVal(data, "DueDays", "dueDays");
-  const dueDateDisplay =
-    getVal(data, "DueDate", "dueDate") || computeDueDate(trnDate, dueDays);
-  // MixPurPrint NOTE: Purchase # = InvNo, CUSTOMER INVOICE NO = BillNo
+  const dueDateDisplay = fmtDateSlashOrRaw(getVal(data, "DueDate", "dueDate"));
   const customerInvoiceNo = getVal(data, "BillNo", "billNo");
+  // MVC: note → InvNo; return/consignment → BillNo as Purchase #
   const purchaseNo = isNote
     ? getVal(data, "InvNo", "invNo")
     : getVal(data, "BillNo", "billNo");
-  // MVC MixPurchasePrint_USA: RECEIVED VIA cell is blank
-  const receivedVia = isNote ? "" : getVal(data, "ShipVia", "shipVia", "ReceivedVia", "receivedVia");
-  // MVC: Amount US {SSymbol} | Amount {MSymbol}
-  const amountHeader = getPrintAmountHeader(data, company);
+  // MVC: RECEIVED VIA blank for note + consignment; return also blank in view
+  const receivedVia = "";
+  const amountHeader = isNote ? getPrintAmountHeader(data, company) : "Amount US $";
+  const titleSize = isNote ? FS_TITLE_NOTE : FS_TITLE_RETURN;
+  const companyColWidth = isNote || isConsignment ? "55%" : "53%";
+  const titleColWidth = isNote || isConsignment ? "32%" : "34%";
+  const companyDetailSize = FS_ADDR;
+  // MVC consignment: "Consigned To:"; purchase/return: "Purchase From:"
+  const addressLegend = isConsignment ? "Consigned To:" : "Purchase From:";
+  // MVC consignment label has no colon after #
+  const purchaseLabel = isConsignment ? "Purchase #" : "Purchase #:";
+  const useNoteMeta = isNote;
 
   const getPageCapacity = (pageIdx) => {
     const isLastPage = pageIdx === pages.length - 1;
-    return isLastPage ? LAST_PAGE_ITEMS : ITEMS_PER_PAGE;
+    return isLastPage ? lastPageItems : itemsPerPage;
   };
 
   const renderMetaTable = () => {
-    if (isNote) {
+    // Same font size as item table (MVC PDF look — not oversized Calibri 16)
+    if (useNoteMeta) {
       return (
         <div style={{ margin: "15px 0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 16, fontFamily: "Calibri" }}>
+          <table
+            className="mix-pur-meta-table"
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: FS,
+              fontFamily: FONT_BODY
+            }}
+          >
             <thead>
-              <tr>
+              <tr style={{ fontWeight: "bold", fontFamily: FONT_BODY, fontSize: FS }}>
                 {[
                   { label: "RECEIVED VIA", width: "30%" },
                   { label: "CUSTOMER INVOICE NO", width: "30%" },
@@ -124,9 +148,17 @@ const MixPurPrintUsaFormat = ({
 
     return (
       <div style={{ margin: "15px 0" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 16, fontFamily: "Calibri" }}>
+        <table
+          className="mix-pur-meta-table"
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: FS,
+            fontFamily: FONT_BODY
+          }}
+        >
           <thead>
-            <tr>
+            <tr style={{ fontWeight: "bold", fontFamily: FONT_BODY, fontSize: FS }}>
               {["RECEIVED VIA", "INVOICE #", "TERMS"].map((h, i) => (
                 <th key={h} style={{ ...th, width: i === 2 ? "34%" : "33%" }}>
                   {h}
@@ -147,110 +179,36 @@ const MixPurPrintUsaFormat = ({
   };
 
   const renderTotals = () => {
-    if (isNote) {
-      // MVC MixPurchasePrint_USA: Sub Total / Charges / TOTAL with amount twice
-      return (
-        <tr style={{ borderTop: "1px solid #000", borderBottom: "1px solid #000", fontSize: 14 }}>
-          <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-          <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-          <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-          <td
-            style={{
-              borderLeft: "1px solid #000",
-              borderRight: "1px solid #000",
-              textAlign: "right",
-              verticalAlign: "top"
-            }}
-          >
-            {totals.qty}
-          </td>
-          <td
-            style={{
-              borderLeft: "1px solid #000",
-              borderRight: "1px solid #000",
-              textAlign: "right",
-              verticalAlign: "top"
-            }}
-          >
-            {fmtNum(totals.wt, 2)}
-          </td>
-          <td
-            style={{
-              borderLeft: "1px solid #000",
-              borderRight: "1px solid #000",
-              paddingLeft: 10,
-              verticalAlign: "top"
-            }}
-          >
-            <div>Sub Total</div>
-            <div>Charges</div>
-            <br />
-            <div style={{ fontWeight: "bold", fontSize: 14 }}>TOTAL</div>
-          </td>
-          <td
-            style={{
-              borderLeft: "1px solid #000",
-              borderRight: "1px solid #000",
-              textAlign: "right",
-              verticalAlign: "top"
-            }}
-          >
-            {fmtNum(totals.amount, 2)}
-            <br />
-            <br />
-            <br />
-            {fmtNum(totals.amount, 2)}
-          </td>
-        </tr>
-      );
-    }
+    const totalCell = {
+      borderLeft: "1px solid #000",
+      borderRight: "1px solid #000",
+      fontFamily: FONT_BODY,
+      fontSize: FS
+    };
 
     return (
-      <tr style={{ borderTop: "1px solid #000", borderBottom: "1px solid #000", fontSize: 14 }}>
-        <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-        <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-        <td style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }} />
-        <td
-          style={{
-            borderLeft: "1px solid #000",
-            borderRight: "1px solid #000",
-            textAlign: "right",
-            verticalAlign: "top"
-          }}
-        >
-          {totals.qty}
-        </td>
-        <td
-          style={{
-            borderLeft: "1px solid #000",
-            borderRight: "1px solid #000",
-            textAlign: "right",
-            verticalAlign: "top"
-          }}
-        >
+      <tr
+        style={{
+          borderTop: "1px solid #000",
+          borderBottom: "1px solid #000",
+          fontSize: FS,
+          fontFamily: FONT_BODY
+        }}
+      >
+        <td style={totalCell} />
+        <td style={totalCell} />
+        <td style={totalCell} />
+        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
+        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>
           {fmtNum(totals.wt, 2)}
         </td>
-        <td
-          style={{
-            borderLeft: "1px solid #000",
-            borderRight: "1px solid #000",
-            paddingLeft: 10,
-            verticalAlign: "top"
-          }}
-        >
-          <div>Sub Total</div>
-          <div>Charges</div>
+        <td style={{ ...totalCell, paddingLeft: 10, verticalAlign: "top" }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS }}>Sub Total</div>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS }}>Charges</div>
           <br />
-          <div style={{ fontWeight: "bold", fontSize: 14 }}>TOTAL</div>
+          <div style={{ fontWeight: "bold", fontSize: FS, fontFamily: FONT_BODY }}>TOTAL</div>
         </td>
-        <td
-          style={{
-            borderLeft: "1px solid #000",
-            borderRight: "1px solid #000",
-            textAlign: "right",
-            verticalAlign: "top"
-          }}
-        >
+        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>
           {fmtNum(totals.amount, 2)}
           <br />
           <br />
@@ -263,49 +221,100 @@ const MixPurPrintUsaFormat = ({
 
   const renderHeader = () => (
     <>
-      <table style={{ width: "100%", paddingBottom: isNote ? 6 : 10 }}>
+      <table style={{ width: "100%", paddingBottom: 10, fontFamily: FONT_BODY, fontSize: FS }}>
         <tbody>
           <tr>
             <td style={{ width: "13%", verticalAlign: "top" }}>
               {logoUrl ? <img src={logoUrl} alt="Logo" style={{ width: 90 }} /> : null}
             </td>
-            <td style={{ width: "55%", verticalAlign: "top", fontSize: 12 }}>
-              <div style={{ fontWeight: "bold", fontSize: 14 }}>{company.companyName}</div>
-              <div style={{ marginTop: 3 }}>{company.companyAddress}</div>
-              <div>{company.companyAddress1}</div>
-              <div>{company.companyAddress2}</div>
-              <div style={{ marginTop: 5 }}>
+            <td style={{ width: companyColWidth, verticalAlign: "top", fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
+              <div
+                className="mix-pur-company-name"
+                style={{ fontWeight: "bold", fontSize: FS_COMPANY, fontFamily: FONT_BODY }}
+              >
+                {company.companyName}
+              </div>
+              <div className="mix-pur-company-detail" style={{ marginTop: 3, fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
+                {company.companyAddress}
+              </div>
+              <div className="mix-pur-company-detail" style={{ fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
+                {company.companyAddress1}
+              </div>
+              <div className="mix-pur-company-detail" style={{ fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
+                {company.companyAddress2}
+              </div>
+              <div className="mix-pur-company-detail" style={{ marginTop: 5, fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
                 <b>Tel:</b>&nbsp;&nbsp;{company.companyPhone}
               </div>
-              <div style={{ marginTop: 5 }}>
+              <div className="mix-pur-company-detail" style={{ marginTop: 5, fontSize: companyDetailSize, fontFamily: FONT_BODY }}>
                 <b>Email:</b>&nbsp;&nbsp;{company.companyEmail}
               </div>
             </td>
-            <td style={{ width: "32%", verticalAlign: "top" }}>
+            <td style={{ width: titleColWidth, verticalAlign: "top", fontFamily: FONT_BODY }}>
               <div
+                className="mix-pur-title"
                 style={{
                   textAlign: "left",
                   fontWeight: "bold",
-                  fontSize: isNote ? 18 : 24,
+                  fontSize: titleSize,
                   paddingTop: 5,
-                  lineHeight: 1.15
+                  lineHeight: 1.15,
+                  fontFamily: FONT_BODY,
+                  whiteSpace: "nowrap"
                 }}
               >
                 {heading}
               </div>
-              <table style={{ width: "100%", fontSize: 13, marginTop: 10 }}>
+              <table style={{ width: "100%", fontSize: FS, marginTop: 10, fontFamily: FONT_BODY }}>
                 <tbody>
                   <tr>
-                    <td style={{ padding: "5px 0", whiteSpace: "nowrap", width: 90 }}>
+                    <td
+                      style={{
+                        padding: "5px 0",
+                        fontFamily: FONT_BODY,
+                        fontSize: FS,
+                        whiteSpace: "nowrap",
+                        verticalAlign: "top"
+                      }}
+                    >
                       <b>Date :</b>
                     </td>
-                    <td>{fmtDateSlash(trnDate)}</td>
+                    <td
+                      style={{
+                        padding: "5px 0 5px 8px",
+                        fontFamily: FONT_BODY,
+                        fontSize: FS,
+                        whiteSpace: "nowrap",
+                        verticalAlign: "top"
+                      }}
+                    >
+                      {fmtDateSlashOrRaw(trnDate)}
+                    </td>
+                    <td style={{ width: "100%" }} />
                   </tr>
                   <tr>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <b>Purchase #:</b>
+                    <td
+                      style={{
+                        fontFamily: FONT_BODY,
+                        fontSize: FS,
+                        whiteSpace: "nowrap",
+                        verticalAlign: "top"
+                      }}
+                    >
+                      <b>{purchaseLabel}</b>
                     </td>
-                    <td>{purchaseNo}</td>
+                    <td
+                      style={{
+                        paddingLeft: 8,
+                        fontFamily: FONT_BODY,
+                        fontSize: FS,
+                        whiteSpace: "nowrap",
+                        verticalAlign: "top"
+                      }}
+                    >
+                      {purchaseNo}
+                    </td>
+                    <td />
                   </tr>
                 </tbody>
               </table>
@@ -314,43 +323,56 @@ const MixPurPrintUsaFormat = ({
         </tbody>
       </table>
 
-      <table style={{ width: "100%", marginTop: 10 }}>
+      <table style={{ width: "100%", marginTop: 10, fontFamily: FONT_BODY, fontSize: FS }}>
         <tbody>
           <tr>
             <td style={{ width: "50%", paddingRight: 20 }}>
               <fieldset
+                className="mix-pur-address-box"
                 style={{
                   border: "1px solid #000",
                   borderRadius: 12,
                   padding: "8px 15px 12px 10px",
                   height: 150,
-                  margin: 0
+                  margin: 0,
+                  fontFamily: FONT_BODY,
+                  fontSize: FS
                 }}
               >
                 <legend
                   style={{
                     fontWeight: "bold",
-                    fontSize: 13,
+                    fontSize: FS,
                     padding: "0 10px",
                     width: "auto",
                     marginLeft: 10,
                     marginBottom: 2,
                     background: "#fff",
-                    border: "none"
+                    border: "none",
+                    fontFamily: FONT_BODY
                   }}
                 >
-                  Purchase From:
+                  {addressLegend}
                 </legend>
-                <div style={{ fontSize: 14, letterSpacing: "0.9px", marginBottom: 5 }}>
+                <div
+                  className="mix-pur-party-name"
+                  style={{
+                    fontSize: FS,
+                    letterSpacing: "0.9px",
+                    marginBottom: 5,
+                    fontFamily: FONT_BODY
+                  }}
+                >
                   {getVal(data, "PartyName", "partyName")}
                 </div>
-                <div style={{ lineHeight: 1.6, fontSize: 12, marginBottom: 5 }}>
+                {/* MVC .address-box div: font-size:12px */}
+                <div className="mix-pur-addr-line" style={{ lineHeight: 1.6, fontSize: FS_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
                   {getVal(data, "AddressLine1", "addressLine1")}
                 </div>
-                <div style={{ lineHeight: 1.6, fontSize: 12, marginBottom: 5 }}>
+                <div className="mix-pur-addr-line" style={{ lineHeight: 1.6, fontSize: FS_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
                   {getVal(data, "AddressLine2", "addressLine2")}
                 </div>
-                <div style={{ lineHeight: 1.6, fontSize: 12, marginBottom: 5 }}>
+                <div className="mix-pur-addr-line" style={{ lineHeight: 1.6, fontSize: FS_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
                   {getVal(data, "AddressLine3", "addressLine3")}
                 </div>
               </fieldset>
@@ -364,22 +386,32 @@ const MixPurPrintUsaFormat = ({
     </>
   );
 
-  const fontFamily = "Verdana, Arial, sans-serif";
-
   return (
-    <div style={{ fontFamily, fontSize: 13, color: "#000" }}>
+    <div style={{ fontFamily: FONT_BODY, fontSize: FS, color: "#000" }}>
       {pages.map((pageItems, pageIdx) => {
         const isLastPage = pageIdx === pages.length - 1;
         const pageCapacity = getPageCapacity(pageIdx);
-        let srNo = items.indexOf(pageItems[0]) + 1 || 1;
+        const srNoStart = pages.slice(0, pageIdx).reduce((sum, page) => sum + page.length, 0) + 1;
+        let srNo = srNoStart;
 
         return (
-          <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
+          <div
+            key={pageIdx}
+            className={`mix-pur-print-page-block${isLastPage ? "" : " page-break"}${
+              pageIdx > 0 ? " mix-pur-print-page-next" : ""
+            }`}
+            style={{
+              fontFamily: FONT_BODY,
+              fontSize: FS,
+              color: "#000",
+              ...(pageIdx > 0 ? { marginTop: 24, paddingTop: 10 } : {})
+            }}
+          >
             {renderHeader()}
 
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_BODY, fontSize: FS }}>
               <thead>
-                <tr style={{ fontSize: 13 }}>
+                <tr style={{ fontSize: FS, fontFamily: FONT_BODY }}>
                   {["Sr No", "Stock #", "DESCRIPTION", "QTY", "WT.", "Price/Carat", amountHeader].map(
                     (h, col) => (
                       <th key={`${h}-${col}`} style={{ ...th, width: ITEM_COL_WIDTHS[col] }}>
@@ -391,7 +423,11 @@ const MixPurPrintUsaFormat = ({
               </thead>
               <tbody>
                 {pageItems.map((item, idx) => (
-                  <tr key={idx} style={{ fontSize: 12 }}>
+                  <tr
+                    key={idx}
+                    className="mix-pur-item-row"
+                    style={{ fontSize: FS, fontFamily: FONT_BODY }}
+                  >
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[0] }}>{srNo++}</td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[1], textAlign: "left" }}>
                       {getVal(item, "StockNo", "stockNo", "Lotno", "lotno", "LotNo", "lotNo")}
@@ -399,35 +435,23 @@ const MixPurPrintUsaFormat = ({
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[2], textAlign: "left" }}>
                       {getVal(item, "Description", "description", "ItemName", "itemName")}
                     </td>
-                    <td
-                      style={{
-                        ...itemCell,
-                        width: ITEM_COL_WIDTHS[3],
-                        textAlign: "right"
-                      }}
-                    >
+                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[3], textAlign: "right" }}>
                       {getVal(item, "Qty", "qty", "Pcs", "pcs")}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[4], textAlign: "right" }}>
                       {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[5], textAlign: "right" }}>
-                      {(() => {
-                        const n = Number(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"));
-                        return Number.isFinite(n) ? n.toFixed(2) : "0.00";
-                      })()}
+                      {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[6], textAlign: "right" }}>
-                      {fmtNum(
-                        getVal(item, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount"),
-                        2
-                      )}
+                      {fmtNum(getVal(item, "Amount", "amount"), 2)}
                     </td>
                   </tr>
                 ))}
 
                 {Array.from({ length: Math.max(0, pageCapacity - pageItems.length) }).map((_, i) => (
-                  <tr key={`empty-${i}`}>
+                  <tr key={`empty-${i}`} className="mix-pur-empty-row" style={{ fontFamily: FONT_BODY }}>
                     {Array.from({ length: COL_COUNT }).map((__, col) => (
                       <td
                         key={col}
@@ -458,8 +482,8 @@ const MixPurPrintUsaFormat = ({
               </tbody>
             </table>
 
-            <div style={{ marginTop: 15 }}>
-              <span style={{ fontSize: 13 }}>Signature:</span>
+            <div style={{ marginTop: isConsignment ? 10 : 15, fontFamily: FONT_BODY }}>
+              <span style={{ fontSize: FS, fontFamily: FONT_BODY }}>Signature:</span>
               <span
                 style={{
                   display: "inline-block",
@@ -471,13 +495,23 @@ const MixPurPrintUsaFormat = ({
               />
             </div>
 
-            <table style={{ width: "100%", marginTop: 50 }}>
+            <table
+              className="mix-pur-footer"
+              style={{
+                width: "100%",
+                marginTop: isConsignment ? 18 : 50,
+                fontFamily: FONT_BODY,
+                fontSize: FS
+              }}
+            >
               <tbody>
                 <tr>
-                  <td style={{ width: "50%", textAlign: "left", fontSize: 12 }}>
+                  <td style={{ width: "50%", textAlign: "left", fontSize: FS, fontFamily: FONT_BODY }}>
                     {company.companyFooter || ""}
                   </td>
-                  <td style={{ width: "50%", textAlign: "right", fontSize: 12 }}>{pageIdx + 1}</td>
+                  <td style={{ width: "50%", textAlign: "right", fontSize: FS, fontFamily: FONT_BODY }}>
+                    {pageIdx + 1}
+                  </td>
                 </tr>
               </tbody>
             </table>

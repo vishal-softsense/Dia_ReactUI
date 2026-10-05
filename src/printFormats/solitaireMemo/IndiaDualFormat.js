@@ -1,59 +1,69 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, getVal } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, fmtNum, getVal } from "../shared/printUtils";
+
+// MVC Views/Memo/SoMemoOutPrintInv_IndiaDual.cshtml
+// One landscape sheet = left copy + right copy of the SAME page; next sheet = next 30 rows
+const PAGE_SIZE = 30;
+
+const cell = {
+  border: "1px solid #000",
+  padding: "3px 2px",
+  fontSize: 8,
+  textAlign: "center",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  verticalAlign: "middle"
+};
 
 const IndiaDualFormat = ({ data, items, totals, company, logoUrl }) => {
-  const pageSize = 30;
-  const totalItems = items.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const list = items || [];
+  const totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
+  const conditions = company.memoConditions || FALLBACK_MEMO_CONDITIONS;
 
   const renderSingleCopy = (currentItems, startRowNumber, isLastPage) => {
     let rowNo = startRowNumber;
     return (
-      <div style={{
-        border: "1px solid #4c4c4c",
-        height: "100%",
-        padding: "12px 14px",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        background: "#fff",
-        fontSize: 9
-      }}>
-        <div style={{
-          position: "absolute",
-          top: -7,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "#fff",
-          padding: "0 5px",
-          fontSize: 11,
-          fontWeight: "bold"
-        }}>
-          શ્રી૧<span style={{ fontSize: 11, position: "relative", top: -2 }}>।</span>
+      <div className="india-dual-copy">
+        <div className="india-dual-shree">
+          શ્રી૧<span className="india-dual-shree-stick">।</span>
         </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", border: "none", fontSize: 8.5 }}>
+        <table className="india-dual-header-table">
           <tbody>
             <tr>
-              <td style={{ width: "32%", verticalAlign: "bottom", lineHeight: 1.6 }}>
-                <div><b>Rapnet Id:</b> {company.rapUsername}</div>
-                <div><b>Skype Id:</b> {company.companySkype}</div>
-                <div><b>Email:</b> {company.companyEmail}</div>
+              <td style={{ width: "32%", verticalAlign: "bottom" }}>
+                <div className="india-dual-meta-line">
+                  <b>Rapnet Id:</b> {company.rapUsername || ""}
+                </div>
+                <div className="india-dual-meta-line">
+                  <b>Skype Id:</b> {company.companySkype || ""}
+                </div>
+                <div className="india-dual-meta-line">
+                  <b>Email:</b> {company.companyEmail || ""}
+                </div>
               </td>
               <td style={{ width: "36%", textAlign: "center", verticalAlign: "top" }}>
-                <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 4 }}>{company.companyName}</div>
-                {logoUrl && <img src={logoUrl} alt="Logo" style={{ height: 45, width: 70, objectFit: "contain" }} />}
+                <div className="india-dual-company-name">{company.companyName}</div>
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="india-dual-logo" />
+                ) : null}
               </td>
-              <td style={{ width: "32%", verticalAlign: "top", lineHeight: 1.5, textAlign: "right" }}>
-                <div><b>Add:</b> {company.companyAddress}</div>
-                <div><b>Ph:</b> {company.companyPhone}</div>
-                <div><b>GST No:</b> {company.companyGSTNo}</div>
+              <td style={{ width: "32%", verticalAlign: "top", textAlign: "left" }}>
+                <div className="india-dual-meta-line">
+                  <b>Add:</b> {company.companyAddress || ""}
+                </div>
+                <div className="india-dual-meta-line">
+                  <b>Ph:</b> {company.companyPhone || ""}
+                </div>
+                <div className="india-dual-meta-line">
+                  <b>GST No:</b> {company.companyGSTNo || ""}
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ borderTop: "1px solid #000", borderBottom: "1px solid #000", padding: "6px 4px", marginTop: 6 }}>
+        <div className="india-dual-party-box">
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 9.5, lineHeight: 1.8 }}>
             <tbody>
               <tr>
@@ -72,64 +82,94 @@ const IndiaDualFormat = ({ data, items, totals, company, logoUrl }) => {
           </table>
         </div>
 
-        <div style={{ flexGrow: 1, marginTop: 6, minHeight: 320 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="india-dual-table-section">
+          <table className="india-dual-data-table">
             <thead>
-              <tr style={{ background: "#e0e0e0", fontSize: 8.5 }}>
-                {["No", "Stone Id", "Shp", "Cts", "Col", "Cla", "Cu", "Po", "Sym", "FL", "Lab", "Rate", "Certi No", "Disc", "Amt"].map((h) => (
-                  <th key={h} style={{ border: "1px solid #000", padding: "4px 2px", textAlign: "center" }}>{h}</th>
+              <tr>
+                {[
+                  "No",
+                  "Stone Id",
+                  "Shp",
+                  "Cts",
+                  "Col",
+                  "Cla",
+                  "Cu",
+                  "Po",
+                  "Sym",
+                  "FL",
+                  "Lab",
+                  "Rate",
+                  "Certi No",
+                  "Disc",
+                  "Amt"
+                ].map((h) => (
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {currentItems.map((item, idx) => {
-                const currentNo = rowNo++;
+                const n = rowNo++;
                 return (
-                  <tr key={idx} style={{ fontSize: 8 }}>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{currentNo}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center", fontWeight: "bold" }}>{getVal(item, "Lotno", "lotNo", "stockNo")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "ShapeId", "shapeId", "shape")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "right" }}>{fmt(getVal(item, "Carats", "carats", "weight"), 2)}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "ColorId", "colorId", "color")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "ClarityId", "clarityId", "clarity")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "PropId", "propId", "cut")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "PolishId", "polishId", "polish")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "SymId", "symId", "symmetry")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "FLId", "flId", "fl")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "CertId", "certId", "lab")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "right" }}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "center" }}>{getVal(item, "CertificateNo", "certificateNo")}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "right" }}>{fmt(getVal(item, "Back", "back", "discount"), 2)}</td>
-                    <td style={{ border: "1px solid #000", padding: "3px 2px", textAlign: "right", fontWeight: "bold" }}>{fmt(getVal(item, "Amount", "amount"), 2)}</td>
+                  <tr key={idx}>
+                    <td style={cell}>{n}</td>
+                    <td style={{ ...cell, fontWeight: "bold" }}>
+                      {getVal(item, "Lotno", "lotNo", "stockNo")}
+                    </td>
+                    <td style={cell}>{getVal(item, "ShapeId", "shapeId", "shape")}</td>
+                    <td style={{ ...cell, textAlign: "right" }}>
+                      {fmt(getVal(item, "Carats", "carats", "weight"), 2)}
+                    </td>
+                    <td style={cell}>{getVal(item, "ColorId", "colorId", "color")}</td>
+                    <td style={cell}>{getVal(item, "ClarityId", "clarityId", "clarity")}</td>
+                    <td style={cell}>{getVal(item, "PropId", "propId", "cut")}</td>
+                    <td style={cell}>{getVal(item, "PolishId", "polishId", "polish")}</td>
+                    <td style={cell}>{getVal(item, "SymId", "symId", "symmetry")}</td>
+                    <td style={cell}>{getVal(item, "FLId", "flId", "fl")}</td>
+                    <td style={cell}>{getVal(item, "CertId", "certId", "lab")}</td>
+                    <td style={{ ...cell, textAlign: "right" }}>
+                      {fmtNum(getVal(item, "Rate", "rate"), 2)}
+                    </td>
+                    <td style={cell}>{getVal(item, "CertificateNo", "certificateNo")}</td>
+                    <td style={{ ...cell, textAlign: "right" }}>
+                      {fmtNum(getVal(item, "Back", "back", "discount") || 0, 2)}
+                    </td>
+                    <td style={{ ...cell, textAlign: "right", fontWeight: "bold" }}>
+                      {fmtNum(getVal(item, "Amount", "amount"), 2)}
+                    </td>
                   </tr>
                 );
               })}
 
-              {isLastPage && (
-                <tr style={{ fontWeight: "bold", background: "#f5f5f5" }}>
-                  <td colSpan="2" style={{ border: "1px solid #000", padding: "5px", fontSize: 9.5 }}>Total:</td>
-                  <td colSpan="2" style={{ border: "1px solid #000", padding: "5px", textAlign: "right", fontSize: 9.5 }}>{fmt(totals.wt, 2)}</td>
-                  <td colSpan="8" style={{ border: "1px solid #000" }}></td>
-                  <td colSpan="3" style={{ border: "1px solid #000", padding: "5px", textAlign: "right", fontSize: 9.5 }}>{fmt(totals.amount, 2)}</td>
+              {isLastPage ? (
+                <tr className="india-dual-total-row">
+                  <td colSpan={2} style={{ ...cell, textAlign: "left", fontWeight: "bold", fontSize: 9.5 }}>
+                    Total:
+                  </td>
+                  <td colSpan={2} style={{ ...cell, textAlign: "right", fontWeight: "bold", fontSize: 9.5 }}>
+                    {fmt(totals.wt, 2)}
+                  </td>
+                  <td colSpan={8} style={cell} />
+                  <td colSpan={3} style={{ ...cell, textAlign: "right", fontWeight: "bold", fontSize: 9.5 }}>
+                    {fmtNum(totals.amount, 2)}
+                  </td>
                 </tr>
-              )}
+              ) : null}
             </tbody>
           </table>
         </div>
 
-        <div style={{ marginTop: "auto", paddingTop: 10 }}>
-          <div style={{ fontSize: 7, textAlign: "justify", lineHeight: 1.3, border: "1px solid #ddd", padding: 5, borderRadius: 4, whiteSpace: "pre-line", maxHeight: 50, overflow: "hidden" }}>
-            {company.memoConditions || FALLBACK_MEMO_CONDITIONS}
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", border: "none", marginTop: 25, fontSize: 9.5 }}>
+        <div className="india-dual-bottom">
+          <div className="india-dual-disclaimer">{conditions}</div>
+          <table className="india-dual-sign-table">
             <tbody>
               <tr>
                 <td style={{ width: "40%", textAlign: "center", verticalAlign: "bottom" }}>
-                  <div style={{ borderTop: "1px solid #000", paddingTop: 4, margin: "0 10px" }}>Receiver's Sign</div>
+                  <div className="india-dual-sign-line">Receiver&apos;s Sign</div>
                 </td>
-                <td style={{ width: "20%" }}></td>
+                <td style={{ width: "20%" }} />
                 <td style={{ width: "40%", textAlign: "center", verticalAlign: "bottom" }}>
-                  <div style={{ borderTop: "1px solid #000", paddingTop: 4, margin: "0 10px" }}>For, {company.companyName}</div>
+                  <div className="india-dual-sign-line">For, {company.companyName}</div>
                 </td>
               </tr>
             </tbody>
@@ -140,28 +180,27 @@ const IndiaDualFormat = ({ data, items, totals, company, logoUrl }) => {
   };
 
   return (
-    <div className="india-dual-print-container" style={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}>
+    <div className="india-dual-print-container">
       {Array.from({ length: totalPages }).map((_, pageIdx) => {
-        const currentItems = items.slice(pageIdx * pageSize, (pageIdx + 1) * pageSize);
-        const startRowNumber = (pageIdx * pageSize) + 1;
+        const currentItems = list.slice(pageIdx * PAGE_SIZE, (pageIdx + 1) * PAGE_SIZE);
+        const startRowNumber = pageIdx * PAGE_SIZE + 1;
         const isLastPage = pageIdx === totalPages - 1;
 
         return (
           <div
             key={pageIdx}
-            className={isLastPage ? "" : "page-break"}
-            style={{ width: "100%", height: "100%", padding: "5px 0", marginBottom: 25 }}
+            className={`india-dual-page${isLastPage ? " india-dual-page-last" : " page-break"}`}
           >
-            <table style={{ width: "100%", height: "100%" }}>
+            <table className="india-dual-sheet-table">
               <tbody>
                 <tr>
-                  <td style={{ width: "49%", verticalAlign: "top" }}>
+                  <td className="india-dual-sheet-left">
                     {renderSingleCopy(currentItems, startRowNumber, isLastPage)}
                   </td>
-                  <td style={{ width: "2%", position: "relative" }}>
-                    <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", borderLeft: "1px dashed #777" }} />
+                  <td className="india-dual-sheet-gap">
+                    <div className="india-dual-cut-line" />
                   </td>
-                  <td style={{ width: "49%", verticalAlign: "top" }}>
+                  <td className="india-dual-sheet-right">
                     {renderSingleCopy(currentItems, startRowNumber, isLastPage)}
                   </td>
                 </tr>

@@ -24,6 +24,7 @@ import {
     getInvoiceLedgerReport,
     getInvoiceLedgerReportPermission
 } from "../../../helpers/fakebackend_helper";
+import { openReportTxnView, resolveVTypePath } from "../../../helpers/reportTxnLinks";
 import {
     getCachedReportCompany,
     getReportCompanySettings,
@@ -92,19 +93,12 @@ const fmtFixed = (value) => {
     return n.toFixed(2);
 };
 
+/** MVC Invoice Ledger setlink — open sale/parcel/mix edit in view mode. */
 const openTxnLink = (code, trnType) => {
-    if (!code) return;
-    const type = String(trnType || "").trim().toUpperCase();
-    // MVC Ledger.js setlink(Code, TrnType) — open created form in Mode=view
-    let path = "";
-    if (type === "PSALE") {
-      // Parcel / Mix Sale form (MVC: saleParcel/edit-saleParcel?ID=&Mode=view)
-      path = `/mix/edit-mixdata?Id=${encodeURIComponent(code)}&Mode=view`;
-    } else {
-      // Solitaire Sale form (MVC: sale/edit-sale?ID=&Mode=view)
-      path = `/sale/edit-sale?Id=${encodeURIComponent(code)}&Mode=view`;
-    }
-    window.open(path, "_blank")?.focus();
+    // Sale forms read `Id` (case-sensitive); map CSALE → mix, etc. via shared helper.
+    // Unknown types fall back to SALE (same as MVC else-branch).
+    const type = String(trnType || "").trim();
+    openReportTxnView(code, resolveVTypePath(type) ? type : "SALE");
 };
 
 const InvoiceLedgerReport = () => {

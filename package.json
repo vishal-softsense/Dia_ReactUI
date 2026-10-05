@@ -94,7 +94,7 @@
     "yup": "^1.4.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node --no-deprecation ./node_modules/react-scripts/scripts/start.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -119,7 +119,9 @@
     "@types/lodash": "^4.14.195",
     "@types/react-bootstrap-table2-paginator": "^2.1.2",
     "@types/react-bootstrap-table2-toolkit": "^2.1.7",
-    "babel-eslint": "^10.1.0"
+    "babel-eslint": "^10.1.0",
+    "baseline-browser-mapping": "^2.11.26",
+    "caniuse-lite": "^1.0.30001814"
   },
   "overrides": {
     "@hello-pangea/dnd": {

@@ -89,6 +89,9 @@ const SolitaireSalePrintView = () => {
   const handlePrint = () => {
     document.title = printFileName;
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
   document.title = printFileName;

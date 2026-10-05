@@ -1621,6 +1621,7 @@ const ParcelStockSearchReport = () => {
                                                     <option value="All">{t("All")}</option>
                                                     <option value="OnHand">{t("OnHand")}</option>
                                                     <option value="OnMemo">{t("OnMemo")}</option>
+                                                    <option value="OnHand + OnMemo">{t("OnHand + OnMemo")}</option>
                                                     <option value="OnHand&Int.Memo">{t("OnHand & Int.Memo")}</option>
                                                     <option value="OnHand + Memo In">{t("OnHand + Memo In")}</option>
                                                     <option value="OnHand + Party Hold">{t("OnHand + Party Hold")}</option>

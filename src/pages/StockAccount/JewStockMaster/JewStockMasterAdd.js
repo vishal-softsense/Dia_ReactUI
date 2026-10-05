@@ -27,6 +27,9 @@ import {
   computeChargeTotals,
   computeMakingCharges,
   floorPurityRatio,
+  formatAmount,
+  formatCarat,
+  formatPrice,
   MAKING_TYPE_OPTIONS,
   mapDiamondListToRows,
   summarizeTableRows,
@@ -872,10 +875,14 @@ export default function AddMountingMaster() {
         setPcs(item.Pcs != null ? String(item.Pcs) : (item.pcs != null ? String(item.pcs) : ""));
         setCarats(
           item.BalanceCarats3Dec != null
-            ? String(item.BalanceCarats3Dec)
-            : (item.balanceCarats3Dec != null ? String(item.balanceCarats3Dec) : "")
+            ? formatCarat(item.BalanceCarats3Dec)
+            : (item.balanceCarats3Dec != null ? formatCarat(item.balanceCarats3Dec) : "")
         );
-        setRate(item.Rate != null ? String(item.Rate) : (item.rate != null ? String(item.rate) : ""));
+        setRate(
+          item.Rate != null
+            ? formatPrice(item.Rate)
+            : (item.rate != null ? formatPrice(item.rate) : "")
+        );
         setLab(item.CertId ?? item.certId ?? "");
       } else {
         toast.warning(response?.message || response?.Message || "No details found for the selected lot number.");
@@ -888,6 +895,7 @@ export default function AddMountingMaster() {
 
   const clearEntryForm = () => {
     setLotNo(""); setLotSearch(""); setLotOptions([]);
+    setShape(""); setSize(""); setSieve(""); setStoneColor(""); setClarity("");
     setPcs(""); setCarats(""); setRate(""); setAmount(""); setLab("");
     setEditingRowId(null);
   };
@@ -899,7 +907,8 @@ export default function AddMountingMaster() {
     }
     const row = {
       id: editingRowId ?? Date.now(), stockID: lotNo, stoneType: elementType,
-      shape, size, sieve, color: stoneColor, clarity, pcs, carats, rate, amount, lab
+      shape, size, sieve, color: stoneColor, clarity, pcs,
+      carats: formatCarat(carats), rate: formatPrice(rate), amount: formatAmount(amount), lab
     };
     if (editingRowId !== null) {
       setTableRows((p) => p.map((r) => r.id === editingRowId ? row : r));
@@ -926,9 +935,9 @@ export default function AddMountingMaster() {
     setStoneColor(row.color || "");
     setClarity(row.clarity || "");
     setPcs(String(row.pcs || ""));
-    setCarats(String(row.carats || ""));
-    setRate(String(row.rate || ""));
-    setAmount(String(row.amount || ""));
+    setCarats(formatCarat(row.carats || 0));
+    setRate(formatPrice(row.rate || 0));
+    setAmount(formatAmount(row.amount || 0));
     setLab(row.lab || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1703,8 +1712,9 @@ export default function AddMountingMaster() {
                                   </button>
                                 </td>
                                 {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
-                                row.color, row.clarity, row.pcs, row.carats, row.rate,
-                                row.amount, row.lab
+                                row.color, row.clarity, row.pcs,
+                                formatCarat(row.carats), formatPrice(row.rate),
+                                formatAmount(row.amount), row.lab
                                 ].map((v, i) => (
                                   <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
                                 ))}

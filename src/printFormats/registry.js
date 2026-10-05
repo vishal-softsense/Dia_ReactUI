@@ -2,6 +2,7 @@ import IndiaDualFormat from "./solitaireMemo/IndiaDualFormat";
 import IndiaSingleFormat from "./solitaireMemo/IndiaSingleFormat";
 import UsaSingleFormat from "./solitaireMemo/UsaSingleFormat";
 import ClassicFormat from "./solitaireMemo/ClassicFormat";
+import SinglePageFormat from "./solitaireMemo/SinglePageFormat";
 import UsaUpAndDownDualFormat from "./parcelMemo/UsaUpAndDownDualFormat";
 import UsaUpAndDownLongFormat from "./parcelMemo/UsaUpAndDownLongFormat";
 import UsaSinglePageFormat from "./parcelMemo/UsaSinglePageFormat";
@@ -32,7 +33,9 @@ const SOLITAIRE_MEMO_FORMATS = {
   "Solitaire Memo India_SideBySideDual Format": IndiaDualFormat,
   "Solitaire Memo India_Single Format": IndiaSingleFormat,
   "Solitaire Memo USA_SiglePage Format": UsaSingleFormat,
-  "Solitaire Memo": ClassicFormat
+  "Solitaire Memo": ClassicFormat,
+  /* Internal: MVC SoMemoOutSiglePageFormat when "Solitaire Memo" && itemCount >= 11 */
+  "Solitaire Memo SinglePage": SinglePageFormat
 };
 
 const PARCEL_MEMO_FORMATS = {
@@ -134,5 +137,7 @@ export function isLandscapePrintFormat(formatName) {
 }
 
 export function getRegisteredFormatNames(moduleKey) {
-  return Object.keys(MODULE_FORMATS[moduleKey] || {});
+  return Object.keys(MODULE_FORMATS[moduleKey] || {}).filter(
+    (k) => k !== "Solitaire Memo SinglePage" && !k.endsWith("_Long")
+  );
 }
