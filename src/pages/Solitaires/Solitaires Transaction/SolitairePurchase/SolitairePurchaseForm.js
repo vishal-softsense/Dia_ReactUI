@@ -394,7 +394,11 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isEdit = mode === "edit";
-  const editId = searchParams.get("Id") || searchParams.get("id") || "";
+  const editId =
+    searchParams.get("Id") ||
+    searchParams.get("id") ||
+    searchParams.get("ID") ||
+    "";
   const urlMode = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase();
   const isView = urlMode === "view";
   const isConsignmentMode = urlMode === "consignment";

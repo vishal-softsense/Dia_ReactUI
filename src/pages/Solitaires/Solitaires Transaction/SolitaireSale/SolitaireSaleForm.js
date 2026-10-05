@@ -272,7 +272,11 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isEdit = mode === "edit";
-  const editId = searchParams.get("Id") || searchParams.get("id") || "";
+  const editId =
+    searchParams.get("Id") ||
+    searchParams.get("id") ||
+    searchParams.get("ID") ||
+    "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
 

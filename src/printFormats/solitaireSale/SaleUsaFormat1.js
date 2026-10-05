@@ -1,139 +1,405 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, getVal, paginateVariable } from "../shared/printUtils";
+import {
+  FALLBACK_MEMO_CONDITIONS,
+  fmtDate,
+  fmtNum,
+  getVal
+} from "../shared/printUtils";
+
+/**
+ * MVC: SoSalePrintInv_USA_F1.cshtml
+ * Page 1 / middle: 30 records + FULL header (no footer)
+ * Last page: up to 30 records + FULL header + Total + footer
+ * ≤30 → 1 page (header + rows + footer)
+ */
+const PAGE_SIZE = 30;
+const LAST_PAGE_SIZE = 30;
+const COL_COUNT = 16;
+
+function paginateSaleFormat1(items, pageSize = PAGE_SIZE, lastCap = LAST_PAGE_SIZE) {
+  const list = items || [];
+  const n = list.length;
+  if (!n) return [[]];
+
+  // Fits on 1 sheet with header + Total + footer
+  if (n <= lastCap) return [list];
+
+  const pages = [];
+  let start = 0;
+  while (n - start > lastCap) {
+    pages.push(list.slice(start, start + pageSize));
+    start += pageSize;
+  }
+  if (start < n) {
+    pages.push(list.slice(start));
+  } else if (pages.length > 0 && lastCap < pageSize) {
+    pages.push([]);
+  }
+  return pages;
+}
+
+const FONT = "Verdana, Arial, Helvetica, sans-serif";
 
 const box = { border: "2px solid #484848" };
-const cell = { border: "1px solid #484848", padding: "2px 3px", textAlign: "center", height: 24 };
+const cell = {
+  border: "1px solid #484848",
+  padding: "4px 3px",
+  textAlign: "center",
+  verticalAlign: "middle",
+  height: 24,
+  fontSize: 9,
+  fontFamily: FONT,
+  color: "#000",
+  lineHeight: 1.35
+};
+const emptyCell = {
+  border: "none",
+  height: 22,
+  padding: "4px 0",
+  fontSize: 9
+};
+
+const HEADERS = [
+  "Sr No",
+  "Item",
+  "Shp",
+  "Cts",
+  "Col",
+  "Cla",
+  "Cut",
+  "pol",
+  "sym",
+  "FL",
+  "Rapa",
+  "Back",
+  "Rate",
+  "Amt",
+  "Lab",
+  "CertificateNo"
+];
 
 const SaleUsaFormat1 = ({ data, items, totals, company, logoUrl }) => {
-  const pages = paginateVariable(items, { single: 21, first: 35, middle: 45, last: 26 });
+  const pages = paginateSaleFormat1(items, PAGE_SIZE, LAST_PAGE_SIZE);
   const conditions = company.saleConditions || FALLBACK_MEMO_CONDITIONS;
 
+  const renderInvoiceHeader = () => (
+    <>
+      <table style={{ width: "100%", borderCollapse: "collapse", ...box, fontFamily: FONT }}>
+        <tbody>
+          <tr style={{ height: 42 }}>
+            <td
+              rowSpan={2}
+              style={{
+                width: 100,
+                borderRight: "2px solid #484848",
+                textAlign: "center",
+                verticalAlign: "middle",
+                padding: 4
+              }}
+            >
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" style={{ width: 100, height: 75, objectFit: "contain" }} />
+              ) : null}
+            </td>
+            <td
+              style={{
+                textAlign: "center",
+                verticalAlign: "middle",
+                fontSize: 20,
+                fontWeight: "bold",
+                fontFamily: FONT,
+                color: "#000"
+              }}
+            >
+              {company.companyName}
+            </td>
+          </tr>
+          <tr style={{ height: 36 }}>
+            <td
+              style={{
+                textAlign: "center",
+                verticalAlign: "middle",
+                borderTop: "2px solid #484848",
+                fontSize: 15,
+                fontWeight: "bold",
+                textDecoration: "underline",
+                fontFamily: FONT,
+                color: "#000"
+              }}
+            >
+              INVOICE
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "2px solid #484848",
+          borderTop: "none",
+          fontFamily: FONT,
+          fontSize: 12,
+          color: "#000"
+        }}
+      >
+        <tbody>
+          <tr>
+            <td style={{ width: "58%", padding: "2px 8px", verticalAlign: "top" }}>
+              <table style={{ borderCollapse: "collapse", fontFamily: FONT, fontSize: 12 }}>
+                <tbody>
+                  <tr>
+                    <td style={{ minWidth: 70, lineHeight: 1.5, padding: "1px 0" }}>Party</td>
+                    <td style={{ width: 14, padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0" }}>{getVal(data, "PartyName", "partyName")}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ verticalAlign: "top", lineHeight: 1.5, padding: "1px 0" }}>Address</td>
+                    <td style={{ verticalAlign: "top", padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0", lineHeight: 1.5 }}>
+                      {company.companyAddress}
+                      <br />
+                      {company.companyAddress1}
+                      <br />
+                      {company.companyAddress2}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ lineHeight: 1.5, padding: "1px 0" }}>City</td>
+                    <td style={{ padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0" }} />
+                  </tr>
+                  <tr>
+                    <td style={{ lineHeight: 1.5, padding: "1px 0" }}>Country</td>
+                    <td style={{ padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0" }} />
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td style={{ width: "42%", padding: "2px 8px", verticalAlign: "top" }}>
+              <table style={{ borderCollapse: "collapse", fontFamily: FONT, fontSize: 12 }}>
+                <tbody>
+                  <tr>
+                    <td style={{ minWidth: 75, lineHeight: 1.5, padding: "1px 0" }}>Date</td>
+                    <td style={{ width: 14, padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0", fontSize: 11 }}>
+                      {fmtDate(getVal(data, "RoundDate", "roundDate", "TrnDate", "trnDate"))}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ lineHeight: 1.5, padding: "1px 0" }}>Due</td>
+                    <td style={{ padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0", fontSize: 11 }}>
+                      {fmtDate(getVal(data, "DueDate", "dueDate"))}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ lineHeight: 1.5, padding: "1px 0" }}>Invoice No</td>
+                    <td style={{ padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0" }}>{getVal(data, "InvNo", "invNo")}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ lineHeight: 1.5, padding: "1px 0" }}>Tel/Fax</td>
+                    <td style={{ padding: "1px 0" }}>:</td>
+                    <td style={{ padding: "1px 0" }}>{company.companyFax || ""}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+
   return (
-    <div style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
+    <div
+      className="sale-usa-f1-root"
+      style={{ fontFamily: FONT, fontSize: 13, color: "#000", lineHeight: 1.3 }}
+    >
       {pages.map((pageItems, pageIdx) => {
-        const isFirstPage = pageIdx === 0;
         const isLastPage = pageIdx === pages.length - 1;
-        const itemsPerPage = isFirstPage && isLastPage ? 21 : isFirstPage ? 35 : isLastPage ? 26 : 45;
-        let srNo = pageItems.length ? items.indexOf(pageItems[0]) + 1 : 1;
+        const isSinglePage = pages.length === 1;
+
+        // Single / last page: fill to 30 so footer sits under table
+        let itemsPerPage;
+        if (isSinglePage || isLastPage) {
+          itemsPerPage = LAST_PAGE_SIZE;
+        } else {
+          itemsPerPage = PAGE_SIZE;
+        }
+
+        let srNo = 1;
+        if (pageItems.length && items?.length) {
+          const idx = items.indexOf(pageItems[0]);
+          srNo = idx >= 0 ? idx + 1 : pageIdx * PAGE_SIZE + 1;
+        }
+
         return (
-          <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
-            {isFirstPage && (
-              <>
-                <table style={{ width: "100%", borderCollapse: "collapse", ...box }}>
-                  <tbody>
-                    <tr style={{ height: 50 }}>
-                      <td rowSpan={2} style={{ width: 110, borderRight: "2px solid #484848", textAlign: "center", verticalAlign: "middle", padding: 6 }}>
-                        {logoUrl ? <img src={logoUrl} alt="Logo" style={{ width: 120, height: 90, objectFit: "contain" }} /> : null}
-                      </td>
-                      <td style={{ textAlign: "center", fontSize: 22, fontWeight: "bold" }}>{company.companyName}</td>
-                    </tr>
-                    <tr style={{ height: 50 }}>
-                      <td style={{ textAlign: "center", borderTop: "2px solid #484848", fontSize: 16, fontWeight: "bold", textDecoration: "underline" }}>INVOICE</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <table style={{ width: "100%", borderCollapse: "collapse", border: "2px solid #484848", borderTop: "none" }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: "58%", padding: "2px 10px", verticalAlign: "top" }}>
-                        <table>
-                          <tbody>
-                            <tr><td style={{ minWidth: 75, lineHeight: 1.8 }}>Party</td><td>:</td><td>{getVal(data, "PartyName", "partyName")}</td></tr>
-                            <tr>
-                              <td style={{ verticalAlign: "top", lineHeight: 1.8 }}>Address</td><td style={{ verticalAlign: "top" }}>:</td>
-                              <td style={{ lineHeight: 1.8 }}>{company.companyAddress}<br />{company.companyAddress1}<br />{company.companyAddress2}</td>
-                            </tr>
-                            <tr><td style={{ lineHeight: 1.8 }}>City</td><td>:</td><td></td></tr>
-                            <tr><td style={{ lineHeight: 1.8 }}>Country</td><td>:</td><td></td></tr>
-                          </tbody>
-                        </table>
-                      </td>
-                      <td style={{ width: "42%", padding: "2px 10px", verticalAlign: "top" }}>
-                        <table>
-                          <tbody>
-                            <tr><td style={{ minWidth: 80, lineHeight: 1.8 }}>Date</td><td>:</td><td>{fmtDate(getVal(data, "RoundDate", "roundDate"))}</td></tr>
-                            <tr><td style={{ lineHeight: 1.8 }}>Due</td><td>:</td><td>{fmtDate(getVal(data, "DueDate", "dueDate"))}</td></tr>
-                            <tr><td style={{ lineHeight: 1.8 }}>Invoice No</td><td>:</td><td>{getVal(data, "InvNo", "invNo")}</td></tr>
-                            <tr><td style={{ lineHeight: 1.8 }}>Tel/Fax</td><td>:</td><td>{company.companyPhone}</td></tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </>
-            )}
-            <table style={{ width: "100%", borderCollapse: "collapse", border: "2px solid #484848", fontSize: 10, marginTop: 8 }}>
+          <div key={pageIdx} className={`sale-usa-f1-page${isLastPage ? "" : " page-break"}`}>
+            {/* FULL invoice header on EVERY page including last page */}
+            <div className="sale-usa-f1-header">{renderInvoiceHeader()}</div>
+
+            <table
+              className="sale-usa-f1-item-table"
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                border: "2px solid #484848",
+                fontSize: 9,
+                fontFamily: FONT,
+                marginTop: 6,
+                color: "#000"
+              }}
+            >
               <thead>
-                <tr>
-                  {["Sr No", "Item", "Shp", "Cts", "Col", "Cla", "Cut", "pol", "sym", "FL", "Rapa", "Back", "Rate", "Amt", "Lab", "CertificateNo"].map((h) => (
-                    <th key={h} style={cell}>{h}</th>
+                <tr style={{ fontSize: 9, height: 26 }}>
+                  {HEADERS.map((h) => (
+                    <th key={h} style={{ ...cell, fontWeight: "bold" }}>
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {pageItems.map((item, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} style={{ fontSize: 9, height: 24 }}>
                     <td style={cell}>{srNo++}</td>
                     <td style={cell}>{getVal(item, "Lotno", "lotNo")}</td>
                     <td style={cell}>{getVal(item, "ShapeId", "shapeId")}</td>
-                    <td style={cell}>{fmt(getVal(item, "Carats", "carats"), 2)}</td>
+                    <td style={cell}>{fmtNum(getVal(item, "Carats", "carats"), 2)}</td>
                     <td style={cell}>{getVal(item, "ColorId", "colorId")}</td>
                     <td style={cell}>{getVal(item, "ClarityId", "clarityId")}</td>
                     <td style={cell}>{getVal(item, "PropId", "propId")}</td>
                     <td style={cell}>{getVal(item, "PolishId", "polishId")}</td>
                     <td style={cell}>{getVal(item, "SymId", "symId")}</td>
                     <td style={cell}>{getVal(item, "FLId", "flId")}</td>
-                    <td style={cell}>{fmt(getVal(item, "Rap", "rap", "MRP", "mrp"), 2)}</td>
+                    <td style={cell}>{fmtNum(getVal(item, "MRP", "mrp", "Rap", "rap"), 2)}</td>
                     <td style={cell}>{getVal(item, "Back", "back")}</td>
-                    <td style={cell}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
-                    <td style={cell}>{fmt(getVal(item, "Amount", "amount"), 2)}</td>
+                    <td style={cell}>{fmtNum(getVal(item, "Rate", "rate"), 2)}</td>
+                    <td style={cell}>{fmtNum(getVal(item, "Amount", "amount"), 2)}</td>
                     <td style={cell}>{getVal(item, "CertId", "certId")}</td>
                     <td style={cell}>{getVal(item, "CertificateNo", "certificateNo")}</td>
                   </tr>
                 ))}
+
                 {Array.from({ length: Math.max(0, itemsPerPage - pageItems.length) }).map((_, i) => (
-                  <tr key={`e-${i}`} style={{ height: 20 }}><td colSpan={16}>&nbsp;</td></tr>
+                  <tr key={`e-${i}`} className="empty-row" style={{ height: 22 }}>
+                    {Array.from({ length: COL_COUNT }).map((__, c) => (
+                      <td key={c} style={emptyCell}>
+                        &nbsp;
+                      </td>
+                    ))}
+                  </tr>
                 ))}
+
                 {isLastPage && (
-                  <tr style={{ fontSize: 12, borderTop: "2px solid #484848", height: 27 }}>
-                    <td colSpan={3} style={{ ...cell, textAlign: "center" }}><b>Total :</b></td>
-                    <td style={cell}>{fmt(totals.wt, 2)}</td>
-                    <td colSpan={9} style={cell}></td>
-                    <td style={cell}>{fmt(totals.amount, 2)}</td>
-                    <td colSpan={2} style={cell}></td>
+                  <tr
+                    className="sale-usa-f1-totals-row"
+                    style={{ fontSize: 11, borderTop: "2px solid #484848", height: 24 }}
+                  >
+                    <td colSpan={3} style={{ ...cell, textAlign: "center", fontSize: 11 }}>
+                      <b>Total :</b>
+                    </td>
+                    <td style={{ ...cell, fontSize: 11 }}>{fmtNum(totals.wt, 2)}</td>
+                    <td colSpan={9} style={{ ...cell, textAlign: "center" }} />
+                    <td style={{ ...cell, fontSize: 11 }}>{fmtNum(totals.amount, 2)}</td>
+                    <td colSpan={2} style={{ ...cell, textAlign: "center" }} />
                   </tr>
                 )}
               </tbody>
             </table>
+
             {isLastPage && (
-              <>
-                <div style={{ borderTop: "2px solid black", marginTop: 10 }} />
-                <div style={{ marginTop: 5, fontWeight: "bold", fontSize: 12 }}>GOODS SOLD & DELIVERED IN HONG KONG , GOODS ONCE SOLD ARE NOT RETURNABLE</div>
-                <table style={{ fontFamily: "Verdana", fontSize: 14, marginTop: 10 }}>
-                  <tbody>
-                    <tr><td colSpan={2}>PAYMENT INFORMATION:</td></tr>
-                    <tr><td>Company Name :</td><td>{company.companyName}</td></tr>
-                    <tr><td>Account Number :</td><td>{getVal(data, "BankAccNo")}</td></tr>
-                    <tr><td style={{ width: 140 }}>Bank Name :</td><td>{getVal(data, "bnm", "BankName")}</td></tr>
-                    <tr><td>Bank Address :</td><td>{getVal(data, "BankAddress1")}</td></tr>
-                  </tbody>
-                </table>
-                <div style={{ fontSize: 10, fontWeight: "bold", marginTop: 20, wordSpacing: 5 }}>{conditions}</div>
-                <table style={{ width: "100%", marginTop: 30 }}>
+              <div className="sale-usa-f1-footer">
+                <div style={{ borderTop: "2px solid black", marginTop: 6, width: "100%" }} />
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontWeight: "bold",
+                    fontSize: 11,
+                    fontFamily: FONT,
+                    color: "#000"
+                  }}
+                >
+                  GOODS SOLD & DELIVERED IN HONG KONG , GOODS ONCE SOLD ARE NOT RETURNABLE
+                </div>
+
+                <table
+                  style={{
+                    fontFamily: FONT,
+                    fontSize: 13,
+                    borderCollapse: "collapse",
+                    marginTop: 6,
+                    color: "#000"
+                  }}
+                >
                   <tbody>
                     <tr>
-                      <td style={{ width: "50%", textAlign: "center", fontWeight: "bold", fontSize: 14 }}>Buyer's Confirmation</td>
-                      <td style={{ width: "50%", textAlign: "center", fontWeight: "bold", fontSize: 14 }}>{company.companyName}</td>
+                      <td colSpan={2} style={{ color: "#000", fontWeight: "bold" }}>
+                        PAYMENT INFORMATION:
+                      </td>
                     </tr>
                     <tr>
-                      <td style={{ paddingTop: 35, textAlign: "center", fontWeight: "bold" }}>(Chop & Signature)</td>
-                      <td style={{ paddingTop: 35, textAlign: "center", fontWeight: "bold" }}>Authorized Signature(s)</td>
+                      <td style={{ color: "#000" }}>Company Name :</td>
+                      <td style={{ color: "#000" }}>{company.companyName}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ color: "#000" }}>Account Number :</td>
+                      <td style={{ color: "#000" }}>{getVal(data, "BankAccNo")}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ width: 140, color: "#000" }}>Bank Name :</td>
+                      <td style={{ color: "#000" }}>{getVal(data, "bnm", "BankName")}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ color: "#000" }}>Bank Address :</td>
+                      <td style={{ color: "#000" }}>{getVal(data, "BankAddress1")}</td>
                     </tr>
                   </tbody>
                 </table>
-                <div style={{ borderTop: "2px solid black", marginTop: 10 }} />
-              </>
+
+                <div
+                  style={{
+                    fontSize: 9,
+                    fontWeight: "bold",
+                    marginTop: 10,
+                    wordSpacing: 4,
+                    fontFamily: FONT,
+                    color: "#000"
+                  }}
+                >
+                  {conditions}
+                </div>
+
+                <table
+                  className="sale-usa-f1-sign"
+                  style={{ width: "100%", marginTop: 14, borderCollapse: "collapse", fontFamily: FONT }}
+                >
+                  <tbody>
+                    <tr>
+                      <td style={{ width: "50%", textAlign: "center", fontWeight: "bold", fontSize: 13, color: "#000" }}>
+                        Buyer's Confirmation
+                      </td>
+                      <td style={{ width: "50%", textAlign: "center", fontWeight: "bold", fontSize: 13, color: "#000" }}>
+                        {company.companyName}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ paddingTop: 22, textAlign: "center", fontWeight: "bold", fontSize: 12, color: "#000" }}>
+                        (Chop & Signature)
+                      </td>
+                      <td style={{ paddingTop: 22, textAlign: "center", fontWeight: "bold", fontSize: 12, color: "#000" }}>
+                        Authorized Signature(s)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ borderTop: "2px solid black", marginTop: 6, width: "100%" }} />
+              </div>
             )}
           </div>
         );

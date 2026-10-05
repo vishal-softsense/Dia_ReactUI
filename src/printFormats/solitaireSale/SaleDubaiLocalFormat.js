@@ -1,222 +1,461 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
+import {
+  FALLBACK_MEMO_CONDITIONS,
+  fmt,
+  fmtDateMMM,
+  fmtNum,
+  getVal,
+  paginateWithLastCap
+} from "../shared/printUtils";
 
-const th = { border: "2px solid #454545", padding: 4, background: "#c0c0c0", textAlign: "center" };
-const td = { border: "2px solid #454545", textAlign: "center" };
+/**
+ * MVC: SoSale_Dubai_Local.cshtml
+ * - ≤30 records → 1 page (header + rows + totals + payment + footer)
+ * - Multi-page: full pages 30 rows; last page ≤21 rows + totals + footer
+ * Fonts match MVC: Verdana/Arial 13 body, table header 10, data rows 13
+ */
+const PAGE_SIZE = 30;
+const LAST_PAGE_SIZE = 21;
+const COL_COUNT = 8;
+const FONT = "Verdana, Arial, sans-serif";
 
-const SaleDubaiLocalFormat = ({ data, items, totals, company, logoUrl }) => {
-  const pages = paginateVariable(items, { single: 15, first: 30, middle: 40, last: 20 });
+const th = {
+  border: "2px solid #454545",
+  padding: 4,
+  background: "#c0c0c0",
+  textAlign: "center",
+  fontWeight: "bold",
+  fontSize: 10,
+  fontFamily: FONT,
+  color: "#000",
+  WebkitPrintColorAdjust: "exact",
+  printColorAdjust: "exact"
+};
+
+const td = {
+  border: "2px solid #454545",
+  textAlign: "center",
+  verticalAlign: "middle",
+  height: 18,
+  fontSize: 13,
+  fontFamily: FONT,
+  color: "#000",
+  padding: "0 3px"
+};
+
+const SaleDubaiLocalFormat = ({ data, items, company, logoUrl }) => {
+  const pages = paginateWithLastCap(items, PAGE_SIZE, LAST_PAGE_SIZE);
   const conditions = company.saleConditions || FALLBACK_MEMO_CONDITIONS;
-  const rate = Number(getVal(data, "MasterCurrencyRate")) || 1;
-  const taxAmt = (Number(getVal(data, "CGSTAmount")) || 0) + (Number(getVal(data, "SGSTAmount")) || 0) + (Number(getVal(data, "IGSTAmount")) || 0);
+  const list = items || [];
+
+  const rate = Number(getVal(data, "MasterCurrencyRate", "masterCurrencyRate")) || 1;
+  const taxAmt =
+    (Number(getVal(data, "CGSTAmount")) || 0) +
+    (Number(getVal(data, "SGSTAmount")) || 0) +
+    (Number(getVal(data, "IGSTAmount")) || 0);
   const finalTax = rate ? taxAmt / rate : 0;
-  const net = Number(getVal(data, "NetAmount")) || totals.amount;
-  const usdFinal = getVal(data, "StockCurrencyFinalAmount") || fmt(net, 2);
-  const aedFinal = getVal(data, "MasterCurrencyFinalAmount") || fmt(net * rate, 2);
+
+  const totalWt = list.reduce(
+    (s, it) => s + (Number(getVal(it, "Weight", "weight", "Carats", "carats")) || 0),
+    0
+  );
+  const totalAmt = list.reduce(
+    (s, it) => s + (Number(getVal(it, "Amount", "amount")) || 0),
+    0
+  );
+  const net = Number(getVal(data, "NetAmount", "netAmount")) || totalAmt;
+  const usdFinal =
+    getVal(data, "StockCurrencyFinalAmount", "stockCurrencyFinalAmount") || fmtNum(net, 2);
+  const aedFinal =
+    getVal(data, "MasterCurrencyFinalAmount", "masterCurrencyFinalAmount") || fmtNum(net * rate, 2);
+
+  const companyFax = getVal(data, "CompanyFax", "companyFax") || company.companyFax || "";
+  const companyMob = getVal(data, "CompanyMob", "companyMob") || company.companyMob || company.companyPhone || "";
+  const companyWebsite = getVal(data, "CompanyWebsite", "companyWebsite") || company.companyWebsite || "";
+  const taxReg =
+    getVal(data, "CompanyTaxRegNumber", "CompnyTaxRegisterNumber", "companyTaxRegNumber") ||
+    company.companyTaxRegNumber ||
+    "";
 
   return (
-    <div style={{ fontFamily: "Verdana, Arial, sans-serif", fontSize: 13, color: "#000" }}>
+    <div className="sale-dubai-local-root" style={{ fontFamily: FONT, fontSize: 13, color: "#000" }}>
       {pages.map((pageItems, pageIdx) => {
         const isFirstPage = pageIdx === 0;
         const isLastPage = pageIdx === pages.length - 1;
-        const itemsPerPage = isFirstPage && isLastPage ? 15 : isFirstPage ? 30 : isLastPage ? 20 : 40;
-        let srNo = (items || []).indexOf(pageItems[0]) + 1 || 1;
+        const fillTo = isLastPage ? Math.max(pageItems.length, LAST_PAGE_SIZE) : PAGE_SIZE;
+        const emptyCount = Math.max(0, fillTo - pageItems.length);
+
+        let srNo = 1;
+        if (pageItems.length && items?.length) {
+          const idx = items.indexOf(pageItems[0]);
+          srNo = idx >= 0 ? idx + 1 : pageIdx * PAGE_SIZE + 1;
+        }
+
         return (
-          <div key={pageIdx} className={isLastPage ? "" : "page-break"}>
-            <table style={{ width: "100%", marginBottom: 10 }}>
-              <tbody>
-                <tr>
-                  <td style={{ width: "20%", verticalAlign: "middle" }}>
-                    {logoUrl ? <img src={logoUrl} alt="Logo" width={120} height={100} /> : null}
-                  </td>
-                  <td style={{ width: "47%", verticalAlign: "top", fontSize: 13 }}>
-                    <div style={{ fontWeight: "bold", fontSize: 22 }}>{company.companyName}</div>
-                    <div style={{ marginTop: 4, width: 250 }}>{company.companyAddress}</div>
-                  </td>
-                  <td style={{ width: "33%", verticalAlign: "top", padding: "8px 0 8px 10px", fontSize: 12, fontWeight: "bold" }}>
-                    Tel : {company.companyPhone}<br />
-                    Fax : {getVal(data, "CompanyFax")}<br />
-                    Mobile : {getVal(data, "CompanyMob")}<br />
-                    Email : {company.companyEmail}<br />
-                    Website : {getVal(data, "CompanyWebsite")}
-                  </td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td style={{ paddingTop: 12, fontSize: 12 }}><b>Tax Registration Number :&nbsp; {getVal(data, "CompanyTaxRegNumber")}</b></td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
-            <div style={{ background: "#000", color: "#fff", margin: "10px 0", textAlign: "center", fontFamily: "Calibri", fontSize: 14, fontWeight: "bold" }}>
-              Diamond & Diamond Studded Jewellery Exporters, Importers & Manufacturers
-            </div>
-            {isFirstPage && (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <div
+            key={pageIdx}
+            className={`sale-dubai-local-page${isLastPage ? "" : " page-break"}`}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              minHeight: "10.4in",
+              boxSizing: "border-box"
+            }}
+          >
+            <div style={{ flex: "1 1 auto" }}>
+              {/* HEADER — every page */}
+              <table style={{ width: "100%", marginBottom: 8, borderCollapse: "collapse" }}>
                 <tbody>
                   <tr>
-                    <td colSpan={2} style={{ textAlign: "center", fontWeight: "bold", padding: "5px 0", fontSize: 14 }}>TAX INVOICE</td>
+                    <td style={{ width: "20%", verticalAlign: "middle" }}>
+                      {logoUrl ? <img src={logoUrl} alt="Logo" width={120} height={100} style={{ objectFit: "contain" }} /> : null}
+                    </td>
+                    <td style={{ width: "47%", verticalAlign: "top", fontSize: 13 }}>
+                      <div style={{ fontWeight: "bold", fontSize: 22 }}>{company.companyName}</div>
+                      <div style={{ marginTop: 4, width: 250 }}>{company.companyAddress}</div>
+                    </td>
+                    <td style={{ width: "33%", verticalAlign: "top", padding: "8px 0 8px 10px", fontSize: 12, fontWeight: "bold" }}>
+                      Tel : {company.companyPhone}
+                      <br />
+                      Fax : {companyFax}
+                      <br />
+                      Mobile : {companyMob}
+                      <br />
+                      Email : {company.companyEmail}
+                      <br />
+                      Website : {companyWebsite}
+                    </td>
                   </tr>
                   <tr>
-                    <td style={{ width: "65%", verticalAlign: "top" }}>
-                      <table style={{ width: "100%" }}>
-                        <tbody>
-                          <tr><td style={{ width: 140, padding: "3px 0" }}>Invoice No :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "InvNo")}</td></tr>
-                          <tr><td style={{ padding: "3px 0" }}>To,</td><td style={{ fontWeight: "bold" }}>{getVal(data, "PartyName")}</td></tr>
-                          <tr><td style={{ padding: "3px 0" }}>Address :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "AddressLine1")}</td></tr>
-                          <tr>
-                            <td style={{ padding: "3px 0" }}>TRN No :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "TRNNo")}</td>
-                            <td style={{ padding: "3px 0" }}>Country of Origin:</td><td style={{ fontWeight: "bold" }}>{getVal(data, "CountryCode")}</td>
-                          </tr>
-                          <tr>
-                            <td style={{ padding: "3px 0" }}>Contact No :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "Mobile")}</td>
-                            <td style={{ padding: "3px 0" }}>Contact Person :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "ContactPerson")}</td>
-                          </tr>
-                          <tr><td style={{ paddingTop: 5 }}>Description :</td><td></td></tr>
-                        </tbody>
-                      </table>
+                    <td />
+                    <td style={{ paddingTop: 10, fontSize: 12 }}>
+                      <b>Tax Registration Number :&nbsp; {taxReg}</b>
                     </td>
-                    <td style={{ width: "35%", verticalAlign: "top" }}>
-                      <table style={{ width: "100%" }}>
-                        <tbody>
-                          <tr><td style={{ width: 130, padding: "3px 0" }}>Invoice Date :</td><td style={{ fontWeight: "bold" }}>{fmtDateMMM(getVal(data, "TrnDate"))}</td></tr>
-                          <tr><td style={{ padding: "3px 0" }}>Terms :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "DueDays")}</td></tr>
-                          <tr><td style={{ padding: "3px 0" }}>Due Date :</td><td style={{ fontWeight: "bold" }}>{fmtDateMMM(getVal(data, "DueDate"))}</td></tr>
-                          <tr><td style={{ padding: "3px 0" }}>Through :</td><td style={{ fontWeight: "bold" }}>{getVal(data, "Through")}</td></tr>
-                        </tbody>
-                      </table>
-                    </td>
+                    <td />
                   </tr>
                 </tbody>
               </table>
-            )}
-            {!isFirstPage && (
-              <div style={{ fontSize: 10, margin: "5px 0" }}>
-                <span style={{ float: "left" }}>Invoice No: <b>{getVal(data, "InvNo")}</b></span>
-                <span style={{ float: "right" }}>Invoice Date:<b> {fmtDateMMM(getVal(data, "TrnDate"))}</b></span>
+
+              <div
+                style={{
+                  background: "#000",
+                  color: "#fff",
+                  margin: "8px 0",
+                  textAlign: "center",
+                  fontFamily: "Calibri, Verdana, sans-serif",
+                  fontSize: 14,
+                  fontWeight: "bold",
+                  padding: "4px 0",
+                  WebkitPrintColorAdjust: "exact",
+                  printColorAdjust: "exact"
+                }}
+              >
+                Diamond & Diamond Studded Jewellery Exporters, Importers & Manufacturers
               </div>
-            )}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 15 }}>
-              <thead>
-                <tr style={{ fontSize: 10 }}>
-                  {["Sr.No.", "Description", "RapPrice", "Discount", "Pkts", "Carats", "Price/Cts(US $)", "Amount(US $)"].map((h) => (
-                    <th key={h} style={th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pageItems.map((item, idx) => (
-                  <tr key={idx} style={{ fontSize: 13 }}>
-                    <td style={td}>{srNo++}</td>
-                    <td style={td}>{getVal(item, "ItemName", "itemName")}</td>
-                    <td style={td}>{fmt(getVal(item, "MRP", "Rap", "rap"), 2)}</td>
-                    <td style={td}>{fmt(getVal(item, "PMRPDown", "Back", "back"), 2)}</td>
-                    <td style={td}>{getVal(item, "Pcs", "pcs")}</td>
-                    <td style={td}>{fmt(getVal(item, "Carats"), 2)}</td>
-                    <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmt(getVal(item, "Rate"), 2)}</td>
-                    <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmt(getVal(item, "Amount"), 2)}</td>
-                  </tr>
-                ))}
-                {Array.from({ length: Math.max(0, itemsPerPage - pageItems.length) }).map((_, i) => {
-                  const lastEmpty = i === itemsPerPage - pageItems.length - 1;
-                  return (
-                    <tr key={`e-${i}`} style={{ height: 24 }}>
-                      {Array.from({ length: 8 }).map((__, c) => (
-                        <td key={c} style={{ height: 24, borderTop: "none", borderBottom: lastEmpty ? "2px solid #454545" : "none", borderLeft: "2px solid #454545", borderRight: "2px solid #454545" }}>&nbsp;</td>
-                      ))}
-                    </tr>
-                  );
-                })}
-                {isLastPage && (
-                  <>
-                    <tr style={{ fontWeight: "bold" }}>
-                      <td style={{ borderTop: "2px solid #454545", borderLeft: "2px solid #454545" }}></td>
-                      <td style={{ borderTop: "2px solid #454545" }}></td>
-                      <td style={{ borderTop: "2px solid #454545" }}></td>
-                      <td style={{ borderTop: "2px solid #454545" }}></td>
-                      <td style={{ borderTop: "2px solid #454545" }}></td>
-                      <td style={{ ...td }}>{fmt(totals.wt, 2)}</td>
-                      <td style={{ ...td, fontSize: 10 }}>Total</td>
-                      <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmt(totals.amount, 2)}</td>
-                    </tr>
-                    <tr style={{ fontWeight: "bold", height: 25 }}>
-                      <td style={td}></td><td style={td}></td><td style={td}></td>
-                      <td colSpan={3} style={{ ...td, textAlign: "right", paddingRight: 5 }}>1 USD = {fmt(rate, 2)} AED</td>
-                      <td style={{ ...td, fontSize: 10 }}>Total USD</td>
-                      <td style={{ ...td, fontSize: 10 }}>Total AED</td>
-                    </tr>
+
+              {/* Invoice meta — first page only */}
+              {isFirstPage && (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <tbody>
                     <tr>
-                      <td colSpan={4} style={{ border: "none", fontSize: 10, paddingTop: 6, verticalAlign: "top" }}>
-                        Amount in Words : <b>AED {getVal(data, "AmountWords")}.</b>
+                      <td colSpan={2} style={{ textAlign: "center", fontWeight: "bold", padding: "5px 0", fontSize: 14 }}>
+                        TAX INVOICE
                       </td>
-                      <td colSpan={2} style={{ ...td, fontWeight: "bold" }}>Gross Amount</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{fmt(net, 2)}</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{fmt(net * rate, 2)}</td>
                     </tr>
                     <tr>
-                      <td colSpan={4} style={{ border: "none", fontSize: 10, paddingTop: 6 }}>Payment Details :</td>
-                      <td colSpan={2} style={{ ...td, fontWeight: "bold" }}>Tax Amount</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{fmt(finalTax, 2)}</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{fmt(finalTax * rate, 2)}</td>
+                      <td style={{ width: "65%", verticalAlign: "top" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <tbody>
+                            <tr>
+                              <td style={{ width: 140, padding: "3px 0", height: 25 }}>Invoice No :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "InvNo", "invNo")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>To,</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "PartyName", "partyName")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>Address :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "AddressLine1", "addressLine1")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>TRN No :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "TRNNo", "trnNo")}</td>
+                              <td style={{ padding: "3px 0", height: 25, whiteSpace: "nowrap" }}>Country of Origin:</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "CountryCode", "countryCode")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>Contact No :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "Mobile", "mobile")}</td>
+                              <td style={{ padding: "3px 0", height: 25, whiteSpace: "nowrap" }}>Contact Person :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "ContactPerson", "contactPerson")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ paddingTop: 5, height: 25 }}>Description :</td>
+                              <td style={{ fontWeight: "bold" }} />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                      <td style={{ width: "35%", verticalAlign: "top" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <tbody>
+                            <tr>
+                              <td style={{ width: 130, padding: "3px 0", height: 25 }}>Invoice Date :</td>
+                              <td style={{ fontWeight: "bold" }}>{fmtDateMMM(getVal(data, "TrnDate", "trnDate"))}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>Terms :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "DueDays", "dueDays")}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>Due Date :</td>
+                              <td style={{ fontWeight: "bold" }}>{fmtDateMMM(getVal(data, "DueDate", "dueDate"))}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: "3px 0", height: 25 }}>Through :</td>
+                              <td style={{ fontWeight: "bold" }}>{getVal(data, "Through", "through")}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
                     </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Company Name</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {company.companyName}</b></td>
-                      <td></td><td></td>
-                      <td colSpan={2} style={{ ...td, fontWeight: "bold" }}>Total Amount</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{usdFinal}</td>
-                      <td style={{ ...td, fontWeight: "bold" }}>{aedFinal}</td>
+                  </tbody>
+                </table>
+              )}
+
+              {!isFirstPage && (
+                <div style={{ fontSize: 10, margin: "5px 0", overflow: "hidden" }}>
+                  <span style={{ float: "left" }}>
+                    Invoice No: <b>{getVal(data, "InvNo", "invNo")}</b>
+                  </span>
+                  <span style={{ float: "right" }}>
+                    Invoice Date:<b> {fmtDateMMM(getVal(data, "TrnDate", "trnDate"))}</b>
+                  </span>
+                </div>
+              )}
+
+              {/* ITEM TABLE */}
+              <table className="sale-dubai-local-item-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 12 }}>
+                <thead>
+                  <tr>
+                    {["Sr.No.", "Description", "RapPrice", "Discount", "Pkts", "Carats", "Price/Cts(US $)", "Amount(US $)"].map((h) => (
+                      <th key={h} style={th}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageItems.map((item, idx) => (
+                    <tr key={idx}>
+                      <td style={td}>{srNo++}</td>
+                      <td style={td}>{getVal(item, "Description", "description", "ItemName", "itemName")}</td>
+                      <td style={td}>{fmt(getVal(item, "MRP", "mrp", "Rap", "rap"), 2)}</td>
+                      <td style={td}>{fmt(getVal(item, "PMRPDown", "pmrpDown", "Back", "back", "Discount"), 2)}</td>
+                      <td style={td}>{getVal(item, "Qty", "qty", "Pcs", "pcs")}</td>
+                      <td style={td}>{fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}</td>
+                      <td style={{ ...td, textAlign: "right", paddingRight: 4 }}>
+                        {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
+                      </td>
+                      <td style={{ ...td, textAlign: "right", paddingRight: 4 }}>
+                        {fmtNum(getVal(item, "Amount", "amount"), 2)}
+                      </td>
                     </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Account Number</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {getVal(data, "BankAccNo")}</b></td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Swift Code</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {getVal(data, "SwiftCode")}</b></td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Bank Name</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {getVal(data, "bnm", "BankName")}</b></td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Bank Address</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {getVal(data, "BankAddress1")}</b></td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "none", fontSize: 10 }}><b>Iban No</b></td>
-                      <td style={{ border: "none", fontSize: 10 }}><b>- {getVal(data, "IbanNo")}</b></td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
+                  ))}
+
+                  {Array.from({ length: emptyCount }).map((_, i) => {
+                    const lastEmpty = i === emptyCount - 1;
+                    return (
+                      <tr key={`e-${i}`} style={{ height: 18 }}>
+                        {Array.from({ length: COL_COUNT }).map((__, c) => (
+                          <td
+                            key={c}
+                            style={{
+                              height: 18,
+                              borderTop: "none",
+                              borderBottom: lastEmpty ? "2px solid #454545" : "none",
+                              borderLeft: "2px solid #454545",
+                              borderRight: "2px solid #454545"
+                            }}
+                          >
+                            &nbsp;
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+
+                  {isLastPage && (
+                    <>
+                      <tr style={{ fontWeight: "bold" }}>
+                        <td style={{ borderTop: "2px solid #454545", borderLeft: "2px solid #454545" }} />
+                        <td style={{ borderTop: "2px solid #454545" }} />
+                        <td style={{ borderTop: "2px solid #454545" }} />
+                        <td style={{ borderTop: "2px solid #454545" }} />
+                        <td style={{ borderTop: "2px solid #454545" }} />
+                        <td style={td}>{fmtNum(totalWt, 2)}</td>
+                        <td style={{ ...td, fontSize: 10 }}>Total</td>
+                        <td style={{ ...td, textAlign: "right", paddingRight: 4 }}>{fmtNum(totalAmt, 2)}</td>
+                      </tr>
+                      <tr style={{ fontWeight: "bold", height: 25 }}>
+                        <td style={td} />
+                        <td style={td} />
+                        <td style={td} />
+                        <td colSpan={3} style={{ ...td, textAlign: "right", paddingRight: 5 }}>
+                          1 USD = {fmt(rate, 2)} AED
+                        </td>
+                        <td style={{ ...td, fontSize: 10 }}>Total USD</td>
+                        <td style={{ ...td, fontSize: 10 }}>Total AED</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={4} style={{ border: "none", fontSize: 10, paddingTop: 6, verticalAlign: "top" }}>
+                          Amount in Words : <b style={{ fontSize: 10 }}>AED {getVal(data, "AmountWords", "amountWords")}.</b>
+                        </td>
+                        <td colSpan={2} style={{ ...td, fontWeight: "bold", whiteSpace: "nowrap" }}>
+                          Gross Amount
+                        </td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{fmtNum(net, 2)}</td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{fmtNum(net * rate, 2)}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={4} style={{ border: "none", fontSize: 10, paddingTop: 6 }}>
+                          Payment Details :
+                        </td>
+                        <td colSpan={2} style={{ ...td, fontWeight: "bold", whiteSpace: "nowrap" }}>
+                          Tax Amount
+                        </td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{fmtNum(finalTax, 2)}</td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{fmtNum(finalTax * rate, 2)}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Company Name</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {company.companyName}</b>
+                        </td>
+                        <td />
+                        <td />
+                        <td colSpan={2} style={{ ...td, fontWeight: "bold", whiteSpace: "nowrap" }}>
+                          Total Amount
+                        </td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{usdFinal}</td>
+                        <td style={{ ...td, fontWeight: "bold" }}>{aedFinal}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Account Number</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {getVal(data, "BankAccNo", "bankAccNo")}</b>
+                        </td>
+                        <td colSpan={4} style={{ border: "none" }} />
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Swift Code</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {getVal(data, "SwiftCode", "swiftCode")}</b>
+                        </td>
+                        <td colSpan={4} style={{ border: "none" }} />
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Bank Name</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {getVal(data, "bnm", "BankName", "bankName")}</b>
+                        </td>
+                        <td colSpan={4} style={{ border: "none" }} />
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Bank Address</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {getVal(data, "BankAddress1", "bankAddress1")}</b>
+                        </td>
+                        <td colSpan={4} style={{ border: "none" }} />
+                      </tr>
+                      <tr>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>Iban No</b>
+                        </td>
+                        <td style={{ border: "none", fontSize: 10 }}>
+                          <b>- {getVal(data, "IbanNo", "ibanNo")}</b>
+                        </td>
+                        <td colSpan={4} style={{ border: "none" }} />
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* FOOTER — last page, pinned bottom */}
             {isLastPage && (
-              <>
-                <div style={{ fontSize: 10, marginTop: 5, textAlign: "justify", marginLeft: 12, fontFamily: "Segoe UI" }}>{conditions}</div>
-                <table style={{ width: "100%", marginTop: 42, marginBottom: 10, fontFamily: "Calibri", fontSize: 12 }}>
+              <div className="sale-dubai-local-footer" style={{ flex: "0 0 auto", marginTop: "auto", paddingTop: 8 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    marginTop: 4,
+                    textAlign: "justify",
+                    marginLeft: 8,
+                    fontFamily: "Segoe UI, Verdana, sans-serif",
+                    lineHeight: 1.35
+                  }}
+                >
+                  {conditions}
+                </div>
+
+                <table style={{ width: "100%", marginTop: 28, marginBottom: 8, fontFamily: "Calibri, Verdana, sans-serif", fontSize: 12 }}>
                   <tbody>
                     <tr>
                       <td style={{ width: "40%", verticalAlign: "top" }}>
                         <div style={{ borderTop: "2px solid #000", width: "94%", marginBottom: 5 }} />
-                        <div><b>Buyer's signature & Co. Stamp confirming the purchase of above<br />mentioned goods as per terms set out.</b></div>
+                        <div>
+                          <b>
+                            Buyer&apos;s signature &amp; Co. Stamp confirming the purchase of above
+                            <br />
+                            mentioned goods as per terms set out.
+                          </b>
+                        </div>
                       </td>
                       <td style={{ width: "20%", textAlign: "center", verticalAlign: "top" }}>
                         <div style={{ fontWeight: "bold", fontSize: 16 }}>THANK YOU</div>
                         <div style={{ fontSize: 13, marginTop: 7 }}>FOR DOING BUSINESS WITH US</div>
                       </td>
-                      <td style={{ width: "40%", textAlign: "center", verticalAlign: "top", fontSize: 15 }}>
-                        <div style={{ fontWeight: "bold" }}>For {company.companyName}</div>
+                      <td style={{ width: "40%", textAlign: "center", verticalAlign: "top", fontSize: 15, fontWeight: "bold" }}>
+                        For {company.companyName}
                       </td>
                     </tr>
                   </tbody>
                 </table>
-                <div style={{ background: "#000", color: "#fff", margin: "2px 0", textAlign: "center", fontFamily: "Calibri", fontSize: 14, fontWeight: "bold" }}>
+
+                <div
+                  style={{
+                    background: "#000",
+                    color: "#fff",
+                    margin: "2px 0",
+                    textAlign: "center",
+                    fontFamily: "Calibri, Verdana, sans-serif",
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    padding: "4px 0",
+                    WebkitPrintColorAdjust: "exact",
+                    printColorAdjust: "exact"
+                  }}
+                >
                   The right source for quality & consistency…
                 </div>
-              </>
+              </div>
             )}
-            <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 12 }}>Page {pageIdx + 1} of {pages.length}</div>
+
+            <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 12, marginTop: 4 }}>
+              Page {pageIdx + 1} of {pages.length}
+            </div>
           </div>
         );
       })}

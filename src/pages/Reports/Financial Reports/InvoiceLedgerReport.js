@@ -93,11 +93,18 @@ const fmtFixed = (value) => {
 };
 
 const openTxnLink = (code, trnType) => {
-    const type = String(trnType || "").toUpperCase();
-    let url = "";
-    if (type === "PSALE") url = `../saleParcel/edit-saleParcel?ID=${code}&Mode=view`;
-    else url = `../sale/edit-sale?ID=${code}&Mode=view`;
-    if (url) window.open(url, "_blank")?.focus();
+    if (!code) return;
+    const type = String(trnType || "").trim().toUpperCase();
+    // MVC Ledger.js setlink(Code, TrnType) — open created form in Mode=view
+    let path = "";
+    if (type === "PSALE") {
+      // Parcel / Mix Sale form (MVC: saleParcel/edit-saleParcel?ID=&Mode=view)
+      path = `/mix/edit-mixdata?Id=${encodeURIComponent(code)}&Mode=view`;
+    } else {
+      // Solitaire Sale form (MVC: sale/edit-sale?ID=&Mode=view)
+      path = `/sale/edit-sale?Id=${encodeURIComponent(code)}&Mode=view`;
+    }
+    window.open(path, "_blank")?.focus();
 };
 
 const InvoiceLedgerReport = () => {

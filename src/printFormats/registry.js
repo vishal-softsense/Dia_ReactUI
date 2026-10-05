@@ -77,7 +77,7 @@ const MODULE_FORMATS = {
 const MODULE_DEFAULTS = {
   solitaireMemo: "Solitaire Memo India_Single Format",
   parcelMemo: "Parcel Memo USA_UpAndDownDual Format",
-  solitaireSale: "Solitaire Sale Invoice USA",
+  solitaireSale: "Solitaire Sale Invoice USA_Format1",
   parcelSale: "Parcel Sale InvoiceUSA_Format",
   mixMemo: "MixMemoUSA"
 };
@@ -109,7 +109,24 @@ export function resolvePrintComponent(moduleKey, formatName, options = {}) {
     const count = Number(options.itemCount) || 0;
     if (count < 11) key = "MixMemoDual";
   }
-  return formats[key] || formats[MODULE_DEFAULTS[moduleKey]] || null;
+  if (formats[key]) return formats[key];
+
+  const collapsed = key.toLowerCase().replace(/[\s_]+/g, "");
+  const fuzzyKey = Object.keys(formats).find(
+    (name) => name.toLowerCase().replace(/[\s_]+/g, "") === collapsed
+  );
+  if (fuzzyKey) return formats[fuzzyKey];
+
+  if (moduleKey === "solitaireSale") {
+    if (/usa.?format\s*1|format\s*1/i.test(key)) {
+      return formats["Solitaire Sale Invoice USA_Format1"] || null;
+    }
+    if (/usa.?format\s*2|format\s*2/i.test(key)) {
+      return formats["Solitaire Sale Invoice USA_Format2"] || null;
+    }
+  }
+
+  return formats[MODULE_DEFAULTS[moduleKey]] || null;
 }
 
 export function isLandscapePrintFormat(formatName) {

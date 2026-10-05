@@ -116,6 +116,123 @@ export const paginateStella = (items, pageSize = 25, lastCap = 21) => {
   return pages;
 };
 
+/**
+ * Purchase NOTE style:
+ * - ≤ lastCap: 1 page with Totals
+ * - else: full/middle pages of pageSize; last page ≤ lastCap with records + Totals
+ * Example (24 / 25): 49 items → Page1: 24 | Page2: 25 + Totals
+ */
+export const paginateWithLastCap = (items, pageSize = 25, lastCap = 21) => {
+  const list = items || [];
+  if (!list.length) return [[]];
+
+  // Single page: allow up to max(pageSize, lastCap)
+  // Sale Format1: 25/21 → ≤25 = 1 page; Purchase: 24/25 → ≤25 = 1 page
+  const singleMax = Math.max(pageSize, lastCap);
+  if (list.length <= singleMax) return [list];
+
+  const pages = [];
+  let start = 0;
+
+  while (list.length - start > lastCap) {
+    const remaining = list.length - start;
+    let take = pageSize;
+    if (remaining - take <= 0) {
+      take = remaining - lastCap;
+    }
+    if (take < 1) take = Math.min(pageSize, remaining - 1);
+    pages.push(list.slice(start, start + take));
+    start += take;
+  }
+  pages.push(list.slice(start));
+  return pages;
+};
+
+/** Sanitize party / name segment for print PDF filenames (MVC style). */
+export const sanitizePrintNamePart = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[\\/:*?"<>|]+/g, "");
+
+/**
+ * e.g. MemoIn_129_Sahil / Purchase_264_Arjunrajpassaround
+ * Uses InvNo (invoice #) + PartyName — not the URL transaction ID.
+ */
+export const buildPrintFileName = (prefix, invNo, partyName) => {
+  const inv = sanitizePrintNamePart(invNo);
+  const party = sanitizePrintNamePart(partyName);
+  if (inv && party) return `${prefix}_${inv}_${party}`;
+  if (inv) return `${prefix}_${inv}`;
+  return prefix;
+};
+
+/** Set document title so browser Print → Save as PDF uses this filename. */
+export const applyPrintDocumentTitle = (fileName) => {
+  if (!fileName) return;
+  document.title = fileName;
+  const titleEl = document.querySelector("head title");
+  if (titleEl) titleEl.textContent = fileName;
+};
+
+/**
+ * Print a DOM element in a dedicated window so Microsoft Print to PDF /
+ * Save-as dialog picks up fileName (e.g. MemoIn_129_Sahil) as the default name.
+ */
+export const printElementWithFileName = (elementId, fileName) => {
+  const safeName = sanitizePrintNamePart(fileName) ? fileName : "print";
+  applyPrintDocumentTitle(safeName);
+
+  const source = document.getElementById(elementId);
+  if (!source) {
+    window.print();
+    return;
+  }
+
+  const printWindow = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+  if (!printWindow) {
+    // Popup blocked — fall back to same-window print
+    setTimeout(() => window.print(), 50);
+    return;
+  }
+
+  const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map((node) => node.outerHTML)
+    .join("\n");
+
+  printWindow.document.open();
+  printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${safeName.replace(/</g, "")}</title>
+  ${styles}
+  <style>
+    html, body { margin: 0; padding: 0; background: #fff !important; }
+    @page { size: Letter portrait; margin: 8mm; }
+    .d-print-none { display: none !important; }
+  </style>
+</head>
+<body>${source.outerHTML}</body>
+</html>`);
+  printWindow.document.close();
+  printWindow.document.title = safeName;
+
+  const triggerPrint = () => {
+    try {
+      printWindow.document.title = safeName;
+      printWindow.focus();
+      printWindow.print();
+    } catch (err) {
+      console.error(err);
+      window.print();
+    }
+  };
+
+  // Allow images/styles to settle before opening the print dialog
+  setTimeout(triggerPrint, 300);
+};
+
 export const PRINT_SETTING_NAMES = {
   solitaireMemo: "DEFAULT MEMO PRINT FORMAT SOLITAIRE",
   parcelMemo: "DEFAULT MEMO PRINT FORMAT PARCEL",
@@ -171,9 +288,9 @@ export const resolveImageFullPath = (item) => {
 };
 
 /**
- * MVC print amount column heading:
- * Currency is resolved invoice currency (SSymbol or MSymbol).
- * Display: "Amount USD" / "Amount INR" (Amount {Currency}).
+ * MVC Purchase/PrintInvoice + MixPurchasePrint_USA amount column:
+ * SSymbol/stock → "Amount US {SSymbol}" (e.g. Amount US USD)
+ * MSymbol/master → "Amount {MSymbol}" (e.g. Amount INR)
  */
 export const getPrintAmountHeader = (data, company = {}) => {
   let auth = {};
@@ -206,17 +323,15 @@ export const getPrintAmountHeader = (data, company = {}) => {
     currency = stockSymbol;
   }
 
-  // Prefer the resolved invoice currency symbol (USD / INR / …) — never hard-code.
   const upper = currency.toUpperCase();
   const stockUpper = String(stockSymbol).trim().toUpperCase();
   const masterUpper = String(masterSymbol).trim().toUpperCase();
 
   if (upper === stockUpper || upper === "USD") {
-    return `Amount ${stockSymbol}`;
+    return `Amount US ${stockSymbol}`;
   }
   if (upper === masterUpper) {
     return `Amount ${masterSymbol}`;
   }
-  // Currency already a symbol name from API
   return `Amount ${currency}`;
 };
