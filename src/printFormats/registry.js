@@ -112,6 +112,11 @@ export function resolvePrintComponent(moduleKey, formatName, options = {}) {
     const count = Number(options.itemCount) || 0;
     if (count < 11) key = "MixMemoDual";
   }
+  // MVC MemoController SoMemoOutPrintInv: "Solitaire Memo" + rows >= 11 → SoMemoOutSiglePageFormat
+  if (moduleKey === "solitaireMemo" && key === "Solitaire Memo") {
+    const count = Number(options.itemCount) || 0;
+    if (count >= 11) key = "Solitaire Memo SinglePage";
+  }
   if (formats[key]) return formats[key];
 
   const collapsed = key.toLowerCase().replace(/[\s_]+/g, "");

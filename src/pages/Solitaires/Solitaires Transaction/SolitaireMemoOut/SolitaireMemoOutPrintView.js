@@ -148,6 +148,12 @@ const SolitaireMemoOutPrintView = () => {
             ref={printRef}
             id="memo-out-print-area"
             className={sheetHostClass}
+            style={{
+              width: "100%",
+              maxWidth: isLandscape ? 1100 : 960,
+              margin: "0 auto",
+              boxSizing: "border-box"
+            }}
           >
             {FormatComponent ? (
               <FormatComponent
@@ -247,6 +253,7 @@ const SolitaireMemoOutPrintView = () => {
               margin: 5mm;
             }
             #memo-out-print-area.classic-print-host {
+              display: block !important;
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
@@ -255,11 +262,15 @@ const SolitaireMemoOutPrintView = () => {
             }
             #memo-out-print-area .classic-print-container {
               width: 100% !important;
+              max-width: 100% !important;
               margin: 0 !important;
               padding: 0 !important;
               border: none !important;
               box-shadow: none !important;
               zoom: 0.72 !important;
+            }
+            #memo-out-print-area .classic-copy {
+              width: 100% !important;
             }
             #memo-out-print-area .classic-main-table th,
             #memo-out-print-area th {
@@ -395,23 +406,35 @@ const SolitaireMemoOutPrintView = () => {
                     : ""
           }
         />
-        {isIndiaSingle || isUsaSingle || isClassic ? (
-          <style>{`
-            @media screen {
-              .memo-out-print-page .india-single-print-host,
-              .memo-out-print-page .usa-single-print-host,
-              .memo-out-print-page .classic-print-host,
-              .memo-out-print-page .single-page-print-host {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                background: #e9eef2;
-                padding: 16px 12px 28px;
-                border-radius: 4px;
-              }
+        <style>{`
+          @media screen {
+            #memo-out-print-area {
+              background: #e9eef2;
+              padding: 16px 12px 28px;
+              border-radius: 4px;
             }
-          `}</style>
-        ) : null}
+            #memo-out-print-area .classic-print-container,
+            #memo-out-print-area .india-single-print-container,
+            #memo-out-print-area .usa-single-print-container,
+            #memo-out-print-area .single-page-print-container {
+              width: 100% !important;
+              max-width: 8.5in !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+              flex-shrink: 0;
+            }
+            #memo-out-print-area .single-page-print-container .single-page-sheet {
+              width: 100% !important;
+              max-width: 8.5in !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+            #memo-out-print-area .india-dual-print-container {
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+          }
+        `}</style>
         <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>

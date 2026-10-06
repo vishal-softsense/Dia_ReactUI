@@ -767,6 +767,7 @@ const authProtectedRoutes = [
   { path: "/memo/add-memo", component: <SolitaireMemoOutAdd /> },
   { path: "/memo/edit-memo", component: <SolitaireMemoOutEdit /> },
   { path: "/memo/printinvview", component: <SolitaireMemoOutPrintView /> },
+  { path: "/memo/printview", component: <SolitaireMemoOutPrintView /> },
 
   // Solitaire Party Hold entry (MVC: /PartyHold/*)
   { path: "/PartyHold/PartyHold-list", component: <SolitairePartyHoldList /> },

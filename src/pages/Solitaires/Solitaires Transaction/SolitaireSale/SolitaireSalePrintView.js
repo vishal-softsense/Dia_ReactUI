@@ -86,6 +86,8 @@ const SolitaireSalePrintView = () => {
     ? `Sale_${saleNo || invNo}_${partyName}`
     : `Sale_${saleNo || invNo}`;
 
+  const prevTitle = document.title;
+
   const handlePrint = () => {
     document.title = printFileName;
     window.print();

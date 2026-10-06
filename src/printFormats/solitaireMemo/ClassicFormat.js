@@ -450,12 +450,19 @@ const ClassicFormat = ({ data, items, totals, company, logoUrl }) => {
         }
         @media screen {
           .classic-print-container {
-            width: 8.5in;
-            max-width: 100%;
+            width: 100%;
+            max-width: 8.5in;
+            min-width: min(8.5in, 100%);
             margin: 0 auto 24px;
             padding: 10mm;
             border: 1px solid #c8c8c8;
             box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+            box-sizing: border-box;
+          }
+          .classic-print-container .classic-copy,
+          .classic-print-container .classic-main-table,
+          .classic-print-container .classic-header {
+            width: 100%;
           }
         }
         @media print {
