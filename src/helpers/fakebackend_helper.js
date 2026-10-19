@@ -960,6 +960,14 @@ export const addMountingItemInGrid = data => api.create(url.ADD_MOUNTING_ITEM_IN
 export const deleteMountingItemFromGrid = index => api.create(url.DELETE_MOUNTING_ITEM_FROM_GRID, index);
 export const getNextMountingStockId = designId => api.get(`${url.GET_NEXT_MOUNTING_STOCK_ID}?designId=${encodeURIComponent(designId)}`);
 export const getMountingStockDropdown = (category, actionType = "") => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}&actionType=${encodeURIComponent(actionType)}`);
+export const getJewDriveFindByName = (name, mediaType = "image") =>
+  api.get(
+    `${url.JEW_DRIVE_FIND_BY_NAME}?name=${encodeURIComponent(name || "")}&mediaType=${encodeURIComponent(mediaType || "image")}`
+  );
+export const getJewDriveListStockImages = (stockId) =>
+  api.get(`${url.JEW_DRIVE_LIST_STOCK_IMAGES}?stockId=${encodeURIComponent(stockId || "")}`);
+export const getJewDriveListStockVideos = (stockId) =>
+  api.get(`${url.JEW_DRIVE_LIST_STOCK_VIDEOS}?stockId=${encodeURIComponent(stockId || "")}`);
 export const getAllLotNoList = (searchby, stoneType) => api.get(`${url.GET_ALL_LOTNO_LIST}?searchby=${encodeURIComponent(searchby)}&stoneType=${encodeURIComponent(stoneType)}`);
 export const getSolitaireLots = (searchby) => api.get(`${url.GET_SOLITAIRE_LOTS}${searchby ? `?searchby=${encodeURIComponent(searchby)}` : ""}`);
 
@@ -1034,6 +1042,7 @@ export const getSolitaireStockHistoryReport = (filter) => api.create(url.SOLITAI
 // Solitaire Grading Comparison Report
 export const getSolitaireGradingComparisonReport = (filter) => api.create(url.SOLITAIRE_GRADING_COMPARISON_REPORT, filter);
 export const getSolitaireGradingComparisonDropdowns = () => api.get(url.SOLITAIRE_GRADING_COMPARISON_DROPDOWNS);
+export const makeSolitaireLabWeightDiffEntry = (payload) => api.create(url.SOLITAIRE_GRADING_COMPARISON_LAB_WEIGHT_DIFF_ENTRY, payload);
 
 // Solitaire Rate Revise Report
 export const getSolitaireRateReviseReport = (filter) => api.create(url.SOLITAIRE_RATE_REVISE_REPORT, filter);

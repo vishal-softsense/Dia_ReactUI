@@ -21,7 +21,12 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
-import { exportToExcel } from "../../../helpers/excel_helper";
+import {
+  exportToExcel,
+  exportSolitairePurchaseReportExcel,
+  exportPurchaseReportPrintExcel,
+  exportSolitairePurchaseExportReportExcel
+} from "../../../helpers/excel_helper";
 
 import {
   getSolitairePurchaseDropdowns,
@@ -205,10 +210,11 @@ const escapeHtml = (value) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+/* MVC purchase-report.js printTable — A4 landscape, 2mm margins, View column omitted */
 const GROUPED_PRINT_STYLES = `
     @page {
         size: A4 landscape;
-        margin: 2mm;
+        margin: 2mm 2mm 2mm 2mm;
     }
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
@@ -219,13 +225,13 @@ const GROUPED_PRINT_STYLES = `
         margin: 0;
     }
     #header {
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: flex-start;
-        max-width: 270mm;
-        width: 100%;
-        margin: 0 auto 8px auto;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        max-width: 270mm !important;
+        width: 100% !important;
+        margin: 0 auto !important;
     }
     #header .company-block {
         display: flex;
@@ -240,13 +246,14 @@ const GROUPED_PRINT_STYLES = `
     }
     #header .company-text {
         font-size: 13px;
-        line-height: 1.6;
+        line-height: 1.8;
     }
     #header .report-title {
         text-align: right;
         font-size: 20px;
         font-weight: 700;
         min-width: 180px;
+        color: #000;
     }
     #report-date-range {
         font-size: 12px;
@@ -254,21 +261,28 @@ const GROUPED_PRINT_STYLES = `
         margin-top: 4px;
         text-align: right;
     }
+    #cpny-footer {
+        max-width: 270mm !important;
+        width: 100% !important;
+        margin: 20px auto 0 auto !important;
+        font-size: 12px;
+    }
     #dynamic-sol-purchase-report-table {
         border-collapse: collapse;
         table-layout: fixed;
-        width: 100%;
-        max-width: 270mm;
-        margin: 16px auto 0 auto;
+        max-width: 270mm !important;
+        width: 100% !important;
+        min-width: auto !important;
+        margin: 20px auto 0 auto;
     }
     #dynamic-sol-purchase-report-table th,
     #dynamic-sol-purchase-report-table td {
-        padding: 2px;
+        padding: 2px !important;
         font-size: 10px;
-        border: 1px solid #000;
-        vertical-align: middle;
+        border: 1px solid black;
         word-break: break-word;
         white-space: normal;
+        vertical-align: middle;
     }
     #dynamic-sol-purchase-report-table thead th {
         background: #f2f2f2;
@@ -276,7 +290,6 @@ const GROUPED_PRINT_STYLES = `
         font-weight: 600;
         white-space: nowrap;
     }
-    /* Match MVC print widths (View omitted): Sr No → Amount */
     #dynamic-sol-purchase-report-table col:nth-child(1) { width: 10%; }
     #dynamic-sol-purchase-report-table col:nth-child(2) { width: 10%; }
     #dynamic-sol-purchase-report-table col:nth-child(3) { width: 22%; }
@@ -298,11 +311,11 @@ const GROUPED_PRINT_STYLES = `
         white-space: nowrap;
         word-break: keep-all;
     }
-    #dynamic-sol-purchase-report-table .invoice-info td {
+    #dynamic-sol-purchase-report-table .memo-info td {
         background: #f5f5f5;
         font-weight: 600;
         text-align: left !important;
-        padding: 6px 8px;
+        padding: 6px 8px !important;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -321,12 +334,6 @@ const GROUPED_PRINT_STYLES = `
         text-align: right !important;
         white-space: nowrap;
         word-break: keep-all;
-    }
-    #cpny-footer {
-        max-width: 270mm;
-        width: 100%;
-        margin: 20px auto 0 auto;
-        font-size: 12px;
     }
 `;
 
@@ -460,9 +467,9 @@ const SolitairePurchaseReport = () => {
       return list.map((item) => ({
         value:
           dropdownKey === "type" ||
-          dropdownKey === "subType" ||
-          dropdownKey === "category" ||
-          dropdownKey === "account"
+            dropdownKey === "subType" ||
+            dropdownKey === "category" ||
+            dropdownKey === "account"
             ? item.name ?? item.Name ?? item.label ?? ""
             : item.id ?? item.ID ?? item.value ?? "",
         label: String(item.name ?? item.Name ?? item.label ?? "").toUpperCase()
@@ -664,7 +671,8 @@ const SolitairePurchaseReport = () => {
           ? `<strong>${escapeHtml(t("Party"))}:</strong> ${escapeHtml(section.groupKey)} &nbsp;|&nbsp; <strong>${escapeHtml(t("Date"))}:</strong> ${escapeHtml(formatReportDisplayDate(getRowDueDateRaw(section.first)))}`
           : `<strong>${escapeHtml(t("Party"))}:</strong> ${escapeHtml(getRowVal(section.first, "Party", "party"))} &nbsp;|&nbsp; <strong>${escapeHtml(t("Inv No"))}:</strong> ${escapeHtml(section.groupKey)} &nbsp;|&nbsp; <strong>${escapeHtml(t("Date"))}:</strong> ${escapeHtml(formatReportDisplayDate(getRowDueDateRaw(section.first)))}`;
 
-      bodyRows += `<tr class="invoice-info"><td colspan="7">${infoText}</td></tr>`;
+      // MVC memo-info group header (printTable clones this class)
+      bodyRows += `<tr class="memo-info"><td colspan="7">${infoText}</td></tr>`;
 
       section.rows.forEach((row) => {
         bodyRows += `
@@ -680,10 +688,10 @@ const SolitairePurchaseReport = () => {
                 `;
       });
 
-      // MVC print (View removed): colspan covers Sr No + InvNo, then LotNo + numeric cols
+      // MVC printTable (View column removed): colspan Sr No+InvNo, then Item + numeric cols
       bodyRows += `
                 <tr class="subtotal">
-                    <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
+                    <td colspan="2" class="col-label" style="padding-left:50px;"><strong>${escapeHtml(t("Total"))}</strong></td>
                     <td></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
@@ -695,7 +703,7 @@ const SolitairePurchaseReport = () => {
 
     bodyRows += `
             <tr class="grand-total">
-                <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
+                <td colspan="2" class="col-label" style="padding-left:50px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
                 <td></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
@@ -713,7 +721,7 @@ const SolitairePurchaseReport = () => {
                     <tr>
                         <th>Sr No</th>
                         <th>InvNo</th>
-                        <th>${escapeHtml(t("LotNo"))}</th>
+                        <th>${escapeHtml(t("Item"))}</th>
                         <th>${escapeHtml(t("Carats"))}</th>
                         <th>${escapeHtml(t("Return"))}</th>
                         <th>${escapeHtml(t("Rate"))}</th>
@@ -847,12 +855,12 @@ const SolitairePurchaseReport = () => {
                 <td key={cell.id}>
                   {column.columnDef.cell
                     ? flexRender(column.columnDef.cell, {
-                        ...cell.getContext(),
-                        row: {
-                          ...row,
-                          original: childRow
-                        }
-                      })
+                      ...cell.getContext(),
+                      row: {
+                        ...row,
+                        original: childRow
+                      }
+                    })
                     : dashText(child[column.columnDef.accessorKey])}
                 </td>
               );
@@ -1046,7 +1054,8 @@ const SolitairePurchaseReport = () => {
     [expandedInvnos, t]
   );
 
-  const handleExcel = async () => {
+  // MVC PurchasePrint: DP = Direct Print (table Excel), PR = PurchaseReport Print, SPR = Solitaire Purchase Report Print
+  const handleDirectPrintExcel = async () => {
     if (!reportRows || reportRows.length === 0) {
       toast.warning(t("No data available to export."));
       return;
@@ -1142,6 +1151,33 @@ const SolitairePurchaseReport = () => {
     if (!res?.success) toast.error(t("Excel export failed."));
   };
 
+  const handlePurchaseReportPrintExcel = async () => {
+    if (!reportRows || reportRows.length === 0) {
+      toast.warning(t("No data available to export."));
+      return;
+    }
+    const res = await exportPurchaseReportPrintExcel(reportRows, "PurchaseReportList");
+    if (!res?.success) toast.error(t("Excel export failed."));
+  };
+
+  const handleSolitairePurchaseReportPrint = async () => {
+    if (!reportRows || reportRows.length === 0) {
+      toast.warning(t("No data available to export."));
+      return;
+    }
+    const res = await exportSolitairePurchaseReportExcel(reportRows, "SolitairePurchaseReport");
+    if (!res?.success) toast.error(t("Excel export failed."));
+  };
+
+  const handleExportReportExcel = async () => {
+    if (!reportRows || reportRows.length === 0) {
+      toast.warning(t("No data available to export."));
+      return;
+    }
+    const res = await exportSolitairePurchaseExportReportExcel(reportRows, "ExportReport");
+    if (!res?.success) toast.error(t("Excel export failed."));
+  };
+
   document.title = `${t("Purchase Report")} | ${t("Reports")}`;
 
   return (
@@ -1205,11 +1241,17 @@ const SolitairePurchaseReport = () => {
                         {t("Excel")} / {t("Print")}
                       </DropdownToggle>
                       <DropdownMenu>
-                        <DropdownItem onClick={handleExcel}>
-                          Direct Print
+                        <DropdownItem onClick={handleDirectPrintExcel}>
+                          {t("Direct Print")}
                         </DropdownItem>
-                        <DropdownItem onClick={handleExcel}>
-                          PurchaseReport Print
+                        <DropdownItem onClick={handlePurchaseReportPrintExcel}>
+                          {t("PurchaseReport Print")}
+                        </DropdownItem>
+                        <DropdownItem onClick={handleSolitairePurchaseReportPrint}>
+                          {t("Solitaire Purchase Report Print")}
+                        </DropdownItem>
+                        <DropdownItem onClick={handleExportReportExcel}>
+                          {t("Solitaire Purchase Export Report Print")}
                         </DropdownItem>
                       </DropdownMenu>
                     </UncontrolledDropdown>

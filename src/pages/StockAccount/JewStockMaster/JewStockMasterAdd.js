@@ -23,6 +23,7 @@ import {
 import { exportToExcel } from "../../../helpers/excel_helper";
 import TableContainer from "../../../Components/Common/TableContainer";
 import JewStockMediaPreview from "./JewStockMediaPreview";
+import JewStockDrivePathFields from "./JewStockDrivePathFields";
 import {
   computeChargeTotals,
   computeMakingCharges,
@@ -946,7 +947,7 @@ export default function AddMountingMaster() {
   const handleSubmit = async () => {
     let currentErrors = {};
     if (!stockID.trim()) currentErrors.stockID = true;
-    
+
     setErrors(currentErrors);
 
     if (Object.keys(currentErrors).length > 0) {
@@ -1192,16 +1193,16 @@ export default function AddMountingMaster() {
                       </FieldRow>
                       <FieldRow label="Stock ID">
                         <>
-                          <input type="text" 
+                          <input type="text"
                             className={`${inputCls} ${errors.stockID ? "is-invalid" : ""}`}
                             placeholder="Stock ID"
-                            value={stockID} 
+                            value={stockID}
                             onChange={(e) => {
-                                setStockID(e.target.value);
-                                if (e.target.value.trim()) setErrors(prev => ({ ...prev, stockID: false }));
+                              setStockID(e.target.value);
+                              if (e.target.value.trim()) setErrors(prev => ({ ...prev, stockID: false }));
                             }}
                             onBlur={() => {
-                                if (!stockID.trim()) setErrors(prev => ({ ...prev, stockID: true }));
+                              if (!stockID.trim()) setErrors(prev => ({ ...prev, stockID: true }));
                             }}
                           />
                           {errors.stockID && <div className="invalid-feedback d-block">{t("Please enter Stock ID")}</div>}
@@ -1385,20 +1386,17 @@ export default function AddMountingMaster() {
                   )}
 
                   {midTab === "images" && (
-                    <>
-                      <FieldRow label="Image Path" wide>
-                        <input type="text" className={inputCls} placeholder="Image Path"
-                          value={imagePath} onChange={(e) => setImagePath(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Video Path" wide>
-                        <input type="text" className={inputCls} placeholder="Video Path"
-                          value={videoPath} onChange={(e) => setVideoPath(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Cert Path" wide>
-                        <input type="text" className={inputCls} placeholder="Cert Path"
-                          value={certPath} onChange={(e) => setCertPath(e.target.value)} />
-                      </FieldRow>
-                    </>
+                    <JewStockDrivePathFields
+                      stockId={stockID}
+                      imagePath={imagePath}
+                      videoPath={videoPath}
+                      certPath={certPath}
+                      onImagePathChange={setImagePath}
+                      onVideoPathChange={setVideoPath}
+                      onCertPathChange={setCertPath}
+                      inputCls={inputCls}
+                      FieldRow={FieldRow}
+                    />
                   )}
                 </CardBody>
               </Card>

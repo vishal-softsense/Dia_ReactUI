@@ -133,8 +133,8 @@ const PayWithExDiffForm = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currencyOpts, setCurrencyOpts] = useState([]);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
 
@@ -169,12 +169,24 @@ const PayWithExDiffForm = () => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      setMasterSymbol(
+        auth?.MSymbol ||
+          auth?.mSymbol ||
+          auth?.data?.MSymbol ||
+          company?.masterSymbol ||
+          cached.masterSymbol ||
+          ""
+      );
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -220,6 +232,11 @@ const PayWithExDiffForm = () => {
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        // MVC paywithexdiff.js: always update MasterSymbol / StockSymbol labels from get-currency-rate
+        const mSym = getVal(res, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(res, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         setForm((prev) => ({
           ...prev,
           mBaseRate: fmtNum(toNum(res.baseRate ?? res.BaseRate, toNum(prev.mBaseRate))),
@@ -377,7 +394,7 @@ const PayWithExDiffForm = () => {
       if (num > usdAmt + 0.0001) {
         Swal.fire({
           title: t("Warning"),
-          text: "AdjUSDAmount should not be greter than USD Amount",
+          text: `${t("Adj")} ${stockSymbol} ${t("Amt")} should not be greter than ${stockSymbol} ${t("Amount")}`,
           icon: "error"
         });
       }
@@ -903,14 +920,28 @@ const PayWithExDiffForm = () => {
                       <th className="text-nowrap">{t("BillNo")}</th>
                       <th className="text-nowrap text-end">{t("Carats")}</th>
                       <th className="text-nowrap">{t("Inv.Cur")}</th>
-                      <th className="text-nowrap text-end">{t("USD Amount")}</th>
+                      <th className="text-nowrap text-end">
+                        {stockSymbol} {t("Amount")}
+                      </th>
                       <th className="text-nowrap text-end">{t("Base Rate")}</th>
-                      <th className="text-nowrap text-end">{t("INR Amount")}</th>
-                      <th className="text-nowrap text-end">{t("Adj USD Amt")}</th>
-                      <th className="text-nowrap text-end">{t("Adj INR Amt")}</th>
-                      <th className="text-nowrap text-end">{t("Ex Diff INR")}</th>
-                      <th className="text-nowrap text-end">{t("Rem USD Amt")}</th>
-                      <th className="text-nowrap text-end">{t("Rem INR Amt")}</th>
+                      <th className="text-nowrap text-end">
+                        {masterSymbol} {t("Amount")}
+                      </th>
+                      <th className="text-nowrap text-end">
+                        {t("Adj")} {stockSymbol} {t("Amt")}
+                      </th>
+                      <th className="text-nowrap text-end">
+                        {t("Adj")} {masterSymbol} {t("Amt")}
+                      </th>
+                      <th className="text-nowrap text-end">
+                        {t("Ex Diff")} {masterSymbol}
+                      </th>
+                      <th className="text-nowrap text-end">
+                        {t("Rem")} {stockSymbol} {t("Amt")}
+                      </th>
+                      <th className="text-nowrap text-end">
+                        {t("Rem")} {masterSymbol} {t("Amt")}
+                      </th>
                       <th className="text-nowrap">{t("TrnType")}</th>
                       <th className="text-nowrap">{t("InvCode")}</th>
                     </tr>

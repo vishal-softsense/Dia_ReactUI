@@ -15,7 +15,7 @@ import NotificationDropdown from '../Components/Common/NotificationDropdown';
 import ProfileDropdown from '../Components/Common/ProfileDropdown';
 import LightDark from '../Components/Common/LightDark';
 
-import { changeSidebarVisibility } from '../slices/thunks';
+import { changeSidebarVisibility, changeLeftsidebarSizeType } from '../slices/thunks';
 import { useSelector, useDispatch } from "react-redux";
 import { createSelector } from 'reselect';
 
@@ -53,11 +53,20 @@ const Header = ({ onChangeLayoutMode, layoutModeType, headerClass }) => {
         if (sidebarVisibilitytype === "show" && (document.documentElement.getAttribute('data-layout') === "vertical" || document.documentElement.getAttribute('data-layout') === "semibox")) {
             if (windowSize < 1025 && windowSize > 767) {
                 document.body.classList.remove('vertical-sidebar-enable');
-                (document.documentElement.getAttribute('data-sidebar-size') === 'sm') ? document.documentElement.setAttribute('data-sidebar-size', '') : document.documentElement.setAttribute('data-sidebar-size', 'sm');
+                // Persist collapsed (sm) vs open (lg) — empty attr maps to default lg
+                const nextSize =
+                    document.documentElement.getAttribute('data-sidebar-size') === 'sm' ? 'lg' : 'sm';
+                document.documentElement.setAttribute('data-sidebar-size', nextSize === 'lg' ? '' : 'sm');
+                dispatch(changeLeftsidebarSizeType(nextSize));
             } else if (windowSize > 1025) {
                 document.body.classList.remove('vertical-sidebar-enable');
-                (document.documentElement.getAttribute('data-sidebar-size') === 'lg') ? document.documentElement.setAttribute('data-sidebar-size', 'sm') : document.documentElement.setAttribute('data-sidebar-size', 'lg');
+                const nextSize =
+                    document.documentElement.getAttribute('data-sidebar-size') === 'lg' ? 'sm' : 'lg';
+                document.documentElement.setAttribute('data-sidebar-size', nextSize);
+                // Persist open/closed via existing Redux + localStorage (leftsidbarSizeType)
+                dispatch(changeLeftsidebarSizeType(nextSize));
             } else if (windowSize <= 767) {
+                // Mobile overlay only — do not overwrite desktop open/closed preference
                 document.body.classList.add('vertical-sidebar-enable');
                 document.documentElement.setAttribute('data-sidebar-size', 'lg');
             }

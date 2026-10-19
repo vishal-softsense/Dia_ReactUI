@@ -12,7 +12,7 @@ import Footer from './footer';
 
 const APP_BRAND_TITLE = "DiaJewel - Diamond & Jewellery Cloud Business App";
 const APP_BRAND_DESCRIPTION = "Manage Inventory & Accounts";
-const APP_SITE_ORIGIN = "https://diar.softoncloud.com";
+const APP_SITE_ORIGIN = "https://jewel.softoncloud.com";
 const APP_OG_IMAGE = `${APP_SITE_ORIGIN}/og-image.jpg?v=8`;
 
 const setMetaTag = (selector, attr, value) => {

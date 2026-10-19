@@ -116,8 +116,8 @@ const JournalEntryForm = ({ mode }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currencyOpts, setCurrencyOpts] = useState([]);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [mOp, setMOp] = useState("");
   const [sOp, setSOp] = useState("");
 
@@ -145,12 +145,24 @@ const JournalEntryForm = ({ mode }) => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      setMasterSymbol(
+        auth?.MSymbol ||
+          auth?.mSymbol ||
+          auth?.data?.MSymbol ||
+          company?.masterSymbol ||
+          cached.masterSymbol ||
+          ""
+      );
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -196,6 +208,10 @@ const JournalEntryForm = ({ mode }) => {
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        const mSym = getVal(res, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(res, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         setForm((prev) => ({
           ...prev,
           baseRate: toNum(res.baseRate ?? res.BaseRate, prev.baseRate),

@@ -150,10 +150,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
         grouped[key].push(item);
     });
 
-    // Match MVC GeneralSaleReport.js: client-side Sr No (not SP RowIndex).
-    // InvNo group → one Sr No per invoice (shared by all lines).
-    // PartyName group → one Sr No per distinct InvNo, global counter across parties.
-    let srNo = 1;
+    // Sale No = BillNo from GetGeneralSaleReportData (API MixSaleReportResultDTO.BillNo).
     const sections = Object.keys(grouped).map((groupKey) => {
         const groupRows = grouped[groupKey];
         const first = groupRows[0];
@@ -167,22 +164,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
             });
         });
 
-        let rowsWithSrNo;
-        if (groupBy === "PartyName") {
-            const invSrMap = {};
-            rowsWithSrNo = groupRows.map((item) => {
-                const invKey = String(getGroupedInvNo(item) || "");
-                if (!(invKey in invSrMap)) {
-                    invSrMap[invKey] = srNo++;
-                }
-                return { ...item, _srNo: invSrMap[invKey] };
-            });
-        } else {
-            const currentSrNo = srNo++;
-            rowsWithSrNo = groupRows.map((item) => ({ ...item, _srNo: currentSrNo }));
-        }
-
-        return { groupKey, first, rows: rowsWithSrNo, subtotal };
+        return { groupKey, first, rows: groupRows, subtotal };
     });
 
     const grandTotal = {};
@@ -276,7 +258,7 @@ const GROUPED_PRINT_STYLES = `
         font-weight: 600;
         white-space: nowrap;
     }
-    /* Match MVC print widths (View omitted): Sr No → Amount */
+    /* Print widths: Sale No → Amount */
     #dynamic-sale-report-table col:nth-child(1) { width: 10%; }
     #dynamic-sale-report-table col:nth-child(2) { width: 10%; }
     #dynamic-sale-report-table col:nth-child(3) { width: 22%; }
@@ -747,7 +729,7 @@ const MixSaleReport = () => {
             section.rows.forEach((row) => {
                 bodyRows += `
                     <tr>
-                        <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
+                        <td class="col-text">${escapeHtml(getRowVal(row, "BillNo", "billNo", "billno") || "")}</td>
                         <td class="col-text">${escapeHtml(getGroupedInvNo(row))}</td>
                         <td class="col-text">${escapeHtml(getGroupedLotNo(row))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
@@ -758,7 +740,7 @@ const MixSaleReport = () => {
                 `;
             });
 
-            // MVC print (View removed): colspan covers Sr No + InvNo, then LotNo + numeric cols
+            // Print: colspan covers Sale No + InvNo, then LotNo + numeric cols
             bodyRows += `
                 <tr class="subtotal">
                     <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
@@ -789,7 +771,7 @@ const MixSaleReport = () => {
                 </colgroup>
                 <thead>
                     <tr>
-                        <th>Sr No</th>
+                        <th>${escapeHtml(t("Sale No"))}</th>
                         <th>InvNo</th>
                         <th>${escapeHtml(t("LotNo"))}</th>
                         <th>${escapeHtml(t("Carats"))}</th>
@@ -1652,7 +1634,7 @@ const MixSaleReport = () => {
                                             <thead>
                                                 <tr className="table-light text-center">
                                                     <th>{t("View")}</th>
-                                                    <th>Sr No</th>
+                                                    <th>{t("Sale No")}</th>
                                                     <th>InvNo</th>
                                                     <th>{t("LotNo")}</th>
                                                     <th className="text-end">{t("Carats")}</th>
@@ -1701,7 +1683,9 @@ const MixSaleReport = () => {
                                                                             ""
                                                                         )}
                                                                     </td>
-                                                                    <td className="text-center">{row._srNo ?? ""}</td>
+                                                                    <td className="text-center">
+                                                                        {dashText(getRowVal(row, "BillNo", "billNo", "billno"))}
+                                                                    </td>
                                                                     <td className="text-center">{dashText(getGroupedInvNo(row))}</td>
                                                                     <td className="text-center">{dashText(getGroupedLotNo(row))}</td>
                                                                     <td className="text-end">{renderGroupedValue(row, "Carats")}</td>

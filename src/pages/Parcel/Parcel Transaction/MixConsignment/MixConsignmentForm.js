@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -261,7 +262,12 @@ const mapGradingFromSource = (src) => ({
   countryOfMfg: getStrVal(src, "CountryOfMfg")
 });
 
+/** Unique row id so duplicate LotNo entries stay separate in React state/DOM. */
+let mixConRowSeq = 0;
+const nextRowId = () => `con-row-${Date.now()}-${++mixConRowSeq}`;
+
 const mapItemFromApi = (r, idx) => ({
+  rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
   srNo: idx + 1,
   lotNo: getStrVal(r, "LotNo"),
   itemName: getStrVal(r, "ItemName"),
@@ -408,25 +414,27 @@ const buildEntryFromAddItemForm = (form, lotNo, header, opts = {}) => {
 };
 
 const emptyItem = () => ({
+  rowId: nextRowId(),
   lotNo: "",
   itemName: "",
   weight: "",
   issueCarats: "",
-  pcs: "1",
+  // First load / Clearall: empty — do not show 0/1 until LotNo fill or user entry
+  pcs: "",
   mrp: "",
-  back: "0",
+  back: "",
   rate: "",
   sRate: "",
-  less1: "0",
-  less2: "0",
-  less3: "0",
+  less1: "",
+  less2: "",
+  less3: "",
   amount: "",
   shape: "",
   color: "",
   clarity: "",
   size: "",
   sieve: "",
-  stockType: "Diamond",
+  stockType: "",
   invDescription: "",
   suppLotNo: "",
   askingRate: "",
@@ -434,10 +442,10 @@ const emptyItem = () => ({
   groupId: "",
   stoneType: "",
   rmk: "",
-  memoTransCode: 0,
-  rtnCarats: "0",
+  memoTransCode: "",
+  rtnCarats: "",
   status: "",
-  spCarats: "0"
+  spCarats: ""
 });
 
 const pickNonEmpty = (primary, fallback) => {
@@ -459,7 +467,9 @@ const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
 
   const carats = getNumVal(lot, "Carats", "Weight");
   const caratStr = fmt(carats, 2);
-  const pcs = getNumVal(lot, "Pcs") || 1;
+  // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
+  // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
+  const pcs = getNumVal(lot, "Pcs");
   const mrp = getNumVal(lot, "PurchaseMRP", "MRP");
   const finalAmountRaw = getStrVal(lot, "FinalAmount");
   const finalAmount =
@@ -709,6 +719,67 @@ const MixConsignmentForm = ({ mode = "add" }) => {
   const [lotLoading, setLotLoading] = useState(false);
   const [lotSel, setLotSel] = useState(null);
   const fillFromLotRequestRef = useRef(0);
+  const lotSelectRef = useRef(null);
+  /** Keep menu open while we force focus after Add Item (blocks premature onMenuClose). */
+  const keepLotMenuOpenRef = useRef(false);
+  /** Controlled menu — forced open after Add Item like MVC select2('open'). */
+  const [lotMenuOpen, setLotMenuOpen] = useState(false);
+  /** Remount CreatableSelect after Add Item so internal focus/menu state resets cleanly. */
+  const [lotSelectKey, setLotSelectKey] = useState(0);
+  /** Bumped after successful Add Item so focus runs after React commit (table + clear). */
+  const [lotFocusToken, setLotFocusToken] = useState(0);
+
+  /**
+   * MVC MixConsignment AddItem end: $('#pur-lotno').focus(); $('#pur-lotno').select2('open');
+   * Opens LotNo dropdown and focuses the search input so the next lot can be typed immediately.
+   */
+  const focusLotNoField = useCallback(() => {
+    keepLotMenuOpenRef.current = true;
+    setLotMenuOpen(true);
+
+    const applyFocus = () => {
+      setLotMenuOpen(true);
+      try {
+        lotSelectRef.current?.focus?.();
+      } catch {
+        /* ignore if select unmounted mid-remount */
+      }
+
+      // Prefer react-select search input — never the LOT NUMBER checkbox
+      const root = document.querySelector(".ie-r1-lot");
+      const byId = document.getElementById("mix-con-lotno-input");
+      const prefixInput =
+        root?.querySelector(".mix-con-lot__input input") ||
+        root?.querySelector(".mix-con-lot__input");
+      const searchInput =
+        byId ||
+        (prefixInput?.tagName === "INPUT" ? prefixInput : null) ||
+        [...(root?.querySelectorAll("input") || [])].find(
+          (el) => el.type !== "checkbox" && !el.classList.contains("form-check-input")
+        );
+
+      if (searchInput && typeof searchInput.focus === "function") {
+        searchInput.focus({ preventScroll: true });
+      }
+    };
+
+    window.requestAnimationFrame(() => {
+      applyFocus();
+      window.setTimeout(applyFocus, 0);
+      window.setTimeout(applyFocus, 50);
+      window.setTimeout(applyFocus, 150);
+      window.setTimeout(() => {
+        keepLotMenuOpenRef.current = false;
+      }, 500);
+    });
+  }, []);
+
+  // After item added + fields cleared: auto-open LotNo (MVC focus + select2 open)
+  useEffect(() => {
+    if (!lotFocusToken) return;
+    const timer = window.setTimeout(() => focusLotNoField(), 0);
+    return () => window.clearTimeout(timer);
+  }, [lotFocusToken, focusLotNoField]);
 
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
@@ -1312,8 +1383,10 @@ const MixConsignmentForm = ({ mode = "add" }) => {
     // MVC AddItem: PurchaseBack = RejeP; Weight = SelectionCarat; ReturnCarats = Reje
     const amount = calcItemAmount(weight, rate, entry.less1, entry.less2, entry.less3, entry.pcs, entry.stockType);
 
+    // MVC MixConsignment add-single-lot: duplicate LotNo check is commented out — always append
     const row = {
       ...entry,
+      rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
       weight: Math.round(weight * 1000) / 1000,
@@ -1334,21 +1407,29 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       spCarats: toNum(entry.spCarats)
     };
 
-    setItems((prev) => {
-      if (editIndex >= 0 && editIndex < prev.length) {
-        const copy = [...prev];
-        copy[editIndex] = row;
-        return copy;
-      }
-      if (prev.some((x) => String(x.lotNo).toLowerCase() === lotNo.toLowerCase())) {
-        toast.warning(t(`Lot number ${lotNo} already exists.`));
-        return prev;
-      }
-      return [...prev, row];
+    // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
+    keepLotMenuOpenRef.current = true;
+    flushSync(() => {
+      setItems((prev) => {
+        if (editIndex >= 0 && editIndex < prev.length) {
+          const copy = [...prev];
+          copy[editIndex] = row;
+          return copy;
+        }
+        return [...prev, row];
+      });
+
+      setEditIndex(-1);
+      setLotSel(null);
+      setLotInput("");
+      setLotOpts([]);
+      setEntry(emptyItem());
+      setLotMenuOpen(true);
+      setLotSelectKey((k) => k + 1);
     });
-    setEditIndex(-1);
-    setLotSel(null);
-    setEntry(emptyItem());
+
+    // Defer focus/open until after React commit (table + remounted select ready)
+    setLotFocusToken((n) => n + 1);
   };
 
   const handleEditRow = (idx) => {
@@ -2430,13 +2511,49 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                               />
                             </Label>
                             <CreatableSelect
-                              styles={customStyles}
+                              key={lotSelectKey}
+                              ref={lotSelectRef}
+                              inputId="mix-con-lotno-input"
+                              classNamePrefix="mix-con-lot"
+                              openMenuOnFocus
+                              menuIsOpen={lotMenuOpen}
+                              styles={{
+                                ...customStyles,
+                                control: (base, state) => ({
+                                  ...customStyles.control(base, state),
+                                  borderColor:
+                                    state.isFocused || lotMenuOpen
+                                      ? "#3b5de7"
+                                      : "var(--vz-border-color, #ced4da)",
+                                  boxShadow:
+                                    state.isFocused || lotMenuOpen
+                                      ? "0 0 0 1px #3b5de7"
+                                      : "none"
+                                }),
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                              }}
                               options={lotOpts}
                               value={lotSel}
+                              onMenuOpen={() => setLotMenuOpen(true)}
+                              onMenuClose={() => {
+                                // After Add Item, react-select may fire close during clear/remount — ignore briefly
+                                if (keepLotMenuOpenRef.current) {
+                                  setLotMenuOpen(true);
+                                  return;
+                                }
+                                setLotMenuOpen(false);
+                              }}
                               onChange={(o) => {
+                                keepLotMenuOpenRef.current = false;
+                                setLotMenuOpen(false);
                                 setLotSel(o);
-                                onEntryChange("lotNo", o?.value || "");
-                                if (o?.value) fillFromLot(o.value);
+                                if (o?.value) {
+                                  // Pcs = 0 immediately on LotNo select (MVC fills from lot detail Pcs, typically 0)
+                                  setEntry((prev) => ({ ...prev, lotNo: o.value, pcs: "0" }));
+                                  fillFromLot(o.value);
+                                } else {
+                                  onEntryChange("lotNo", "");
+                                }
                               }}
                               onInputChange={(v, meta) => {
                                 if (meta.action === "input-change") setLotInput(v);
@@ -2446,6 +2563,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                               isClearable
                               isSearchable
                               filterOption={null}
+                              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                              menuPosition="fixed"
                               noOptionsMessage={({ inputValue }) =>
                                 lotLoading
                                   ? t("Searching...")
@@ -2536,7 +2655,15 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                         </Col>
                         <Col xs={12} sm={4} md={2} className="ie-r1-btn d-none d-lg-block">
                           <FormGroup className="mb-2 mb-sm-0">
-                            <Button color="primary" size="sm" className="w-100 text-nowrap" style={fieldH} onClick={handleAddItem}>
+                            <Button
+                              type="button"
+                              color="primary"
+                              size="sm"
+                              className="w-100 text-nowrap"
+                              style={fieldH}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={handleAddItem}
+                            >
                               {editIndex >= 0 ? t("Update Item") : t("Add Item")}
                             </Button>
                           </FormGroup>
@@ -2684,17 +2811,24 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                         <Col xs={12} sm={6} md={3} className="ie-r3-memo">
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("MEMOTRNCODE")}</Label>
-                            <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("MemoTrnCode")} value={entry.memoTransCode || 0} readOnly />
+                            <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("MemoTrnCode")} value={entry.memoTransCode === 0 || entry.memoTransCode === "0" ? "0" : (entry.memoTransCode ?? "")} readOnly />
                           </FormGroup>
                         </Col>
                         <Col xs={12} sm={6} md={3} className="ie-r3-stock">
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("STOCKTYPE")}</Label>
-                            <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("StockType")} value={entry.stockType || "Diamond"} readOnly />
+                            <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("StockType")} value={entry.stockType || ""} readOnly />
                           </FormGroup>
                         </Col>
                         <Col xs={12} className="d-block d-lg-none mt-2">
-                          <Button color="primary" size="sm" className="w-100 text-nowrap py-2 fw-semibold" onClick={handleAddItem}>
+                          <Button
+                            type="button"
+                            color="primary"
+                            size="sm"
+                            className="w-100 text-nowrap py-2 fw-semibold"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleAddItem}
+                          >
                             <i className="ri-add-line me-1" />
                             {editIndex >= 0 ? t("Update Item") : t("Add Item")}
                           </Button>
@@ -2723,7 +2857,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                         </thead>
                         <tbody>
                           {items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
+                            <tr key={r.rowId || `${r.lotNo}-${idx}`} style={getItemRowStyle(r)}>
                               <td>
                                 {!readOnly ? (
                                   <div className="d-flex gap-1">

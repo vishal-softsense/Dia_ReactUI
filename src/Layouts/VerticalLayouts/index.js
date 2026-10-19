@@ -44,13 +44,14 @@ const VerticalLayout = (props) => {
                 document.documentElement.setAttribute("data-sidebar-size", leftsidbarSizeType);
             }
             if ((sidebarVisibilitytype === "show" || layoutType === "vertical" || layoutType === "twocolumn") && document.querySelector(".hamburger-icon")) {
-                //     document.querySelector(".hamburger-icon").classList.remove("open");
-                // } else {
-                //     document.querySelector(".hamburger-icon").classList.add("open");
-                // }
                 var hamburgerIcon = document.querySelector(".hamburger-icon");
                 if (hamburgerIcon !== null) {
-                    hamburgerIcon.classList.remove("open");
+                    // Match hamburger to persisted size: sm (collapsed) => open icon, lg => closed icon
+                    if (leftsidbarSizeType === "sm") {
+                        hamburgerIcon.classList.add("open");
+                    } else {
+                        hamburgerIcon.classList.remove("open");
+                    }
                 }
             } else {
                 var hamburgerIcon = document.querySelector(".hamburger-icon");
@@ -83,6 +84,9 @@ const VerticalLayout = (props) => {
 
     useEffect(() => {
         window.addEventListener("resize", resizeSidebarMenu, true);
+        // Apply persisted sidebar size (and hamburger) on mount / preference change
+        resizeSidebarMenu();
+        return () => window.removeEventListener("resize", resizeSidebarMenu, true);
     }, [resizeSidebarMenu]);
 
     useEffect(() => {

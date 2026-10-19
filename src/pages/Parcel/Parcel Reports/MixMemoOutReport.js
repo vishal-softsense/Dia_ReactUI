@@ -144,10 +144,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
         grouped[key].push(item);
     });
 
-    // Match MVC MixMemoreport.js: client-side Sr No (not SP RowIndex).
-    // MemoNo group → one Sr No per memo (shared by all lines).
-    // PartyName group → one Sr No per distinct MemoNo, global counter across parties.
-    let srNo = 1;
+    // Sale No = BillNo from report API (MixMemoOutReportResultDTO.BillNo).
     const sections = Object.keys(grouped).map((groupKey) => {
         const groupRows = grouped[groupKey];
         const first = groupRows[0];
@@ -161,22 +158,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
             });
         });
 
-        let rowsWithSrNo;
-        if (groupBy === "PartyName") {
-            const invSrMap = {};
-            rowsWithSrNo = groupRows.map((item) => {
-                const invKey = String(getRowVal(item, "MemoNo", "memoNo", "InvNo", "invNo") || "");
-                if (!(invKey in invSrMap)) {
-                    invSrMap[invKey] = srNo++;
-                }
-                return { ...item, _srNo: invSrMap[invKey] };
-            });
-        } else {
-            const currentSrNo = srNo++;
-            rowsWithSrNo = groupRows.map((item) => ({ ...item, _srNo: currentSrNo }));
-        }
-
-        return { groupKey, first, rows: rowsWithSrNo, subtotal };
+        return { groupKey, first, rows: groupRows, subtotal };
     });
 
     const grandTotal = {};
@@ -270,7 +252,7 @@ const GROUPED_PRINT_STYLES = `
         font-weight: 600;
         white-space: nowrap;
     }
-    /* Match MVC print widths (View column omitted): Sr No → Amount */
+    /* Print widths: Sale No → Amount */
     #dynamic-memoOut-report-table col:nth-child(1) { width: 15mm; }
     #dynamic-memoOut-report-table col:nth-child(2) { width: 15mm; }
     #dynamic-memoOut-report-table col:nth-child(3) { width: 55mm; }
@@ -784,7 +766,7 @@ const MixMemoOutReport = () => {
             section.rows.forEach((row) => {
                 bodyRows += `
                     <tr>
-                        <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
+                        <td class="col-text">${escapeHtml(getRowVal(row, "BillNo", "billNo", "billno") || "")}</td>
                         <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
                         <td class="col-text">${escapeHtml(getRowVal(row, "Lotno", "lotno"))}</td>
                         <td class="col-product">${escapeHtml(getRowVal(row, "ItemName", "itemName"))}</td>
@@ -798,16 +780,16 @@ const MixMemoOutReport = () => {
                 `;
             });
 
-            // MVC print (View removed): colspan covers Sr No + MemoNo, then empty LotNo + Product
+            // Print: colspan covers Sale No + MemoNo, then empty LotNo + Product
             bodyRows += `
                 <tr class="subtotal">
                     <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
                     <td></td>
                     <td></td>
                     ${GROUPED_SUM_COLUMNS.map(
-                        (colKey) =>
-                            `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
-                    ).join("")}
+                (colKey) =>
+                    `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+            ).join("")}
                 </tr>
             `;
         });
@@ -818,9 +800,9 @@ const MixMemoOutReport = () => {
                 <td></td>
                 <td></td>
                 ${GROUPED_SUM_COLUMNS.map(
-                    (colKey) =>
-                        `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
-                ).join("")}
+            (colKey) =>
+                `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+        ).join("")}
             </tr>
         `;
 
@@ -832,7 +814,7 @@ const MixMemoOutReport = () => {
                 </colgroup>
                 <thead>
                     <tr>
-                        <th>Sr No</th>
+                        <th>${escapeHtml(t("Sale No"))}</th>
                         <th>MemoNo</th>
                         <th>${escapeHtml(t("LotNo"))}</th>
                         <th>${escapeHtml(t("Product"))}</th>
@@ -1648,168 +1630,170 @@ const MixMemoOutReport = () => {
                                     }
                                 `}</style>
                                 <div className="mb-3">
-                                        <div className="row align-items-start">
-                                            <div className="col-sm-10 d-flex">
-                                                {companyLogoUrl ? (
-                                                    <div className="pe-3 pt-2">
-                                                        <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                                    <div className="row align-items-start">
+                                        <div className="col-sm-10 d-flex">
+                                            {companyLogoUrl ? (
+                                                <div className="pe-3 pt-2">
+                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                                                </div>
+                                            ) : null}
+                                            <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
+                                                <div className="fw-bold">{companyInfo?.companyName}</div>
+                                                <div>{companyInfo?.companyAddress}</div>
+                                                {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
+                                                {companyInfo?.companyAddress2 ? <div>{companyInfo.companyAddress2}</div> : null}
+                                                {companyInfo?.companyPhone ? (
+                                                    <div>
+                                                        <strong>{t("Tel")}:</strong> {companyInfo.companyPhone}
                                                     </div>
                                                 ) : null}
-                                                <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
-                                                    <div className="fw-bold">{companyInfo?.companyName}</div>
-                                                    <div>{companyInfo?.companyAddress}</div>
-                                                    {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
-                                                    {companyInfo?.companyAddress2 ? <div>{companyInfo.companyAddress2}</div> : null}
-                                                    {companyInfo?.companyPhone ? (
-                                                        <div>
-                                                            <strong>{t("Tel")}:</strong> {companyInfo.companyPhone}
-                                                        </div>
-                                                    ) : null}
-                                                    {companyInfo?.companyEmail ? (
-                                                        <div>
-                                                            <strong>{t("Email")}:</strong> {companyInfo.companyEmail}
-                                                        </div>
-                                                    ) : null}
-                                                </div>
+                                                {companyInfo?.companyEmail ? (
+                                                    <div>
+                                                        <strong>{t("Email")}:</strong> {companyInfo.companyEmail}
+                                                    </div>
+                                                ) : null}
                                             </div>
-                                            <div className="col-sm-2 text-end pt-2">
-                                                <div className="fs-5 fw-bold">{t("Mix Memo Out Report")}</div>
-                                                <div className="small text-muted">
-                                                    <div>
-                                                        <strong>{t("From")}:</strong> {filters.fromDate}
-                                                    </div>
-                                                    <div>
-                                                        <strong>{t("To")}:</strong> {filters.toDate}
-                                                    </div>
+                                        </div>
+                                        <div className="col-sm-2 text-end pt-2">
+                                            <div className="fs-5 fw-bold">{t("Mix Memo Out Report")}</div>
+                                            <div className="small text-muted">
+                                                <div>
+                                                    <strong>{t("From")}:</strong> {filters.fromDate}
+                                                </div>
+                                                <div>
+                                                    <strong>{t("To")}:</strong> {filters.toDate}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {groupedReportData.sections.length === 0 ? (
-                                        <div className="text-center py-4 text-muted">{t("No data available.")}</div>
-                                    ) : (
-                                        <div className="table-responsive mix-memo-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
-                                            <table className="table table-bordered align-middle mb-0" id="dynamic-memoOut-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
-                                                <colgroup>
-                                                    <col style={{ width: "48px" }} />
-                                                    <col style={{ width: "56px" }} />
-                                                    <col style={{ width: "70px" }} />
-                                                    <col style={{ width: "110px" }} />
-                                                    <col style={{ width: "220px" }} />
-                                                    <col style={{ width: "90px" }} />
-                                                    <col style={{ width: "90px" }} />
-                                                    <col style={{ width: "90px" }} />
-                                                    <col style={{ width: "90px" }} />
-                                                    <col style={{ width: "90px" }} />
-                                                    <col style={{ width: "100px" }} />
-                                                </colgroup>
-                                                <thead>
-                                                    <tr className="table-light text-center">
-                                                        <th>{t("View")}</th>
-                                                        <th>Sr No</th>
-                                                        <th>MemoNo</th>
-                                                        <th>{t("LotNo")}</th>
-                                                        <th>{t("Product")}</th>
-                                                        <th className="text-end">{t("Carats")}</th>
-                                                        <th className="text-end">{t("Sold")}</th>
-                                                        <th className="text-end">{t("Return")}</th>
-                                                        <th className="text-end">{t("Balance")}</th>
-                                                        <th className="text-end">{t("Price")}</th>
-                                                        <th className="text-end">{t("Amount")}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {groupedReportData.sections.map((section) => (
-                                                        <React.Fragment key={section.groupKey}>
-                                                            <tr className="memo-info">
-                                                                <td colSpan={11} className="text-start">
-                                                                    {filters.groupBy === "PartyName" ? (
-                                                                        <>
-                                                                            <strong>{t("Party")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
-                                                                            <strong>{t("Date")}:</strong>{" "}
-                                                                            {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <strong>{t("Party")}:</strong> {dashText(getRowVal(section.first, "Party", "party"))} &nbsp;|&nbsp;
-                                                                            <strong>{t("Memo No")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
-                                                                            <strong>{t("Date")}:</strong>{" "}
-                                                                            {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
-                                                                        </>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                            {section.rows.map((row, rowIndex) => {
-                                                                const code = getRowVal(row, "Code", "code");
-                                                                return (
-                                                                    <tr key={`${section.groupKey}-${rowIndex}`}>
-                                                                        <td className="text-center">
-                                                                            {code ? (
-                                                                                <div className="report-action">
-                                                                                    <a
-                                                                                        href={`../mix-memo/edit-mixmemo?Id=${code}&Mode=view`}
-                                                                                        target="_blank"
-                                                                                        rel="noreferrer"
-                                                                                    >
-                                                                                        <i className="bx bx-show-alt" />
-                                                                                    </a>
-                                                                                </div>
-                                                                            ) : (
-                                                                                ""
-                                                                            )}
-                                                                        </td>
-                                                                        <td className="text-center">{row._srNo ?? ""}</td>
-                                                                        <td className="text-center">
-                                                                            {dashText(getRowVal(row, "MemoNo", "memoNo"))}
-                                                                        </td>
-                                                                        <td className="text-center">{dashText(getRowVal(row, "Lotno", "lotno"))}</td>
-                                                                        <td className="text-center">{dashText(getRowVal(row, "ItemName", "itemName"))}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "Carats")}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "Estimate")}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "Return")}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "Balance")}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "Price")}</td>
-                                                                        <td className="text-end">{renderGroupedValue(row, "BalanceAmt")}</td>
-                                                                    </tr>
-                                                                );
-                                                            })}
-                                                            <tr className="subtotal">
-                                                                <td />
-                                                                <td colSpan={2} className="text-start ps-5">
-                                                                    <strong>{t("Total")}</strong>
-                                                                </td>
-                                                                <td />
-                                                                <td />
-                                                                {GROUPED_SUM_COLUMNS.map((colKey) => (
-                                                                    <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                                                        <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
-                                                                    </td>
-                                                                ))}
-                                                            </tr>
-                                                        </React.Fragment>
-                                                    ))}
-                                                    <tr className="grand-total">
-                                                        <td />
-                                                        <td colSpan={2} className="text-start ps-5">
-                                                            <strong>{t("Grand Total")}</strong>
-                                                        </td>
-                                                        <td />
-                                                        <td />
-                                                        {GROUPED_SUM_COLUMNS.map((colKey) => (
-                                                            <td key={`grand-${colKey}`} className="text-end">
-                                                                <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                {groupedReportData.sections.length === 0 ? (
+                                    <div className="text-center py-4 text-muted">{t("No data available.")}</div>
+                                ) : (
+                                    <div className="table-responsive mix-memo-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                                        <table className="table table-bordered align-middle mb-0" id="dynamic-memoOut-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
+                                            <colgroup>
+                                                <col style={{ width: "48px" }} />
+                                                <col style={{ width: "56px" }} />
+                                                <col style={{ width: "70px" }} />
+                                                <col style={{ width: "110px" }} />
+                                                <col style={{ width: "220px" }} />
+                                                <col style={{ width: "90px" }} />
+                                                <col style={{ width: "90px" }} />
+                                                <col style={{ width: "90px" }} />
+                                                <col style={{ width: "90px" }} />
+                                                <col style={{ width: "90px" }} />
+                                                <col style={{ width: "100px" }} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="table-light text-center">
+                                                    <th>{t("View")}</th>
+                                                    <th>{t("Sale No")}</th>
+                                                    <th>MemoNo</th>
+                                                    <th>{t("LotNo")}</th>
+                                                    <th>{t("Product")}</th>
+                                                    <th className="text-end">{t("Carats")}</th>
+                                                    <th className="text-end">{t("Sold")}</th>
+                                                    <th className="text-end">{t("Return")}</th>
+                                                    <th className="text-end">{t("Balance")}</th>
+                                                    <th className="text-end">{t("Price")}</th>
+                                                    <th className="text-end">{t("Amount")}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {groupedReportData.sections.map((section) => (
+                                                    <React.Fragment key={section.groupKey}>
+                                                        <tr className="memo-info">
+                                                            <td colSpan={11} className="text-start">
+                                                                {filters.groupBy === "PartyName" ? (
+                                                                    <>
+                                                                        <strong>{t("Party")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
+                                                                        <strong>{t("Date")}:</strong>{" "}
+                                                                        {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <strong>{t("Party")}:</strong> {dashText(getRowVal(section.first, "Party", "party"))} &nbsp;|&nbsp;
+                                                                        <strong>{t("Memo No")}:</strong> {dashText(section.groupKey)} &nbsp;|&nbsp;
+                                                                        <strong>{t("Date")}:</strong>{" "}
+                                                                        {dashText(formatReportDisplayDate(getRowDueDateRaw(section.first)))}
+                                                                    </>
+                                                                )}
                                                             </td>
-                                                        ))}
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
+                                                        </tr>
+                                                        {section.rows.map((row, rowIndex) => {
+                                                            const code = getRowVal(row, "Code", "code");
+                                                            return (
+                                                                <tr key={`${section.groupKey}-${rowIndex}`}>
+                                                                    <td className="text-center">
+                                                                        {code ? (
+                                                                            <div className="report-action">
+                                                                                <a
+                                                                                    href={`../mix-memo/edit-mixmemo?Id=${code}&Mode=view`}
+                                                                                    target="_blank"
+                                                                                    rel="noreferrer"
+                                                                                >
+                                                                                    <i className="bx bx-show-alt" />
+                                                                                </a>
+                                                                            </div>
+                                                                        ) : (
+                                                                            ""
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="text-center">
+                                                                        {dashText(getRowVal(row, "BillNo", "billNo", "billno"))}
+                                                                    </td>
+                                                                    <td className="text-center">
+                                                                        {dashText(getRowVal(row, "MemoNo", "memoNo"))}
+                                                                    </td>
+                                                                    <td className="text-center">{dashText(getRowVal(row, "Lotno", "lotno"))}</td>
+                                                                    <td className="text-center">{dashText(getRowVal(row, "ItemName", "itemName"))}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "Carats")}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "Estimate")}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "Return")}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "Balance")}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "Price")}</td>
+                                                                    <td className="text-end">{renderGroupedValue(row, "BalanceAmt")}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                        <tr className="subtotal">
+                                                            <td />
+                                                            <td colSpan={2} className="text-start ps-5">
+                                                                <strong>{t("Total")}</strong>
+                                                            </td>
+                                                            <td />
+                                                            <td />
+                                                            {GROUPED_SUM_COLUMNS.map((colKey) => (
+                                                                <td key={`${section.groupKey}-${colKey}`} className="text-end">
+                                                                    <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    </React.Fragment>
+                                                ))}
+                                                <tr className="grand-total">
+                                                    <td />
+                                                    <td colSpan={2} className="text-start ps-5">
+                                                        <strong>{t("Grand Total")}</strong>
+                                                    </td>
+                                                    <td />
+                                                    <td />
+                                                    {GROUPED_SUM_COLUMNS.map((colKey) => (
+                                                        <td key={`grand-${colKey}`} className="text-end">
+                                                            <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
 
-                                    {companyInfo?.companyFooter ? (
-                                        <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
-                                    ) : null}
+                                {companyInfo?.companyFooter ? (
+                                    <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
+                                ) : null}
                             </CardBody>
                         </Card>
                     )}

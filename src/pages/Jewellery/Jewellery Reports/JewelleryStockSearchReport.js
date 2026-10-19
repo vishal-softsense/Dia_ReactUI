@@ -9,6 +9,10 @@ import {
   FormGroup,
   Input,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Row
 } from "reactstrap";
 import Select, { components } from "react-select";
@@ -16,10 +20,26 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
-import { api } from "../../../config";
 import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
 import { getAddMountingStockData, getAllLotNoList, getJewelleryStockIds, getJewelleryStockSearchDropdowns, getJewelleryStockSearchReport, getJewPurity, getSettingData } from "../../../helpers/fakebackend_helper";
+import {
+  checkGoogleDriveFileExists,
+  collectDriveImageCandidates,
+  extractGoogleDriveFileId,
+  isGoogleDriveFileName,
+  looksLikeDriveMedia,
+  parseMediaPaths,
+  resolveDriveShareLinksFromPaths,
+  resolveDriveVideoFileId,
+  showGoogleDriveMediaWarning,
+  toGoogleDriveVideoPreviewEmbedUrl,
+  toGoogleDriveVideoResponseLink,
+} from "../../../helpers/googleDriveMedia";
 import { getReportCompanySettings, resolveCompanyLogoUrl } from "../../../helpers/reportCompanyDefaults";
+import {
+  collectJewMediaCandidates,
+  resolveJewMediaUrl
+} from "../../StockAccount/JewStockMaster/JewStockMediaPreview";
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -105,40 +125,6 @@ function filterBasicByType(arr, typeFilter) {
   });
 }
 
-const normalizeMediaPath = (path) => {
-  if (!path || typeof path !== "string") return "";
-  let trimmed = path.trim();
-  if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") return "";
-  trimmed = trimmed.replace(/\\/g, "/").replace(/^~\//, "/");
-  return trimmed;
-};
-
-const resolveMediaUrl = (path) => {
-  const trimmed = normalizeMediaPath(path);
-  if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return trimmed;
-  const baseUrl = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
-  // Strip leading ../ segments used by some MVC relative paths
-  const clean = trimmed.replace(/^(\.\.\/)+/, "");
-  if (clean.startsWith("/")) return `${baseUrl}${clean}`;
-  if (/^upload\//i.test(clean) || /^images\//i.test(clean) || /^jew/i.test(clean)) {
-    return `${baseUrl}/${clean}`;
-  }
-  return `${baseUrl}/${clean}`;
-};
-
-const collectMediaCandidates = (...paths) => {
-  const urls = [];
-  paths.filter(Boolean).forEach((raw) => {
-    const normalized = normalizeMediaPath(raw);
-    if (!normalized) return;
-    const resolved = resolveMediaUrl(normalized);
-    if (resolved && !urls.includes(resolved)) urls.push(resolved);
-    if (normalized.startsWith("/") && !urls.includes(normalized)) urls.push(normalized);
-  });
-  return urls;
-};
-
 const fmtNum = (value, decimals = 2) => {
   const n = Number(value);
   if (Number.isNaN(n)) return (0).toFixed(decimals);
@@ -147,50 +133,374 @@ const fmtNum = (value, decimals = 2) => {
 
 const getJewelleryRow = (item) => item?.jewellery ?? item?.Jewellery ?? item;
 
-const MediaImage = ({ jewellery }) => {
-  const candidates = useMemo(() => collectMediaCandidates(
-    jewellery?.imagePath,
-    jewellery?.ImagePath,
-    jewellery?.assetImagePath,
-    jewellery?.AssetImagePath,
-    jewellery?.pagePath,
-    jewellery?.PagePath
-  ), [jewellery]);
+/** MVC jewellery-stock-search.js: use ImagePath only (no Asset/Page fallbacks). */
+const getJewelleryImagePath = (jewellery) =>
+  jewellery?.imagePath ?? jewellery?.ImagePath ?? "";
+
+/** MVC jewellery-stock-search.js: use VideoPath only. */
+const getJewelleryVideoPath = (jewellery) =>
+  jewellery?.videoPath ?? jewellery?.VideoPath ?? "";
+
+/** Resolve report thumb src: Google Drive CDN/proxy first, else local/static paths. */
+async function collectReportImageCandidates(rawPath) {
+  const primary = String(rawPath || "").trim();
+  if (!primary) return [];
+  if (looksLikeDriveMedia(primary)) {
+    const drive = await collectDriveImageCandidates(primary);
+    if (drive.length) return drive;
+  }
+  return collectJewMediaCandidates(getPrimaryPathForLocal(primary));
+}
+
+function getPrimaryPathForLocal(rawPath) {
+  const parts = parseMediaPaths(rawPath);
+  return parts.length ? parts[0] : String(rawPath || "").trim();
+}
+
+/** MVC BuildGoogleDriveImageHtml → clickable thumb; multi-path via data-images gallery. */
+const MediaImage = ({ jewellery, onOpenGallery }) => {
+  const rawPath = getJewelleryImagePath(jewellery);
+  const [candidates, setCandidates] = useState([]);
   const [idx, setIdx] = useState(0);
 
-  useEffect(() => { setIdx(0); }, [candidates]);
+  useEffect(() => {
+    let cancelled = false;
+    setIdx(0);
+    setCandidates([]);
+    (async () => {
+      // DB stores names (Abc.png|Abc1.png); console logs full Drive share links
+      if (rawPath) await resolveDriveShareLinksFromPaths(rawPath, "image");
+      const urls = await collectReportImageCandidates(rawPath);
+      if (!cancelled) setCandidates(urls);
+    })();
+    return () => { cancelled = true; };
+  }, [rawPath]);
 
-  if (!candidates.length || idx >= candidates.length) {
-    return <i className="ri-image-line text-muted" style={{ fontSize: 24 }} title="No image" />;
+  const openGallery = () => {
+    const paths = parseMediaPaths(rawPath);
+    if (!paths.length) {
+      showGoogleDriveMediaWarning("image");
+      return;
+    }
+    onOpenGallery?.(paths);
+  };
+
+  if (!rawPath || !candidates.length || idx >= candidates.length) {
+    return (
+      <i
+        className="ri-image-line text-muted gdrive-image-empty"
+        style={{ fontSize: 24 }}
+        title="No image"
+      />
+    );
   }
 
   return (
     <img
       src={candidates[idx]}
       alt=""
-      className="jew-thumb-img"
+      className="jew-thumb-img gdrive-image-button"
+      referrerPolicy="no-referrer"
+      title="Open image"
+      style={{ cursor: "pointer" }}
+      onClick={openGallery}
       onError={() => setIdx((prev) => prev + 1)}
     />
   );
 };
 
-const MediaVideo = ({ jewellery }) => {
-  const candidates = useMemo(() => collectMediaCandidates(
-    jewellery?.videoPath,
-    jewellery?.VideoPath
-  ), [jewellery]);
-  const src = candidates[0] || "";
-  if (!src) {
-    return <i className="ri-video-line text-muted" style={{ fontSize: 16 }} />;
+/** Video icon → open in-app player (local proxy), same pattern as Images gallery. */
+const MediaVideo = ({ jewellery, onOpenVideo }) => {
+  const rawPath = getJewelleryVideoPath(jewellery);
+  const apiLinks = jewellery?.videoDriveLinks || jewellery?.VideoDriveLinks || [];
+
+  useEffect(() => {
+    if (!rawPath) return;
+    resolveDriveShareLinksFromPaths(rawPath, "video");
+  }, [rawPath]);
+
+  if (!rawPath && !(Array.isArray(apiLinks) && apiLinks.length)) {
+    return (
+      <i
+        className="ri-video-line text-muted video-button-empty"
+        style={{ fontSize: 16, cursor: "pointer" }}
+        title="No video"
+        onClick={() => showGoogleDriveMediaWarning("video")}
+      />
+    );
   }
+
   return (
     <i
-      className="ri-video-line jew-video-icon"
-      title="Open video"
-      onClick={() => window.open(src, "_blank")}
+      className="ri-video-line jew-video-icon video-button"
+      title="Play video"
+      style={{ cursor: "pointer", color: "#000" }}
+      onClick={() => onOpenVideo?.(jewellery)}
     />
   );
 };
+
+/**
+ * Video popup — plays inside the form via Option B API HTTP stream.
+ * Uses jew-drive-image URL directly (AllowAnonymous) — no Drive redirect.
+ */
+function JewDriveVideoModal({ isOpen, urls, toggle }) {
+  const list = useMemo(
+    () => (Array.isArray(urls) ? urls.filter(Boolean) : []).filter(Boolean),
+    [urls]
+  );
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setIndex(0);
+  }, [isOpen, list]);
+
+  const src = list[index] || "";
+  const isDrivePreview = src.indexOf("drive.google.com") >= 0 && src.indexOf("/preview") >= 0;
+
+  useEffect(() => {
+    if (!isOpen || !src) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+  }, [isOpen, src]);
+
+  const multi = list.length > 1;
+
+  const goPrev = () => {
+    if (!list.length) return;
+    setIndex((i) => (i <= 0 ? list.length - 1 : i - 1));
+  };
+  const goNext = () => {
+    if (!list.length) return;
+    setIndex((i) => (i >= list.length - 1 ? 0 : i + 1));
+  };
+
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} centered size="lg" style={{ maxWidth: 860 }}>
+      <ModalHeader toggle={toggle} className="py-2">Video</ModalHeader>
+      <ModalBody className="text-center">
+        <div className="d-flex align-items-center justify-content-center mb-2" style={{ gap: 8 }}>
+          {multi && (
+            <Button type="button" color="primary" outline size="sm" title="Previous" onClick={goPrev}>
+              ‹
+            </Button>
+          )}
+          {src ? (
+            <div style={{ position: "relative", width: "100%", maxWidth: 720 }}>
+              {loading && (
+                <div className="text-muted p-4" style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+                  Loading video…
+                </div>
+              )}
+              {isDrivePreview ? (
+                <iframe
+                  key={src}
+                  title="Google Drive Video"
+                  src={src}
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                  onLoad={() => setLoading(false)}
+                  style={{
+                    width: "100%",
+                    maxWidth: 720,
+                    height: "65vh",
+                    border: "1px solid #ddd",
+                    borderRadius: 4,
+                    background: "#000",
+                  }}
+                />
+              ) : (
+                <video
+                  key={src}
+                  src={src}
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="auto"
+                  onCanPlay={() => setLoading(false)}
+                  onError={() => setLoading(false)}
+                  style={{
+                    width: "100%",
+                    maxWidth: 720,
+                    height: "65vh",
+                    border: "1px solid #ddd",
+                    borderRadius: 4,
+                    background: "#000",
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+          ) : (
+            <div className="text-muted p-4">No video</div>
+          )}
+          {multi && (
+            <Button type="button" color="primary" outline size="sm" title="Next" onClick={goNext}>
+              ›
+            </Button>
+          )}
+        </div>
+        {list.length > 0 && (
+          <div className="text-muted small mt-1">
+            {index + 1} / {list.length}
+          </div>
+        )}
+      </ModalBody>
+      <ModalFooter className="py-2">
+        <Button color="secondary" size="sm" onClick={toggle}>Close</Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
+/** MVC #jewDriveImageGalleryModal — Images gallery with thumbs / prev / next / counter. */
+function DriveGalleryThumb({ path, active, onClick }) {
+  const [src, setSrc] = useState("");
+  const [idx, setIdx] = useState(0);
+  const [candidates, setCandidates] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIdx(0);
+    (async () => {
+      const urls = await collectReportImageCandidates(path);
+      if (!cancelled) setCandidates(urls);
+    })();
+    return () => { cancelled = true; };
+  }, [path]);
+
+  useEffect(() => {
+    setSrc(candidates[idx] || "");
+  }, [candidates, idx]);
+
+  return (
+    <img
+      src={src || undefined}
+      alt=""
+      referrerPolicy="no-referrer"
+      onClick={onClick}
+      onError={() => setIdx((prev) => prev + 1)}
+      style={{
+        width: 56,
+        height: 52,
+        objectFit: "contain",
+        border: active ? "1.5px solid #5A8DEE" : "1.5px solid #dde3ee",
+        boxShadow: active ? "0 0 0 1px rgba(90,141,238,0.35)" : "none",
+        borderRadius: 5,
+        cursor: "pointer",
+        background: "#fff",
+        flex: "0 0 56px",
+      }}
+    />
+  );
+}
+
+function JewDriveImageGalleryModal({ isOpen, paths, toggle }) {
+  const list = useMemo(() => (Array.isArray(paths) ? paths.filter(Boolean) : []), [paths]);
+  const [index, setIndex] = useState(0);
+  const [mainCandidates, setMainCandidates] = useState([]);
+  const [mainIdx, setMainIdx] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) setIndex(0);
+  }, [isOpen, list]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMainIdx(0);
+    setMainCandidates([]);
+    const path = list[index];
+    if (!path) return undefined;
+    (async () => {
+      const urls = await collectReportImageCandidates(path);
+      if (!cancelled) setMainCandidates(urls);
+    })();
+    return () => { cancelled = true; };
+  }, [list, index]);
+
+  const multi = list.length > 1;
+  const mainSrc = mainCandidates[mainIdx] || "";
+
+  const goPrev = () => {
+    if (!list.length) return;
+    setIndex((i) => (i <= 0 ? list.length - 1 : i - 1));
+  };
+  const goNext = () => {
+    if (!list.length) return;
+    setIndex((i) => (i >= list.length - 1 ? 0 : i + 1));
+  };
+
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} centered size="lg" style={{ maxWidth: 860 }}>
+      <ModalHeader toggle={toggle} className="py-2">Images</ModalHeader>
+      <ModalBody className="text-center">
+        <div className="d-flex align-items-center justify-content-center mb-2" style={{ gap: 8 }}>
+          {multi && (
+            <Button type="button" color="primary" outline size="sm" title="Previous" onClick={goPrev}>
+              ‹
+            </Button>
+          )}
+          {mainSrc ? (
+            <img
+              key={`${index}-${mainSrc}`}
+              src={mainSrc}
+              alt="Image"
+              referrerPolicy="no-referrer"
+              onError={() => setMainIdx((prev) => prev + 1)}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "65vh",
+                objectFit: "contain",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+                background: "#fff",
+              }}
+            />
+          ) : (
+            <div className="text-muted p-4">No image</div>
+          )}
+          {multi && (
+            <Button type="button" color="primary" outline size="sm" title="Next" onClick={goNext}>
+              ›
+            </Button>
+          )}
+        </div>
+        {multi && (
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              overflowX: "auto",
+              justifyContent: "center",
+              padding: "4px 0",
+            }}
+          >
+            {list.map((p, i) => (
+              <DriveGalleryThumb
+                key={`gthumb-${i}-${p}`}
+                path={p}
+                active={i === index}
+                onClick={() => setIndex(i)}
+              />
+            ))}
+          </div>
+        )}
+        {list.length > 0 && (
+          <div className="text-muted small mt-1">
+            {index + 1} / {list.length}
+          </div>
+        )}
+      </ModalBody>
+      <ModalFooter className="py-2">
+        <Button color="secondary" size="sm" onClick={toggle}>Close</Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
 
 const ReportCompanyHeader = ({ companyInfo }) => (
   <div id="jew-company-info" className="jew-report-header">
@@ -218,6 +528,84 @@ const ReportCompanyHeader = ({ companyInfo }) => (
 );
 
 const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) => {
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryPaths, setGalleryPaths] = useState([]);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [videoUrls, setVideoUrls] = useState([]);
+
+  const openImageGallery = useCallback((paths) => {
+    const list = Array.isArray(paths) ? paths.filter(Boolean) : parseMediaPaths(paths);
+    if (!list.length) {
+      showGoogleDriveMediaWarning("image");
+      return;
+    }
+    setGalleryPaths(list);
+    setGalleryOpen(true);
+  }, []);
+
+  const openVideoModal = useCallback((jewellery) => {
+    // Collect candidates → Google Drive /preview (MVC fast path, Google CDN)
+    const candidates = [];
+    const apiLinks = jewellery?.videoDriveLinks || jewellery?.VideoDriveLinks;
+    if (Array.isArray(apiLinks) && apiLinks.length) {
+      apiLinks.filter(Boolean).forEach((u) => candidates.push(u));
+    }
+    const rawPath = getJewelleryVideoPath(jewellery);
+    if (rawPath) {
+      parseMediaPaths(rawPath).forEach((p) => {
+        if (p && !candidates.includes(p)) candidates.push(p);
+      });
+    }
+    if (!candidates.length) {
+      showGoogleDriveMediaWarning("video");
+      return;
+    }
+
+    const previews = [];
+    const needAsync = [];
+    candidates.forEach((c) => {
+      const id = extractGoogleDriveFileId(c);
+      if (id) {
+        const embed = toGoogleDriveVideoPreviewEmbedUrl(id);
+        if (embed && !previews.includes(embed)) previews.push(embed);
+      } else {
+        needAsync.push(c);
+      }
+    });
+
+    setVideoUrls(previews);
+    setVideoOpen(true);
+
+    if (!needAsync.length) {
+      if (!previews.length) showGoogleDriveMediaWarning("video");
+      return;
+    }
+
+    (async () => {
+      const ids = await Promise.all(needAsync.map((c) => resolveDriveVideoFileId(c)));
+      const extra = [];
+      ids.forEach((id) => {
+        if (!id) return;
+        const embed = toGoogleDriveVideoPreviewEmbedUrl(id);
+        if (embed && !previews.includes(embed) && !extra.includes(embed)) extra.push(embed);
+      });
+      if (!extra.length && !previews.length) {
+        showGoogleDriveMediaWarning("video");
+        setVideoOpen(false);
+        return;
+      }
+      if (extra.length) {
+        setVideoUrls((prev) => {
+          const merged = [...prev];
+          extra.forEach((u) => {
+            if (!merged.includes(u)) merged.push(u);
+          });
+          return merged;
+        });
+      }
+    })();
+  }, []);
+
   const grouped = useMemo(() => {
     const map = {};
     (data || []).forEach((item) => {
@@ -327,8 +715,12 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
             <tr key={`${jewCode}-${groupIndex}-${i}`} style={rowColor ? { color: rowColor } : undefined}>
               {i === 0 && (
                 <>
-                  <td rowSpan={maxRows} className="col-image"><MediaImage jewellery={jewellery} /></td>
-                  <td rowSpan={maxRows} className="col-video"><MediaVideo jewellery={jewellery} /></td>
+                  <td rowSpan={maxRows} className="col-image">
+                    <MediaImage jewellery={jewellery} onOpenGallery={openImageGallery} />
+                  </td>
+                  <td rowSpan={maxRows} className="col-video">
+                    <MediaVideo jewellery={jewellery} onOpenVideo={openVideoModal} />
+                  </td>
                   <td rowSpan={maxRows} className="col-lab">{jewellery?.lab ?? jewellery?.LAB ?? ""}</td>
                   <td rowSpan={maxRows} className="col-certno">{jewellery?.cNo ?? jewellery?.CNo ?? ""}</td>
                   <td rowSpan={maxRows} className="col-category">{jewellery?.category ?? jewellery?.Category ?? ""}</td>
@@ -521,6 +913,16 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
         </thead>
         <tbody>{renderRows()}</tbody>
       </table>
+      <JewDriveImageGalleryModal
+        isOpen={galleryOpen}
+        paths={galleryPaths}
+        toggle={() => setGalleryOpen(false)}
+      />
+      <JewDriveVideoModal
+        isOpen={videoOpen}
+        urls={videoUrls}
+        toggle={() => setVideoOpen(false)}
+      />
     </div>
   );
 };
@@ -1178,9 +1580,33 @@ ${hideCss} { display: none; }
   };
 
   const getExcelImageBase64 = async (j) => {
-    const candidates = collectMediaCandidates(j?.imagePath, j?.ImagePath, j?.assetImagePath, j?.AssetImagePath, j?.pagePath, j?.PagePath);
+    // MVC Excel embeds ImagePath (Drive CDN / local). Prefer Drive candidates first.
+    const candidates = await collectReportImageCandidates(getJewelleryImagePath(j));
     if (!candidates || !candidates.length) return null;
-    return await getBase64FromUrl(candidates[0]);
+    for (const url of candidates) {
+      if (!url || url.indexOf("/jew-drive-image") >= 0) continue; // skip auth proxy in Excel fetch
+      const base64 = await getBase64FromUrl(url);
+      if (base64) return base64;
+    }
+    return null;
+  };
+
+  const getExcelVideoUrl = async (j) => {
+    const raw = String(getJewelleryVideoPath(j) || "").trim();
+    if (!raw) return "";
+    // Video /preview links (videoDriveLinks) — never image lh3 CDN
+    const apiLinks = j?.videoDriveLinks || j?.VideoDriveLinks;
+    if (Array.isArray(apiLinks) && apiLinks[0]) return apiLinks[0];
+    const videoLink = toGoogleDriveVideoResponseLink(raw);
+    if (videoLink) return videoLink;
+    if (isGoogleDriveFileName(raw)) {
+      const resolved = await checkGoogleDriveFileExists(raw, "video");
+      if (resolved.ok && resolved.fileId) {
+        return toGoogleDriveVideoResponseLink(resolved.fileId);
+      }
+      return "";
+    }
+    return resolveJewMediaUrl(raw) || raw;
   };
 
   const exportBarcodeExcel = async (combinedList) => {
@@ -1720,7 +2146,8 @@ ${hideCss} { display: none; }
 
           if (i === 0) {
             rowData[1] = "";
-            rowData[2] = j?.videoPath ?? j?.VideoPath ?? "";
+            // MVC: relative VideoPath → authority + path; absolute http(s) kept as-is
+            rowData[2] = "";
             rowData[3] = j?.lab ?? j?.LAB ?? "";
             rowData[4] = j?.cNo ?? j?.CNo ?? "";
             rowData[5] = j?.category ?? j?.Category ?? "";
@@ -1796,6 +2223,14 @@ ${hideCss} { display: none; }
             excelRow.getCell(18).numFmt = "#,##0.00";
             excelRow.getCell(19).numFmt = "#,##0.00";
             for (let c = 38; c <= 44; c++) excelRow.getCell(c).numFmt = "#,##0.00";
+
+            // MVC Excel: Video cell = "Video" hyperlink (Drive preview or absolute path)
+            const videoUrl = await getExcelVideoUrl(j);
+            if (videoUrl) {
+              const videoCell = excelRow.getCell(2);
+              videoCell.value = { text: "Video", hyperlink: videoUrl };
+              videoCell.font = { color: { argb: "FF0000FF" }, underline: true };
+            }
           }
           if (dia) {
             excelRow.getCell(26).numFmt = "#,##0.000";

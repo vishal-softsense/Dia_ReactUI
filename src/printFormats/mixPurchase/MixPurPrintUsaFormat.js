@@ -1,30 +1,68 @@
 import React from "react";
 import { fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
 
-// MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml — match MVC PDF visual font sizes
-// Purchase/return: 20 per page. Mix Consignment (GENERAL MEMO IN): MVC 29 / last+single 27.
+// MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml — source of truth for Mix Purchase (variant=note)
+// MVC layout: 24 on full pages, 20 on single/last page with totals, signature and footer.
 const ITEMS_PER_PAGE_DEFAULT = 20;
-const LAST_PAGE_ITEMS_DEFAULT = 20;
-const ITEMS_PER_PAGE_CONSIGNMENT = 29;
-const LAST_PAGE_ITEMS_CONSIGNMENT = 27;
+const LAST_PAGE_ITEMS_DEFAULT = 16;
+const ITEMS_PER_PAGE_NOTE = 25;
+const LAST_PAGE_ITEMS_NOTE = 25;
+const ITEMS_PER_PAGE_CONSIGNMENT = 24;
+const LAST_PAGE_ITEMS_CONSIGNMENT = 20;
 const COL_COUNT = 7;
 
-/** MVC body: Verdana — one size for tables/body so React matches MVC PDF look */
+/**
+ * Mix Purchase Note pagination:
+ * - 25 data rows per page
+ * - <= 25 items: single page with 25 rows (data + empty) + Totals + Signature + Footer
+ * - > 25 items: multi-page with 25 rows on each page.
+ */
+export const paginateMixPur = (items, fullPageCap = 25, lastPageCap = 25) => {
+  const list = items || [];
+  if (!list.length) return [[]];
+  if (list.length <= lastPageCap) {
+    return [list];
+  }
+
+  const pages = [];
+  let start = 0;
+  while (start < list.length) {
+    const remaining = list.length - start;
+    if (remaining <= lastPageCap) {
+      pages.push(list.slice(start));
+      break;
+    }
+    let take = fullPageCap;
+    if (remaining - take < 1) {
+      take = Math.ceil(remaining / 2);
+    }
+    pages.push(list.slice(start, start + take));
+    start += take;
+  }
+  return pages;
+};
+
+/** MVC body: Verdana — header 13px, item rows 12px (MixPurchasePrint_USA) */
 const FONT_BODY = "Verdana, Arial, sans-serif";
-const FS = 13; // unified body/table size (MVC PDF visual)
+const FS = 13; // meta / header chrome
+const FS_ITEM_HDR = 13; // MVC thead font-size:13px
+const FS_ITEM = 12; // MVC tbody tr font-size:12px
 const FS_COMPANY = 14; // MVC company name
+const FS_PARTY = 14; // MVC party name in address box
 const FS_TITLE_NOTE = 18; // MVC MixPurchasePrint_USA "GENERAL PURCHASE NOTE"
 const FS_TITLE_RETURN = 24; // MVC MixPurRtnPrint_USA "GENERAL PUR RETURN"
 const FS_ADDR = 12; // MVC .address-box div / company address lines
+const FS_TOTALS = 13; // MVC totals row
+const ROW_H = 20; // 20px row height for 25 data rows
 
 const th = {
   background: "#c0c0c0",
   border: "1px solid #000",
-  padding: "6px 0",
+  padding: "4px 0",
   textAlign: "center",
   fontWeight: "bold",
   fontFamily: FONT_BODY,
-  fontSize: FS
+  fontSize: FS_ITEM_HDR
 };
 
 const topCell = {
@@ -32,7 +70,7 @@ const topCell = {
   padding: "0 6px",
   textAlign: "center",
   verticalAlign: "middle",
-  height: 24,
+  height: 20,
   fontFamily: FONT_BODY,
   fontSize: FS
 };
@@ -45,12 +83,16 @@ const itemCell = {
   padding: "0 6px",
   textAlign: "center",
   verticalAlign: "middle",
-  height: 24,
+  height: ROW_H,
   fontFamily: FONT_BODY,
-  fontSize: FS
+  fontSize: FS_ITEM
 };
 
-const ITEM_COL_WIDTHS = ["6%", "12%", "34%", "8%", "10%", "14%", "16%"];
+/**
+ * MVC MixPurchasePrint_USA column proportions:
+ * Sr No (5%), Stock # (18%), DESCRIPTION (28%), QTY (5%), WT. (8%), Price/Carat (14%), Amount (22%)
+ */
+const ITEM_COL_WIDTHS = ["5%", "18%", "28%", "5%", "8%", "14%", "22%"];
 
 /** Keep MM/dd/yyyy from API; otherwise format like MVC ToString("MM/dd/yyyy"). */
 const fmtDateSlashOrRaw = (val) => {
@@ -76,9 +118,19 @@ const MixPurPrintUsaFormat = ({
 }) => {
   const isNote = variant === "note";
   const isConsignment = variant === "consignment";
-  const itemsPerPage = isConsignment ? ITEMS_PER_PAGE_CONSIGNMENT : ITEMS_PER_PAGE_DEFAULT;
-  const lastPageItems = isConsignment ? LAST_PAGE_ITEMS_CONSIGNMENT : LAST_PAGE_ITEMS_DEFAULT;
-  const pages = paginateStella(items, itemsPerPage, lastPageItems);
+  const itemsPerPage = isNote
+    ? ITEMS_PER_PAGE_NOTE
+    : isConsignment
+      ? ITEMS_PER_PAGE_CONSIGNMENT
+      : ITEMS_PER_PAGE_DEFAULT;
+  const lastPageItems = isNote
+    ? LAST_PAGE_ITEMS_NOTE
+    : isConsignment
+      ? LAST_PAGE_ITEMS_CONSIGNMENT
+      : LAST_PAGE_ITEMS_DEFAULT;
+  const pages = isNote
+    ? paginateMixPur(items, itemsPerPage, lastPageItems)
+    : paginateStella(items, itemsPerPage, lastPageItems);
   const trnDate = getVal(data, "TrnDate", "trnDate");
   const dueDays = getVal(data, "DueDays", "dueDays");
   const dueDateDisplay = fmtDateSlashOrRaw(getVal(data, "DueDate", "dueDate"));
@@ -106,8 +158,9 @@ const MixPurPrintUsaFormat = ({
   };
 
   const renderMetaTable = () => {
-    // Same font size as item table (MVC PDF look — not oversized Calibri 16)
+    // MVC MixPurchasePrint_USA: Calibri 16px meta table
     if (useNoteMeta) {
+      const metaFont = { fontSize: 15, fontFamily: "Calibri, Verdana, Arial, sans-serif" };
       return (
         <div style={{ margin: "15px 0" }}>
           <table
@@ -115,19 +168,29 @@ const MixPurPrintUsaFormat = ({
             style={{
               width: "100%",
               borderCollapse: "collapse",
-              fontSize: FS,
-              fontFamily: FONT_BODY
+              border: "1px solid #000",
+              ...metaFont
             }}
           >
             <thead>
-              <tr style={{ fontWeight: "bold", fontFamily: FONT_BODY, fontSize: FS }}>
+              <tr style={{ fontWeight: "bold", ...metaFont }}>
                 {[
-                  { label: "RECEIVED VIA", width: "30%" },
-                  { label: "CUSTOMER INVOICE NO", width: "30%" },
-                  { label: "TERMS", width: "20%" },
-                  { label: "DUE DATE", width: "30%" }
-                ].map((h) => (
-                  <th key={h.label} style={{ ...th, width: h.width }}>
+                  { label: "RECEIVED VIA", width: "27%" },
+                  { label: "CUSTOMER INVOICE NO", width: "27%" },
+                  { label: "TERMS", width: "18%" },
+                  { label: "DUE DATE", width: "28%" }
+                ].map((h, i) => (
+                  <th
+                    key={h.label}
+                    style={{
+                      ...th,
+                      padding: "3px 0",
+                      width: h.width,
+                      border: "1px solid #000",
+                      ...(i === 3 ? { borderRight: "1px solid #000" } : {}),
+                      ...metaFont
+                    }}
+                  >
                     {h.label}
                   </th>
                 ))}
@@ -135,10 +198,10 @@ const MixPurPrintUsaFormat = ({
             </thead>
             <tbody>
               <tr>
-                <td style={topCell}>{receivedVia || ""}</td>
-                <td style={topCell}>{customerInvoiceNo}</td>
-                <td style={topCell}>{dueDays ?? ""}</td>
-                <td style={topCell}>{dueDateDisplay}</td>
+                <td style={{ ...topCell, ...metaFont }}>{receivedVia || ""}</td>
+                <td style={{ ...topCell, ...metaFont }}>{customerInvoiceNo}</td>
+                <td style={{ ...topCell, ...metaFont }}>{dueDays ?? ""}</td>
+                <td style={{ ...topCell, borderRight: "1px solid #000", ...metaFont }}>{dueDateDisplay}</td>
               </tr>
             </tbody>
           </table>
@@ -147,12 +210,13 @@ const MixPurPrintUsaFormat = ({
     }
 
     return (
-      <div style={{ margin: "15px 0" }}>
+      <div style={{ margin: "12px 0" }}>
         <table
           className="mix-pur-meta-table"
           style={{
             width: "100%",
             borderCollapse: "collapse",
+            border: "1px solid #000",
             fontSize: FS,
             fontFamily: FONT_BODY
           }}
@@ -160,7 +224,15 @@ const MixPurPrintUsaFormat = ({
           <thead>
             <tr style={{ fontWeight: "bold", fontFamily: FONT_BODY, fontSize: FS }}>
               {["RECEIVED VIA", "INVOICE #", "TERMS"].map((h, i) => (
-                <th key={h} style={{ ...th, width: i === 2 ? "34%" : "33%" }}>
+                <th
+                  key={h}
+                  style={{
+                    ...th,
+                    width: i === 2 ? "34%" : "33%",
+                    border: "1px solid #000",
+                    ...(i === 2 ? { borderRight: "1px solid #000" } : {})
+                  }}
+                >
                   {h}
                 </th>
               ))}
@@ -170,7 +242,7 @@ const MixPurPrintUsaFormat = ({
             <tr>
               <td style={topCell} />
               <td style={topCell}>{getVal(data, "InvNo", "invNo")}</td>
-              <td style={topCell}>{getVal(data, "DueDays", "dueDays")}</td>
+              <td style={{ ...topCell, borderRight: "1px solid #000" }}>{getVal(data, "DueDays", "dueDays")}</td>
             </tr>
           </tbody>
         </table>
@@ -182,38 +254,39 @@ const MixPurPrintUsaFormat = ({
     const totalCell = {
       borderLeft: "1px solid #000",
       borderRight: "1px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       fontFamily: FONT_BODY,
-      fontSize: FS
+      fontSize: FS_TOTALS,
+      padding: "2px 6px"
     };
 
     return (
       <tr
+        className="mix-pur-total-row"
         style={{
           borderTop: "1px solid #000",
           borderBottom: "1px solid #000",
-          fontSize: FS,
+          fontSize: FS_TOTALS,
           fontFamily: FONT_BODY
         }}
       >
-        <td style={totalCell} />
-        <td style={totalCell} />
-        <td style={totalCell} />
-        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
-        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[0] }} />
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[1] }} />
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[2] }} />
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[3], textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[4], textAlign: "right", verticalAlign: "top" }}>
           {fmtNum(totals.wt, 2)}
         </td>
-        <td style={{ ...totalCell, paddingLeft: 10, verticalAlign: "top" }}>
-          <div style={{ fontFamily: FONT_BODY, fontSize: FS }}>Sub Total</div>
-          <div style={{ fontFamily: FONT_BODY, fontSize: FS }}>Charges</div>
-          <br />
-          <div style={{ fontWeight: "bold", fontSize: FS, fontFamily: FONT_BODY }}>TOTAL</div>
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[5], paddingLeft: 8, verticalAlign: "top" }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>Sub Total</div>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>Charges</div>
+          <div style={{ fontWeight: "bold", fontSize: FS_TOTALS, fontFamily: FONT_BODY, marginTop: 4, lineHeight: 1.25 }}>TOTAL</div>
         </td>
-        <td style={{ ...totalCell, textAlign: "right", verticalAlign: "top" }}>
-          {fmtNum(totals.amount, 2)}
-          <br />
-          <br />
-          <br />
-          {fmtNum(totals.amount, 2)}
+        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[6], textAlign: "right", verticalAlign: "top", paddingRight: 6 }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>{fmtNum(totals.amount, 2)}</div>
+          <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>&nbsp;</div>
+          <div style={{ fontWeight: "bold", fontSize: FS_TOTALS, fontFamily: FONT_BODY, marginTop: 4, lineHeight: 1.25 }}>{fmtNum(totals.amount, 2)}</div>
         </td>
       </tr>
     );
@@ -333,7 +406,8 @@ const MixPurPrintUsaFormat = ({
                   border: "1px solid #000",
                   borderRadius: 12,
                   padding: "8px 15px 12px 10px",
-                  height: 150,
+                  height: 135,
+                  boxSizing: "border-box",
                   margin: 0,
                   fontFamily: FONT_BODY,
                   fontSize: FS
@@ -342,7 +416,7 @@ const MixPurPrintUsaFormat = ({
                 <legend
                   style={{
                     fontWeight: "bold",
-                    fontSize: FS,
+                    fontSize: 13,
                     padding: "0 10px",
                     width: "auto",
                     marginLeft: 10,
@@ -357,7 +431,7 @@ const MixPurPrintUsaFormat = ({
                 <div
                   className="mix-pur-party-name"
                   style={{
-                    fontSize: FS,
+                    fontSize: isNote ? FS_PARTY : FS,
                     letterSpacing: "0.9px",
                     marginBottom: 5,
                     fontFamily: FONT_BODY
@@ -365,7 +439,7 @@ const MixPurPrintUsaFormat = ({
                 >
                   {getVal(data, "PartyName", "partyName")}
                 </div>
-                {/* MVC .address-box div: font-size:12px */}
+                {/* MVC .address-box div: line-height: 1.6; font-size: 12px; margin-bottom: 5px; */}
                 <div className="mix-pur-addr-line" style={{ lineHeight: 1.6, fontSize: FS_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
                   {getVal(data, "AddressLine1", "addressLine1")}
                 </div>
@@ -409,12 +483,36 @@ const MixPurPrintUsaFormat = ({
           >
             {renderHeader()}
 
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_BODY, fontSize: FS }}>
+            <table
+              className="mix-pur-item-table"
+              style={{
+                width: "calc(100% - 2px)",
+                borderCollapse: "collapse",
+                tableLayout: "fixed",
+                borderLeft: "1px solid #000",
+                borderRight: "1px solid #000",
+                borderBottom: "1px solid #000",
+                fontFamily: FONT_BODY,
+                fontSize: FS_ITEM
+              }}
+            >
+              <colgroup>
+                {ITEM_COL_WIDTHS.map((w, i) => (
+                  <col key={i} style={{ width: w }} />
+                ))}
+              </colgroup>
               <thead>
-                <tr style={{ fontSize: FS, fontFamily: FONT_BODY }}>
+                <tr style={{ fontSize: FS_ITEM_HDR, fontFamily: FONT_BODY }}>
                   {["Sr No", "Stock #", "DESCRIPTION", "QTY", "WT.", "Price/Carat", amountHeader].map(
                     (h, col) => (
-                      <th key={`${h}-${col}`} style={{ ...th, width: ITEM_COL_WIDTHS[col] }}>
+                      <th
+                        key={`${h}-${col}`}
+                        style={{
+                          ...th,
+                          width: ITEM_COL_WIDTHS[col],
+                          ...(col === COL_COUNT - 1 ? { borderRight: "1px solid #000" } : {})
+                        }}
+                      >
                         {h}
                       </th>
                     )
@@ -426,13 +524,32 @@ const MixPurPrintUsaFormat = ({
                   <tr
                     key={idx}
                     className="mix-pur-item-row"
-                    style={{ fontSize: FS, fontFamily: FONT_BODY }}
+                    style={{ fontSize: FS_ITEM, fontFamily: FONT_BODY }}
                   >
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[0] }}>{srNo++}</td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[1], textAlign: "left" }}>
+                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[0], textAlign: "center" }}>
+                      {srNo++}
+                    </td>
+                    <td
+                      style={{
+                        ...itemCell,
+                        width: ITEM_COL_WIDTHS[1],
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden"
+                      }}
+                    >
                       {getVal(item, "StockNo", "stockNo", "Lotno", "lotno", "LotNo", "lotNo")}
                     </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[2], textAlign: "left" }}>
+                    <td
+                      style={{
+                        ...itemCell,
+                        width: ITEM_COL_WIDTHS[2],
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis"
+                      }}
+                    >
                       {getVal(item, "Description", "description", "ItemName", "itemName")}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[3], textAlign: "right" }}>
@@ -444,7 +561,7 @@ const MixPurPrintUsaFormat = ({
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[5], textAlign: "right" }}>
                       {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
                     </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[6], textAlign: "right" }}>
+                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[6], textAlign: "right", borderRight: "1px solid #000" }}>
                       {fmtNum(getVal(item, "Amount", "amount"), 2)}
                     </td>
                   </tr>
@@ -471,9 +588,20 @@ const MixPurPrintUsaFormat = ({
                 ))}
 
                 {!isLastPage && (
-                  <tr>
+                  <tr style={{ height: 0 }}>
                     {Array.from({ length: COL_COUNT }).map((_, col) => (
-                      <td key={col} style={{ borderBottom: "1px solid #000" }} />
+                      <td
+                        key={col}
+                        style={{
+                          borderBottom: "1px solid #000",
+                          borderLeft: "1px solid #000",
+                          borderRight: "1px solid #000",
+                          width: ITEM_COL_WIDTHS[col],
+                          padding: 0,
+                          height: 0,
+                          lineHeight: 0
+                        }}
+                      />
                     ))}
                   </tr>
                 )}
@@ -482,7 +610,7 @@ const MixPurPrintUsaFormat = ({
               </tbody>
             </table>
 
-            <div style={{ marginTop: isConsignment ? 10 : 15, fontFamily: FONT_BODY }}>
+            <div style={{ marginTop: 6, fontFamily: FONT_BODY }}>
               <span style={{ fontSize: FS, fontFamily: FONT_BODY }}>Signature:</span>
               <span
                 style={{
@@ -499,7 +627,7 @@ const MixPurPrintUsaFormat = ({
               className="mix-pur-footer"
               style={{
                 width: "100%",
-                marginTop: isConsignment ? 18 : 50,
+                marginTop: 8,
                 fontFamily: FONT_BODY,
                 fontSize: FS
               }}
@@ -507,7 +635,7 @@ const MixPurPrintUsaFormat = ({
               <tbody>
                 <tr>
                   <td style={{ width: "50%", textAlign: "left", fontSize: FS, fontFamily: FONT_BODY }}>
-                    {company.companyFooter || ""}
+                    {company.companyFooter || "Powered by SoftOnCloud"}
                   </td>
                   <td style={{ width: "50%", textAlign: "right", fontSize: FS, fontFamily: FONT_BODY }}>
                     {pageIdx + 1}

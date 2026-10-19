@@ -9,7 +9,9 @@ import {
   FormGroup,
   Input,
   Label,
-  Row
+  Row,
+  Spinner,
+  Table
 } from "reactstrap";
 import Select from "react-select";
 
@@ -20,7 +22,8 @@ import TableContainer from "../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import {
   getSolitaireGradingComparisonDropdowns,
-  getSolitaireGradingComparisonReport
+  getSolitaireGradingComparisonReport,
+  makeSolitaireLabWeightDiffEntry
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
@@ -38,6 +41,126 @@ const getRowVal = (row, ...keys) => {
     }
   }
   return "";
+};
+
+const toNum = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+/**
+ * Lab/GIA rows from GetGradingComparision often return rate/amount/back as 0.
+ * Collect pricing from the stock/"Selected" row for each LotNo so paired lab rows can display it.
+ */
+const buildLotFinancialMap = (rows) => {
+  const map = {};
+  (rows || []).forEach((row) => {
+    const lot = String(getRowVal(row, "lotNo", "LotNo") || "").trim();
+    if (!lot) return;
+    if (!map[lot]) {
+      map[lot] = { rate: 0, amount: 0, back: 0, msp: 0, hasBack: false };
+    }
+
+    const rate = toNum(getRowVal(row, "rate", "Rate"));
+    const amount = toNum(getRowVal(row, "amount", "Amount"));
+    const rawBack = getRowVal(row, "back", "Back");
+    const back = toNum(rawBack);
+    const msp = toNum(getRowVal(row, "msp", "MSP", "mrp", "MRP"));
+    const carats = toNum(getRowVal(row, "carats", "Carats"));
+
+    if (rate !== 0) map[lot].rate = rate;
+    if (amount !== 0) map[lot].amount = amount;
+    if (msp !== 0) map[lot].msp = msp;
+    if (rawBack !== "" && back !== 0) {
+      map[lot].back = back;
+      map[lot].hasBack = true;
+    }
+
+    // If this stock row has amount but rate is 0, derive from its own carats
+    if (map[lot].rate === 0 && amount !== 0 && carats > 0) {
+      map[lot].rate = amount / carats;
+    }
+  });
+
+  Object.values(map).forEach((fin) => {
+    if (!fin.hasBack && fin.msp > 0 && fin.rate !== 0) {
+      fin.back = (fin.rate / fin.msp) * 100 - 100;
+      fin.hasBack = true;
+    }
+  });
+
+  return map;
+};
+
+const getLotFinance = (row, lotFinMap) => {
+  const lot = String(getRowVal(row, "lotNo", "LotNo") || "").trim();
+  return (lot && lotFinMap?.[lot]) || null;
+};
+
+/**
+ * Rate = MRP × (1 + Back/100) when Back + MRP exist; else row/lot rate; else Amount/Carats.
+ * Matches stock entry: MRP 43000, Back -30 → Rate 30100.
+ */
+const getDisplayRate = (row, lotFinMap) => {
+  const fin = getLotFinance(row, lotFinMap);
+  const msp = toNum(getRowVal(row, "msp", "MSP", "mrp", "MRP")) || fin?.msp || 0;
+  const rawBack = getRowVal(row, "back", "Back");
+  const back = rawBack !== "" && toNum(rawBack) !== 0
+    ? toNum(rawBack)
+    : (fin?.hasBack ? fin.back : 0);
+
+  if (msp > 0 && (rawBack !== "" || fin?.hasBack)) {
+    return msp * (1 + back / 100);
+  }
+
+  const rawRate = getRowVal(row, "rate", "Rate");
+  const rate = toNum(rawRate);
+  if (rawRate !== "" && rate !== 0) return rate;
+  if (fin?.rate) return fin.rate;
+
+  const carats = toNum(getRowVal(row, "carats", "Carats"));
+  const amount = toNum(getRowVal(row, "amount", "Amount")) || fin?.amount || 0;
+  if (carats > 0 && amount !== 0) return amount / carats;
+  return rate;
+};
+
+/**
+ * Amount = Rate × this row's Carats (Selected uses 10.5, GIA uses 10.000).
+ * Do not copy Selected amount onto lab rows — that caused 316050 on 10.000 cts.
+ */
+const getDisplayAmount = (row, lotFinMap) => {
+  const rate = getDisplayRate(row, lotFinMap);
+  const carats = toNum(getRowVal(row, "carats", "Carats"));
+  if (rate !== 0 && carats > 0) return rate * carats;
+
+  const rawAmount = getRowVal(row, "amount", "Amount");
+  const amount = toNum(rawAmount);
+  if (rawAmount !== "" && amount !== 0) return amount;
+
+  const fin = getLotFinance(row, lotFinMap);
+  if (fin?.amount) return fin.amount;
+  return amount;
+};
+
+/**
+ * Prefer row Back; else lot stock Back; else derive from Rate vs MRP:
+ * Back = (Rate / MRP) × 100 - 100.
+ */
+const getDisplayBack = (row, lotFinMap) => {
+  const rawBack = getRowVal(row, "back", "Back");
+  const back = toNum(rawBack);
+  if (rawBack !== "" && back !== 0) return back;
+
+  const fin = getLotFinance(row, lotFinMap);
+  if (fin?.hasBack && fin.back !== 0) return fin.back;
+
+  const msp = toNum(getRowVal(row, "msp", "MSP", "mrp", "MRP")) || fin?.msp || 0;
+  const rawRate = getRowVal(row, "rate", "Rate");
+  const rate = (rawRate !== "" && toNum(rawRate) !== 0)
+    ? toNum(rawRate)
+    : (fin?.rate || 0);
+  if (msp > 0 && rate !== 0) return (rate / msp) * 100 - 100;
+  return back;
 };
 
 const dash = (val) => (val === "" || val === null || val === undefined) ? "-" : val;
@@ -111,6 +234,12 @@ const SolitaireGradingComparisonReport = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [reportRows, setReportRows] = useState([]);
+  const [labWeightRows, setLabWeightRows] = useState([]);
+  const [selectedLabLots, setSelectedLabLots] = useState({});
+  const [showLabWeightDiff, setShowLabWeightDiff] = useState(false);
+  const [useLabWeightDate, setUseLabWeightDate] = useState(false);
+  const [labWeightDate, setLabWeightDate] = useState(formatLocalDate(new Date()));
+  const [makingEntry, setMakingEntry] = useState(false);
 
   const [filters, setFilters] = useState({
     fromDate,
@@ -124,7 +253,8 @@ const SolitaireGradingComparisonReport = () => {
     symmetry: [],
     lab: [],
     fluorescence: [],
-    lotNo: ""
+    lotNo: "",
+    labWeightDifference: false
   });
 
   const customStyles = useMemo(() => ({
@@ -233,10 +363,24 @@ const SolitaireGradingComparisonReport = () => {
     }));
   };
 
+  const resetLabWeightSelection = (rows) => {
+    const next = {};
+    (rows || []).forEach((row, idx) => {
+      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
+      next[key] = true;
+    });
+    setSelectedLabLots(next);
+  };
+
   const handleClear = async () => {
     const d = await getDates();
     setHasSearched(false);
+    setShowLabWeightDiff(false);
     setReportRows([]);
+    setLabWeightRows([]);
+    setSelectedLabLots({});
+    setUseLabWeightDate(false);
+    setLabWeightDate(formatLocalDate(new Date()));
     setFilters(mergeDates({
       shape: [],
       color: [],
@@ -247,7 +391,8 @@ const SolitaireGradingComparisonReport = () => {
       symmetry: [],
       lab: [],
       fluorescence: [],
-      lotNo: ""
+      lotNo: "",
+      labWeightDifference: false
     }, d));
   };
 
@@ -266,7 +411,8 @@ const SolitaireGradingComparisonReport = () => {
         Symmetry: filters.symmetry,
         LAB: filters.lab,
         Fluorescence: filters.fluorescence,
-        LotNo: filters.lotNo
+        LotNo: filters.lotNo,
+        LabWeightDifference: !!filters.labWeightDifference
       };
 
       const response = await getSolitaireGradingComparisonReport(payload);
@@ -274,9 +420,21 @@ const SolitaireGradingComparisonReport = () => {
 
       if (ok) {
         const data = response.Data || response.data || [];
-        setReportRows(data);
-        setHasSearched(true);
-        toast.success(t("Report loaded successfully."));
+        if (filters.labWeightDifference) {
+          setLabWeightRows(Array.isArray(data) ? data : []);
+          resetLabWeightSelection(Array.isArray(data) ? data : []);
+          setShowLabWeightDiff(true);
+          setHasSearched(false);
+          setReportRows([]);
+          toast.success(t("Report loaded successfully."));
+        } else {
+          setReportRows(data);
+          setHasSearched(true);
+          setShowLabWeightDiff(false);
+          setLabWeightRows([]);
+          setSelectedLabLots({});
+          toast.success(t("Report loaded successfully."));
+        }
       } else {
         toast.warning(response?.Data || response?.data || response?.Message || t("Failed to load report."));
       }
@@ -290,12 +448,92 @@ const SolitaireGradingComparisonReport = () => {
 
   const handleNewSearch = () => {
     setHasSearched(false);
+    setShowLabWeightDiff(false);
+    setLabWeightRows([]);
+    setSelectedLabLots({});
   };
+
+  const allLabSelected = useMemo(() => {
+    if (!labWeightRows.length) return false;
+    return labWeightRows.every((row, idx) => {
+      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
+      return !!selectedLabLots[key];
+    });
+  }, [labWeightRows, selectedLabLots]);
+
+  const handleSelectAllLab = (checked) => {
+    const next = {};
+    labWeightRows.forEach((row, idx) => {
+      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
+      next[key] = checked;
+    });
+    setSelectedLabLots(next);
+  };
+
+  const handleSelectLabRow = (key, checked) => {
+    setSelectedLabLots((prev) => ({ ...prev, [key]: checked }));
+  };
+
+  const getDiffColor = (oldWeight, newWeight) => {
+    const oldW = Number(oldWeight) || 0;
+    const newW = Number(newWeight) || 0;
+    if (oldW > newW) return "#dc3545";
+    if (newW > oldW) return "#0d6efd";
+    return "inherit";
+  };
+
+  const handleMakeLabWeightDiffEntry = async () => {
+    if (makingEntry) return;
+
+    const selectedRows = labWeightRows.filter((row, idx) => {
+      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
+      return !!selectedLabLots[key];
+    });
+
+    if (!selectedRows.length) {
+      toast.warning(t("Please select at least one lot."));
+      return;
+    }
+
+    setMakingEntry(true);
+    try {
+      const payload = {
+        UseLabWeightDate: !!useLabWeightDate,
+        LabWeightDate: useLabWeightDate ? labWeightDate : null,
+        Rows: selectedRows.map((row) => ({
+          LotNo: getRowVal(row, "lotNo", "LotNo"),
+          OldWeight: Number(getRowVal(row, "oldWeight", "OldWeight") || 0),
+          NewWeight: Number(getRowVal(row, "newWeight", "NewWeight") || 0)
+        }))
+      };
+
+      const response = await makeSolitaireLabWeightDiffEntry(payload);
+      const ok = response?.success || response?.Success;
+      if (ok) {
+        toast.success(response?.Message || response?.message || t("LabWeightDiff Done!!!"));
+      } else {
+        toast.error(response?.Message || response?.message || t("Failed to make Lab Weight Diff entry."));
+      }
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.Message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        t("Server Connection Problem..");
+      toast.error(msg);
+    } finally {
+      setMakingEntry(false);
+    }
+  };
+
+  const lotFinancialMap = useMemo(() => buildLotFinancialMap(reportRows), [reportRows]);
 
   const footerTotals = useMemo(() => {
     let caratTotal = 0;
     let amtTotal = 0;
 
+    // Keep original API amounts for totals so GIA display fill does not double-count.
     reportRows.forEach((row) => {
       caratTotal += Number(getRowVal(row, "carats", "Carats") || 0);
       amtTotal += Number(getRowVal(row, "amount", "Amount") || 0);
@@ -356,7 +594,9 @@ const SolitaireGradingComparisonReport = () => {
       {
         header: t("Rate"),
         accessorKey: "rate",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "rate", "Rate")} decimals={2} align="right" />,
+        cell: ({ row }) => (
+          <CompareCell value={getDisplayRate(row.original, lotFinancialMap)} decimals={2} align="right" />
+        ),
         footer: ({ table }) => (
           <CompareCell
             value={getGradingCompTableTotals(table).avgRate}
@@ -369,7 +609,9 @@ const SolitaireGradingComparisonReport = () => {
       {
         header: t("Amount"),
         accessorKey: "amount",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "amount", "Amount")} decimals={2} align="right" />,
+        cell: ({ row }) => (
+          <CompareCell value={getDisplayAmount(row.original, lotFinancialMap)} decimals={2} align="right" />
+        ),
         footer: ({ table }) => (
           <CompareCell
             value={getGradingCompTableTotals(table).totalAmount}
@@ -382,12 +624,14 @@ const SolitaireGradingComparisonReport = () => {
       {
         header: t("MRP"),
         accessorKey: "msp",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "msp", "MSP")} decimals={2} align="right" />
+        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "msp", "MSP", "mrp", "MRP")} decimals={2} align="right" />
       },
       {
         header: t("Back"),
         accessorKey: "back",
-        cell: ({ row }) => <CompareCell value={getRowVal(row.original, "back", "Back")} decimals={2} align="right" />
+        cell: ({ row }) => (
+          <CompareCell value={getDisplayBack(row.original, lotFinancialMap)} decimals={2} align="right" />
+        )
       },
       {
         header: t("Shape"),
@@ -558,7 +802,7 @@ const SolitaireGradingComparisonReport = () => {
         cell: ({ row }) => <CompareCell value={getRowVal(row.original, "fees", "Fees")} decimals={2} align="right" />
       }
     ],
-    [t]
+    [t, lotFinancialMap]
   );
 
   const handleExcel = async () => {
@@ -573,6 +817,9 @@ const SolitaireGradingComparisonReport = () => {
         const key = col.accessorKey;
         const pascal = key.charAt(0).toUpperCase() + key.slice(1);
         if (key === "gDate") return formatGDate(getRowVal(row, "gDate", "GDate"));
+        if (key === "rate") return getDisplayRate(row, lotFinancialMap);
+        if (key === "amount") return getDisplayAmount(row, lotFinancialMap);
+        if (key === "back") return getDisplayBack(row, lotFinancialMap);
         return getRowVal(row, key, pascal);
       })
     );
@@ -609,16 +856,16 @@ const SolitaireGradingComparisonReport = () => {
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
-              <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
-              {hasSearched ? t("Grading Comparison Report Results") : t("Grading Comparison Report Filters")}
+              <i className={hasSearched && !showLabWeightDiff ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
+              {hasSearched && !showLabWeightDiff ? t("Grading Comparison Report Results") : t("Grading Comparison Report Filters")}
             </h5>
             <div className="d-flex gap-2">
-              {!hasSearched ? (
+              {!hasSearched || showLabWeightDiff ? (
                 <>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading}>
+                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading || makingEntry}>
                     {loading ? t("Loading...") : t("Report")}
                   </Button>
-                  <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={handleClear} disabled={loading}>
+                  <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={handleClear} disabled={loading || makingEntry}>
                     {t("Clear")}
                   </Button>
                 </>
@@ -638,7 +885,7 @@ const SolitaireGradingComparisonReport = () => {
             </div>
           </div>
 
-          {!hasSearched && (
+          {(!hasSearched || showLabWeightDiff) && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody className="bg-light-subtle">
                 <Row className="g-3">
@@ -680,6 +927,29 @@ const SolitaireGradingComparisonReport = () => {
                       {renderSelect("LAB", "lab", "LAB")}
                       {renderSelect("Fluorescence", "fluorescence", "Fluorescence")}
                     </Row>
+                    <Row className="g-2 mt-2">
+                      <Col xs="auto">
+                        <FormGroup check className="mb-0 d-flex align-items-center gap-2">
+                          <Input
+                            id="chkLabWeightDifference"
+                            type="checkbox"
+                            checked={!!filters.labWeightDifference}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setFilters((prev) => ({ ...prev, labWeightDifference: checked }));
+                              if (!checked) {
+                                setShowLabWeightDiff(false);
+                                setLabWeightRows([]);
+                                setSelectedLabLots({});
+                              }
+                            }}
+                          />
+                          <Label check htmlFor="chkLabWeightDifference" className="fw-medium mb-0">
+                            {t("Lab Weight Difference")}
+                          </Label>
+                        </FormGroup>
+                      </Col>
+                    </Row>
                   </Col>
                   <Col lg={2} md={3}>
                     <FormGroup className="mb-0">
@@ -700,7 +970,128 @@ const SolitaireGradingComparisonReport = () => {
             </Card>
           )}
 
-          {hasSearched && (
+          {showLabWeightDiff && (
+            <Card className="shadow-lg border-0 rounded-3 mb-4">
+              <CardBody>
+                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+                  <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                    <i className="ri-scales-3-line fs-20 text-primary"></i>
+                    {t("Lab Weight Difference")}
+                  </h5>
+                  <div className="d-flex flex-wrap align-items-center gap-3">
+                    <FormGroup check className="mb-0 d-flex align-items-center gap-2">
+                      <Input
+                        id="chkUseLabWeightDate"
+                        type="checkbox"
+                        checked={useLabWeightDate}
+                        onChange={(e) => setUseLabWeightDate(e.target.checked)}
+                        disabled={makingEntry}
+                      />
+                      <Label check htmlFor="chkUseLabWeightDate" className="fw-medium mb-0">
+                        {t("Use Lab Weight Date")}
+                      </Label>
+                    </FormGroup>
+                    {useLabWeightDate && (
+                      <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ height: "31px", width: "160px" }}
+                        value={labWeightDate}
+                        onChange={(e) => setLabWeightDate(e.target.value)}
+                        disabled={makingEntry}
+                      />
+                    )}
+                    <Button
+                      color="primary"
+                      className="btn-sm rounded-2 px-3 py-1"
+                      onClick={handleMakeLabWeightDiffEntry}
+                      disabled={makingEntry || !labWeightRows.length}
+                    >
+                      {makingEntry ? (
+                        <>
+                          <Spinner size="sm" className="me-1" />
+                          {t("Making entry...")}
+                        </>
+                      ) : (
+                        <>
+                          <i className="ri-file-add-line align-middle me-1"></i>
+                          {t("Make Lab Weight Diff Entry")}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {labWeightRows.length === 0 ? (
+                  <div className="text-center py-4 text-muted">{t("No lab weight difference data available.")}</div>
+                ) : (
+                  <>
+                    <FormGroup check className="mb-3">
+                      <Input
+                        id="chkSelectAllLabWeight"
+                        type="checkbox"
+                        checked={allLabSelected}
+                        onChange={(e) => handleSelectAllLab(e.target.checked)}
+                        disabled={makingEntry}
+                      />
+                      <Label check htmlFor="chkSelectAllLabWeight" className="fw-medium">
+                        {t("Select All")}
+                      </Label>
+                    </FormGroup>
+                    <div className="table-responsive table-card mb-0">
+                      <Table className="align-middle table-nowrap mb-0 table-hover table-striped" size="sm">
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{ width: "60px" }}>{t("Select")}</th>
+                            <th style={{ width: "50px" }}>#</th>
+                            <th>{t("Lot No")}</th>
+                            <th className="text-end">{t("Old Weight")}</th>
+                            <th className="text-end">{t("New Weight")}</th>
+                            <th className="text-end">{t("Difference")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {labWeightRows.map((row, idx) => {
+                            const lotNo = String(getRowVal(row, "lotNo", "LotNo") || "");
+                            const key = lotNo || String(idx);
+                            const oldWeight = Number(getRowVal(row, "oldWeight", "OldWeight") || 0);
+                            const newWeight = Number(getRowVal(row, "newWeight", "NewWeight") || 0);
+                            const difference = Math.abs(
+                              Number(getRowVal(row, "difference", "Difference") || (oldWeight - newWeight))
+                            );
+                            return (
+                              <tr key={key}>
+                                <td>
+                                  <Input
+                                    type="checkbox"
+                                    checked={!!selectedLabLots[key]}
+                                    onChange={(e) => handleSelectLabRow(key, e.target.checked)}
+                                    disabled={makingEntry}
+                                  />
+                                </td>
+                                <td>{idx + 1}</td>
+                                <td>{lotNo || "-"}</td>
+                                <td className="text-end">{oldWeight.toFixed(3)}</td>
+                                <td className="text-end">{newWeight.toFixed(3)}</td>
+                                <td
+                                  className="text-end fw-semibold"
+                                  style={{ color: getDiffColor(oldWeight, newWeight) }}
+                                >
+                                  {difference.toFixed(3)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+              </CardBody>
+            </Card>
+          )}
+
+          {hasSearched && !showLabWeightDiff && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
               <CardBody>
                 {reportRows.length === 0 ? (

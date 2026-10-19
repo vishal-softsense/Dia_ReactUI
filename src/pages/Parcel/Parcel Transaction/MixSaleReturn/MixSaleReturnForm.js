@@ -637,18 +637,23 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       .catch(() => callback([]));
   }, []);
 
-  const applyCurrencyRates = async (curCode) => {
+  // MVC Edit: GetCurDetail loads operators/symbols only — keeps invoice BaseRate/SBaseRate.
+  // Live master rates apply on Add and when the user changes Currency.
+  const applyCurrencyRates = async (curCode, options = {}) => {
     if (!curCode) return;
+    const preserveRates = !!options.preserveRates;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
-        setHeader((prev) => ({
-          ...prev,
-          baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
-          sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
-        }));
+        if (!preserveRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
+            sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -745,8 +750,9 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays"), 0),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode", "Currency") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      // MVC Edit binds MasterCurrencyRate / StockCurrencyRate; API also exposes BaseRate / SBaseRate
+      baseRate: toNum(getVal(h, "MasterCurrencyRate", "BaseRate"), 1),
+      sBaseRate: toNum(getVal(h, "StockCurrencyRate", "SBaseRate"), 1),
       adatPer: getNumVal(h, "AdatPer", "ComPer", "AdatPercentage", "ComPercentage"),
       adatAmount: getNumVal(h, "AdatAmount", "ComAmount", "AdatAmt", "ComAmt"),
       brokerPer: getNumVal(h, "BrokerPer", "BroPer", "BrokerPercentage", "BroPercentage"),
@@ -775,10 +781,11 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       decimalPlaces: 2
     });
 
-    const sBase = toNum(getVal(h, "SBaseRate"), 1);
+    const sBase = toNum(getVal(h, "StockCurrencyRate", "SBaseRate"), 1);
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx, sBase)));
+    // Only load currency operators on Edit — do not overwrite saved BaseRate/SBaseRate with live master rates
     const loadedCur = String(getVal(h, "CurCode") || "");
-    if (loadedCur) await applyCurrencyRates(loadedCur);
+    if (loadedCur) await applyCurrencyRates(loadedCur, { preserveRates: true });
   };
 
   useEffect(() => {
@@ -1858,13 +1865,17 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4} xs={6}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1 text-uppercase small">{masterSymbol} Rate</Label>
+                          <Label className="form-label mb-1 text-uppercase small">
+                            {masterSymbol} <span className="text-danger">{mOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4} xs={6}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1 text-uppercase small">{stockSymbol} Rate</Label>
+                          <Label className="form-label mb-1 text-uppercase small">
+                            {stockSymbol} <span className="text-danger">{sOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} />
                         </FormGroup>
                       </Col>

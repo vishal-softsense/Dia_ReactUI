@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -116,7 +117,12 @@ const calcItemAmount = (weight, rate, less1, less2, less3, pcs = 1, stockType = 
   return Math.round(amount * 100) / 100;
 };
 
+/** Unique row id so duplicate LotNo entries stay separate in React state/DOM. */
+let mixMemoRowSeq = 0;
+const nextRowId = () => `memo-row-${Date.now()}-${++mixMemoRowSeq}`;
+
 const emptyItem = () => ({
+  rowId: nextRowId(),
   lotNo: "",
   itemName: "",
   weight: "",
@@ -161,6 +167,7 @@ const resolveSelectValue = (options = [], rawValue, ...fallbacks) => {
 };
 
 const mapItemFromApi = (r, idx) => ({
+  rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
   srNo: idx + 1,
   lotNo: getStrVal(r, "LotNo"),
   itemName: getStrVal(r, "ItemName"),
@@ -350,11 +357,74 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   const [lotOpts, setLotOpts] = useState([]);
   const [lotLoading, setLotLoading] = useState(false);
   const [lotSel, setLotSel] = useState(null);
+  const lotSelectRef = useRef(null);
+  /** Keep menu open while we force focus after Add Item (blocks premature onMenuClose). */
+  const keepLotMenuOpenRef = useRef(false);
+  /** Controlled menu — forced open after Add Item like MVC select2('open'). */
+  const [lotMenuOpen, setLotMenuOpen] = useState(false);
+  /** Remount CreatableSelect after Add Item so internal focus/menu state resets cleanly. */
+  const [lotSelectKey, setLotSelectKey] = useState(0);
+  /** Bumped after successful Add Item so focus runs after React commit (table + clear). */
+  const [lotFocusToken, setLotFocusToken] = useState(0);
+
+  /**
+   * MVC mixmemo AddItem end: $('#mix-memo-lotno').focus(); $('#mix-memo-lotno').select2('open');
+   * Opens LotNo dropdown and focuses the search input so the next lot can be typed immediately.
+   */
+  const focusLotNoField = useCallback(() => {
+    keepLotMenuOpenRef.current = true;
+    setLotMenuOpen(true);
+
+    const applyFocus = () => {
+      setLotMenuOpen(true);
+      try {
+        lotSelectRef.current?.focus?.();
+      } catch {
+        /* ignore if select unmounted mid-remount */
+      }
+
+      const root = document.querySelector(".mix-memo-lot");
+      const byId = document.getElementById("mix-memo-lotno-input");
+      const prefixInput =
+        root?.querySelector(".mix-memo-lot__input input") ||
+        root?.querySelector(".mix-memo-lot__input");
+      const searchInput =
+        byId ||
+        (prefixInput?.tagName === "INPUT" ? prefixInput : null) ||
+        [...(root?.querySelectorAll("input") || [])].find(
+          (el) => el.type !== "checkbox" && !el.classList.contains("form-check-input")
+        );
+
+      if (searchInput && typeof searchInput.focus === "function") {
+        searchInput.focus({ preventScroll: true });
+      }
+    };
+
+    window.requestAnimationFrame(() => {
+      applyFocus();
+      window.setTimeout(applyFocus, 0);
+      window.setTimeout(applyFocus, 50);
+      window.setTimeout(applyFocus, 150);
+      window.setTimeout(() => {
+        keepLotMenuOpenRef.current = false;
+      }, 500);
+    });
+  }, []);
+
+  // After item added + fields cleared: auto-open LotNo (MVC focus + select2 open)
+  useEffect(() => {
+    if (!lotFocusToken) return;
+    const timer = window.setTimeout(() => focusLotNoField(), 0);
+    return () => window.clearTimeout(timer);
+  }, [lotFocusToken, focusLotNoField]);
 
   const [mOp, setMOp] = useState("*");
+  const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
   const [entry, setEntry] = useState(emptyItem());
+  /** MVC #cleardata — when checked, Clearall() after Add Item */
+  const [clearData, setClearData] = useState(false);
   const [bulkLotNos, setBulkLotNos] = useState("");
   const [warningModal, setWarningModal] = useState({ open: false, message: "" });
   const showWarning = useCallback((message) => setWarningModal({ open: true, message }), []);
@@ -542,17 +612,23 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [lotInput]);
 
-  const applyCurrencyRates = async (curCode) => {
+  // MVC Edit: GetCurDetail loads operators/symbols only — keeps invoice BaseRate/SBaseRate.
+  // Live master rates apply on Add and when the user changes Currency.
+  const applyCurrencyRates = async (curCode, options = {}) => {
     if (!curCode) return;
+    const preserveRates = !!options.preserveRates;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
-        setHeader((prev) => ({
-          ...prev,
-          baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
-          sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
-        }));
+        setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        if (!preserveRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
+            sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -611,8 +687,9 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      // MVC Edit binds MasterCurrencyRate / StockCurrencyRate; API also exposes BaseRate / SBaseRate
+      baseRate: toNum(getVal(h, "MasterCurrencyRate", "BaseRate"), 1),
+      sBaseRate: toNum(getVal(h, "StockCurrencyRate", "SBaseRate"), 1),
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundDate: toLocalDateStr(getVal(h, "RoundDate")) || todayIso(),
@@ -621,8 +698,9 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     });
 
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+    // Only load currency operators on Edit — do not overwrite saved BaseRate/SBaseRate with live master rates
     const loadedCur = String(getVal(h, "CurCode") || "");
-    if (loadedCur) await applyCurrencyRates(loadedCur);
+    if (loadedCur) await applyCurrencyRates(loadedCur, { preserveRates: true });
   };
 
   useEffect(() => {
@@ -686,7 +764,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       if (!lot) return;
 
       const weight = getNumVal(lot, "Weight", "Carats");
-      const pcs = getNumVal(lot, "Pcs") || 0;
+      // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
+      const pcs = getNumVal(lot, "Pcs");
       const rate = getNumVal(lot, "Rate");
 
       if (weight <= 0) {
@@ -725,8 +804,10 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     if (weight <= 0) return showWarning(t("Carat or Rate can not be 0"));
     if (rate === 0) return showWarning(t("Carat or Rate can not be 0"));
 
+    // MVC AddMixMemoItem: duplicate LotNo is allowed — always append a new row (unless editing)
     const row = {
       ...entry,
+      rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
       weight: Math.round(weight * 1000) / 1000,
@@ -744,21 +825,32 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       stockType: entry.stockType || "Diamond"
     };
 
-    setItems((prev) => {
-      if (editIndex >= 0 && editIndex < prev.length) {
-        const copy = [...prev];
-        copy[editIndex] = row;
-        return copy;
+    // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
+    keepLotMenuOpenRef.current = true;
+    flushSync(() => {
+      setItems((prev) => {
+        if (editIndex >= 0 && editIndex < prev.length) {
+          const copy = [...prev];
+          copy[editIndex] = row;
+          return copy;
+        }
+        return [...prev, row];
+      });
+
+      setEditIndex(-1);
+      // MVC: Clearall only when #cleardata is checked
+      if (clearData) {
+        setLotSel(null);
+        setLotInput("");
+        setLotOpts([]);
+        setEntry(emptyItem());
       }
-      if (prev.some((x) => String(x.lotNo).toLowerCase() === lotNo.toLowerCase())) {
-        toast.warning(t(`Lot number ${lotNo} already exists.`));
-        return prev;
-      }
-      return [...prev, row];
+      setLotMenuOpen(true);
+      setLotSelectKey((k) => k + 1);
     });
-    setEditIndex(-1);
-    setLotSel(null);
-    setEntry(emptyItem());
+
+    // Defer focus/open until after React commit (table + remounted select ready)
+    setLotFocusToken((n) => n + 1);
   };
 
   const handleEditRow = (idx) => {
@@ -809,19 +901,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
         : data.ExcelData || data.excelData || data.items || data.Items || [];
       const newItems = rows.map((r, idx) => mapItemFromApi(r, idx));
 
+      // MVC allows duplicate LotNo — append each loaded lot as its own row (do not merge/replace)
       setItems((prevItems) => {
-        const result = [...prevItems];
-        newItems.forEach((newItem) => {
-          const newLotUpper = String(newItem.lotNo || "").trim().toUpperCase();
-          const idx = result.findIndex(
-            (item) => String(item.lotNo || "").trim().toUpperCase() === newLotUpper
-          );
-          if (idx >= 0) {
-            result[idx] = { ...result[idx], ...newItem };
-          } else {
-            result.push(newItem);
-          }
-        });
+        const result = [
+          ...prevItems,
+          ...newItems.map((r) => ({ ...r, rowId: r.rowId || nextRowId() }))
+        ];
         return result.map((r, idx) => ({ ...r, srNo: idx + 1 }));
       });
 
@@ -1079,13 +1164,17 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{masterSymbol} Rate</Label>
+                          <Label className="form-label mb-1 text-uppercase">
+                            {masterSymbol} <span className="text-danger">{mOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{stockSymbol} Rate</Label>
+                          <Label className="form-label mb-1 text-uppercase">
+                            {stockSymbol} <span className="text-danger">{sOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
@@ -1156,75 +1245,229 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           <Row>
             <Col xs={12} lg={9}>
               <Card className="shadow-sm border-0 rounded-3 mb-3">
-                <CardHeader className="bg-transparent border-bottom">
-                  <h6 className="mb-0 fw-semibold">{t("Item Entry")}</h6>
-                </CardHeader>
-                <CardBody>
+                <CardBody className="p-3">
                   {!readOnly && (
-                    <Row className="g-2 align-items-end">
-                      <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Lot Number")}</Label>
-                        <CreatableSelect
-                          styles={customStyles}
-                          options={lotOpts}
-                          value={lotSel}
-                          onChange={(o) => {
-                            setLotSel(o);
-                            onEntryChange("lotNo", o?.value || "");
-                            if (o?.value) fillFromLot(o.value);
-                          }}
-                          onInputChange={(v, meta) => { if (meta.action === "input-change") setLotInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setLotInput(""); setLotOpts([]); } }}
-                          isLoading={lotLoading}
-                          placeholder={t("Lot...")}
-                          isClearable
-                        />
-                      </Col>
-                      <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Item Name")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={entry.itemName} onChange={(e) => onEntryChange("itemName", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Pcs")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.pcs} onChange={(e) => onEntryChange("pcs", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Rate")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.rate} onChange={(e) => onEntryChange("rate", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less1")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.less1} onChange={(e) => onEntryChange("less1", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less2")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.less2} onChange={(e) => onEntryChange("less2", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Less3")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.less3} onChange={(e) => onEntryChange("less3", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("Amount")}</Label>
-                        <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("ItemDescription")}</Label>
-                        <Input className="form-control-sm" style={fieldH} placeholder={t("ItemDescription")} value={entry.invDescription || ""} onChange={(e) => onEntryChange("invDescription", e.target.value)} />
-                      </Col>
-                      <Col xs={6} sm={4} md={1}>
-                        <Label className="form-label mb-1">{t("StockType")}</Label>
-                        <Input className="form-control-sm bg-light" style={fieldH} placeholder={t("StockType")} value={entry.stockType || "Diamond"} readOnly />
-                      </Col>
-                      <Col xs={12} sm={4} md={2}>
-                        <Button color="primary" size="sm" className="w-100" style={fieldH} onClick={handleAddItem}>
-                          {editIndex >= 0 ? t("Update Item") : t("Add Item")}
-                        </Button>
-                      </Col>
-                    </Row>
+                    <div className="mb-3">
+                      {/* MVC AddMixMemoOut Row 1: Lot No (4) · Item Name (2) · ItemDescription (2) · Add Item (2) */}
+                      <Row className="g-2 align-items-end mb-2">
+                        <Col xs={12} sm={6} lg={4} className="mix-memo-lot">
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
+                              {t("LOT NUMBER")}{" "}
+                              <Link
+                                to="/parcel/add-ParcelItemMaster"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="ms-1 border border-primary text-primary px-1 rounded"
+                                style={{ fontSize: "10px", textDecoration: "none", lineHeight: 1.4 }}
+                              >
+                                {t("ADD ITEM")}
+                              </Link>
+                              {/* MVC #cleardata beside Lot No */}
+                              <Input
+                                type="checkbox"
+                                className="form-check-input ms-2"
+                                id="mix-memo-cleardata"
+                                checked={clearData}
+                                onChange={(e) => setClearData(e.target.checked)}
+                                style={{ width: 16, height: 16, marginTop: 0, verticalAlign: "middle", cursor: "pointer" }}
+                                title={t("Clear data after Add Item")}
+                              />
+                            </Label>
+                            <CreatableSelect
+                              key={lotSelectKey}
+                              ref={lotSelectRef}
+                              inputId="mix-memo-lotno-input"
+                              classNamePrefix="mix-memo-lot"
+                              openMenuOnFocus
+                              menuIsOpen={lotMenuOpen}
+                              styles={{
+                                ...customStyles,
+                                control: (base, state) => ({
+                                  ...customStyles.control(base, state),
+                                  borderColor:
+                                    state.isFocused || lotMenuOpen
+                                      ? "#3b5de7"
+                                      : "var(--vz-border-color, #ced4da)",
+                                  boxShadow:
+                                    state.isFocused || lotMenuOpen
+                                      ? "0 0 0 1px #3b5de7"
+                                      : "none"
+                                }),
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                              }}
+                              options={lotOpts}
+                              value={lotSel}
+                              onMenuOpen={() => setLotMenuOpen(true)}
+                              onMenuClose={() => {
+                                // After Add Item, react-select may fire close during clear/remount — ignore briefly
+                                if (keepLotMenuOpenRef.current) {
+                                  setLotMenuOpen(true);
+                                  return;
+                                }
+                                setLotMenuOpen(false);
+                              }}
+                              onChange={(o) => {
+                                keepLotMenuOpenRef.current = false;
+                                setLotMenuOpen(false);
+                                setLotSel(o);
+                                if (o?.value) {
+                                  // Pcs = 0 immediately on LotNo select (MVC fills from lot detail Pcs, typically 0)
+                                  setEntry((prev) => ({ ...prev, lotNo: o.value, pcs: "0" }));
+                                  fillFromLot(o.value);
+                                } else {
+                                  onEntryChange("lotNo", "");
+                                }
+                              }}
+                              onInputChange={(v, meta) => {
+                                if (meta.action === "input-change") setLotInput(v);
+                              }}
+                              isLoading={lotLoading}
+                              placeholder={t("Lot No")}
+                              isClearable
+                              isSearchable
+                              filterOption={null}
+                              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                              menuPosition="fixed"
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={12} sm={6} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ITEM NAME")}</Label>
+                            <Input
+                              className="form-control-sm"
+                              style={fieldH}
+                              placeholder={t("Name")}
+                              value={entry.itemName}
+                              onChange={(e) => onEntryChange("itemName", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={12} sm={6} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ITEMDESCRIPTION")}</Label>
+                            <Input
+                              className="form-control-sm"
+                              style={fieldH}
+                              placeholder={t("ItemDescription")}
+                              value={entry.invDescription || ""}
+                              onChange={(e) => onEntryChange("invDescription", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={12} sm={6} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 d-none d-lg-block" style={{ fontSize: "11px" }}>&nbsp;</Label>
+                            <Button
+                              type="button"
+                              color="primary"
+                              size="sm"
+                              className="w-100 text-nowrap"
+                              style={fieldH}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={handleAddItem}
+                            >
+                              {editIndex >= 0 ? t("Update Item") : t("Add Item")}
+                            </Button>
+                          </FormGroup>
+                        </Col>
+                      </Row>
+
+                      {/* MVC AddMixMemoOut Row 2: Weight(1) Pcs(1) Rate(2) Less1-3(1) Amount(2) StockType(2) */}
+                      <Row className="g-2 align-items-end">
+                        <Col xs={6} sm={4} lg={1}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("WEIGHT")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.weight}
+                              onChange={(e) => onEntryChange("weight", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={1}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("PCS")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.pcs}
+                              onChange={(e) => onEntryChange("pcs", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("RATE")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.rate}
+                              onChange={(e) => onEntryChange("rate", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={1}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("LESS1")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.less1}
+                              onChange={(e) => onEntryChange("less1", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={1}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("LESS2")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.less2}
+                              onChange={(e) => onEntryChange("less2", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={1}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("LESS3")}</Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              style={fieldH}
+                              value={entry.less3}
+                              onChange={(e) => onEntryChange("less3", e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("AMOUNT")}</Label>
+                            <Input className="form-control-sm" style={fieldH} value={entry.amount} readOnly />
+                          </FormGroup>
+                        </Col>
+                        <Col xs={6} sm={4} lg={2}>
+                          <FormGroup className="mb-2 mb-sm-0">
+                            <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("STOCKTYPE")}</Label>
+                            <Input
+                              className="form-control-sm bg-light"
+                              style={fieldH}
+                              placeholder={t("StockType")}
+                              value={entry.stockType || "Diamond"}
+                              readOnly
+                            />
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                    </div>
                   )}
 
                   {items.length > 0 && (
@@ -1242,7 +1485,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                         </thead>
                         <tbody>
                           {items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`} style={getRowStatusStyle(r.status)}>
+                            <tr key={r.rowId || `${r.lotNo}-${idx}`} style={getRowStatusStyle(r.status)}>
                               <td>
                                 {!readOnly ? (
                                   <div className="d-flex gap-1">
