@@ -140,12 +140,13 @@ const MixPurchasePrintView = () => {
             className="mix-pur-print-sheet"
             style={{
               background: "#fff",
-              padding: 16,
+              padding: "20px 24px",
               border: "1px solid #dee2e6",
               borderRadius: 8,
               width: "100%",
-              maxWidth: 960,
-              margin: "0 auto"
+              maxWidth: 860,
+              margin: "0 auto",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
             }}
           >
             <MixPurPrintUsaFormat
@@ -162,44 +163,111 @@ const MixPurchasePrintView = () => {
 
         <style>{`
           .page-break { page-break-after: always; break-after: page; }
-          /* Second+ print pages: top spacing after page break */
           .mix-pur-print-page-next {
-            margin-top: 24px;
-            padding-top: 10px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px dashed #e0e0e0;
           }
-          /* MVC MixPurchasePrint_USA — Verdana 13px everywhere (match MVC PDF visual) */
-          .mix-pur-print-sheet,
-          .mix-pur-print-sheet * {
-            font-family: Verdana, Arial, sans-serif !important;
-          }
+          /* MVC MixPurchasePrint_USA — Verdana body */
           .mix-pur-print-sheet {
+            font-family: Verdana, Arial, sans-serif;
             font-size: 13px;
             color: #000;
           }
+          .mix-pur-print-sheet .mix-pur-meta-table {
+            table-layout: fixed !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
+          .mix-pur-print-sheet .mix-pur-meta-table th,
+          .mix-pur-print-sheet .mix-pur-meta-table td {
+            border: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
+          .mix-pur-print-sheet .mix-pur-meta-table th:last-child,
+          .mix-pur-print-sheet .mix-pur-meta-table td:last-child {
+            border-right: 1px solid #000 !important;
+          }
+          .mix-pur-print-sheet .mix-pur-item-table {
+            table-layout: fixed !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border-left: 1px solid #000 !important;
+            border-right: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
+          .mix-pur-print-sheet .mix-pur-item-table thead th {
+            border: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
+          .mix-pur-print-sheet .mix-pur-item-table thead th:last-child,
+          .mix-pur-print-sheet .mix-pur-item-row td:last-child,
+          .mix-pur-print-sheet .mix-pur-empty-row td:last-child,
+          .mix-pur-print-sheet .mix-pur-total-row td:last-child {
+            border-right: 1px solid #000 !important;
+          }
+          .mix-pur-print-sheet .mix-pur-item-row td,
+          .mix-pur-print-sheet .mix-pur-empty-row td {
+            height: 20px;
+            vertical-align: middle;
+            border-left: 1px solid #000 !important;
+            border-right: 1px solid #000 !important;
+            border-top: none !important;
+            border-bottom: none !important;
+            box-sizing: border-box !important;
+          }
+          .mix-pur-print-sheet .mix-pur-total-row td {
+            border-top: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            border-left: 1px solid #000 !important;
+            border-right: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
           @media print {
-            /* margin:0 keeps Chrome Headers/Footers from eating Letter space (MVC Rotativa has no browser chrome) */
-            @page { size: Letter portrait; margin: 0; }
+            @page {
+              size: A4 portrait;
+              margin: 8mm 10mm 6mm 10mm;
+            }
             html, body {
               background: #fff !important;
               margin: 0 !important;
               padding: 0 !important;
+              width: 100% !important;
+              height: auto !important;
+              overflow: visible !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            body * { visibility: hidden !important; }
+            .layout-wrapper,
+            .main-content,
+            .page-content,
+            .container-fluid,
+            .mix-pur-print-page {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              overflow: visible !important;
+              min-height: 0 !important;
+              height: auto !important;
+            }
+            body * {
+              visibility: hidden !important;
+            }
             #mix-pur-print-area,
             #mix-pur-print-area * {
               visibility: visible !important;
             }
             #mix-pur-print-area {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
+              position: static !important;
+              display: block !important;
               width: 100% !important;
               max-width: 100% !important;
               margin: 0 !important;
-              /* Match MVC Rotativa PageMargins(10,10,10,10) without browser header/footer chrome */
-              padding: 10mm !important;
+              padding: 0 2px 0 0 !important;
               border: none !important;
               border-radius: 0 !important;
               box-shadow: none !important;
@@ -208,27 +276,116 @@ const MixPurchasePrintView = () => {
               box-sizing: border-box !important;
               font-family: Verdana, Arial, sans-serif !important;
               font-size: 13px !important;
+              overflow: visible !important;
             }
-            #mix-pur-print-area,
-            #mix-pur-print-area * {
-              font-family: Verdana, Arial, sans-serif !important;
-              font-size: 13px !important;
+            .mix-pur-print-page-block {
+              box-sizing: border-box !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+            }
+            .mix-pur-print-page-block.page-break {
+              page-break-after: always !important;
+              break-after: page !important;
+            }
+            .mix-pur-print-page-next {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+              border-top: none !important;
             }
             #mix-pur-print-area .mix-pur-title {
               font-size: 18px !important;
             }
-            #mix-pur-print-area .mix-pur-company-name {
+            #mix-pur-print-area .mix-pur-company-name,
+            #mix-pur-print-area .mix-pur-party-name {
               font-size: 14px !important;
             }
-            #mix-pur-print-area .mix-pur-company-detail {
-              font-size: 12px !important;
-            }
+            #mix-pur-print-area .mix-pur-company-detail,
             #mix-pur-print-area .mix-pur-addr-line {
               font-size: 12px !important;
             }
-            /* Keep table chrome + gray headers identical to on-screen / MVC */
-            #mix-pur-print-area table {
+            /* MVC meta table: Calibri 16px */
+            #mix-pur-print-area .mix-pur-meta-table {
+              table-layout: fixed !important;
+              width: 100% !important;
               border-collapse: collapse !important;
+              border: 1px solid #000 !important;
+              box-sizing: border-box !important;
+              font-family: Calibri, Verdana, Arial, sans-serif !important;
+              font-size: 16px !important;
+            }
+            #mix-pur-print-area .mix-pur-meta-table th,
+            #mix-pur-print-area .mix-pur-meta-table td {
+              font-family: Calibri, Verdana, Arial, sans-serif !important;
+              font-size: 16px !important;
+              border: 1px solid #000 !important;
+              box-sizing: border-box !important;
+            }
+            #mix-pur-print-area .mix-pur-meta-table th:last-child,
+            #mix-pur-print-area .mix-pur-meta-table td:last-child {
+              border-right: 1px solid #000 !important;
+            }
+            /* MVC item thead 13px / tbody 12px */
+            #mix-pur-print-area .mix-pur-item-table thead th {
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 13px !important;
+              border: 1px solid #000 !important;
+              background-color: #c0c0c0 !important;
+              box-sizing: border-box !important;
+            }
+            #mix-pur-print-area .mix-pur-item-table thead th:last-child {
+              border-right: 1px solid #000 !important;
+            }
+            #mix-pur-print-area .mix-pur-item-row td,
+            #mix-pur-print-area .mix-pur-empty-row td {
+              font-family: Verdana, Arial, sans-serif !important;
+              font-size: 12px !important;
+              height: 20px !important;
+              line-height: 1.2 !important;
+              padding-top: 0 !important;
+              padding-bottom: 0 !important;
+              padding-left: 6px !important;
+              padding-right: 6px !important;
+              border-left: 1px solid #000 !important;
+              border-right: 1px solid #000 !important;
+              border-top: none !important;
+              border-bottom: none !important;
+              box-sizing: border-box !important;
+            }
+            #mix-pur-print-area .mix-pur-item-row td:last-child,
+            #mix-pur-print-area .mix-pur-empty-row td:last-child {
+              border-right: 1px solid #000 !important;
+            }
+            #mix-pur-print-area .mix-pur-total-row td {
+              border-top: 1px solid #000 !important;
+              border-bottom: 1px solid #000 !important;
+              border-left: 1px solid #000 !important;
+              border-right: 1px solid #000 !important;
+              box-sizing: border-box !important;
+            }
+            #mix-pur-print-area .mix-pur-total-row td:last-child {
+              border-right: 1px solid #000 !important;
+            }
+            #mix-pur-print-area .mix-pur-item-table {
+              table-layout: fixed !important;
+              width: 100% !important;
+              border-collapse: collapse !important;
+              border-left: 1px solid #000 !important;
+              border-right: 1px solid #000 !important;
+              border-bottom: 1px solid #000 !important;
+              page-break-inside: auto !important;
+              break-inside: auto !important;
+              box-sizing: border-box !important;
+            }
+            #mix-pur-print-area .mix-pur-item-table thead {
+              display: table-header-group !important;
+            }
+            #mix-pur-print-area .mix-pur-item-table tr {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
             #mix-pur-print-area th {
               background-color: #c0c0c0 !important;
@@ -239,21 +396,43 @@ const MixPurchasePrintView = () => {
             #mix-pur-print-area th {
               box-sizing: border-box !important;
             }
-            /* Fit Letter like Rotativa: empty rows must not force a 2nd page for single-invoice prints */
-            #mix-pur-print-area .mix-pur-item-row td,
-            #mix-pur-print-area .mix-pur-empty-row td {
-              height: 18px !important;
-              max-height: 18px !important;
-              line-height: 18px !important;
-              padding-top: 0 !important;
-              padding-bottom: 0 !important;
+            /* MVC address-box styling */
+            #mix-pur-print-area .mix-pur-address-box,
+            .mix-pur-print-sheet .mix-pur-address-box {
+              height: 135px !important;
+              border: 1px solid #000 !important;
+              border-radius: 12px !important;
+              padding: 8px 15px 12px 10px !important;
+              box-sizing: border-box !important;
             }
-            #mix-pur-print-area .mix-pur-address-box {
-              height: 120px !important;
+            #mix-pur-print-area .mix-pur-address-box legend,
+            .mix-pur-print-sheet .mix-pur-address-box legend {
+              float: none !important;
+              font-weight: bold !important;
+              font-size: 13px !important;
+              padding: 0 10px !important;
+              width: auto !important;
+              margin-left: 10px !important;
+              margin-bottom: 2px !important;
+              background: #fff !important;
+              border: none !important;
             }
-            #mix-pur-print-area .mix-pur-print-page-next {
-              margin-top: 0 !important;
-              padding-top: 10mm !important;
+            #mix-pur-print-area .mix-pur-address-box div,
+            .mix-pur-print-sheet .mix-pur-address-box div {
+              font-size: 12px !important;
+              line-height: 1.6 !important;
+              margin-bottom: 5px !important;
+            }
+            #mix-pur-print-area .mix-pur-party-name,
+            .mix-pur-print-sheet .mix-pur-party-name {
+              font-size: 14px !important;
+              letter-spacing: 0.9px !important;
+            }
+            #mix-pur-print-area .mix-pur-footer {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              page-break-before: avoid !important;
+              break-before: avoid !important;
             }
             .d-print-none,
             .navbar-menu,
@@ -262,9 +441,13 @@ const MixPurchasePrintView = () => {
             .footer,
             .vertical-menu,
             #page-topbar,
-            .page-title-box {
+            .page-title-box,
+            .Toastify {
               display: none !important;
               visibility: hidden !important;
+              height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
           }
           @media (max-width: 767px) {

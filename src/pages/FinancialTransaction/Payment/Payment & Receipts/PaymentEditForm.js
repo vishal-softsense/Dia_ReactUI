@@ -158,6 +158,56 @@ const normalizePending = (r) => ({
   TrnType: getVal(r, "TrnType", "trnType")
 });
 
+/**
+ * MVC AdjustInr/AdjustUsd: on edit load, derive the cross-currency Adj from the
+ * payment-currency Adj using invoice BaseRate (Pay INR Rate), not header rate.
+ * Only rewrites rows where Adj amounts are inconsistent (e.g. AdjUSD stored 1:1 with AdjINR).
+ */
+const syncAdjFromPayCurrency = (row, { payIsMaster }) => {
+  const base = toNum(row.BaseRate) || toNum(row.PayINRRate) || 1;
+  const sCur = toNum(row.SCurAmt);
+  const mCur = toNum(row.MCurAmt);
+  const adjUsd = toNum(row.AdUSDAmount);
+  const adjInr = toNum(row.AdINRCurAmt);
+  if (adjUsd <= 0 && adjInr <= 0) {
+    return { ...row, PayINRRate: base || toNum(row.PayINRRate) };
+  }
+
+  const nearlyEqual = (a, b) => Math.abs(toNum(a) - toNum(b)) < 0.02;
+
+  if (payIsMaster) {
+    // Payment in master (e.g. INR): AdjINR is source → AdjUSD = AdjINR / BaseRate
+    const masterAdj = adjInr > 0 ? adjInr : Number((adjUsd * base).toFixed(2));
+    const stockAdj = base ? Number((masterAdj / base).toFixed(2)) : 0;
+    if (nearlyEqual(adjUsd, stockAdj) && nearlyEqual(adjInr, masterAdj)) {
+      return { ...row, PayINRRate: base };
+    }
+    return {
+      ...row,
+      PayINRRate: base,
+      AdINRCurAmt: masterAdj,
+      AdUSDAmount: stockAdj,
+      RemUSDAmount: Number((sCur - stockAdj).toFixed(2)),
+      RemINRCurAmt: Number((mCur - masterAdj).toFixed(2))
+    };
+  }
+
+  // Payment in stock (e.g. USD): AdjUSD is source → AdjINR = AdjUSD * BaseRate
+  const stockAdj = adjUsd > 0 ? adjUsd : base ? Number((adjInr / base).toFixed(2)) : 0;
+  const masterAdj = Number((stockAdj * base).toFixed(2));
+  if (nearlyEqual(adjUsd, stockAdj) && nearlyEqual(adjInr, masterAdj)) {
+    return { ...row, PayINRRate: base };
+  }
+  return {
+    ...row,
+    PayINRRate: base,
+    AdUSDAmount: stockAdj,
+    AdINRCurAmt: masterAdj,
+    RemUSDAmount: Number((sCur - stockAdj).toFixed(2)),
+    RemINRCurAmt: Number((mCur - masterAdj).toFixed(2))
+  };
+};
+
 const PaymentEditForm = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -168,8 +218,8 @@ const PaymentEditForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [currencyOpts, setCurrencyOpts] = useState([]);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
 
@@ -203,12 +253,24 @@ const PaymentEditForm = () => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      setMasterSymbol(
+        auth?.MSymbol ||
+          auth?.mSymbol ||
+          auth?.data?.MSymbol ||
+          company?.masterSymbol ||
+          cached.masterSymbol ||
+          ""
+      );
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -254,6 +316,11 @@ const PaymentEditForm = () => {
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        // MVC: MasterSymbol / StockSymbol from get-currency-rate drive labels
+        const mSym = getVal(res, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(res, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         const m = toNum(res.baseRate ?? res.BaseRate, 0);
         const s = toNum(res.sBaseRate ?? res.SBaseRate, 0);
         if (m > 0 || s > 0) {
@@ -271,12 +338,13 @@ const PaymentEditForm = () => {
     return null;
   };
 
-  const recalcRow = (row, field, value, mRate) => {
+  const recalcRow = (row, field, value) => {
     const next = { ...row };
     const num = toNum(value);
     const sCur = toNum(next.SCurAmt);
     const mCur = toNum(next.MCurAmt);
-    const base = toNum(mRate) || toNum(next.BaseRate) || 1;
+    // MVC AdjustUsd/AdjustInr: conversion rate = invoice row BaseRate (#baserate), not header INR rate
+    const base = toNum(next.BaseRate) || 1;
     next.PayINRRate = base;
 
     if (field === "AdUSDAmount") {
@@ -412,7 +480,16 @@ const PaymentEditForm = () => {
         const gridRes = await getPaymentEditDetails(String(editId), adjType);
         let rows = [];
         if (gridRes?.success || gridRes?.Success) {
-          rows = (gridRes.Data || gridRes.data || []).map(normalizePending);
+          // MVC: master-currency payment when header MasterCurrencyRate === 1; stock when StockCurrencyRate === 1
+          const payIsMaster =
+            toNum(nextForm.mBaseRate) === 1
+              ? true
+              : toNum(nextForm.sBaseRate) === 1
+                ? false
+                : true;
+          rows = (gridRes.Data || gridRes.data || [])
+            .map(normalizePending)
+            .map((r) => syncAdjFromPayCurrency(r, { payIsMaster }));
           setPendingRows(rows);
         } else {
           toast.warning(gridRes?.Data || gridRes?.data || t("Failed to load invoice details."));
@@ -475,7 +552,7 @@ const PaymentEditForm = () => {
       }).then((result) => {
         setPendingRows((prev) => {
           const next = [...prev];
-          next[idx] = recalcRow(next[idx], field, result.isConfirmed ? num : actual, form.mBaseRate);
+          next[idx] = recalcRow(next[idx], field, result.isConfirmed ? num : actual);
           return next;
         });
       });
@@ -484,7 +561,7 @@ const PaymentEditForm = () => {
 
     setPendingRows((prev) => {
       const next = [...prev];
-      next[idx] = recalcRow(next[idx], field, value, form.mBaseRate);
+      next[idx] = recalcRow(next[idx], field, value);
       return next;
     });
   };
@@ -515,7 +592,7 @@ const PaymentEditForm = () => {
       if (fillAmt <= 0) return prev;
 
       const next = [...prev];
-      next[idx] = recalcRow(row, field, fillAmt, form.mBaseRate);
+      next[idx] = recalcRow(row, field, fillAmt);
       return next;
     });
   };
@@ -650,7 +727,7 @@ const PaymentEditForm = () => {
             PDate: r.Date,
             InvNo: r.InvNo,
             InvCode: r.InvCode,
-            BaseRate: toNum(r.PayINRRate || form.mBaseRate),
+            BaseRate: toNum(r.PayINRRate || r.BaseRate),
             AdMCurAmt: toNum(r.AdINRCurAmt),
             AdSCurAmt: toNum(r.AdUSDAmount)
           }))
@@ -1018,19 +1095,19 @@ const PaymentEditForm = () => {
                         {masterSymbol} {t("Amount")}
                       </th>
                       <th className="text-end">
-                        {t("Adj")} {stockSymbol}
+                        {t("Adj")} {stockSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
                         {t("Pay")} {masterSymbol} {t("Rate")}
                       </th>
                       <th className="text-end">
-                        {t("Adj")} {masterSymbol}
+                        {t("Adj")} {masterSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
-                        {t("Rem")} {stockSymbol}
+                        {t("Rem")} {stockSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
-                        {t("Rem")} {masterSymbol}
+                        {t("Rem")} {masterSymbol} {t("Amt")}
                       </th>
                       <th>{t("TrnType")}</th>
                       <th>{t("InvCode")}</th>
@@ -1091,7 +1168,7 @@ const PaymentEditForm = () => {
                               onChange={(e) => updatePendingRow(idx, "AdUSDAmount", e.target.value)}
                             />
                           </td>
-                          <td className="text-end">{fmtNum(row.PayINRRate || form.mBaseRate)}</td>
+                          <td className="text-end">{fmtNum(row.PayINRRate || row.BaseRate)}</td>
                           <td>
                             <Input
                               type="number"

@@ -21,6 +21,7 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import JewStockMediaPreview from "./JewStockMediaPreview";
+import JewStockDrivePathFields from "./JewStockDrivePathFields";
 import {
   computeChargeTotals,
   computeMakingCharges,
@@ -1298,20 +1299,18 @@ export default function JewStockMasterEdit() {
                   )}
 
                   {midTab === "images" && (
-                    <>
-                      <FieldRow label="Image Path" wide>
-                        <input type="text" className={inputCls} placeholder="Image Path"
-                          value={imagePath} onChange={(e) => setImagePath(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Video Path" wide>
-                        <input type="text" className={inputCls} placeholder="Video Path"
-                          value={videoPath} onChange={(e) => setVideoPath(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Cert Path" wide>
-                        <input type="text" className={inputCls} placeholder="Cert Path"
-                          value={certPath} onChange={(e) => setCertPath(e.target.value)} />
-                      </FieldRow>
-                    </>
+                    <JewStockDrivePathFields
+                      stockId={stockID}
+                      imagePath={imagePath}
+                      videoPath={videoPath}
+                      certPath={certPath}
+                      onImagePathChange={setImagePath}
+                      onVideoPathChange={setVideoPath}
+                      onCertPathChange={setCertPath}
+                      inputCls={inputCls}
+                      readOnly={readOnly}
+                      FieldRow={FieldRow}
+                    />
                   )}
                 </CardBody>
               </Card>

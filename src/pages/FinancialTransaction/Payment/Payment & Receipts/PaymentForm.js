@@ -160,8 +160,8 @@ const PaymentForm = ({ mode }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currencyOpts, setCurrencyOpts] = useState([]);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
 
@@ -201,12 +201,24 @@ const PaymentForm = ({ mode }) => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      setMasterSymbol(
+        auth?.MSymbol ||
+          auth?.mSymbol ||
+          auth?.data?.MSymbol ||
+          company?.masterSymbol ||
+          cached.masterSymbol ||
+          ""
+      );
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -252,6 +264,11 @@ const PaymentForm = ({ mode }) => {
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        // MVC payments.js: MasterSymbol / StockSymbol from get-currency-rate drive labels
+        const mSym = getVal(res, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(res, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         setForm((prev) => ({
           ...prev,
           mBaseRate: fmtNum(toNum(res.baseRate ?? res.BaseRate, toNum(prev.mBaseRate))),
@@ -430,7 +447,8 @@ const PaymentForm = ({ mode }) => {
       const row = { ...next[idx] };
       const sCur = toNum(getVal(row, "SCurAmt", "sCurAmt"));
       const mCur = toNum(getVal(row, "MCurAmt", "mCurAmt"));
-      const base = toNum(form.mBaseRate) || 1;
+      // MVC AdjustUsd/AdjustInr: conversion rate = invoice row BaseRate (#baserate), not header INR rate
+      const base = toNum(getVal(row, "BaseRate", "baseRate")) || 1;
       row.PayINRRate = base;
 
       if (field === "AdUSDAmount") {
@@ -516,7 +534,8 @@ const PaymentForm = ({ mode }) => {
       const updated = { ...row };
       const sCur = toNum(getVal(updated, "SCurAmt", "sCurAmt"));
       const mCur = toNum(getVal(updated, "MCurAmt", "mCurAmt"));
-      const base = toNum(form.mBaseRate) || 1;
+      // MVC: PayINRRate / conversion uses invoice BaseRate
+      const base = toNum(getVal(updated, "BaseRate", "baseRate")) || 1;
       updated.PayINRRate = base;
       if (isUsdField) {
         updated.AdUSDAmount = fillAmt;
@@ -558,7 +577,7 @@ const PaymentForm = ({ mode }) => {
         PDate: getVal(r, "Date", "date"),
         InvNo: getVal(r, "InvNo", "invNo"),
         InvCode: getVal(r, "InvCode", "invCode"),
-        BaseRate: toNum(r.PayINRRate || form.mBaseRate),
+        BaseRate: toNum(r.PayINRRate || r.BaseRate),
         AdMCurAmt: toNum(r.AdINRCurAmt),
         AdSCurAmt: toNum(r.AdUSDAmount)
       }))
@@ -1256,19 +1275,19 @@ const PaymentForm = ({ mode }) => {
                           {masterSymbol} {t("Amount")}
                         </th>
                         <th className="text-end">
-                          {t("Adj")} {stockSymbol}
+                          {t("Adj")} {stockSymbol} {t("Amt")}
                         </th>
                         <th className="text-end">
                           {t("Pay")} {masterSymbol} {t("Rate")}
                         </th>
                         <th className="text-end">
-                          {t("Adj")} {masterSymbol}
+                          {t("Adj")} {masterSymbol} {t("Amt")}
                         </th>
                         <th className="text-end">
-                          {t("Rem")} {stockSymbol}
+                          {t("Rem")} {stockSymbol} {t("Amt")}
                         </th>
                         <th className="text-end">
-                          {t("Rem")} {masterSymbol}
+                          {t("Rem")} {masterSymbol} {t("Amt")}
                         </th>
                         <th>{t("TrnType")}</th>
                         <th>{t("InvCode")}</th>

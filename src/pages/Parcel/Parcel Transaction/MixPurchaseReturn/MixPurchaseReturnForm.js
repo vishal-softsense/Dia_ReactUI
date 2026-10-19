@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -210,7 +211,12 @@ const calcItemAmount = (selectionCarats, rate, less1, less2, less3, pcs = 1, sto
   return Math.round(amount * 100) / 100;
 };
 
+/** Unique row id so duplicate LotNo entries stay separate in React state/DOM. */
+let mixPurRtnRowSeq = 0;
+const nextRowId = () => `purrtn-row-${Date.now()}-${++mixPurRtnRowSeq}`;
+
 const emptyItem = () => ({
+  rowId: nextRowId(),
   lotNo: "",
   itemName: "",
   shape: "",
@@ -276,6 +282,7 @@ const mapItemFromApi = (r, idx, sBaseRate = 1) => {
   }
 
   return {
+    rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
     srNo: idx + 1,
     lotNo: getStrVal(r, "LotNo", "lotNo"),
     itemName: getStrVal(r, "ItemName", "itemName"),
@@ -442,6 +449,67 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
   const [shipVia, setShipVia] = useState(null);
 
   const [lotSel, setLotSel] = useState(null);
+  const lotSelectRef = useRef(null);
+  /** Keep menu open while we force focus after Add Item (blocks premature onMenuClose). */
+  const keepLotMenuOpenRef = useRef(false);
+  /** Controlled menu — forced open after Add Item like MVC select2('open'). */
+  const [lotMenuOpen, setLotMenuOpen] = useState(false);
+  /** Remount AsyncSelect after Add Item so internal focus/menu state resets cleanly. */
+  const [lotSelectKey, setLotSelectKey] = useState(0);
+  /** Bumped after successful Add Item so focus runs after React commit (table + clear). */
+  const [lotFocusToken, setLotFocusToken] = useState(0);
+
+  /**
+   * MVC mix-pur-return AddItem end: $('#mix-lotno').focus(); $('#mix-lotno').select2('open');
+   * Opens LotNo dropdown and focuses the search input so the next lot can be typed immediately.
+   */
+  const focusLotNoField = useCallback(() => {
+    keepLotMenuOpenRef.current = true;
+    setLotMenuOpen(true);
+
+    const applyFocus = () => {
+      setLotMenuOpen(true);
+      try {
+        lotSelectRef.current?.focus?.();
+      } catch {
+        /* ignore if select unmounted mid-remount */
+      }
+
+      // Prefer react-select search input — never the clear-data checkbox
+      const root = document.querySelector(".mix-pur-rtn-lot");
+      const byId = document.getElementById("mix-pur-rtn-lotno-input");
+      const prefixInput =
+        root?.querySelector(".mix-pur-rtn-lot__input input") ||
+        root?.querySelector(".mix-pur-rtn-lot__input");
+      const searchInput =
+        byId ||
+        (prefixInput?.tagName === "INPUT" ? prefixInput : null) ||
+        [...(root?.querySelectorAll("input") || [])].find(
+          (el) => el.type !== "checkbox" && !el.classList.contains("form-check-input")
+        );
+
+      if (searchInput && typeof searchInput.focus === "function") {
+        searchInput.focus({ preventScroll: true });
+      }
+    };
+
+    window.requestAnimationFrame(() => {
+      applyFocus();
+      window.setTimeout(applyFocus, 0);
+      window.setTimeout(applyFocus, 50);
+      window.setTimeout(applyFocus, 150);
+      window.setTimeout(() => {
+        keepLotMenuOpenRef.current = false;
+      }, 500);
+    });
+  }, []);
+
+  // After item added: auto-open LotNo (MVC focus + select2 open)
+  useEffect(() => {
+    if (!lotFocusToken) return;
+    const timer = window.setTimeout(() => focusLotNoField(), 0);
+    return () => window.clearTimeout(timer);
+  }, [lotFocusToken, focusLotNoField]);
 
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
@@ -659,18 +727,23 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       .catch(() => callback([]));
   }, []);
 
-  const applyCurrencyRates = async (curCode) => {
+  // MVC Edit: GetCurDetail loads operators/symbols only — keeps invoice BaseRate/SBaseRate.
+  // Live master rates apply on Add and when the user changes Currency.
+  const applyCurrencyRates = async (curCode, options = {}) => {
     if (!curCode) return;
+    const preserveRates = !!options.preserveRates;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
-        setHeader((prev) => ({
-          ...prev,
-          baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
-          sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
-        }));
+        if (!preserveRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
+            sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -769,8 +842,9 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays"), 0),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode", "Currency") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      // MVC Edit binds MasterCurrencyRate / StockCurrencyRate; API also exposes BaseRate / SBaseRate
+      baseRate: toNum(getVal(h, "MasterCurrencyRate", "BaseRate"), 1),
+      sBaseRate: toNum(getVal(h, "StockCurrencyRate", "SBaseRate"), 1),
       adatPer: getNumVal(h, "AdatPer", "ComPer", "AdatPercentage", "ComPercentage"),
       adatAmount: getNumVal(h, "AdatAmount", "ComAmount", "AdatAmt", "ComAmt"),
       brokerPer: getNumVal(h, "BrokerPer", "BroPer", "BrokerPercentage", "BroPercentage"),
@@ -799,10 +873,11 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       decimalPlaces: 2
     });
 
-    const sBase = toNum(getVal(h, "SBaseRate"), 1);
+    const sBase = toNum(getVal(h, "StockCurrencyRate", "SBaseRate"), 1);
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx, sBase)));
+    // Only load currency operators on Edit — do not overwrite saved BaseRate/SBaseRate with live master rates
     const loadedCur = String(getVal(h, "CurCode") || "");
-    if (loadedCur) await applyCurrencyRates(loadedCur);
+    if (loadedCur) await applyCurrencyRates(loadedCur, { preserveRates: true });
   };
 
   useEffect(() => {
@@ -956,6 +1031,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       }
 
       const weight = getNumVal(lot, "Weight", "Carats", "IssueCarats");
+      // MVC: $('#Pcs').val(jsonData[0].Pcs) — keep 0; do not coerce with || 1
       const pcs = getNumVal(lot, "Pcs");
       const rate = getNumVal(lot, "Rate", "PurRate", "PurchaseRate");
       const sBase = toNum(header.sBaseRate, 1) || 1;
@@ -985,7 +1061,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
             rejP: "0",
             rejection: "0",
             selectionCarats: weight,
-            pcs: pcs || 0,
+            pcs,
             rate,
             sRate,
             cogs,
@@ -1014,8 +1090,10 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       return toast.warning(t("Carat or Rate can not be 0"));
     }
 
+    // MVC MixPurchaseReturn add-single-lot: duplicate LotNo check is commented out — always append
     const row = {
       ...entry,
+      rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
       shape: entry.shape || "",
@@ -1040,23 +1118,30 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       stockType: entry.stockType || "Diamond"
     };
 
-    setItems((prev) => {
-      if (editIndex >= 0 && editIndex < prev.length) {
-        const copy = [...prev];
-        copy[editIndex] = row;
-        return copy;
+    // Commit table (+ optional clear) before focusing LotNo — MVC: focus + select2('open')
+    keepLotMenuOpenRef.current = true;
+    flushSync(() => {
+      setItems((prev) => {
+        if (editIndex >= 0 && editIndex < prev.length) {
+          const copy = [...prev];
+          copy[editIndex] = row;
+          return copy;
+        }
+        return [...prev, row];
+      });
+
+      setEditIndex(-1);
+      // MVC: Clearall only when #cleardata is checked
+      if (clearData) {
+        setLotSel(null);
+        setEntry(emptyItem());
       }
-      if (prev.some((x) => String(x.lotNo).toLowerCase() === lotNo.toLowerCase())) {
-        toast.warning(t(`Lot number ${lotNo} already exists.`));
-        return prev;
-      }
-      return [...prev, row];
+      setLotMenuOpen(true);
+      setLotSelectKey((k) => k + 1);
     });
-    setEditIndex(-1);
-    if (clearData) {
-      setLotSel(null);
-      setEntry(emptyItem());
-    }
+
+    // Defer focus/open until after React commit (table + remounted select ready)
+    setLotFocusToken((n) => n + 1);
   };
 
   const handleEditRow = (idx) => {
@@ -1475,13 +1560,17 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4} xs={3}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1 text-uppercase small">{masterSymbol} *</Label>
+                          <Label className="form-label mb-1 text-uppercase small">
+                            {masterSymbol} <span className="text-danger">{mOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4} xs={3}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1 text-uppercase small">{stockSymbol} *</Label>
+                          <Label className="form-label mb-1 text-uppercase small">
+                            {stockSymbol} <span className="text-danger">{sOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
@@ -1651,7 +1740,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                     <>
                       {/* Item Entry Row 1: LOT NUMBER (col-lg-4) | ITEM NAME (col-lg-2) | SHAPE (col-lg-1) | COLOR (col-lg-1) | CLARITY (col-lg-1) | SIZE (col-lg-1) | SIEVE (col-lg-2) */}
                       <Row className="g-2 align-items-end mb-2">
-                        <Col xs={12} sm={6} lg={4}>
+                        <Col xs={12} sm={6} lg={4} className="mix-pur-rtn-lot">
                           <FormGroup className="mb-0">
                             <div className="d-flex align-items-center gap-2 mb-1">
                               <Label className="form-label mb-0 text-uppercase fw-semibold" style={{ fontSize: "11px", color: "#495057" }}>
@@ -1678,15 +1767,53 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               </div>
                             </div>
                             <AsyncSelect
-                              styles={customStyles}
+                              key={lotSelectKey}
+                              ref={lotSelectRef}
+                              inputId="mix-pur-rtn-lotno-input"
+                              classNamePrefix="mix-pur-rtn-lot"
+                              openMenuOnFocus
+                              menuIsOpen={lotMenuOpen}
+                              styles={{
+                                ...customStyles,
+                                control: (base, state) => ({
+                                  ...(typeof customStyles.control === "function"
+                                    ? customStyles.control(base, state)
+                                    : base),
+                                  borderColor:
+                                    state.isFocused || lotMenuOpen
+                                      ? "#3b5de7"
+                                      : "var(--vz-border-color, #ced4da)",
+                                  boxShadow:
+                                    state.isFocused || lotMenuOpen
+                                      ? "0 0 0 1px #3b5de7"
+                                      : "none"
+                                }),
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                              }}
                               cacheOptions={false}
                               defaultOptions={false}
                               loadOptions={loadLotOptions}
                               value={lotSel}
+                              onMenuOpen={() => setLotMenuOpen(true)}
+                              onMenuClose={() => {
+                                // After Add Item, react-select may fire close during remount — ignore briefly
+                                if (keepLotMenuOpenRef.current) {
+                                  setLotMenuOpen(true);
+                                  return;
+                                }
+                                setLotMenuOpen(false);
+                              }}
                               onChange={(o) => {
+                                keepLotMenuOpenRef.current = false;
+                                setLotMenuOpen(false);
                                 setLotSel(o);
-                                onEntryChange("lotNo", o?.value || "");
-                                if (o?.value) fillFromLot(o.value);
+                                if (o?.value) {
+                                  // Pcs = 0 immediately on LotNo select (MVC fills from lot detail Pcs, typically 0)
+                                  setEntry((prev) => ({ ...prev, lotNo: o.value, pcs: "0" }));
+                                  fillFromLot(o.value);
+                                } else {
+                                  onEntryChange("lotNo", "");
+                                }
                               }}
                               placeholder={t("Lot No")}
                               isClearable
@@ -1989,6 +2116,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                         <Col xs={6} sm={3} lg={2}>
                           <FormGroup className="mb-0">
                             <Button
+                              type="button"
                               color="primary"
                               size="sm"
                               style={{
@@ -1997,6 +2125,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                                 maxWidth: "150px",
                                 fontWeight: 500
                               }}
+                              onMouseDown={(e) => e.preventDefault()}
                               onClick={handleAddItem}
                             >
                               {editIndex >= 0 ? t("Update Item") : t("Add Item")}
@@ -2023,7 +2152,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                         </thead>
                         <tbody>
                           {items.map((r, idx) => (
-                            <tr key={`${r.lotNo}-${idx}`}>
+                            <tr key={r.rowId || `${r.lotNo}-${idx}`}>
                               <td>
                                 {!readOnly ? (
                                   <div className="d-flex gap-1">

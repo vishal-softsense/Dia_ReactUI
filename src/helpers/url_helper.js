@@ -710,6 +710,10 @@ export const ADD_MOUNTING_ITEM_IN_GRID = "/api/JewelleryStockMaster/add-mounting
 export const DELETE_MOUNTING_ITEM_FROM_GRID = "/api/JewelleryStockMaster/delete-mounting-item";
 export const GET_NEXT_MOUNTING_STOCK_ID = "/api/JewelleryStockMaster/get-next-mountid";
 export const GET_MOUNTING_STOCK_DROPDOWN = "/api/JewelleryStockMaster/mounting-stock-dropdown";
+export const JEW_DRIVE_IMAGE = "/api/JewelleryStockMaster/jew-drive-image";
+export const JEW_DRIVE_FIND_BY_NAME = "/api/JewelleryStockMaster/jew-drive-find-by-name";
+export const JEW_DRIVE_LIST_STOCK_IMAGES = "/api/JewelleryStockMaster/jew-drive-list-stock-images";
+export const JEW_DRIVE_LIST_STOCK_VIDEOS = "/api/JewelleryStockMaster/jew-drive-list-stock-videos";
 export const GET_ALL_LOTNO_LIST = "/api/JewelleryStockMaster/get-alllotno-listall";
 export const GET_JEW_LOTNO_DATA = "/api/JewelleryStockMaster/get-jewlotno-data";
 export const GET_SOLITAIRE_LOTS = "/api/SolitaireStockSearchReport/get-solitaire-lots";
@@ -828,6 +832,7 @@ export const SOLITAIRE_STOCK_HISTORY_REPORT = "/api/SolitaireStockHistoryReport/
 // Solitaire Grading Comparison Report
 export const SOLITAIRE_GRADING_COMPARISON_REPORT = "/api/SolitaireGradingComparisonReport/search";
 export const SOLITAIRE_GRADING_COMPARISON_DROPDOWNS = "/api/SolitaireGradingComparisonReport/dropdowns";
+export const SOLITAIRE_GRADING_COMPARISON_LAB_WEIGHT_DIFF_ENTRY = "/api/SolitaireGradingComparisonReport/make-lab-weight-diff-entry";
 
 // Solitaire Rate Revise Report
 export const SOLITAIRE_RATE_REVISE_REPORT = "/api/SolitaireRateReviseReport/search";

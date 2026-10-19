@@ -30,14 +30,28 @@ export const loadExcelJS = () => {
     });
 };
 
+const isPresentVal = (v) => v !== undefined && v !== null && v !== "";
+
+/**
+ * Resolve row field across PascalCase / camelCase / acronym keys
+ * (FLId↔flId, MRP↔mrp, Brokerper↔brokerper).
+ * Prefers the first non-empty match among all case variants of each key.
+ */
 const getItemVal = (item, ...keys) => {
     if (!item) return "";
+    const itemKeys = Object.keys(item);
     for (const key of keys) {
-        if (item[key] !== undefined && item[key] !== null && item[key] !== "") return item[key];
-        const camel = key.charAt(0).toLowerCase() + key.slice(1);
-        const pascal = key.charAt(0).toUpperCase() + key.slice(1);
-        if (item[camel] !== undefined && item[camel] !== null && item[camel] !== "") return item[camel];
-        if (item[pascal] !== undefined && item[pascal] !== null && item[pascal] !== "") return item[pascal];
+        if (!key) continue;
+
+        const candidates = [key, key.charAt(0).toLowerCase() + key.slice(1), key.charAt(0).toUpperCase() + key.slice(1)];
+        for (const c of candidates) {
+            if (isPresentVal(item[c])) return item[c];
+        }
+
+        const lower = String(key).toLowerCase();
+        for (const k of itemKeys) {
+            if (k.toLowerCase() === lower && isPresentVal(item[k])) return item[k];
+        }
     }
     return "";
 };
@@ -47,6 +61,17 @@ const stripComma = (val) => String(val ?? "").replace(/,/g, "");
 const toNumOrNull = (val) => {
     const n = parseFloat(stripComma(val));
     return Number.isFinite(n) ? n : null;
+};
+
+/** First finite numeric among aliases; skips empty/missing (keeps 0). */
+const getItemNum = (item, ...keys) => {
+    for (const key of keys) {
+        const v = getItemVal(item, key);
+        if (v === "" || v === null || v === undefined) continue;
+        const n = toNumOrNull(v);
+        if (n !== null) return n;
+    }
+    return null;
 };
 
 const parseCvdDiam = (diam) => {
@@ -254,8 +279,8 @@ export const exportCvdExcel = async (items = [], fileName = "SolitaireStock_CVD"
                     val && typeof val === "object" && val.text !== undefined
                         ? String(val.text)
                         : val !== null && val !== undefined
-                          ? String(val)
-                          : "";
+                            ? String(val)
+                            : "";
                 if (text.length > maxLen) maxLen = text.length;
             });
             column.width = Math.min(maxLen + 3, 40);
@@ -273,6 +298,414 @@ export const exportCvdExcel = async (items = [], fileName = "SolitaireStock_CVD"
         return { success: true };
     } catch (error) {
         console.error("Error exporting CVD Excel:", error);
+        return { success: false, error };
+    }
+};
+
+/**
+ * Growth column: if LABComments has `(...)`, show only the last bracketed value;
+ * otherwise keep the full original text. Null/empty → "".
+ * e.g. "... CVD growth process (CVD)" → "CVD"; no brackets → full string.
+ */
+const extractGrowthAbbrev = (raw) => {
+    if (raw == null) return "";
+    const text = String(raw).trim();
+    if (!text) return "";
+    const matches = [...text.matchAll(/\(([^)]+)\)/g)];
+    if (matches.length > 0) {
+        const inside = String(matches[matches.length - 1][1] || "").trim();
+        return inside || text;
+    }
+    return text;
+};
+
+/**
+ * MVC ReportController.SolitairePurchaseExcelGenerate — "Solitaire Purchase Report Print" (SPR).
+ * @param {Array<object>} items - Purchase report rows from GetPurchaseReportData
+ * @param {string} fileName - Download file name without extension
+ */
+export const exportSolitairePurchaseReportExcel = async (items = [], fileName = "SolitairePurchaseReport") => {
+    try {
+        if (!items.length) return { success: false, error: new Error("No data") };
+
+        const ExcelJS = await loadExcelJS();
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("SolitairePurchaseReport");
+        worksheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft" }];
+
+        const headers = [
+            "Report No.", "Client Ref", "Shape", "Size", "Color", "Clarity", "Cut", "Polish", "Sym", "Floro",
+            "Lab", "Growth", "Length", "Width", "Depth", "Depth %", "Table %", "Rap Price ($)", "Disc ($)", "Rate ($)",
+            "Final Amount ($)", "RATE", "TERMS", "TERMS2", "PRICE/CT", "NETT $", "PRICE/CT RS", "AMOUNT RS.", "BROKERAGE", "FINAL AMT $",
+            "FINAL AMOUNT RS", "DAYS Int", "NETT FINAL AMOUNT $", "NETT FINAL AMOUNT Rs.", "DAYS", "COMPANY", "BROKER", "BILL", "DATE", "Inv Descriptions"
+        ];
+
+        const headerRow = worksheet.addRow(headers);
+        headerRow.font = { bold: true, name: "Arial", size: 10 };
+        headerRow.alignment = { horizontal: "center" };
+
+        const getCol = (row, ...keys) => {
+            const v = getItemVal(row, ...keys);
+            return v === null || v === undefined ? "" : String(v);
+        };
+
+        const setNumCell = (cell, raw, decimals) => {
+            const n = toNumOrNull(raw);
+            if (n !== null) {
+                cell.value = Number(n.toFixed(decimals));
+                cell.numFmt = decimals === 3 ? "0.000" : "0.00";
+            } else if (raw !== null && raw !== undefined && String(raw).trim() !== "") {
+                cell.value = String(raw);
+            } else {
+                cell.value = "";
+            }
+            cell.alignment = { horizontal: "center" };
+            cell.font = { name: "Arial", size: 10 };
+        };
+
+        items.forEach((row) => {
+            const excelRow = worksheet.addRow(new Array(headers.length).fill(""));
+            excelRow.alignment = { horizontal: "center" };
+            excelRow.font = { name: "Arial", size: 10 };
+
+            excelRow.getCell(1).value = getCol(row, "CertificateNo", "CertNo", "ReportNo");
+            excelRow.getCell(2).value = getCol(row, "MfgSeriesID", "ClientRef");
+            excelRow.getCell(3).value = getCol(row, "ShapeId", "Shapeid", "Shape","shp");
+            // Size = SizeId (size grade from report row)
+            excelRow.getCell(4).value = getCol(row, "SizeId", "sizeId", "Sizeid", "SizeID");
+            excelRow.getCell(5).value = getCol(row, "ColorId", "colorid", "Color");
+            excelRow.getCell(6).value = getCol(row, "ClarityId", "clarityid", "Clarity");
+            excelRow.getCell(7).value = getCol(row, "PropId", "Cut", "Proportion");
+            excelRow.getCell(8).value = getCol(row, "PolishId", "Polish");
+            excelRow.getCell(9).value = getCol(row, "SymId", "Sym");
+            // Floro — same fields as grid FL / PurchaseReport Print (FLId / flId)
+            excelRow.getCell(10).value = getCol(row, "FLId", "flId", "Floro", "FL", "Fluorescence");
+            excelRow.getCell(11).value = getCol(row, "Cert", "cert", "Lab", "LAB");
+            // Growth — MVC source LABComments (fallback RoughId); print only bracketed abbrev e.g. (CVD) → CVD
+            excelRow.getCell(12).value = extractGrowthAbbrev(
+                getCol(row, "LABComments", "LabComments", "labComments", "RoughId")
+            );
+            excelRow.getCell(13).value = getCol(row, "Length", "L", "Dia");
+            excelRow.getCell(14).value = getCol(row, "Width", "W");
+
+            setNumCell(excelRow.getCell(15), getCol(row, "Depth", "D", "TotDepth"), 2);
+            setNumCell(excelRow.getCell(16), getCol(row, "TotDepth", "TotalDepthPer", "T.Dep.", "DepthPer", "Depth%"), 2);
+            excelRow.getCell(17).value = getCol(row, "TablePer", "Tab.", "Table");
+
+            // Rap Price ($) — MRP / mrp (PurchaseReport Print aliases)
+            const rapPrice = getItemNum(row, "MRP", "mrp", "RapPrice", "PurchaseMRP");
+            setNumCell(excelRow.getCell(18), rapPrice !== null ? rapPrice : getCol(row, "MRP", "mrp", "RapPrice"), 2);
+            setNumCell(excelRow.getCell(19), getCol(row, "Discount", "Disc"), 2);
+            setNumCell(excelRow.getCell(20), getCol(row, "StockCurrencyRate", "rate", "Rate"), 2);
+            setNumCell(excelRow.getCell(21), getCol(row, "StockCurrencyAmount", "Amount", "amount"), 2);
+            setNumCell(excelRow.getCell(22), getCol(row, "DRate", "MasterCurrencyRate", "RATE"), 2);
+
+            excelRow.getCell(23).value = getCol(row, "Due", "TERMS", "Term");
+            excelRow.getCell(24).value = getCol(row, "Less2", "TERMS2");
+
+            setNumCell(excelRow.getCell(25), getCol(row, "rate", "Rate", "StockCurrencyRate"), 2);
+            setNumCell(excelRow.getCell(26), getCol(row, "Amount", "amount", "StockCurrencyAmount"), 2);
+            setNumCell(excelRow.getCell(27), getCol(row, "MasterCurrencyRate"), 2);
+            setNumCell(excelRow.getCell(28), getCol(row, "MasterCurrencyAmount"), 2);
+
+            // BROKERAGE = brokeramount
+            const brokerageNum = getItemNum(row, "brokeramount", "BrokerAmount", "brokerAmount");
+            if (brokerageNum !== null) {
+                setNumCell(excelRow.getCell(29), brokerageNum, 2);
+            } else {
+                excelRow.getCell(29).value = getCol(row, "brokeramount", "BrokerAmount", "brokerAmount");
+            }
+
+            setNumCell(excelRow.getCell(30), getCol(row, "StockCurrencyAmount", "Amount", "amount"), 2);
+            setNumCell(excelRow.getCell(31), getCol(row, "MasterCurrencyAmount"), 2);
+            excelRow.getCell(32).value = getCol(row, "Due", "Days", "DAYS Int");
+            setNumCell(excelRow.getCell(33), getCol(row, "StockCurrencyAmount", "Amount", "amount"), 2);
+            setNumCell(excelRow.getCell(34), getCol(row, "MasterCurrencyAmount"), 2);
+            excelRow.getCell(35).value = getCol(row, "Due", "Days");
+            excelRow.getCell(36).value = getCol(row, "Party", "COMPANY", "Company");
+            excelRow.getCell(37).value = getCol(row, "Broker", "BROKER");
+            excelRow.getCell(38).value = getCol(row, "BillNo", "Billno", "InvNo", "Invno");
+            excelRow.getCell(39).value = getCol(row, "ConDATE", "Date", "DATE");
+            excelRow.getCell(40).value = getCol(row, "Remarks");
+        });
+
+        const lastDataRow = items.length + 1;
+        const totalRowNum = items.length + 2;
+        const total = worksheet.getRow(totalRowNum);
+        total.font = { bold: true, name: "Arial", size: 10 };
+
+        total.getCell(1).value = { formula: `"Total: " & COUNTA(B2:B${lastDataRow})` };
+        // Size is SizeId (text grade) — do not SUM
+        total.getCell(21).value = { formula: `SUM(U2:U${lastDataRow})` };
+        total.getCell(21).numFmt = "0.00";
+        total.getCell(26).value = { formula: `SUM(Z2:Z${lastDataRow})` };
+        total.getCell(26).numFmt = "0.00";
+        total.getCell(28).value = { formula: `SUM(AB2:AB${lastDataRow})` };
+        total.getCell(28).numFmt = "0.00";
+        total.getCell(30).value = { formula: `SUM(AD2:AD${lastDataRow})` };
+        total.getCell(30).numFmt = "0.00";
+        total.getCell(31).value = { formula: `SUM(AE2:AE${lastDataRow})` };
+        total.getCell(31).numFmt = "0.00";
+        total.getCell(33).value = { formula: `SUM(AG2:AG${lastDataRow})` };
+        total.getCell(33).numFmt = "0.00";
+        total.getCell(34).value = { formula: `SUM(AH2:AH${lastDataRow})` };
+        total.getCell(34).numFmt = "0.00";
+
+        for (let c = 1; c <= headers.length; c++) {
+            total.getCell(c).font = { bold: true, name: "Arial", size: 10 };
+            worksheet.getColumn(c).width = 14;
+        }
+
+        worksheet.columns.forEach((column, i) => {
+            let maxLen = headers[i] ? String(headers[i]).length : 10;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                const val = cell.value;
+                const text =
+                    val && typeof val === "object" && val.formula !== undefined
+                        ? String(val.formula)
+                        : val !== null && val !== undefined
+                            ? String(val)
+                            : "";
+                if (text.length > maxLen) maxLen = text.length;
+            });
+            column.width = Math.min(Math.max(maxLen + 2, 12), 28);
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        return { success: true };
+    } catch (error) {
+        console.error("Error exporting Solitaire Purchase Report Excel:", error);
+        return { success: false, error };
+    }
+};
+
+/**
+ * Solitaire Purchase Report — "Export Report" (9-column commercial layout).
+ * Columns: SR.NO. | DESCRIPTION OF GOODS | CERTIFICATE & LAB | GROWTH | STOCK ID | PCS | CARAT | RATE$ | TOTAL$
+ * @param {Array<object>} items - Purchase report rows from GetPurchaseReportData
+ * @param {string} fileName - Download file name without extension
+ */
+export const exportSolitairePurchaseExportReportExcel = async (items = [], fileName = "ExportReport") => {
+    try {
+        if (!items.length) return { success: false, error: new Error("No data") };
+
+        const ExcelJS = await loadExcelJS();
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("ExportReport");
+        worksheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft" }];
+
+        const headers = [
+            "SR.NO.",
+            "DESCRIPTION OF GOODS",
+            "CERTIFICATE & LAB",
+            "GROWTH",
+            "STOCK ID",
+            "PCS",
+            "CARAT",
+            "RATE$",
+            "TOTAL$"
+        ];
+
+        const thinBorder = {
+            top: { style: "thin", color: { argb: "FF000000" } },
+            left: { style: "thin", color: { argb: "FF000000" } },
+            bottom: { style: "thin", color: { argb: "FF000000" } },
+            right: { style: "thin", color: { argb: "FF000000" } }
+        };
+
+        const headerRow = worksheet.addRow(headers);
+        headerRow.font = { bold: true, name: "Calibri", size: 11 };
+        headerRow.alignment = { horizontal: "center", vertical: "middle" };
+        headerRow.eachCell((cell) => {
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFBFBFBF" }
+            };
+            cell.border = thinBorder;
+        });
+
+        const getCol = (row, ...keys) => {
+            const v = getItemVal(row, ...keys);
+            return v === null || v === undefined ? "" : String(v).trim();
+        };
+
+        items.forEach((row, index) => {
+            const certNo = getCol(row, "CertificateNo", "certificateNo", "CertNo");
+            const lab = getCol(row, "Cert", "cert", "Lab", "LAB");
+            const certAndLab = [certNo, lab].filter(Boolean).join(" ");
+
+            const growth = extractGrowthAbbrev(
+                getCol(row, "LABComments", "LabComments", "labComments", "RoughId")
+            );
+
+            const caratNum = getItemNum(row, "Carats", "Cts", "Weight");
+            const rateNum = getItemNum(row, "Rate", "rate");
+            const totalNum = getItemNum(row, "Amount", "amount");
+
+            const excelRow = worksheet.addRow([
+                index + 1,
+                getCol(row, "ItemName", "itemName"),
+                certAndLab,
+                growth,
+                getCol(row, "Item", "item"),
+                "1 PC",
+                caratNum !== null ? Number(caratNum.toFixed(2)) : "",
+                rateNum !== null ? Number(rateNum.toFixed(2)) : "",
+                totalNum !== null ? Number(totalNum.toFixed(2)) : ""
+            ]);
+
+            excelRow.font = { name: "Calibri", size: 11 };
+            excelRow.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = thinBorder;
+                cell.alignment = { horizontal: "center", vertical: "middle" };
+            });
+
+            if (caratNum !== null) excelRow.getCell(7).numFmt = "0.00";
+            if (rateNum !== null) excelRow.getCell(8).numFmt = "0.00";
+            if (totalNum !== null) excelRow.getCell(9).numFmt = "0.00";
+        });
+
+        // Suitable widths matching the commercial layout (DESCRIPTION / CERTIFICATE wide)
+        const widths = [8, 36, 22, 12, 14, 10, 10, 12, 12];
+        widths.forEach((w, i) => {
+            worksheet.getColumn(i + 1).width = w;
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        return { success: true };
+    } catch (error) {
+        console.error("Error exporting Solitaire Purchase Export Report Excel:", error);
+        return { success: false, error };
+    }
+};
+
+/**
+ * MVC ReportController.PurchaseExcelGenerate — "PurchaseReport Print" (PR).
+ * @param {Array<object>} items - Purchase report rows
+ * @param {string} fileName - Download file name without extension
+ */
+export const exportPurchaseReportPrintExcel = async (items = [], fileName = "PurchaseReportList") => {
+    try {
+        if (!items.length) return { success: false, error: new Error("No data") };
+
+        const ExcelJS = await loadExcelJS();
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("GetPurchaseReportData");
+        worksheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft" }];
+
+        const headers = [
+            "Pur inv", "Bill No", "Date", "Days", "Party", "LotId", "ItemName", "Carats",
+            "MRP", "Back", "Rate", "Amount", "Cert.", "Cert.No.", "Shp.", "Size",
+            "Col.", "Cla.", "Cut", "Sym", "Polish", "Dia.", "T.Dep.", "Tab.",
+            "FL", "EXPORT NO", "REMARKS"
+        ];
+
+        const headerRow = worksheet.addRow(headers);
+        headerRow.font = { bold: true, name: "Arial", size: 10 };
+        headerRow.alignment = { horizontal: "center" };
+
+        items.forEach((row) => {
+            const carats = toNumOrNull(getItemVal(row, "Carats", "carats"));
+            const discount = toNumOrNull(getItemVal(row, "Discount", "discount"));
+            const rate = toNumOrNull(getItemVal(row, "Rate", "rate"));
+            const amount = toNumOrNull(getItemVal(row, "Amount", "amount"));
+
+            const excelRow = worksheet.addRow([
+                getItemVal(row, "Invno", "InvNo", "invno"),
+                getItemVal(row, "BillNo", "Billno", "billNo"),
+                getItemVal(row, "ConDATE", "Date", "conDATE"),
+                "",
+                getItemVal(row, "Party", "party"),
+                getItemVal(row, "Item", "item"),
+                getItemVal(row, "ItemName", "itemName"),
+                carats,
+                getItemVal(row, "MRP", "mrp"),
+                discount,
+                rate,
+                amount,
+                getItemVal(row, "Cert", "cert"),
+                getItemVal(row, "CertificateNo", "certificateNo"),
+                getItemVal(row, "ShapeId", "Shapeid", "shapeId"),
+                getItemVal(row, "Size", "SizeId", "sizeId"),
+                getItemVal(row, "ColorId", "colorid", "colorId"),
+                getItemVal(row, "ClarityId", "clarityid", "clarityId"),
+                getItemVal(row, "PropId", "Cut", "propId"),
+                getItemVal(row, "SymId", "symId"),
+                getItemVal(row, "PolishId", "polishId"),
+                getItemVal(row, "Dia", "dia"),
+                getItemVal(row, "TotDepth", "totDepth"),
+                getItemVal(row, "TablePer", "tablePer"),
+                getItemVal(row, "FLId", "flId"),
+                getItemVal(row, "ExportNo", "exportNo"),
+                getItemVal(row, "Remarks", "remarks")
+            ]);
+            excelRow.alignment = { horizontal: "center" };
+            excelRow.font = { name: "Arial", size: 10 };
+            if (carats !== null) excelRow.getCell(8).numFmt = "0.000";
+            if (discount !== null) excelRow.getCell(10).numFmt = "0.00";
+            if (rate !== null) excelRow.getCell(11).numFmt = "0.00";
+            if (amount !== null) excelRow.getCell(12).numFmt = "0.00";
+        });
+
+        const lastDataRow = items.length + 1;
+        const totalRowNum = items.length + 2;
+        const total = worksheet.getRow(totalRowNum);
+        total.font = { bold: true, name: "Arial", size: 10 };
+        total.getCell(1).value = { formula: `"Total: " & COUNTA(B2:B${lastDataRow})` };
+        total.getCell(8).value = { formula: `SUM(H2:H${lastDataRow})` };
+        total.getCell(8).numFmt = "0.000";
+        total.getCell(8).alignment = { horizontal: "right" };
+        total.getCell(11).value = { formula: `IFERROR(L${totalRowNum}/H${totalRowNum},0)` };
+        total.getCell(11).numFmt = "0.00";
+        total.getCell(11).alignment = { horizontal: "right" };
+        total.getCell(12).value = { formula: `SUM(L2:L${lastDataRow})` };
+        total.getCell(12).numFmt = "0.00";
+        total.getCell(12).alignment = { horizontal: "right" };
+
+        worksheet.columns.forEach((column, i) => {
+            let maxLen = headers[i] ? String(headers[i]).length : 10;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                const val = cell.value;
+                const text =
+                    val && typeof val === "object" && val.formula !== undefined
+                        ? String(val.formula)
+                        : val !== null && val !== undefined
+                            ? String(val)
+                            : "";
+                if (text.length > maxLen) maxLen = text.length;
+            });
+            column.width = Math.min(Math.max(maxLen + 2, 12), 22);
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        return { success: true };
+    } catch (error) {
+        console.error("Error exporting Purchase Report Print Excel:", error);
         return { success: false, error };
     }
 };
@@ -381,7 +814,7 @@ export const getExcelBase64 = async (headers, rows, sheetName = "Sheet1") => {
         ];
 
         const buffer = await workbook.xlsx.writeBuffer();
-        
+
         // Convert ArrayBuffer to Base64 in a browser-safe way
         let binary = "";
         const bytes = new Uint8Array(buffer);

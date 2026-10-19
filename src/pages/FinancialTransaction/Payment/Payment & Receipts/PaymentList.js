@@ -7,8 +7,12 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../../helpers/excel_helper";
-import { deletePayment, getPaymentList } from "../../../../helpers/fakebackend_helper";
-import { getCachedReportCompany } from "../../../../helpers/reportCompanyDefaults";
+import {
+  deletePayment,
+  getCurrencyRates,
+  getPaymentList,
+  getPaymentPageData
+} from "../../../../helpers/fakebackend_helper";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -60,18 +64,34 @@ const PaymentList = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [invoiceInfo, setInvoiceInfo] = useState({ invNo: "", billNo: "" });
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
 
+  // MVC LoginController: DefaultCurrency → GetStockAndMasterCurrencyRate → Session["MSymbol"] / Session["SSymbol"]
+  // MVC PaymentList.cshtml: "@(Session["MSymbol"]) Amt" / "@(Session["SSymbol"]) Amt"
   useEffect(() => {
-    try {
-      const company = getCachedReportCompany();
-      setStockSymbol(company?.stockSymbol || "USD");
-      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
-    } catch {
-      /* keep defaults */
-    }
+    const loadSymbols = async () => {
+      try {
+        const pageRes = await getPaymentPageData();
+        if (!(pageRes?.success || pageRes?.Success)) return;
+        const pageData = pageRes.Data || pageRes.data || {};
+        const defCode = String(
+          pageData.DefaultCurrencyCode || pageData.defaultCurrencyCode || ""
+        );
+        if (!defCode) return;
+
+        const rateRes = await getCurrencyRates(defCode);
+        if (!(rateRes?.success || rateRes?.Success)) return;
+
+        const mSym = getVal(rateRes, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(rateRes, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(String(mSym));
+        if (sSym) setStockSymbol(String(sSym));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadSymbols();
   }, []);
 
   useEffect(() => {

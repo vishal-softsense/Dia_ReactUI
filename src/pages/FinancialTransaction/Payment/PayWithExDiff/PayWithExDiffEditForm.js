@@ -190,8 +190,8 @@ const PayWithExDiffEditForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [currencyOpts, setCurrencyOpts] = useState([]);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
 
@@ -225,12 +225,24 @@ const PayWithExDiffEditForm = () => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      setMasterSymbol(
+        auth?.MSymbol ||
+          auth?.mSymbol ||
+          auth?.data?.MSymbol ||
+          company?.masterSymbol ||
+          cached.masterSymbol ||
+          ""
+      );
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -276,6 +288,11 @@ const PayWithExDiffEditForm = () => {
       if (res?.success || res?.Success) {
         setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
         setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
+        // MVC: MasterSymbol / StockSymbol from get-currency-rate drive labels
+        const mSym = getVal(res, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(res, "StockSymbol", "stockSymbol");
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         const m = toNum(res.baseRate ?? res.BaseRate, 0);
         const s = toNum(res.sBaseRate ?? res.SBaseRate, 0);
         if (m > 0 || s > 0) {
@@ -1043,22 +1060,22 @@ const PayWithExDiffEditForm = () => {
                         {masterSymbol} {t("Amount")}
                       </th>
                       <th className="text-end">
-                        {t("Adj")} {stockSymbol}
+                        {t("Adj")} {stockSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
                         {t("Pay")} {masterSymbol} {t("Rate")}
                       </th>
                       <th className="text-end">
-                        {t("Adj")} {masterSymbol}
+                        {t("Adj")} {masterSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
                         {t("Ex Diff")} {masterSymbol}
                       </th>
                       <th className="text-end">
-                        {t("Rem")} {stockSymbol}
+                        {t("Rem")} {stockSymbol} {t("Amt")}
                       </th>
                       <th className="text-end">
-                        {t("Rem")} {masterSymbol}
+                        {t("Rem")} {masterSymbol} {t("Amt")}
                       </th>
                       <th>{t("TrnType")}</th>
                       <th>{t("InvCode")}</th>

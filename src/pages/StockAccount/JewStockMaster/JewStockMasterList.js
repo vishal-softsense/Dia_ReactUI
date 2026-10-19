@@ -94,7 +94,8 @@ const MountingStockList = () => {
             "Diamond Weight",
             "Gross Weight",
             "Net Weight",
-            "Metal Amount"
+            "Metal Amount",
+            "Total Amount"
         ];
 
         const rows = mountingStock.map((item) => [
@@ -106,7 +107,8 @@ const MountingStockList = () => {
             item.totalDiamondCarat || item.TotalDiamondCarat || 0,
             Number(item.grossWeight || item.GrossWeight || 0).toFixed(3),
             Number(item.netWeight || item.NetWeight || 0).toFixed(3),
-            Number(item.totalMetalAmount || item.TotalMetalAmount || 0).toFixed(2)
+            Number(item.totalMetalAmount || item.TotalMetalAmount || 0).toFixed(2),
+            Number(item.finalAmount ?? item.FinalAmount ?? 0).toFixed(2)
         ]);
 
         const result = await exportToExcel(
@@ -217,6 +219,16 @@ const MountingStockList = () => {
                 cell: (cellProps) => {
                     const val = cellProps.getValue();
                     return typeof val === "number" ? val.toFixed(2) : val || "0.00";
+                }
+            },
+            {
+                header: t("Total Amount"),
+                accessorKey: "FinalAmount",
+                accessorFn: (row) => row.finalAmount ?? row.FinalAmount ?? 0,
+                enableColumnFilter: true,
+                cell: (cellProps) => {
+                    const val = cellProps.getValue();
+                    return typeof val === "number" ? val.toFixed(2) : Number(val || 0).toFixed(2);
                 }
             }
         ],

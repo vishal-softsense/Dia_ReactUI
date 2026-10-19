@@ -151,10 +151,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
     grouped[key].push(item);
   });
 
-  // Match MVC jew-memo-report.js: client-side Sr No (not SP RowIndex).
-  // MemoNo group → one Sr No per memo (shared by all lines).
-  // PartyName group → one Sr No per distinct MemoNo, global counter across parties.
-  let srNo = 1;
+  // Sale No = BillNo from report API (JewelleryMemoOutReportDto.BillNo).
   const sections = Object.keys(grouped).map((groupKey) => {
     const groupRows = grouped[groupKey];
     const first = groupRows[0];
@@ -168,22 +165,7 @@ const buildGroupedReportSections = (rows, groupBy) => {
       });
     });
 
-    let rowsWithSrNo;
-    if (groupBy === "PartyName") {
-      const invSrMap = {};
-      rowsWithSrNo = groupRows.map((item) => {
-        const invKey = String(getRowVal(item, "MemoNo", "memoNo", "InvNo", "invNo") || "");
-        if (!(invKey in invSrMap)) {
-          invSrMap[invKey] = srNo++;
-        }
-        return { ...item, _srNo: invSrMap[invKey] };
-      });
-    } else {
-      const currentSrNo = srNo++;
-      rowsWithSrNo = groupRows.map((item) => ({ ...item, _srNo: currentSrNo }));
-    }
-
-    return { groupKey, first, rows: rowsWithSrNo, subtotal };
+    return { groupKey, first, rows: groupRows, subtotal };
   });
 
   const grandTotal = {};
@@ -277,7 +259,7 @@ const GROUPED_PRINT_STYLES = `
         font-weight: 600;
         white-space: nowrap;
     }
-    /* Match MVC print widths (View omitted): Sr No → Amount */
+    /* Print widths: Sale No → Amount */
     #dynamic-memoOut-report-table col:nth-child(1) { width: 15mm; }
     #dynamic-memoOut-report-table col:nth-child(2) { width: 15mm; }
     #dynamic-memoOut-report-table col:nth-child(3) { width: 55mm; }
@@ -655,7 +637,7 @@ const JewelleryMemooutReport = () => {
       section.rows.forEach((row) => {
         bodyRows += `
           <tr>
-            <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
+            <td class="col-text">${escapeHtml(getRowVal(row, "BillNo", "billNo", "billno") || "")}</td>
             <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
             <td class="col-text">${escapeHtml(getGroupedStockId(row))}</td>
             <td class="col-product">${escapeHtml(getRowVal(row, "ItemName", "itemName"))}</td>
@@ -669,7 +651,7 @@ const JewelleryMemooutReport = () => {
         `;
       });
 
-      // MVC print (View removed): colspan covers Sr No + MemoNo, then empty Stock ID + Product
+      // Print: colspan covers Sale No + MemoNo, then empty Stock ID + Product
       bodyRows += `
         <tr class="subtotal">
           <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
@@ -703,7 +685,7 @@ const JewelleryMemooutReport = () => {
         </colgroup>
         <thead>
           <tr>
-            <th>Sr No</th>
+            <th>${escapeHtml(t("Sale No"))}</th>
             <th>MemoNo</th>
             <th>${escapeHtml(t("Jew Stock ID"))}</th>
             <th>${escapeHtml(t("Product"))}</th>
@@ -1420,7 +1402,7 @@ const JewelleryMemooutReport = () => {
                       <thead>
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
-                          <th>Sr No</th>
+                          <th>{t("Sale No")}</th>
                           <th>MemoNo</th>
                           <th>{t("Jew Stock ID")}</th>
                           <th>{t("Product")}</th>
@@ -1472,7 +1454,9 @@ const JewelleryMemooutReport = () => {
                                       ""
                                     )}
                                   </td>
-                                  <td className="text-center">{row._srNo ?? ""}</td>
+                                  <td className="text-center">
+                                    {dashText(getRowVal(row, "BillNo", "billNo", "billno"))}
+                                  </td>
                                   <td className="text-center">
                                     {dashText(getRowVal(row, "MemoNo", "memoNo"))}
                                   </td>
