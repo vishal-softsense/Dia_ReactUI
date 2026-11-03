@@ -678,6 +678,7 @@ export const getMixSaleConsignment = (payload) =>
   });
 export const getMixSaleMemoToSale = getMixSaleConsignment;
 export const addMixSaleSingleLot = (payload) => api.create(url.MIX_SALE_ADD_SINGLE_LOT, payload);
+export const getMixSaleBackFromExcel = (payload) => api.create(url.MIX_SALE_GET_BACK_FROM_EXCEL, payload);
 export const getMixSalePrintView = (invNo) => api.get(`${url.MIX_SALE_PRINT_VIEW}/${invNo}`);
 export const getMixSaleCurrentStatus = (invNo) => api.get(`${url.MIX_SALE_CURRENT_STATUS}/${invNo}`);
 export const getMixSaleLots = (searchby) => {
@@ -896,6 +897,7 @@ export const deleteSolitaireSale = (id) => api.create(url.SOLITAIRE_SALE_DELETE,
 export const getSolitaireSaleLotDetail = (payload) => api.create(url.SOLITAIRE_SALE_LOT_DETAIL, payload);
 export const addSolitaireSaleSingleLot = (payload) => api.create(url.SOLITAIRE_SALE_ADD_SINGLE_LOT, payload);
 export const getSolitaireSaleItemFromList = (payload) => api.create(url.SOLITAIRE_SALE_GET_ITEM_FROM_LIST, payload);
+export const getSolitaireSaleBackFromExcel = (payload) => api.create(url.SOLITAIRE_SALE_GET_BACK_FROM_EXCEL, payload);
 export const refreshSolitaireSaleBack = (payload) => api.create(url.SOLITAIRE_SALE_REFRESH_BACK, payload);
 export const getSolitaireSaleMemoToSale = (payload) => api.create(url.SOLITAIRE_SALE_MEMO_TO_SALE, payload);
 export const getSolitaireSalePrintView = (invNo) => api.get(`${url.SOLITAIRE_SALE_PRINT_VIEW}/${encodeURIComponent(invNo)}`);
@@ -960,6 +962,8 @@ export const addMountingItemInGrid = data => api.create(url.ADD_MOUNTING_ITEM_IN
 export const deleteMountingItemFromGrid = index => api.create(url.DELETE_MOUNTING_ITEM_FROM_GRID, index);
 export const getNextMountingStockId = designId => api.get(`${url.GET_NEXT_MOUNTING_STOCK_ID}?designId=${encodeURIComponent(designId)}`);
 export const getMountingStockDropdown = (category, actionType = "") => api.get(`${url.GET_MOUNTING_STOCK_DROPDOWN}?category=${encodeURIComponent(category)}&actionType=${encodeURIComponent(actionType)}`);
+export const checkStockIdExists = (stockId, excludeId) =>
+  api.get(`${url.CHECK_STOCK_ID_EXISTS}?stockId=${encodeURIComponent(stockId || "")}${excludeId ? `&excludeId=${excludeId}` : ""}`);
 export const getJewDriveFindByName = (name, mediaType = "image") =>
   api.get(
     `${url.JEW_DRIVE_FIND_BY_NAME}?name=${encodeURIComponent(name || "")}&mediaType=${encodeURIComponent(mediaType || "image")}`

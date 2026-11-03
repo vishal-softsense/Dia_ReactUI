@@ -429,18 +429,31 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   const [excelOpen, setExcelOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
 
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
 
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      const sSym = company?.stockSymbol || cached.stockSymbol || "";
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      const mSym =
+        auth?.MSymbol ||
+        auth?.mSymbol ||
+        auth?.data?.MSymbol ||
+        company?.masterSymbol ||
+        cached.masterSymbol ||
+        "";
+      if (sSym) setStockSymbol(sSym);
+      if (mSym) setMasterSymbol(mSym);
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -597,18 +610,30 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [lotInput]);
 
-  const applyCurrencyRates = async (curCode) => {
+  const applyCurrencyRates = async (curCode, { overwriteRates = true } = {}) => {
     if (!curCode) return;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
-        const base = toNum(res.baseRate ?? res.BaseRate, 1);
-        const sBase = toNum(res.sBaseRate ?? res.SBaseRate, 1);
-        const opM = getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
-        const opS = getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const raw = res?.data || res?.Data || res;
+        const target = Array.isArray(raw) ? raw[0] : (raw?.data && Array.isArray(raw.data) ? raw.data[0] : raw) || {};
+        const base = toNum(target.baseRate ?? target.BaseRate ?? target.MasterCurrencyRate, 1);
+        const sBase = toNum(target.sBaseRate ?? target.SBaseRate ?? target.StockCurrencyRate, 1);
+        const opM = getVal(target, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
+        const opS = getVal(target, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const mSym = getVal(target, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(target, "StockSymbol", "stockSymbol");
         setMOp(opM);
         setSOp(opS);
-        setHeader((prev) => ({ ...prev, baseRate: base, sBaseRate: sBase }));
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
+        if (overwriteRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: base,
+            sBaseRate: sBase
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -710,7 +735,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
 
       const loadedCurCode = String(getVal(h, "CurCode") || "");
       if (loadedCurCode) {
-        await applyCurrencyRates(loadedCurCode);
+        await applyCurrencyRates(loadedCurCode, { overwriteRates: false });
       }
     } catch (err) {
       console.error(err);
@@ -1859,7 +1884,10 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{masterSymbol} Rate</Label>
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{masterSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{mOp}</span>
+                          </Label>
                           <Input
                             type="number"
                             className="form-control-sm"
@@ -1871,7 +1899,10 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{stockSymbol} Rate</Label>
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{stockSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{sOp}</span>
+                          </Label>
                           <Input
                             type="number"
                             className="form-control-sm"
@@ -2311,11 +2342,15 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                     </Row>
                     <hr className="mb-2" />
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span className="text-primary fw-semibold small">{masterSymbol} FINAL AMOUNT</span>
+                      <span className="text-primary fw-semibold small">
+                        {masterSymbol ? `${masterSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                      </span>
                       <strong className="text-end">{summary.finalMAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between mb-1 gap-2">
-                      <span className="text-primary fw-semibold small">{stockSymbol} FINAL AMOUNT</span>
+                      <span className="text-primary fw-semibold small">
+                        {stockSymbol ? `${stockSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                      </span>
                       <strong className="text-end">{summary.finalSAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between gap-2">

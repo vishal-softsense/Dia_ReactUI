@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  collectDriveImageCandidates,
+  getPrimaryMediaPath,
+  looksLikeDriveMedia
+} from "../../helpers/googleDriveMedia";
 import {
   fmtDateSlash,
   fmtNum,
-  getItemImageUrl,
+  getItemImageCandidates,
   getVal,
   paginateVariable,
   resolveImageFullPath
@@ -16,6 +22,9 @@ const MIDDLE_PAGE = 20;
 const LAST_PAGE = 14;
 /** Non-last pages only — fill table height (MVC pageFillRows) */
 const PAGE_FILL_ROWS = 28;
+/** SoftSense Jewellery_SaleUSA_Print thumb — small enough for ITEM col, clear on print */
+const ITEM_IMG_W = 70;
+const ITEM_IMG_H = 50;
 
 const th = {
   background: "#BFBFBF",
@@ -42,7 +51,7 @@ const itemCell = {
   padding: "0 6px",
   textAlign: "center",
   verticalAlign: "middle",
-  height: 24,
+  height: ITEM_IMG_H,
   fontSize: 11
 };
 
@@ -77,10 +86,136 @@ const getStockNo = (item) => {
   return name.split(/\s+/)[0] || "";
 };
 
-const renderItemImage = (item) => {
-  const src = resolveImageFullPath(item) || getItemImageUrl(item);
-  if (!src) return <div style={{ height: 24 }} />;
-  return <img src={src} alt="" style={{ width: 48, height: 36, objectFit: "contain" }} />;
+/** Convert blob → data URL so print does not depend on live Drive/CDN URLs. */
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+const fetchUrlAsDataUrl = async (url) => {
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+  try {
+    const res = await axios.get(url, { responseType: "blob" });
+    const blob = res instanceof Blob ? res : res?.data;
+    if (!(blob instanceof Blob) || blob.size === 0) return "";
+    // Avoid embedding HTML error pages as "images"
+    if (blob.type && blob.type.indexOf("text/") === 0) return "";
+    return await blobToDataUrl(blob);
+  } catch {
+    return "";
+  }
+};
+
+/**
+ * ITEM column: first/main product image only.
+ * Prefers API-embedded data URL; otherwise resolves Google Drive (find-by-name → CDN/proxy)
+ * and embeds as data URL so Print/PDF shows the photo.
+ */
+const PrintItemThumb = ({ item }) => {
+  const [src, setSrc] = useState("");
+  const [fallbacks, setFallbacks] = useState([]);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setIdx(0);
+      setFallbacks([]);
+      setSrc("");
+
+      // 1) Already embedded by print API (best for print)
+      const embedded =
+        resolveImageFullPath(item) ||
+        (() => {
+          const p = String(getVal(item, "ImagePath", "imagePath") || "").trim();
+          return p.startsWith("data:") ? p : "";
+        })();
+      if (embedded) {
+        if (!cancelled) setSrc(embedded);
+        return;
+      }
+
+      const rawPath = getVal(item, "ImagePath", "imagePath", "AssetImagePath", "assetImagePath", "Image", "image");
+      const primary = getPrimaryMediaPath(rawPath); // first/main image only
+
+      // 2) Google Drive — resolve name → fileId → proxy first (no CORS), then CDN
+      if (primary && looksLikeDriveMedia(primary)) {
+        const driveUrls = await collectDriveImageCandidates(primary);
+        const ordered = [
+          ...driveUrls.filter((u) => String(u).indexOf("jew-drive-image") >= 0),
+          ...driveUrls.filter((u) => String(u).indexOf("jew-drive-image") < 0)
+        ];
+        for (const url of ordered) {
+          const dataUrl = await fetchUrlAsDataUrl(url);
+          if (cancelled) return;
+          if (dataUrl) {
+            setSrc(dataUrl);
+            return;
+          }
+        }
+        // Last resort: <img> can load lh3 CDN without axios CORS
+        if (!cancelled && ordered.length) {
+          setFallbacks(ordered);
+          setSrc(ordered[0]);
+        }
+        return;
+      }
+
+      // 3) Local / static path candidates
+      const local = getItemImageCandidates(item);
+      for (const url of local) {
+        if (url.startsWith("data:")) {
+          if (!cancelled) setSrc(url);
+          return;
+        }
+        const dataUrl = await fetchUrlAsDataUrl(url);
+        if (cancelled) return;
+        if (dataUrl) {
+          setSrc(dataUrl);
+          return;
+        }
+      }
+      if (!cancelled && local.length) {
+        setFallbacks(local);
+        setSrc(local[0]);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [item]);
+
+  const displaySrc = src || fallbacks[idx] || "";
+  if (!displaySrc) {
+    return <div style={{ height: ITEM_IMG_H, width: ITEM_IMG_W }} />;
+  }
+
+  return (
+    <img
+      src={displaySrc}
+      alt=""
+      className="mix-sale-item-thumb"
+      style={{
+        width: ITEM_IMG_W,
+        height: ITEM_IMG_H,
+        maxWidth: "100%",
+        objectFit: "contain",
+        display: "block",
+        margin: "0 auto"
+      }}
+      onError={() => {
+        if (idx + 1 < fallbacks.length) setIdx((n) => n + 1);
+        else setSrc("");
+      }}
+    />
+  );
 };
 
 const formatTdc = (item) => {
@@ -295,7 +430,16 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                 {pageItems.map((item, idx) => (
                   <tr key={idx} className="mix-sale-item-row" style={{ fontSize: 11 }}>
                     <td style={itemCell}>{srNo++}</td>
-                    <td style={{ ...itemCell, padding: "2px 0", verticalAlign: "middle" }}>{renderItemImage(item)}</td>
+                    <td
+                      style={{
+                        ...itemCell,
+                        padding: "4px 0",
+                        height: ITEM_IMG_H,
+                        verticalAlign: "middle"
+                      }}
+                    >
+                      <PrintItemThumb item={item} />
+                    </td>
                     <td style={itemCell}>{getVal(item, "MemoNo", "memoNo", "ExportNo", "exportNo")}</td>
                     <td style={{ ...itemCell, textAlign: "left", paddingLeft: 15 }}>{getStockNo(item)}</td>
                     <td style={{ ...itemCell, textAlign: "center" }}>

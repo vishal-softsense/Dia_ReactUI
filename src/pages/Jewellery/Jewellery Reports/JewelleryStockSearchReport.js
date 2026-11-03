@@ -735,7 +735,8 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
                     {stockId}
                   </td>
                   <td rowSpan={maxRows} className="col-itemname">{jewellery?.itemName ?? jewellery?.ItemName ?? ""}</td>
-                  <td rowSpan={maxRows} className="col-pcs text-end">{jewellery?.pcs ?? jewellery?.Pcs ?? 0}</td>
+                  {/* MVC jewellery-stock-search.js: Pcs column binds Carats (Pcs property left unused) */}
+                  <td rowSpan={maxRows} className="col-pcs text-end">{jewellery?.carats ?? jewellery?.Carats ?? 0}</td>
                   <td rowSpan={maxRows} className="col-rate text-end">{fmtNum(jewellery?.rate ?? jewellery?.Rate)}</td>
                   <td rowSpan={maxRows} className="col-amount text-end">{fmtNum(jewellery?.amount ?? jewellery?.Amount)}</td>
                   <td rowSpan={maxRows} className="col-metaltype">{jewellery?.metalType ?? jewellery?.MetalType ?? ""}</td>
@@ -1634,6 +1635,12 @@ ${hideCss} { display: none; }
       cell.border = thinBorder;
     });
 
+    // Barcode Print only: GRWT / NTWT / DCRT display as exactly 2 decimals (does not alter source data).
+    const toBarcodeNum = (value) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? Number(n.toFixed(2)) : 0;
+    };
+
     for (const item of combinedList) {
       const j = item.Jewellery;
       const diaList = item.DiamondDetails || [];
@@ -1641,17 +1648,17 @@ ${hideCss} { display: none; }
       const rowDiaPcs = diaList.reduce((acc, d) => acc + Number(d?.diamondPcs ?? d?.DiamondPcs ?? 0), 0);
 
       const r = ws.addRow([
-        Number(j?.grossWeight ?? j?.GrossWeight ?? 0),
-        Number(j?.netWeight ?? j?.NetWeight ?? 0),
+        toBarcodeNum(j?.grossWeight ?? j?.GrossWeight),
+        toBarcodeNum(j?.netWeight ?? j?.NetWeight),
         j?.jewPurity ?? j?.JewPurity ?? j?.purity ?? j?.Purity ?? "",
-        Number(rowDiaCrt.toFixed(3)),
+        toBarcodeNum(rowDiaCrt),
         rowDiaPcs,
         j?.lotNo ?? j?.LotNo ?? ""
       ]);
 
-      r.getCell(1).numFmt = "0.000";
-      r.getCell(2).numFmt = "0.000";
-      r.getCell(4).numFmt = "0.000";
+      r.getCell(1).numFmt = "0.00";
+      r.getCell(2).numFmt = "0.00";
+      r.getCell(4).numFmt = "0.00";
       
       r.eachCell((cell) => {
         cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -1803,7 +1810,8 @@ ${hideCss} { display: none; }
             rowData[3] = j?.curStatus ?? j?.CurStatus ?? "";
             rowData[4] = j?.lotNo ?? j?.LotNo ?? "";
             rowData[5] = j?.itemName ?? j?.ItemName ?? "";
-            rowData[6] = Number(j?.pcs ?? j?.Pcs ?? 0);
+            // MVC Excel Pcs column = Carats
+            rowData[6] = Number(j?.carats ?? j?.Carats ?? 0);
             rowData[7] = j?.metalType ?? j?.MetalType ?? "";
             rowData[8] = j?.jewColor ?? j?.JewColor ?? "";
             rowData[9] = j?.jewPurity ?? j?.JewPurity ?? "";
@@ -2114,7 +2122,8 @@ ${hideCss} { display: none; }
           totalStoneAmt += Number(s?.diamondAmount ?? s?.DiamondAmount ?? 0);
         });
 
-        grandJewPcs += Number(j?.pcs ?? j?.Pcs ?? 0);
+        // MVC grandPcs += jewellery.Carats
+        grandJewPcs += Number(j?.carats ?? j?.Carats ?? 0);
         grandJewAmount += Number(j?.amount ?? j?.Amount ?? 0);
         grandGrossWt += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         grandNetWt += Number(j?.netWeight ?? j?.NetWeight ?? 0);
@@ -2155,7 +2164,8 @@ ${hideCss} { display: none; }
             rowData[7] = j?.curStatus ?? j?.CurStatus ?? "";
             rowData[8] = j?.lotNo ?? j?.LotNo ?? "";
             rowData[9] = j?.itemName ?? j?.ItemName ?? "";
-            rowData[10] = Number(j?.pcs ?? j?.Pcs ?? 0);
+            // MVC Excel Pcs column = Carats
+            rowData[10] = Number(j?.carats ?? j?.Carats ?? 0);
             rowData[11] = Number(j?.rate ?? j?.Rate ?? 0);
             rowData[12] = Number(j?.amount ?? j?.Amount ?? 0);
 

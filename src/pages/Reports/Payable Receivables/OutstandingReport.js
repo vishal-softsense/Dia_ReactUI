@@ -105,6 +105,46 @@ const numVal = (row, ...keys) => {
   return Number.isNaN(n) ? 0 : n;
 };
 
+/** MVC outstanding-report.js month map for DueDate "dd-MMM-yyyy" within-party sort. */
+const DUE_DATE_MONTH_ORDER = {
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12
+};
+
+/** Match MVC Invoice-by-Party: missing DueDate sorts last; parse dd-MMM-yyyy. */
+const compareDueDateAsc = (a, b) => {
+  const dueA = getRowVal(a, "DueDate");
+  const dueB = getRowVal(b, "DueDate");
+  if (!dueA) return 1;
+  if (!dueB) return -1;
+
+  const partsA = String(dueA).split("-");
+  const partsB = String(dueB).split("-");
+  if (partsA.length === 3 && partsB.length === 3) {
+    const [dayA, monthA, yearA] = partsA;
+    const [dayB, monthB, yearB] = partsB;
+    const yA = parseInt(yearA, 10);
+    const yB = parseInt(yearB, 10);
+    if (yA !== yB) return yA - yB;
+    const mA = DUE_DATE_MONTH_ORDER[String(monthA).toLowerCase()] || 0;
+    const mB = DUE_DATE_MONTH_ORDER[String(monthB).toLowerCase()] || 0;
+    if (mA !== mB) return mA - mB;
+    return parseInt(dayA, 10) - parseInt(dayB, 10);
+  }
+
+  return String(dueA).localeCompare(String(dueB));
+};
+
 const ALL_COLUMNS = [
   { key: "view", header: "View", align: "center", excel: false },
   { key: "Date", header: "Date", align: "left" },
@@ -177,6 +217,7 @@ const STATEMENT_COLUMNS = [
 const OutstandingReport = () => {
   const { t } = useTranslation();
   const printRef = useRef(null);
+  const isPrintingRef = useRef(false);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -726,24 +767,19 @@ const OutstandingReport = () => {
     return totals;
   }, [filteredAllRows]);
 
+  // Match MVC renderOutstandingTable: group by Party, A–Z localeCompare, rows by DueDate ASC.
   const partyGrouped = useMemo(() => {
     const grouped = {};
-    sortedReportRows.forEach((item) => {
+    (reportRows || []).forEach((item) => {
       const key = getRowVal(item, "Party", "party") || "Unknown Party";
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(item);
     });
 
-    const sortedParties = Object.keys(grouped);
-    if (sortConfig.key === "Party" && sortConfig.direction) {
-      sortedParties.sort((a, b) => {
-        if (sortConfig.direction === "asc") return a.localeCompare(b);
-        return b.localeCompare(a);
-      });
-    }
+    const sortedParties = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
 
     return sortedParties.map((party) => {
-      const rows = grouped[party];
+      const rows = [...grouped[party]].sort(compareDueDateAsc);
       const subtotal = {
         Totcts: 0,
         Amount: 0,
@@ -766,7 +802,7 @@ const OutstandingReport = () => {
       });
       return { party, rows, subtotal };
     });
-  }, [sortedReportRows, sortConfig]);
+  }, [reportRows]);
 
   const statementTotals = useMemo(() => {
     let balance = 0;
@@ -870,9 +906,8 @@ const OutstandingReport = () => {
       mode === "required" ? "Required-Partywise-Outstanding-Report" : "Partywise-Outstanding-Report";
     const res = await exportToExcel(headers, rows, "OutstandingParty", fileName);
     if (!res?.success) toast.error(t("Excel export failed."));
-  };
-
-  const handlePrint = () => {
+  };  const handlePrint = () => {
+    if (isPrintingRef.current) return;
     const node = printRef.current;
     if (!node) {
       toast.warning(t("No report is currently visible to print."));
@@ -880,12 +915,16 @@ const OutstandingReport = () => {
     }
 
     const isInvoiceParty = reportMode === "invoiceByParty";
-    // MVC: ddl-excel-type === 'required' → printReportRequired (hide .required-exclude + BillNo)
+    // MVC: ddl-excel-type === 'required' → printReportRequired (hide .required-exclude + BillNo + SalesPerson)
     const isRequiredPrint = isInvoiceParty && excelExportType === "required";
     const pageSizeCss = isInvoiceParty ? "A4 landscape" : "A4 portrait";
     const pageMargin = isInvoiceParty ? "6mm" : "10mm";
-    const tableFontSize = isInvoiceParty ? "7.5px" : "11px";
-    const cellPadding = isInvoiceParty ? "3px 4px" : "6px 8px";
+    // For Required Print (8 columns), font is 11px and padding is 7px 6px (matching MVC printReportRequired)
+    // For Full Print (25 columns), font is 7.5px and padding is 3px 4px
+    // For Party Statement, font is 11px and padding is 6px 8px
+    const tableFontSize = isRequiredPrint ? "11px" : isInvoiceParty ? "7.5px" : "11px";
+    const cellPadding = isRequiredPrint ? "7px 6px" : isInvoiceParty ? "3px 4px" : "6px 8px";
+    const thPadding = isRequiredPrint ? "9px 6px" : isInvoiceParty ? "4px 4px" : "8px 8px";
 
     const clone = node.cloneNode(true);
     clone.querySelectorAll("button, .btn").forEach((el) => el.remove());
@@ -903,14 +942,42 @@ const OutstandingReport = () => {
       el.classList.remove("table-responsive");
     });
 
+    // Remove sticky / fixed positioning and scroll styles from all elements
+    clone.querySelectorAll("*").forEach((el) => {
+      if (el.style) {
+        if (el.style.position === "sticky" || el.style.position === "fixed") {
+          el.style.position = "static";
+        }
+        if (el.style.top) el.style.top = "auto";
+        if (el.style.bottom) el.style.bottom = "auto";
+        if (el.style.zIndex) el.style.zIndex = "auto";
+      }
+    });
+
+    // Move any <tfoot> rows into <tbody> as regular trailing rows, then remove <tfoot>.
+    // This matches MVC behavior where Grand Total is simply the final row of tbody,
+    // completely eliminating the browser print bug where tfoot sticks or overlaps page rows.
+    clone.querySelectorAll("tfoot").forEach((tfoot) => {
+      const parentTable = tfoot.closest("table");
+      const tbody = parentTable ? parentTable.querySelector("tbody") : null;
+      if (tbody) {
+        const rows = Array.from(tfoot.querySelectorAll("tr"));
+        rows.forEach((tr) => {
+          tr.removeAttribute("style");
+          tr.classList.add("or-grand-total", "grand-total");
+          Array.from(tr.children).forEach((cell) => {
+            cell.removeAttribute("style");
+          });
+          tbody.appendChild(tr);
+        });
+      }
+      tfoot.remove();
+    });
+
     if (isInvoiceParty) {
+      // 1. Remove first empty/action column (view button / no-print cell) from all rows
       clone.querySelectorAll("tr").forEach((tr) => {
         if (tr.classList.contains("or-group-header")) {
-          const td = tr.querySelector("td");
-          if (td) {
-            const span = parseInt(td.getAttribute("colspan") || "1", 10);
-            if (span > 1) td.setAttribute("colspan", String(span - 1));
-          }
           return;
         }
         const firstTh = tr.querySelector("th:first-child");
@@ -920,7 +987,7 @@ const OutstandingReport = () => {
       });
 
       if (isRequiredPrint) {
-        // MVC printReportRequired: hide .required-exclude, then drop BillNo and SalesPerson
+        // MVC printReportRequired: drop .required-exclude, BillNo, and SalesPerson
         const removeIndexes = [];
         const headerCells = clone.querySelectorAll("thead tr:first-child th, thead tr:first-child td");
         headerCells.forEach((cell, index) => {
@@ -937,31 +1004,44 @@ const OutstandingReport = () => {
             removeIndexes.push(index);
           }
         });
-        // Also mark required-exclude body cells by class (same indexes as headers)
-        clone.querySelectorAll(".required-exclude").forEach((el) => {
-          const parent = el.closest("tr");
-          if (!parent || parent.classList.contains("or-group-header")) return;
-          const cells = [...parent.children];
-          const idx = cells.indexOf(el);
-          if (idx >= 0 && !removeIndexes.includes(idx)) removeIndexes.push(idx);
+
+        // Also cross-reference PARTYWISE_COLUMNS to guarantee all excluded columns are identified
+        PARTYWISE_COLUMNS.forEach((col, index) => {
+          if (col.requiredExclude || col.key === "BillNo" || col.key === "SalesPerson") {
+            if (!removeIndexes.includes(index) && index < headerCells.length) {
+              removeIndexes.push(index);
+            }
+          }
         });
 
+        // Remove excluded columns from right-to-left so indices remain intact
         removeIndexes
           .sort((a, b) => b - a)
           .forEach((colIndex) => {
             clone.querySelectorAll("tr").forEach((tr) => {
-              if (tr.classList.contains("or-group-header")) {
-                const td = tr.querySelector("td");
-                if (td) {
-                  const span = parseInt(td.getAttribute("colspan") || "1", 10);
-                  td.setAttribute("colspan", String(Math.max(1, span - 1)));
-                }
-                return;
-              }
+              if (tr.classList.contains("or-group-header")) return;
               const cell = tr.children[colIndex];
               if (cell) cell.remove();
             });
           });
+
+        // Update group header colspan to match remaining visible columns exactly
+        const remainingCols = clone.querySelectorAll("thead tr:first-child th, thead tr:first-child td").length || 8;
+        clone.querySelectorAll("tr.or-group-header").forEach((tr) => {
+          const td = tr.querySelector("td");
+          if (td) {
+            td.setAttribute("colspan", String(remainingCols));
+          }
+        });
+      } else {
+        // Full print: update group header colspan to match remaining columns (24 columns)
+        const remainingCols = clone.querySelectorAll("thead tr:first-child th, thead tr:first-child td").length || 24;
+        clone.querySelectorAll("tr.or-group-header").forEach((tr) => {
+          const td = tr.querySelector("td");
+          if (td) {
+            td.setAttribute("colspan", String(remainingCols));
+          }
+        });
       }
     }
 
@@ -970,6 +1050,7 @@ const OutstandingReport = () => {
       toast.warning(t("Please allow pop-ups to print."));
       return;
     }
+    isPrintingRef.current = true;
 
     printWindow.document.write("<html><head><title>Outstanding Report</title>");
     printWindow.document.write(`
@@ -981,11 +1062,11 @@ const OutstandingReport = () => {
 
   html, body {
     margin: 0 !important;
-    padding: 8px !important;
+    padding: ${isInvoiceParty ? "8px 10px" : "10px"} !important;
     width: 100% !important;
     background: #fff !important;
     color: #000 !important;
-    font-family: Arial, Helvetica, sans-serif !important;
+    font-family: "Segoe UI", Arial, sans-serif !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     overflow: visible !important;
@@ -1030,8 +1111,10 @@ const OutstandingReport = () => {
   .text-uppercase { text-transform: uppercase !important; }
   .text-center { text-align: center !important; }
   .text-end, .text-lg-end { text-align: right !important; }
+  .text-start { text-align: left !important; }
   .text-muted { color: #666 !important; }
-  .small { font-size: ${isInvoiceParty ? "7.5px" : "11px"} !important; }
+  .text-body { color: #000 !important; }
+  .small { font-size: ${isRequiredPrint ? "11px" : isInvoiceParty ? "7.5px" : "11px"} !important; }
 
   .row {
     display: flex !important;
@@ -1075,45 +1158,120 @@ const OutstandingReport = () => {
     width: 100% !important;
     max-width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: ${isInvoiceParty ? "fixed" : "auto"} !important;
+    table-layout: ${isRequiredPrint ? "auto" : isInvoiceParty ? "fixed" : "auto"} !important;
     font-size: ${tableFontSize} !important;
     margin-top: 8px !important;
     page-break-inside: auto !important;
   }
 
-  thead { display: table-header-group !important; }
-  tfoot { display: table-footer-group !important; }
-  tr { page-break-inside: avoid !important; }
+  thead {
+    display: table-header-group !important;
+    position: static !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
+  }
+
+  tfoot {
+    display: none !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 
   th, td {
-    border: 1px solid #999 !important;
+    border: 1px solid #d7d7d7 !important;
     padding: ${cellPadding} !important;
     color: #000 !important;
     vertical-align: middle !important;
-    white-space: ${isInvoiceParty ? "normal" : "nowrap"} !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
+    white-space: ${isRequiredPrint ? "nowrap" : isInvoiceParty ? "normal" : "nowrap"} !important;
+    word-break: ${isRequiredPrint ? "normal" : isInvoiceParty ? "break-word" : "normal"} !important;
+    overflow-wrap: ${isRequiredPrint ? "normal" : isInvoiceParty ? "anywhere" : "normal"} !important;
   }
 
   th {
-    background: #f2f2f2 !important;
+    background: #f3f3f3 !important;
+    color: #41506a !important;
     font-weight: 700 !important;
+    border: 1px solid #cfcfcf !important;
+    padding: ${thPadding} !important;
     text-align: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .or-group-header td {
-    background: #f3f6f9 !important;
+  /* Group header row */
+  .or-group-header,
+  .group-header {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .or-group-header td,
+  .group-header td {
+    background: #f7f7f7 !important;
     font-weight: 700 !important;
+    font-size: ${isRequiredPrint ? "13px" : "11px"} !important;
     text-align: left !important;
+    color: #000 !important;
+    padding: ${isRequiredPrint ? "8px 10px 8px 16px" : "5px 8px 5px 12px"} !important;
     border-top: 2px solid #b3b3b3 !important;
     border-bottom: 2px solid #b3b3b3 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Subtotal row */
+  .or-subtotal,
+  .subtotal {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .or-subtotal td,
-  .or-grand-total td {
+  .subtotal td {
     font-weight: 700 !important;
+    color: #000 !important;
+    background: #fafafa !important;
     border-top: 2px solid #999 !important;
     border-bottom: 2px solid #999 !important;
+    border-left: 1px solid #d7d7d7 !important;
+    border-right: 1px solid #d7d7d7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Grand Total row */
+  .or-grand-total,
+  .grand-total {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .or-grand-total td,
+  .grand-total td {
+    font-weight: 700 !important;
+    color: #000 !important;
+    background: #f2f2f2 !important;
+    border-top: 2px solid #666 !important;
+    border-bottom: 2px solid #666 !important;
+    border-left: 1px solid #d7d7d7 !important;
+    border-right: 1px solid #d7d7d7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .or-subtotal td:first-child,
+  .or-grand-total td:first-child,
+  .subtotal td:first-child,
+  .grand-total td:first-child {
+    text-align: left !important;
+    padding-left: 10px !important;
   }
 
   @media print {
@@ -1131,11 +1289,19 @@ const OutstandingReport = () => {
     printWindow.document.write(clone.innerHTML);
     printWindow.document.write("</body></html>");
     printWindow.document.close();
-    printWindow.focus();
+
+    printWindow.onafterprint = () => {
+      try {
+        printWindow.close();
+      } catch (e) {}
+      isPrintingRef.current = false;
+    };
+
     setTimeout(() => {
+      printWindow.focus();
       printWindow.print();
-      printWindow.close();
-    }, 400);
+      isPrintingRef.current = false;
+    }, 500);
   };
 
   const renderCellValue = (row, col) => {
@@ -1287,6 +1453,16 @@ const OutstandingReport = () => {
         [data-layout-mode="dark"] .or-filter-input::placeholder,
         [data-bs-theme="dark"] .or-filter-input::placeholder {
           color: var(--vz-secondary-color, #878a99) !important;
+        }
+        @media print {
+          .table-responsive,
+          .or-print-table-wrap {
+            overflow: visible !important;
+            max-height: none !important;
+          }
+          tfoot {
+            position: static !important;
+          }
         }
       `}</style>
       <div className="page-content">

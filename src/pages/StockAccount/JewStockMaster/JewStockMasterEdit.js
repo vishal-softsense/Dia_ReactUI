@@ -18,6 +18,7 @@ import {
   getAllLotNoList,
   getAddMountingStockData,
   getJewLotNoData,
+  checkStockIdExists,
 } from "../../../helpers/fakebackend_helper";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import JewStockMediaPreview from "./JewStockMediaPreview";
@@ -31,6 +32,7 @@ import {
   formatPrice,
   MAKING_TYPE_OPTIONS,
   mapDiamondListToRows,
+  resolveOtherChargesExtra,
   summarizeTableRows,
 } from "./jewStockFormUtils";
 
@@ -116,6 +118,7 @@ export default function JewStockMasterEdit() {
   // Form state
   const [trnDate, setTrnDate] = useState("");
   const [stockID, setStockID] = useState("");
+  const [stockIdExists, setStockIdExists] = useState(false);
   const [errors, setErrors] = useState({});
   const [jewCategory, setJewCategory] = useState("");
   const [category, setCategory] = useState("");
@@ -155,6 +158,9 @@ export default function JewStockMasterEdit() {
   const [isManualAskingRate, setIsManualAskingRate] = useState(false);
   const [otherPer, setOtherPer] = useState("0");
   const [askingPer, setAskingPer] = useState("0");
+  const [chargeSettingsReady, setChargeSettingsReady] = useState(false);
+  const otherChargesExtraRef = useRef(0);
+  const pendingLoadedOtherRef = useRef(null);
   const [imagePath, setImagePath] = useState("");
   const [videoPath, setVideoPath] = useState("");
   const [certPath, setCertPath] = useState("");
@@ -196,10 +202,55 @@ export default function JewStockMasterEdit() {
 
   // Table rows for diamonds/stones
   const [tableRows, setTableRows] = useState([]);
+  const lastCheckedStockRef = useRef("");
+  const inFlightValidationRef = useRef(false);
 
   useEffect(() => {
     document.title = "Edit Mounting Stock | DiaJewSoft";
   }, []);
+
+  /**
+   * Validate if stock ID already exists in the database for another record
+   */
+  const validateDuplicateStockId = useCallback(async (idToValidate) => {
+    const sid = (idToValidate !== undefined ? idToValidate : stockID || "").trim();
+    if (!sid) {
+      setStockIdExists(false);
+      lastCheckedStockRef.current = "";
+      return false;
+    }
+
+    if (inFlightValidationRef.current) {
+      return false;
+    }
+
+    if (lastCheckedStockRef.current.toLowerCase() === sid.toLowerCase()) {
+      return stockIdExists;
+    }
+
+    try {
+      inFlightValidationRef.current = true;
+      const response = await checkStockIdExists(sid, id);
+      const exists =
+        response?.exists ?? response?.Exists ??
+        response?.data?.exists ?? response?.data?.Exists ?? false;
+
+      lastCheckedStockRef.current = sid;
+      setStockIdExists(exists);
+      if (exists) {
+        setErrors(prev => ({ ...prev, stockID: true }));
+        toast.warning(t("This Stock ID already exists. Please use a different Stock ID."), {
+          toastId: "duplicate-stock-id-warning",
+        });
+      }
+      return exists;
+    } catch (err) {
+      console.error("Error checking duplicate stock id:", err);
+      return false;
+    } finally {
+      inFlightValidationRef.current = false;
+    }
+  }, [stockID, stockIdExists, id, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -240,6 +291,7 @@ export default function JewStockMasterEdit() {
         }
         setOtherPer(data.OtherPer ?? data.otherPer ?? "0");
         setAskingPer(data.AskingPer ?? data.askingPer ?? "0");
+        setChargeSettingsReady(true);
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -430,6 +482,7 @@ export default function JewStockMasterEdit() {
       setHandlingAmount(data.totalHandlingCharges ?? data.TotalHandlingCharges ?? "");
       setJewCert(data.jewelleryCertificate || data.JewelleryCertificate || "");
       setCertificateCharges(data.totalCertificateCharges ?? data.TotalCertificateCharges ?? "");
+      pendingLoadedOtherRef.current = { value: data.otherCharges ?? data.OtherCharges };
       setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
       setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
       setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
@@ -537,6 +590,7 @@ export default function JewStockMasterEdit() {
         setHandlingCharges(data.handlingChargesPerCarat || data.HandlingChargesPerCarat || "");
         setHandlingAmount(data.totalHandlingCharges || data.TotalHandlingCharges || "");
         setCertificateCharges(data.totalCertificateCharges || data.TotalCertificateCharges || "");
+        pendingLoadedOtherRef.current = { value: data.otherCharges ?? data.OtherCharges };
         setOtherCharges(data.otherCharges || data.OtherCharges || "");
         setHallmarkCharges(data.hallmarkCharges || data.HallmarkCharges || "");
         setTotalMakingCharges(data.totalMakingCharges || data.TotalMakingCharges || "");
@@ -667,7 +721,7 @@ export default function JewStockMasterEdit() {
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
-    const totals = computeChargeTotals({
+    const chargeArgs = {
       metalAmount,
       originalMakingCharges,
       handlingAmount,
@@ -680,7 +734,20 @@ export default function JewStockMasterEdit() {
       askingPer,
       isManualAskingRate,
       currentAskingRate: askingRate,
-    });
+    };
+    let extra = otherChargesExtraRef.current || 0;
+    if (pendingLoadedOtherRef.current) {
+      const autoTotals = computeChargeTotals({ ...chargeArgs, otherChargesExtra: 0 });
+      const loadedOther = pendingLoadedOtherRef.current.value;
+      extra = loadedOther == null || loadedOther === ""
+        ? 0
+        : resolveOtherChargesExtra(loadedOther, autoTotals.autoOtherCharges);
+      otherChargesExtraRef.current = extra;
+      if (chargeSettingsReady) {
+        pendingLoadedOtherRef.current = null;
+      }
+    }
+    const totals = computeChargeTotals({ ...chargeArgs, otherChargesExtra: extra });
     setCostAmount(totals.costAmount);
     setOtherCharges(totals.otherCharges);
     setTotalMakingCharges(totals.totalMakingCharges);
@@ -691,7 +758,7 @@ export default function JewStockMasterEdit() {
   }, [
     metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
     hallmarkCharges, settingCharges, diamondAmount, stoneAmount, otherPer,
-    askingPer, isManualAskingRate,
+    askingPer, isManualAskingRate, chargeSettingsReady,
   ]);
 
   useEffect(() => {
@@ -709,8 +776,27 @@ export default function JewStockMasterEdit() {
   }, [carats, rate]);
 
   const handleOtherChargesChange = (value) => {
+    const autoTotals = computeChargeTotals({
+      metalAmount,
+      originalMakingCharges,
+      handlingAmount,
+      certificateCharges,
+      hallmarkCharges,
+      settingCharges,
+      diamondAmount,
+      stoneAmount,
+      otherPer,
+      askingPer,
+      isManualAskingRate,
+      currentAskingRate: askingRate,
+      otherChargesExtra: 0,
+    });
+    pendingLoadedOtherRef.current = null;
+    otherChargesExtraRef.current = value === ""
+      ? 0
+      : resolveOtherChargesExtra(value, autoTotals.autoOtherCharges);
     setOtherCharges(value);
-    const cost = parseFloat(costAmount) || 0;
+    const cost = parseFloat(autoTotals.costAmount) || 0;
     const other = parseFloat(value) || 0;
     const finalCost = Math.round((cost + other) * 100) / 100;
     setFinalAmount(finalCost.toFixed(2));
@@ -853,13 +939,26 @@ export default function JewStockMasterEdit() {
   const handleSubmit = async () => {
     let currentErrors = {};
     if (!trnDate) currentErrors.trnDate = true;
-    if (!stockID) currentErrors.stockID = true;
+    const trimmedStockId = (stockID || "").trim();
+    if (!trimmedStockId) currentErrors.stockID = true;
     if (!jewCategory) currentErrors.jewCategory = true;
     
     setErrors(currentErrors);
 
     if (Object.keys(currentErrors).length > 0) {
       toast.error(t("Please fill all required fields"));
+      return;
+    }
+
+    if (stockIdExists) {
+      toast.warning(t("This Stock ID already exists. Please use a different Stock ID."), {
+        toastId: "duplicate-stock-id-warning",
+      });
+      return;
+    }
+
+    const isDuplicate = await validateDuplicateStockId(trimmedStockId);
+    if (isDuplicate) {
       return;
     }
     setSubmitLoading(true);
@@ -1123,11 +1222,46 @@ export default function JewStockMasterEdit() {
                       <FieldRow label="Stock ID">
                         <>
                           <input type="text"
-                            className={`${roCls} text-end ${errors.stockID ? "is-invalid" : ""}`}
+                            className={`${readOnly ? roCls : inputCls} ${errors.stockID ? "is-invalid" : ""}`}
+                            placeholder="Stock ID"
                             value={stockID}
-                            readOnly
+                            readOnly={readOnly}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setStockID(val);
+                              if (val.trim()) {
+                                setErrors(prev => ({ ...prev, stockID: false }));
+                                if (stockIdExists) setStockIdExists(false);
+                              }
+                              if (lastCheckedStockRef.current.toLowerCase() !== val.trim().toLowerCase()) {
+                                lastCheckedStockRef.current = "";
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                const val = (e.target.value || "").trim();
+                                validateDuplicateStockId(val);
+                              }
+                            }}
+                            onBlur={async (e) => {
+                              if (readOnly) return;
+                              const val = (e.target.value || "").trim();
+                              if (!val) {
+                                setErrors(prev => ({ ...prev, stockID: true }));
+                                setStockIdExists(false);
+                                lastCheckedStockRef.current = "";
+                              } else {
+                                validateDuplicateStockId(val);
+                              }
+                            }}
                           />
-                          {errors.stockID && <div className="invalid-feedback d-block">{t("Stock ID is required")}</div>}
+                          {errors.stockID && (
+                            <div className="invalid-feedback d-block">
+                              {stockIdExists
+                                ? t("This Stock ID already exists. Please use a different Stock ID.")
+                                : t("Stock ID is required")}
+                            </div>
+                          )}
                         </>
                       </FieldRow>
                       <FieldRow label="Jewellery Category">
