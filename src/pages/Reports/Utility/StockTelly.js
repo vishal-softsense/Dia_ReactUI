@@ -33,7 +33,7 @@ const TABLE_COLUMNS = [
     { key: "LotNo", label: "LotNo", align: "text-start" },
     { key: "Pcs", label: "Pcs", align: "text-end" },
     { key: "carats", label: "Carats", align: "text-end", decimals: 3 },
-    { key: "OnHand", label: "OnHand", align: "text-end", decimals: 3 },
+    { key: "OnHand", label: "On Hand", align: "text-end", decimals: 3 },
     { key: "Rate", label: "AskingPrice", align: "text-end", decimals: 2 },
     { key: "Amount", label: "Amount", align: "text-end", decimals: 3 }
 ];
@@ -169,7 +169,7 @@ const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) =>
                         <tr>
                             <td className="fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{t("Total:") || "Total:"}</td>
                             <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{totals.pcs}</td>
+                            <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
                             <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.carats, 2)}</td>
                             <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.onHand, 2)}</td>
                             <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
@@ -206,7 +206,7 @@ const StockTelly = () => {
     const [importFilters, setImportFilters] = useState({});
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [file, setFile] = useState(null);
-    const [resultModal, setResultModal] = useState({ open: false, type: "success", title: "", text: "" });
+    const [resultModal, setResultModal] = useState({ open: false, type: "success", title: "", text: "", reloadOnClose: false });
 
     const selectStyles = {
         control: (provided, state) => ({
@@ -360,43 +360,67 @@ const StockTelly = () => {
         }
     };
 
-    const buildSavePayload = (rows) =>
-        rows.map(row => {
-            const carats = Number(getRowValue(row, "carats")) || 0;
-            const rate = Number(getRowValue(row, "Rate")) || 0;
-            return {
-                ItemCode: Number(getRowValue(row, "ItemCode")) || 0,
-                Fromlotno: getRowValue(row, "LotNo"),
-                Tolotno: getRowValue(row, "LotNo"),
-                Pcs: Number(getRowValue(row, "Pcs")) || 0,
-                Carats: carats,
-                Rate: rate,
-                Amount: parseFloat((carats * rate).toFixed(2)),
-                FromPrice: rate,
-                ToPrice: rate,
-                TrnDate: trnDate
-            };
-        });
+    const buildOnHandSaveRow = (row, itemCode, onHandQty, rate) => ({
+        ItemCode: Number(itemCode) || 0,
+        Fromlotno: getRowValue(row, "LotNo"),
+        Tolotno: getRowValue(row, "LotNo"),
+        Pcs: Number(getRowValue(row, "Pcs")) || 0,
+        Carats: onHandQty,
+        OnHand: onHandQty,
+        Rate: rate,
+        Amount: parseFloat((onHandQty * rate).toFixed(2)),
+        FromPrice: rate,
+        ToPrice: rate,
+        TrnDate: trnDate
+    });
 
     const handleSubmit = async () => {
-        if (!stockRows.length && !importRows.length) {
-            toast.error(t("Please run report or import data first."));
+        if (!importRows.length) {
+            toast.error(t("Please import Stock Tally data first."));
             return;
         }
 
+        const reverseLotMap = {};
+        importRows.forEach(row => {
+            const lotNo = String(getRowValue(row, "LotNo") || "").trim();
+            if (lotNo) reverseLotMap[lotNo.toUpperCase()] = row;
+        });
+
+        const matchedForward = stockRows.filter(row => {
+            const lotNo = String(getRowValue(row, "LotNo") || "").trim();
+            return lotNo && Object.prototype.hasOwnProperty.call(reverseLotMap, lotNo.toUpperCase());
+        });
+
+        if (!matchedForward.length) {
+            toast.error(t("No matching LotNo found between Stock List and Tally Data."));
+            return;
+        }
+
+        const spList = matchedForward.map(fwd => {
+            const onHandQty = Number(getRowValue(fwd, "OnHand")) || 0;
+            const rate = Number(getRowValue(fwd, "Rate")) || 0;
+            return buildOnHandSaveRow(fwd, getRowValue(fwd, "ItemCode"), onHandQty, rate);
+        });
+
+        const spList1 = importRows.map(rev => {
+            const lotNo = String(getRowValue(rev, "LotNo") || "").trim().toUpperCase();
+            const matchedFwd = stockRows.find(fwd => String(getRowValue(fwd, "LotNo") || "").trim().toUpperCase() === lotNo);
+            const itemCode = Number(getRowValue(rev, "ItemCode")) || (matchedFwd ? Number(getRowValue(matchedFwd, "ItemCode")) : 0);
+            const onHandQty = Number(getRowValue(rev, "OnHand")) || 0;
+            const rate = Number(getRowValue(rev, "Rate")) || (matchedFwd ? Number(getRowValue(matchedFwd, "Rate")) : 0) || 0;
+            return buildOnHandSaveRow(rev, itemCode, onHandQty, rate);
+        });
+
         setBusy(true);
         try {
-            const payload = {
-                spList: buildSavePayload(stockRows),
-                spList1: buildSavePayload(importRows)
-            };
-            const response = await saveStockTelly(payload);
+            const response = await saveStockTelly({ spList, spList1 });
             if (response?.success === true || response?.Success === true) {
                 setResultModal({
                     open: true,
                     type: "success",
                     title: t("Success"),
-                    text: response?.message || response?.Message || t("Stock transactions saved successfully.")
+                    text: response?.message || response?.Message || t("Stock transactions saved successfully."),
+                    reloadOnClose: true
                 });
             } else {
                 setResultModal({
@@ -425,14 +449,13 @@ const StockTelly = () => {
         }
 
         const filteredRows = filterRows(stockRows, stockFilters);
-        const headers = ["Code", "LotNo", "Pcs", "Carats","OnHand", "AskingPrice", "Amount"];
+        const headers = ["LotNo", "Pcs", "Carats", "On Hand", "AskingPrice", "Amount"];
         const rows = filteredRows.map(row => [
-            getRowValue(row, "ItemCode"),
             getRowValue(row, "LotNo"),
             getRowValue(row, "Pcs"),
             formatNumber(getRowValue(row, "carats"), 3),
             formatNumber(getRowValue(row, "OnHand"), 3),
-            formatNumber(getRowValue(row, "AskingPrice"), 2),
+            formatNumber(getRowValue(row, "Rate"), 2),
             formatNumber(getRowValue(row, "Amount"), 3)
         ]);
 
@@ -626,7 +649,16 @@ const StockTelly = () => {
                 title={resultModal.title}
                 text={resultModal.text}
                 confirmText={t("OK")}
-                onClose={() => setResultModal(prev => ({ ...prev, open: false }))}
+                onClose={() => {
+                    const shouldReload = resultModal.reloadOnClose;
+                    setResultModal({ open: false, type: "success", title: "", text: "", reloadOnClose: false });
+                    if (shouldReload) {
+                        setStockRows([]);
+                        setImportRows([]);
+                        setStockFilters({});
+                        setImportFilters({});
+                    }
+                }}
             />
         </React.Fragment>
     );

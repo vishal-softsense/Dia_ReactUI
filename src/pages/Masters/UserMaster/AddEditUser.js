@@ -10,6 +10,17 @@ import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getUserRoleDropdown } from "../../../helpers/fakebackend_helper";
 import { useTranslation } from "react-i18next";
 
+// Applied only when creating or changing a password (not on login / legacy passwords).
+const applyStrongPasswordRules = (schema) =>
+    schema
+        .min(8, "Password must be at least 8 characters")
+        .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+        .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .matches(/[0-9]/, "Password must contain at least one number")
+        .matches(/[^A-Za-z0-9]/, "Password must contain at least one special symbol");
+
+const strongPasswordSchema = applyStrongPasswordRules(Yup.string());
+
 const AddEditUser = () => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
@@ -78,9 +89,32 @@ const AddEditUser = () => {
             email: Yup.string()
                 .matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid professional email address")
                 .required("Please Enter Email"),
-            password: isEdit ? Yup.string() : Yup.string().required("Please Enter Password"),
-            confirmPassword: isEdit ? Yup.string().oneOf([Yup.ref('password'), null], 'Passwords must match') 
-                                    : Yup.string().oneOf([Yup.ref('password'), null], 'Passwords must match').required("Please Confirm Password"),
+            // Strong password only when creating or changing a password (blank on edit keeps existing).
+            password: isEdit
+                ? Yup.string().test("password-strength-on-change", function (value) {
+                    if (!value) return true;
+                    try {
+                        strongPasswordSchema.validateSync(value);
+                        return true;
+                    } catch (err) {
+                        return this.createError({ message: err.message });
+                    }
+                })
+                : applyStrongPasswordRules(Yup.string().required("Please Enter Password")),
+            confirmPassword: Yup.string()
+                .test("confirm-required", "Please Confirm Password", function (value) {
+                    const password = this.parent.password;
+                    if (!isEdit || (password && String(password).length > 0)) {
+                        return !!(value && String(value).length > 0);
+                    }
+                    return true;
+                })
+                .test("confirm-match", "Passwords must match", function (value) {
+                    const password = this.parent.password;
+                    if (!password && isEdit) return true;
+                    if (!value && !password) return true;
+                    return value === password;
+                }),
         }),
         onSubmit: (values) => {
             if (isEdit) {

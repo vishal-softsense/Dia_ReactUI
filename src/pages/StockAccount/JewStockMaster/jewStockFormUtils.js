@@ -34,7 +34,18 @@ export function computeMakingCharges(makingType, makingRate, grossWeight) {
   return r * gw;
 }
 
-/** MVC updateTotalMakingCharges() */
+export function roundMoney(value) {
+  return Math.round((parseFloat(value) || 0) * 100) / 100;
+}
+
+/** Manual extra = loaded/typed Other Charges minus the automatic % amount. */
+export function resolveOtherChargesExtra(loadedOther, autoOther) {
+  const loaded = parseFloat(loadedOther);
+  if (Number.isNaN(loaded)) return 0;
+  return roundMoney(loaded - (parseFloat(autoOther) || 0));
+}
+
+/** MVC updateTotalMakingCharges() — auto % plus any user extra amount. */
 export function computeChargeTotals({
   metalAmount,
   originalMakingCharges,
@@ -48,6 +59,7 @@ export function computeChargeTotals({
   askingPer,
   isManualAskingRate,
   currentAskingRate,
+  otherChargesExtra = 0,
 }) {
   const metal = parseFloat(metalAmount) || 0;
   const making = parseFloat(originalMakingCharges) || 0;
@@ -59,23 +71,26 @@ export function computeChargeTotals({
   const stone = parseFloat(stoneAmount) || 0;
   const otherPct = parseFloat(otherPer) || 0;
   const askingPct = parseFloat(askingPer) || 0;
+  const extra = parseFloat(otherChargesExtra) || 0;
 
   const baseFinalAmount =
     metal + making + handling + certificate + hallmark + diamond + stone + setting;
 
-  const other = Math.round(baseFinalAmount * otherPct * 100) / 100;
+  const autoOther = roundMoney(baseFinalAmount * otherPct);
+  const other = roundMoney(autoOther + extra);
 
   let totalMaking = 0;
   if (making > 0) {
     totalMaking = making + handling + certificate + hallmark + setting;
   }
 
-  const finalCostAmount = Math.round((baseFinalAmount + other) * 100) / 100;
+  const finalCostAmount = roundMoney(baseFinalAmount + other);
   const autoAsking =
-    finalCostAmount + Math.round(finalCostAmount * askingPct * 100) / 100;
+    finalCostAmount + roundMoney(finalCostAmount * askingPct);
 
   return {
     costAmount: baseFinalAmount.toFixed(2),
+    autoOtherCharges: autoOther.toFixed(2),
     otherCharges: other.toFixed(2),
     totalMakingCharges: totalMaking.toFixed(2),
     finalAmount: finalCostAmount.toFixed(2),

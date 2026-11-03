@@ -30,6 +30,7 @@ export default function JewStockDrivePathFields({
   inputCls = "form-control",
   readOnly = false,
   FieldRow,
+  disableAutoFetch = false,
 }) {
   const [imageRows, setImageRows] = useState(() => {
     const parts = parseMediaPaths(imagePath);
@@ -43,9 +44,10 @@ export default function JewStockDrivePathFields({
   const [debouncedStockId, setDebouncedStockId] = useState(stockId);
 
   useEffect(() => {
+    if (disableAutoFetch) return;
     const t = setTimeout(() => setDebouncedStockId(stockId), 450);
     return () => clearTimeout(t);
-  }, [stockId]);
+  }, [stockId, disableAutoFetch]);
 
   // Sync rows when parent imagePath changes from outside (edit load / reset)
   useEffect(() => {
@@ -128,7 +130,7 @@ export default function JewStockDrivePathFields({
 
   // Stock ID → auto-fill first Drive image + video (MVC ApplyStockIdToMedia)
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || disableAutoFetch) return;
     const sid = (debouncedStockId || "").trim();
     const prevStock = lastAutoStockRef.current || "";
 

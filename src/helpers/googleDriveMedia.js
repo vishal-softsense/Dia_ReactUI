@@ -612,3 +612,100 @@ export function pickNextUnusedStockImage(usedPaths, files) {
 export function pickNextUnusedStockVideo(usedPaths, files) {
   return pickNextUnusedStockImage(usedPaths, files);
 }
+
+/**
+ * Auto-suggest first Drive image + video for a Stock ID (MVC ApplyStockIdToMedia parity).
+ * - Finds first matching Drive video (e.g., STD1001.mp4)
+ * - Finds first matching Drive image (e.g., STD1001.png)
+ * - Preserves existing custom image/video paths
+ * - Shows toast warnings if not found
+ */
+export async function applyStockIdToDriveMedia({
+  stockId,
+  prevStockId = "",
+  currentImagePath = "",
+  currentVideoPath = "",
+  showWarnings = true,
+}) {
+  const sid = (stockId || "").trim();
+  const prev = (prevStockId || "").trim();
+
+  const canAutoFillImage = (val) => {
+    val = (val || "").trim();
+    return !val || isAutoStockImageName(val, sid) || (prev && isAutoStockImageName(val, prev));
+  };
+  const canAutoFillVideo = (val) => {
+    val = (val || "").trim();
+    return !val || isAutoStockVideoName(val, sid) || (prev && isAutoStockVideoName(val, prev));
+  };
+
+  if (!sid) {
+    clearStockDriveImageCache();
+    clearStockDriveVideoCache();
+    const currentImgs = parseMediaPaths(currentImagePath);
+    const keptImgs = currentImgs.filter((v) => !canAutoFillImage(v));
+    const nextVideo = canAutoFillVideo(currentVideoPath) ? "" : currentVideoPath;
+    return {
+      imagePath: joinMediaPaths(keptImgs),
+      videoPath: nextVideo,
+      stockId: "",
+      cleared: true,
+    };
+  }
+
+  const stockChanged = !prev || prev.toLowerCase() !== sid.toLowerCase();
+  if (stockChanged) {
+    clearStockDriveImageCache();
+    clearStockDriveVideoCache();
+  }
+
+  const currentVideo = (currentVideoPath || "").trim();
+  const shouldFetchVideo = canAutoFillVideo(currentVideo) && !(
+    !stockChanged &&
+    currentVideo &&
+    isAutoStockVideoName(currentVideo, sid)
+  );
+
+  const currentImgs = parseMediaPaths(currentImagePath);
+  const firstVal = (currentImgs[0] || "").trim();
+  const shouldFetchImage = canAutoFillImage(firstVal) && !(
+    !stockChanged &&
+    firstVal &&
+    isAutoStockImageName(firstVal, sid)
+  );
+
+  let newVideoPath = currentVideo;
+  let newImagePath = currentImagePath;
+
+  const [videoFiles, imageFiles] = await Promise.all([
+    shouldFetchVideo ? listStockDriveVideos(sid) : Promise.resolve(null),
+    shouldFetchImage ? listStockDriveImages(sid) : Promise.resolve(null),
+  ]);
+
+  if (shouldFetchVideo && videoFiles !== null) {
+    const foundVideo = videoFiles && videoFiles.length ? videoFiles[0] : null;
+    if (foundVideo) {
+      newVideoPath = foundVideo;
+    } else {
+      newVideoPath = "";
+      if (showWarnings) showGoogleDriveMediaWarning("video");
+    }
+  }
+
+  if (shouldFetchImage && imageFiles !== null) {
+    const mainImage = imageFiles && imageFiles.length ? imageFiles[0] : null;
+    const keptCustom = currentImgs.filter((v) => v && !canAutoFillImage(v));
+    if (mainImage) {
+      newImagePath = joinMediaPaths([mainImage, ...keptCustom]);
+    } else {
+      newImagePath = joinMediaPaths(keptCustom);
+      if (showWarnings) showGoogleDriveMediaWarning("image");
+    }
+  }
+
+  return {
+    imagePath: newImagePath,
+    videoPath: newVideoPath,
+    stockId: sid,
+  };
+}

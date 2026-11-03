@@ -261,38 +261,53 @@ const mapGradingFromSource = (src) => ({
   countryOfMfg: getStrVal(src, "CountryOfMfg")
 });
 
-const mapItemFromApi = (r, idx) => ({
-  rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
-  srNo: idx + 1,
-  lotNo: getStrVal(r, "LotNo"),
-  itemName: getStrVal(r, "ItemName"),
-  weight: getNumVal(r, "Weight", "Carats"),
-  issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
-  pcs: getNumVal(r, "Pcs") || 1,
-  mrp: getNumVal(r, "MRP", "PurchaseMRP"),
-  back: getNumVal(r, "PurchaseBack", "PMRPDown", "Back"),
-  rate: getNumVal(r, "PurchaseRate", "Rate"),
-  less1: getNumVal(r, "Less1"),
-  less2: getNumVal(r, "Less2"),
-  less3: getNumVal(r, "Less3"),
-  amount: getNumVal(r, "PurAmount", "Amount"),
-  shape: getStrVal(r, "Shape", "ShapeId", "PShape"),
-  color: getStrVal(r, "Color", "ColorId", "PColor"),
-  clarity: getStrVal(r, "Clarity", "ClarityId", "PClarity"),
-  size: getStrVal(r, "Size", "SizeId", "PSize"),
-  sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
-  stockType: getStrVal(r, "StockType") || "Diamond",
-  invDescription: getStrVal(r, "InvDescription", "invDescription"),
-  suppLotNo: getStrVal(r, "SuppLotNo"),
-  askingRate: getNumVal(r, "AskingRate"),
-  actualRate: getNumVal(r, "ActualRate"),
-  groupId: getStrVal(r, "GroupId", "ItemGroup"),
-  stoneType: getStrVal(r, "StoneType"),
-  rmk: getStrVal(r, "RMK", "MemberRemarks"),
-  memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
-  rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
-  status: getStrVal(r, "Status", "status")
-});
+const mapItemFromApi = (r, idx) => {
+  // MVC EditMixPurchaseD: jewellery LotNo = stockid when StockType is not Diamond/Shipping
+  const stockType = getStrVal(r, "StockType", "stockType") || "Diamond";
+  let lotNo = getStrVal(r, "LotNo", "lotNo", "Lotno", "stockid", "Stock_ID", "Stock_Id", "stock_ID", "stockId");
+  if (
+    !lotNo &&
+    String(stockType).toLowerCase() === "jewellery"
+  ) {
+    const itemName = getStrVal(r, "ItemName", "itemName");
+    const first = itemName ? String(itemName).trim().split(/\s+/)[0] : "";
+    if (first) lotNo = first;
+  }
+
+  return {
+    rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
+    srNo: idx + 1,
+    lotNo,
+    itemName: getStrVal(r, "ItemName"),
+    weight: getNumVal(r, "Weight", "Carats"),
+    issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    // Keep lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
+    pcs: getNumVal(r, "Pcs"),
+    mrp: getNumVal(r, "MRP", "PurchaseMRP"),
+    back: getNumVal(r, "PurchaseBack", "PMRPDown", "Back"),
+    rate: getNumVal(r, "PurchaseRate", "Rate"),
+    less1: getNumVal(r, "Less1"),
+    less2: getNumVal(r, "Less2"),
+    less3: getNumVal(r, "Less3"),
+    amount: getNumVal(r, "PurAmount", "Amount"),
+    shape: getStrVal(r, "Shape", "ShapeId", "PShape"),
+    color: getStrVal(r, "Color", "ColorId", "PColor"),
+    clarity: getStrVal(r, "Clarity", "ClarityId", "PClarity"),
+    size: getStrVal(r, "Size", "SizeId", "PSize"),
+    sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
+    stockType,
+    invDescription: getStrVal(r, "InvDescription", "invDescription"),
+    suppLotNo: getStrVal(r, "SuppLotNo"),
+    askingRate: getNumVal(r, "AskingRate"),
+    actualRate: getNumVal(r, "ActualRate"),
+    groupId: getStrVal(r, "GroupId", "ItemGroup"),
+    stoneType: getStrVal(r, "StoneType"),
+    rmk: getStrVal(r, "RMK", "MemberRemarks"),
+    memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
+    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+    status: getStrVal(r, "Status", "status")
+  };
+};
 
 const resolveOptionValue = (options = [], rawValue) => {
   if (rawValue == null || rawValue === "") return "";
@@ -783,18 +798,31 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   const [consignLotFilter, setConsignLotFilter] = useState("");
   const [consignSearch, setConsignSearch] = useState("");
 
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
 
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      const sSym = company?.stockSymbol || cached.stockSymbol || "";
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      const mSym =
+        auth?.MSymbol ||
+        auth?.mSymbol ||
+        auth?.data?.MSymbol ||
+        company?.masterSymbol ||
+        cached.masterSymbol ||
+        "";
+      if (sSym) setStockSymbol(sSym);
+      if (mSym) setMasterSymbol(mSym);
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -943,16 +971,22 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   // Live master rates apply on Add and when the user changes Currency.
   const applyCurrencyRates = async (curCode, options = {}) => {
     if (!curCode) return;
-    const preserveRates = !!options.preserveRates;
+    const preserveRates = !!(options.preserveRates ?? (options.overwriteRates === false));
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
-        const base = toNum(res.baseRate ?? res.BaseRate, 1);
-        const sBase = toNum(res.sBaseRate ?? res.SBaseRate, 1);
-        const opM = getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
-        const opS = getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const raw = res?.data || res?.Data || res;
+        const target = Array.isArray(raw) ? raw[0] : (raw?.data && Array.isArray(raw.data) ? raw.data[0] : raw) || {};
+        const base = toNum(target.baseRate ?? target.BaseRate ?? target.MasterCurrencyRate, 1);
+        const sBase = toNum(target.sBaseRate ?? target.SBaseRate ?? target.StockCurrencyRate, 1);
+        const opM = getVal(target, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
+        const opS = getVal(target, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const mSym = getVal(target, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(target, "StockSymbol", "stockSymbol");
         setMOp(opM);
         setSOp(opS);
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         if (!preserveRates) {
           setHeader((prev) => ({ ...prev, baseRate: base, sBaseRate: sBase }));
         }
@@ -1562,7 +1596,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Weight: toNum(r.weight),
       Carats: toNum(r.weight),
       IssueCarats: toNum(r.issueCarats) || toNum(r.weight),
-      Pcs: toNum(r.pcs, 1),
+      Pcs: toNum(r.pcs),
       MRP: toNum(r.mrp),
       PurchaseBack: toNum(r.back),
       PurchaseRate: toNum(r.rate),
@@ -1778,59 +1812,94 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       });
   }, [consignRows, consignSearch]);
 
-  const consignToPurchase = () => {
+  /**
+   * Same Pcs rules as MixMemo→MixSale:
+   * Load lot Pcs via getMixPurchaseLotDetail (not hardcoded 1).
+   * Jewellery fallback: Math.trunc(weight) when lot missing (MVC Convert.ToInt32(Weight)).
+   */
+  const consignToPurchase = async () => {
     const selected = consignRows.filter((r) => r.selected && toNum(r.purchase) > 0);
     if (!selected.length) {
       toast.warning(t("Select at least one consignment row."));
       return;
     }
     // MVC MixPurchaseController.MixConToMixPurFill: always PurExcel.Add — never overwrite by LotNo.
-    // Duplicate LotNo rows stay as separate lines (same as MVC).
     let skipAlert = "";
-    setItems((prev) => {
-      const next = [...prev];
-      selected.forEach((r) => {
-        const lotNo = r.lotNo;
-        // MVC: IssueCarats = Weight = Purchase; Rate = PurchaseRate
-        const weight = toNum(r.purchase);
-        const rate = toNum(r.rate);
-        // MVC: skip tiny residual weight with "Lotno On Memo or Sold"
-        if (weight > 0 && weight <= 0.001) {
-          skipAlert += ` Lotno On Memo or Sold: ${lotNo}`;
-          return;
+    const built = [];
+    for (const r of selected) {
+      const lotNo = r.lotNo;
+      const weight = toNum(r.purchase);
+      const rate = toNum(r.rate);
+      if (weight > 0 && weight <= 0.001) {
+        skipAlert += ` Lotno On Memo or Sold: ${lotNo}`;
+        continue;
+      }
+      const rowStockType = r.stockType || "Diamond";
+      const isJewellery = String(rowStockType).toLowerCase() === "jewellery";
+
+      let pcs = isJewellery ? Math.trunc(weight) : 0;
+      let shape = "";
+      let color = "";
+      let clarity = "";
+      let size = "";
+      let sieve = "";
+      let invDescription = "";
+      try {
+        const res = await getMixPurchaseLotDetail(lotNo);
+        if (res?.success || res?.Success) {
+          const rows = res.Data || res.data || [];
+          const lot = Array.isArray(rows) ? rows[0] : rows;
+          if (lot) {
+            // Keep 0 when lot Pcs is 0; do not coerce with || 1
+            pcs = getNumVal(lot, "Pcs");
+            // MVC MixConToMixPurFill Jewellery keeps Pcs = Weight (not overwritten by GetMemoReport1)
+            if (isJewellery) pcs = Math.trunc(weight);
+            shape = isJewellery ? "" : getStrVal(lot, "Shape", "ShapeId", "PShape");
+            color = isJewellery ? "" : getStrVal(lot, "Color", "ColorId", "PColor");
+            clarity = isJewellery ? "" : getStrVal(lot, "Clarity", "ClarityId", "PClarity");
+            size = isJewellery ? "" : getStrVal(lot, "Size", "SizeId", "PSize");
+            sieve = isJewellery ? "" : getStrVal(lot, "Sieve", "SieveId", "PSieve");
+            invDescription = getStrVal(lot, "InvDescription");
+          }
         }
-        const row = {
-          ...emptyItem(),
-          lotNo,
-          itemName: r.itemName,
-          weight,
-          issueCarats: weight,
-          pcs: 1,
-          mrp: toNum(r.mrp),
-          back: 0,
-          rate,
-          sRate: "",
-          less1: 0,
-          less2: 0,
-          less3: 0,
-          amount: calcItemAmount(weight, rate, 0, 0, 0, 1, r.stockType || "Diamond"),
-          shape: "",
-          color: "",
-          clarity: "",
-          size: "",
-          sieve: "",
-          stockType: r.stockType || "Diamond",
-          memoTransCode: toNum(r.memoTransCode),
-          rtnCarats: toNum(r.rtn),
-          status: "Purchase"
-        };
-        next.push(row);
+      } catch (err) {
+        console.error(err);
+      }
+
+      built.push({
+        ...emptyItem(),
+        lotNo,
+        itemName: r.itemName,
+        weight,
+        issueCarats: weight,
+        pcs,
+        mrp: toNum(r.mrp),
+        back: 0,
+        rate,
+        sRate: "",
+        less1: 0,
+        less2: 0,
+        less3: 0,
+        amount: calcItemAmount(weight, rate, 0, 0, 0, pcs, rowStockType),
+        shape,
+        color,
+        clarity,
+        size,
+        sieve,
+        stockType: rowStockType,
+        memoTransCode: toNum(r.memoTransCode),
+        rtnCarats: toNum(r.rtn),
+        invDescription,
+        status: "Purchase"
       });
-      return next;
-    });
+    }
+
+    if (built.length) {
+      setItems((prev) => [...prev, ...built]);
+    }
     setConsignOpen(false);
     if (skipAlert) toast.warning(skipAlert.trim());
-    else toast.success(t("Consignment items added."));
+    else if (built.length) toast.success(t("Consignment items added."));
   };
 
   const buildPayload = () => {
@@ -1902,7 +1971,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Weight: toNum(r.weight),
       Carats: toNum(r.weight),
       IssueCarats: toNum(r.issueCarats) || toNum(r.weight),
-      Pcs: toNum(r.pcs, 1),
+      Pcs: toNum(r.pcs),
       MRP: toNum(r.mrp),
       PurchaseBack: toNum(r.back),
       PurchaseRate: toNum(r.rate),
@@ -2253,7 +2322,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={3} md={3} lg={1}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
-                            {masterSymbol} <span className="text-danger">{mOp}</span>
+                            <span style={{ color: "cornflowerblue" }}>{masterSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{mOp}</span>
                           </Label>
                           <Input
                             type="number"
@@ -2267,7 +2337,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={3} md={3} lg={1}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
-                            {stockSymbol} <span className="text-danger">{sOp}</span>
+                            <span style={{ color: "cornflowerblue" }}>{stockSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{sOp}</span>
                           </Label>
                           <Input
                             type="number"
@@ -2527,11 +2598,15 @@ const MixPurchaseForm = ({ mode = "add" }) => {
 
                     <div className="pt-2 border-top">
                       <div className="d-flex align-items-center justify-content-between mb-2">
-                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>{masterSymbol} FINAL AMOUNT</span>
+                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>
+                          {masterSymbol ? `${masterSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                        </span>
                         <span className="fw-bold" style={{ fontSize: "13px" }}>{summary.finalMAmount}</span>
                       </div>
                       <div className="d-flex align-items-center justify-content-between mb-2">
-                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>{stockSymbol} FINAL AMOUNT</span>
+                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>
+                          {stockSymbol ? `${stockSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                        </span>
                         <span className="fw-bold" style={{ fontSize: "13px" }}>{summary.finalSAmount}</span>
                       </div>
                       <div className="d-flex align-items-center justify-content-between">
@@ -3369,17 +3444,23 @@ const MixPurchaseForm = ({ mode = "add" }) => {
               </Col>
             </Row>
 
-            {/* Row 5: USD to INR Rate, Purchase/Cost Price USD/Carats, Purchase/Cost Price INR/Carats, Single/Parcel */}
+            {/* Row 5: Stock to Master Rate, Purchase/Cost Price Stock/Carats, Purchase/Cost Price Master/Carats, Single/Parcel */}
             <Row className="mb-3">
               <Col md={3}>
                 <FormGroup className="mb-0">
                   <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
-                    {t(`${stockSymbol} TO ${masterSymbol} RATE`).toUpperCase()}
+                    {stockSymbol && masterSymbol
+                      ? t(`${stockSymbol} TO ${masterSymbol} RATE`).toUpperCase()
+                      : t("RATE").toUpperCase()}
                   </Label>
                   <Input
                     type="text"
                     className="form-control text-end"
-                    placeholder={t("USD to INR Rate")}
+                    placeholder={
+                      stockSymbol && masterSymbol
+                        ? `${stockSymbol} to ${masterSymbol} Rate`
+                        : t("Rate")
+                    }
                     value={addItemForm.pDollorRate}
                     onChange={(e) => handleAddItemChange("pDollorRate", e.target.value)}
                   />
@@ -3388,12 +3469,18 @@ const MixPurchaseForm = ({ mode = "add" }) => {
               <Col md={3}>
                 <FormGroup className="mb-0">
                   <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
-                    {t(`PURCHASE/COST PRICE ${stockSymbol}/CARATS`).toUpperCase()}
+                    {stockSymbol
+                      ? t(`PURCHASE/COST PRICE ${stockSymbol}/CARATS`).toUpperCase()
+                      : t("PURCHASE/COST PRICE").toUpperCase()}
                   </Label>
                   <Input
                     type="text"
                     className="form-control text-end"
-                    placeholder={t("Purchase/Cost Price USD/Carats")}
+                    placeholder={
+                      stockSymbol
+                        ? `Purchase/Cost Price ${stockSymbol}/Carats`
+                        : t("Purchase/Cost Price")
+                    }
                     value={addItemForm.purchaseRate}
                     onChange={(e) => handleAddItemChange("purchaseRate", e.target.value)}
                   />
@@ -3402,12 +3489,18 @@ const MixPurchaseForm = ({ mode = "add" }) => {
               <Col md={3}>
                 <FormGroup className="mb-0">
                   <Label className="form-label fw-semibold" style={{ fontSize: "12px" }}>
-                    {t(`PURCHASE/COST PRICE ${masterSymbol}/CARATS`).toUpperCase()}
+                    {masterSymbol
+                      ? t(`PURCHASE/COST PRICE ${masterSymbol}/CARATS`).toUpperCase()
+                      : t("PURCHASE/COST PRICE").toUpperCase()}
                   </Label>
                   <Input
                     type="text"
                     className="form-control text-end"
-                    placeholder={t("Purchase/Cost Price INR/Carats")}
+                    placeholder={
+                      masterSymbol
+                        ? `Purchase/Cost Price ${masterSymbol}/Carats`
+                        : t("Purchase/Cost Price")
+                    }
                     value={addItemForm.masterCurrencyRate}
                     onChange={(e) => handleAddItemChange("masterCurrencyRate", e.target.value)}
                   />

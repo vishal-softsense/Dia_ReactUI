@@ -538,7 +538,21 @@ const MixPurPrintUsaFormat = ({
                         overflow: "hidden"
                       }}
                     >
-                      {getVal(item, "StockNo", "stockNo", "Lotno", "lotno", "LotNo", "lotNo")}
+                      {getVal(
+                        item,
+                        "StockNo",
+                        "stockNo",
+                        "Lotno",
+                        "lotno",
+                        "LotNo",
+                        "lotNo",
+                        "Stock_ID",
+                        "Stock_Id",
+                        "stock_ID",
+                        "stockId",
+                        "JewItem",
+                        "jewItem"
+                      )}
                     </td>
                     <td
                       style={{

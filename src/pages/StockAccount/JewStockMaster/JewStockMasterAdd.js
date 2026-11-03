@@ -19,11 +19,13 @@ import {
   getAddMountingStockData,
   getJewLotNoData,
   getMountingStockDetail,
+  checkStockIdExists,
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import TableContainer from "../../../Components/Common/TableContainer";
 import JewStockMediaPreview from "./JewStockMediaPreview";
 import JewStockDrivePathFields from "./JewStockDrivePathFields";
+import { applyStockIdToDriveMedia } from "../../../helpers/googleDriveMedia";
 import {
   computeChargeTotals,
   computeMakingCharges,
@@ -33,6 +35,7 @@ import {
   formatPrice,
   MAKING_TYPE_OPTIONS,
   mapDiamondListToRows,
+  resolveOtherChargesExtra,
   summarizeTableRows,
 } from "./jewStockFormUtils";
 
@@ -337,6 +340,7 @@ export default function AddMountingMaster() {
   const today = new Date().toISOString().slice(0, 10);
   const [trnDate, setTrnDate] = useState(today);
   const [stockID, setStockID] = useState("");
+  const [stockIdExists, setStockIdExists] = useState(false);
   const [errors, setErrors] = useState({});
   const [jewCategory, setJewCategory] = useState("");
   const [useMounting, setUseMounting] = useState("");
@@ -367,6 +371,126 @@ export default function AddMountingMaster() {
   const [imagePath, setImagePath] = useState("");
   const [videoPath, setVideoPath] = useState("");
   const [certPath, setCertPath] = useState("");
+  const lastAutoStockRef = useRef("");
+  const inFlightStockRef = useRef("");
+  const lastCheckedStockRef = useRef("");
+  const inFlightValidationRef = useRef(false);
+  const imagePathRef = useRef(imagePath);
+  const videoPathRef = useRef(videoPath);
+
+  useEffect(() => {
+    imagePathRef.current = imagePath;
+  }, [imagePath]);
+
+  useEffect(() => {
+    videoPathRef.current = videoPath;
+  }, [videoPath]);
+
+  /**
+   * Directly fetch and apply Google Drive media on Stock ID Tab / blur / change
+   * (MVC ApplyStockIdToMedia parity — fetches first image + video immediately).
+   */
+  const applyStockMedia = useCallback(async (sidToUse) => {
+    const sid = (sidToUse !== undefined ? sidToUse : stockID || "").trim();
+    if (!sid) {
+      if (lastAutoStockRef.current) {
+        lastAutoStockRef.current = "";
+        inFlightStockRef.current = "";
+        const res = await applyStockIdToDriveMedia({
+          stockId: "",
+          prevStockId: lastAutoStockRef.current,
+          currentImagePath: imagePathRef.current,
+          currentVideoPath: videoPathRef.current,
+          showWarnings: false,
+        });
+        setImagePath(res.imagePath || "");
+        setVideoPath(res.videoPath || "");
+      }
+      return;
+    }
+
+    if (inFlightStockRef.current.toLowerCase() === sid.toLowerCase()) {
+      return;
+    }
+    if (
+      lastAutoStockRef.current.toLowerCase() === sid.toLowerCase() &&
+      (imagePathRef.current || videoPathRef.current)
+    ) {
+      return;
+    }
+
+    try {
+      inFlightStockRef.current = sid;
+      const res = await applyStockIdToDriveMedia({
+        stockId: sid,
+        prevStockId: lastAutoStockRef.current,
+        currentImagePath: imagePathRef.current,
+        currentVideoPath: videoPathRef.current,
+        showWarnings: true,
+      });
+      lastAutoStockRef.current = res.stockId;
+      if (res.imagePath !== undefined) setImagePath(res.imagePath);
+      if (res.videoPath !== undefined) setVideoPath(res.videoPath);
+    } catch (err) {
+      console.error("Error auto-fetching stock media:", err);
+    } finally {
+      inFlightStockRef.current = "";
+    }
+  }, [stockID]);
+
+  /**
+   * Validate if stock ID already exists in the database
+   */
+  const validateDuplicateStockId = useCallback(async (idToValidate) => {
+    const sid = (idToValidate !== undefined ? idToValidate : stockID || "").trim();
+    if (!sid) {
+      setStockIdExists(false);
+      lastCheckedStockRef.current = "";
+      return false;
+    }
+
+    if (inFlightValidationRef.current) {
+      return false;
+    }
+
+    if (lastCheckedStockRef.current.toLowerCase() === sid.toLowerCase()) {
+      return stockIdExists;
+    }
+
+    try {
+      inFlightValidationRef.current = true;
+      const response = await checkStockIdExists(sid);
+      const exists =
+        response?.exists ?? response?.Exists ??
+        response?.data?.exists ?? response?.data?.Exists ?? false;
+
+      lastCheckedStockRef.current = sid;
+      setStockIdExists(exists);
+      if (exists) {
+        setErrors(prev => ({ ...prev, stockID: true }));
+        toast.warning(t("This Stock ID already exists. Please use a different Stock ID."), {
+          toastId: "duplicate-stock-id-warning",
+        });
+      }
+      return exists;
+    } catch (err) {
+      console.error("Error checking duplicate stock id:", err);
+      return false;
+    } finally {
+      inFlightValidationRef.current = false;
+    }
+  }, [stockID, stockIdExists, t]);
+
+  // Debounced auto-fetch when user pauses typing without tabbing
+  useEffect(() => {
+    const sid = (stockID || "").trim();
+    if (!sid) return;
+    if (lastAutoStockRef.current.toLowerCase() === sid.toLowerCase()) return;
+    const t = setTimeout(() => {
+      applyStockMedia(sid);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [stockID, applyStockMedia]);
 
   // ── Charges ──
   const [makingType, setMakingType] = useState("");
@@ -387,6 +511,9 @@ export default function AddMountingMaster() {
   const [isManualAskingRate, setIsManualAskingRate] = useState(false);
   const [otherPer, setOtherPer] = useState("0");
   const [askingPer, setAskingPer] = useState("0");
+  const [chargeSettingsReady, setChargeSettingsReady] = useState(false);
+  const otherChargesExtraRef = useRef(0);
+  const pendingLoadedOtherRef = useRef(null);
 
   // ── Row entry form ──
   const [elementType, setElementType] = useState("");
@@ -454,6 +581,7 @@ export default function AddMountingMaster() {
         const askingP = data.AskingPer ?? data.askingPer ?? "0";
         setOtherPer(otherP || "0");
         setAskingPer(askingP || "0");
+        setChargeSettingsReady(true);
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -583,7 +711,7 @@ export default function AddMountingMaster() {
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
-    const totals = computeChargeTotals({
+    const chargeArgs = {
       metalAmount,
       originalMakingCharges,
       handlingAmount,
@@ -596,7 +724,20 @@ export default function AddMountingMaster() {
       askingPer,
       isManualAskingRate,
       currentAskingRate: askingRate,
-    });
+    };
+    let extra = otherChargesExtraRef.current || 0;
+    if (pendingLoadedOtherRef.current) {
+      const autoTotals = computeChargeTotals({ ...chargeArgs, otherChargesExtra: 0 });
+      const loadedOther = pendingLoadedOtherRef.current.value;
+      extra = loadedOther == null || loadedOther === ""
+        ? 0
+        : resolveOtherChargesExtra(loadedOther, autoTotals.autoOtherCharges);
+      otherChargesExtraRef.current = extra;
+      if (chargeSettingsReady) {
+        pendingLoadedOtherRef.current = null;
+      }
+    }
+    const totals = computeChargeTotals({ ...chargeArgs, otherChargesExtra: extra });
     setCostAmount(totals.costAmount);
     setOtherCharges(totals.otherCharges);
     setTotalMakingCharges(totals.totalMakingCharges);
@@ -607,7 +748,7 @@ export default function AddMountingMaster() {
   }, [
     metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
     hallmarkCharges, settingCharges, diamondAmount, stoneAmount, otherPer,
-    askingPer, isManualAskingRate,
+    askingPer, isManualAskingRate, chargeSettingsReady,
   ]);
 
   useEffect(() => {
@@ -625,8 +766,27 @@ export default function AddMountingMaster() {
   }, [carats, rate]);
 
   const handleOtherChargesChange = (value) => {
+    const autoTotals = computeChargeTotals({
+      metalAmount,
+      originalMakingCharges,
+      handlingAmount,
+      certificateCharges,
+      hallmarkCharges,
+      settingCharges,
+      diamondAmount,
+      stoneAmount,
+      otherPer,
+      askingPer,
+      isManualAskingRate,
+      currentAskingRate: askingRate,
+      otherChargesExtra: 0,
+    });
+    pendingLoadedOtherRef.current = null;
+    otherChargesExtraRef.current = value === ""
+      ? 0
+      : resolveOtherChargesExtra(value, autoTotals.autoOtherCharges);
     setOtherCharges(value);
-    const cost = parseFloat(costAmount) || 0;
+    const cost = parseFloat(autoTotals.costAmount) || 0;
     const other = parseFloat(value) || 0;
     const finalCost = Math.round((cost + other) * 100) / 100;
     setFinalAmount(finalCost.toFixed(2));
@@ -742,6 +902,7 @@ export default function AddMountingMaster() {
       setHandlingAmount(data.totalHandlingCharges ?? data.TotalHandlingCharges ?? "");
       setJewCert(data.jewelleryCertificate || data.JewelleryCertificate || "");
       setCertificateCharges(data.totalCertificateCharges ?? data.TotalCertificateCharges ?? "");
+      pendingLoadedOtherRef.current = { value: data.otherCharges ?? data.OtherCharges };
       setOtherCharges(data.otherCharges ?? data.OtherCharges ?? "");
       setHallmarkCharges(data.hallmarkCharges ?? data.HallmarkCharges ?? "");
       setTotalMakingCharges(data.totalMakingCharges ?? data.TotalMakingCharges ?? "");
@@ -946,12 +1107,25 @@ export default function AddMountingMaster() {
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     let currentErrors = {};
-    if (!stockID.trim()) currentErrors.stockID = true;
+    const trimmedStockId = (stockID || "").trim();
+    if (!trimmedStockId) currentErrors.stockID = true;
 
     setErrors(currentErrors);
 
     if (Object.keys(currentErrors).length > 0) {
       toast.error(t("Please fill all required fields"));
+      return;
+    }
+
+    if (stockIdExists) {
+      toast.warning(t("This Stock ID already exists. Please use a different Stock ID."), {
+        toastId: "duplicate-stock-id-warning",
+      });
+      return;
+    }
+
+    const isDuplicate = await validateDuplicateStockId(trimmedStockId);
+    if (isDuplicate) {
       return;
     }
 
@@ -1177,127 +1351,165 @@ export default function AddMountingMaster() {
                 <CardBody>
                   {/* tabs */}
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button className={tabBtnClass(leftTab === "stock")} onClick={() => setLeftTab("stock")}>
+                    <button
+                      type="button"
+                      className={tabBtnClass(leftTab === "stock")}
+                      onClick={() => setLeftTab("stock")}
+                    >
                       <i className="ri-bar-chart-line me-1"></i>Stock Details
                     </button>
-                    <button className={tabBtnClass(leftTab === "image")} onClick={() => setLeftTab("image")}>
+                    <button
+                      type="button"
+                      className={tabBtnClass(leftTab === "image")}
+                      onClick={() => {
+                        setLeftTab("image");
+                        if (stockID.trim()) applyStockMedia(stockID);
+                      }}
+                    >
                       <i className="ri-image-line me-1"></i>Image
                     </button>
                   </div>
 
-                  {leftTab === "stock" && (
-                    <>
-                      <FieldRow label="Date">
-                        <input type="date" className={inputCls} value={trnDate}
-                          onChange={(e) => handleDateChange(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Stock ID">
-                        <>
-                          <input type="text"
-                            className={`${inputCls} ${errors.stockID ? "is-invalid" : ""}`}
-                            placeholder="Stock ID"
-                            value={stockID}
-                            onChange={(e) => {
-                              setStockID(e.target.value);
-                              if (e.target.value.trim()) setErrors(prev => ({ ...prev, stockID: false }));
-                            }}
-                            onBlur={() => {
-                              if (!stockID.trim()) setErrors(prev => ({ ...prev, stockID: true }));
-                            }}
-                          />
-                          {errors.stockID && <div className="invalid-feedback d-block">{t("Please enter Stock ID")}</div>}
-                        </>
-                      </FieldRow>
-                      <FieldRow label="Jewellery Category">
-                        <select className={selectCls} value={jewCategory}
-                          onChange={(e) => setJewCategory(e.target.value)}>
-                          <option value="">Select JewelleryCategory</option>
-                          <option value="Finished Jewellery">Finished Jewellery</option>
-                          <option value="Semi Jewellery">Semi Jewellery</option>
-                          <option value="Mounting">Mounting</option>
-                          <option value="Metal">Metal</option>
-                        </select>
-                      </FieldRow>
+                  <div style={{ display: leftTab === "stock" ? "block" : "none" }}>
+                    <FieldRow label="Date">
+                      <input type="date" className={inputCls} value={trnDate}
+                        onChange={(e) => handleDateChange(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Stock ID">
+                      <>
+                        <input type="text"
+                          className={`${inputCls} ${errors.stockID ? "is-invalid" : ""}`}
+                          placeholder="Stock ID"
+                          value={stockID}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setStockID(val);
+                            if (val.trim()) {
+                              setErrors(prev => ({ ...prev, stockID: false }));
+                              if (stockIdExists) setStockIdExists(false);
+                            }
+                            if (lastCheckedStockRef.current.toLowerCase() !== val.trim().toLowerCase()) {
+                              lastCheckedStockRef.current = "";
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              const val = (e.target.value || "").trim();
+                              applyStockMedia(val);
+                              validateDuplicateStockId(val);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = (e.target.value || "").trim();
+                            if (!val) {
+                              setErrors(prev => ({ ...prev, stockID: true }));
+                              setStockIdExists(false);
+                              lastCheckedStockRef.current = "";
+                              applyStockMedia("");
+                            } else {
+                              applyStockMedia(val);
+                              validateDuplicateStockId(val);
+                            }
+                          }}
+                        />
+                        {errors.stockID && (
+                          <div className="invalid-feedback d-block">
+                            {stockIdExists
+                              ? t("This Stock ID already exists. Please use a different Stock ID.")
+                              : t("Please enter Stock ID")}
+                          </div>
+                        )}
+                      </>
+                    </FieldRow>
+                    <FieldRow label="Jewellery Category">
+                      <select className={selectCls} value={jewCategory}
+                        onChange={(e) => setJewCategory(e.target.value)}>
+                        <option value="">Select JewelleryCategory</option>
+                        <option value="Finished Jewellery">Finished Jewellery</option>
+                        <option value="Semi Jewellery">Semi Jewellery</option>
+                        <option value="Mounting">Mounting</option>
+                        <option value="Metal">Metal</option>
+                      </select>
+                    </FieldRow>
 
-                      {showMountingSection && (
-                        <FieldRow label="Use Mounting">
-                          {/* MVC Select2 (#UseMounting): searchable dropdown */}
-                          <Select
-                            classNamePrefix="react-select"
-                            placeholder="Select Lot No"
-                            isClearable
-                            isSearchable
-                            options={mountOpts}
-                            value={mountOpts.find((o) => String(o.value) === String(useMounting)) || null}
-                            onChange={(selected) => handleUseMountingChange(selected ? selected.value : "")}
-                            styles={{
-                              control: (base) => ({
-                                ...base,
-                                minHeight: 31,
-                                fontSize: 13,
-                              }),
-                              menu: (base) => ({ ...base, zIndex: 20, fontSize: 13 }),
-                              option: (base) => ({ ...base, fontSize: 13 }),
-                              input: (base) => ({ ...base, margin: 0, padding: 0 }),
-                              valueContainer: (base) => ({ ...base, padding: "0 8px" }),
-                              indicatorsContainer: (base) => ({ ...base, height: 29 }),
-                            }}
-                          />
-                        </FieldRow>
-                      )}
+                    {showMountingSection && (
+                      <FieldRow label="Use Mounting">
+                        {/* MVC Select2 (#UseMounting): searchable dropdown */}
+                        <Select
+                          classNamePrefix="react-select"
+                          placeholder="Select Lot No"
+                          isClearable
+                          isSearchable
+                          options={mountOpts}
+                          value={mountOpts.find((o) => String(o.value) === String(useMounting)) || null}
+                          onChange={(selected) => handleUseMountingChange(selected ? selected.value : "")}
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: 31,
+                              fontSize: 13,
+                            }),
+                            menu: (base) => ({ ...base, zIndex: 20, fontSize: 13 }),
+                            option: (base) => ({ ...base, fontSize: 13 }),
+                            input: (base) => ({ ...base, margin: 0, padding: 0 }),
+                            valueContainer: (base) => ({ ...base, padding: "0 8px" }),
+                            indicatorsContainer: (base) => ({ ...base, height: 29 }),
+                          }}
+                        />
+                      </FieldRow>
+                    )}
 
-                      <FieldRow label="Category">
-                        <select className={selectCls} value={category}
-                          onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
-                          <option value="">Select Category</option>
-                          {categoryOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Sub Category">
-                        <select className={selectCls} value={subCategory}
-                          onChange={(e) => setSubCategory(e.target.value)}>
-                          <option value="">Select Sub Category</option>
-                          {subCategoryOptionsForCategory.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Jewellery Size">
-                        <input type="text" className={inputCls} placeholder="Size"
-                          value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Certificate">
-                        <select className={selectCls} value={jewCert}
-                          onChange={(e) => setJewCert(e.target.value)}>
-                          <option value="">Select Certificate</option>
-                          <option value="IGI">IGI</option>
-                          <option value="GIA">GIA</option>
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Certificate No">
-                        <input type="text" className={inputCls} placeholder="Certificate No"
-                          value={certNo} onChange={(e) => setCertNo(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Description" wide>
-                        <input type="text" className={inputCls} placeholder="Description"
-                          value={description} onChange={(e) => setDescription(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Pcs">
-                        <input type="text" className={`${inputCls} text-end`} placeholder="Pcs"
-                          value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
-                      </FieldRow>
-                    </>
-                  )}
+                    <FieldRow label="Category">
+                      <select className={selectCls} value={category}
+                        onChange={(e) => { setCategory(e.target.value); setSubCategory(""); }}>
+                        <option value="">Select Category</option>
+                        {categoryOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Sub Category">
+                      <select className={selectCls} value={subCategory}
+                        onChange={(e) => setSubCategory(e.target.value)}>
+                        <option value="">Select Sub Category</option>
+                        {subCategoryOptionsForCategory.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Jewellery Size">
+                      <input type="text" className={inputCls} placeholder="Size"
+                        value={jewSize} onChange={(e) => setJewSize(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Certificate">
+                      <select className={selectCls} value={jewCert}
+                        onChange={(e) => setJewCert(e.target.value)}>
+                        <option value="">Select Certificate</option>
+                        <option value="IGI">IGI</option>
+                        <option value="GIA">GIA</option>
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Certificate No">
+                      <input type="text" className={inputCls} placeholder="Certificate No"
+                        value={certNo} onChange={(e) => setCertNo(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Description" wide>
+                      <input type="text" className={inputCls} placeholder="Description"
+                        value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Pcs">
+                      <input type="text" className={`${inputCls} text-end`} placeholder="Pcs"
+                        value={totalPcs} onChange={(e) => setTotalPcs(e.target.value)} />
+                    </FieldRow>
+                  </div>
 
-                  {leftTab === "image" && (
+                  <div style={{ display: leftTab === "image" ? "block" : "none" }}>
                     <JewStockMediaPreview
                       imagePath={imagePath}
                       videoPath={videoPath}
                       certPath={certPath}
                     />
-                  )}
+                  </div>
                 </CardBody>
               </Card>
             </Col>
@@ -1307,85 +1519,94 @@ export default function AddMountingMaster() {
               <Card className="flex-grow-1 mb-0">
                 <CardBody>
                   <div className="d-flex justify-content-center mb-3 gap-1">
-                    <button className={tabBtnClass(midTab === "metal")} onClick={() => setMidTab("metal")}>
+                    <button
+                      type="button"
+                      className={tabBtnClass(midTab === "metal")}
+                      onClick={() => setMidTab("metal")}
+                    >
                       <i className="ri-settings-3-line me-1"></i>Metal Details
                     </button>
-                    <button className={tabBtnClass(midTab === "images")} onClick={() => setMidTab("images")}>
+                    <button
+                      type="button"
+                      className={tabBtnClass(midTab === "images")}
+                      onClick={() => {
+                        setMidTab("images");
+                        if (stockID.trim()) applyStockMedia(stockID);
+                      }}
+                    >
                       <i className="ri-folder-image-line me-1"></i>Images Details
                     </button>
                   </div>
 
-                  {midTab === "metal" && (
-                    <>
-                      <FieldRow label="Metal Type">
-                        <select className={selectCls} value={metal}
-                          onChange={(e) => handleMetalChange(e.target.value)}>
-                          <option value="">Select MetalType</option>
-                          {metalTypeOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Color">
-                        <select className={selectCls} value={color}
-                          onChange={(e) => setColor(e.target.value)}>
-                          <option value="">Select Color</option>
-                          {colorOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Purity">
-                        <select className={selectCls} value={metalPurity} disabled={!metal || purityLoading}
-                          onChange={(e) => handlePurityChange(e.target.value)}>
-                          <option value="">
-                            {!metal ? "Select Metal Type first" : purityLoading ? "Loading…" : "Select Metal Purity"}
-                          </option>
-                          {purityOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </FieldRow>
-                      <FieldRow label="Purity Ratio">
-                        <input type="text" className={`${roCls} text-end`} placeholder="Pure Ratio"
-                          value={purityRatio} readOnly />
-                      </FieldRow>
-                      <FieldRow label="Gross Weight">
-                        <input type="text" className={`${inputCls} text-end`} placeholder="Gross Weight"
-                          value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Net Weight">
-                        <input type="text" className={`${roCls} text-end`}
-                          placeholder="Net Weight" value={netWeight} readOnly />
-                      </FieldRow>
-                      <FieldRow label="Metal Price/Gm">
-                        <input type="text" className={`${inputCls} text-end`} placeholder="Metal Price/Gm"
-                          value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
-                      </FieldRow>
-                      <FieldRow label="Metal Amount">
-                        <input type="text" className={`${roCls} text-end`}
-                          placeholder="Metal Amount" value={metalAmount} readOnly />
-                      </FieldRow>
-                      <FieldRow label="Diamond">
-                        <div className="d-flex gap-1">
-                          <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
-                            placeholder="Amt" value={diamondAmount} readOnly />
-                          <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
-                            placeholder="Pcs" value={diamondQty} readOnly />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="Stone">
-                        <div className="d-flex gap-1">
-                          <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
-                            placeholder="Amt" value={stoneAmount} readOnly />
-                          <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
-                            placeholder="Pcs" value={stoneQty} readOnly />
-                        </div>
-                      </FieldRow>
-                    </>
-                  )}
+                  <div style={{ display: midTab === "metal" ? "block" : "none" }}>
+                    <FieldRow label="Metal Type">
+                      <select className={selectCls} value={metal}
+                        onChange={(e) => handleMetalChange(e.target.value)}>
+                        <option value="">Select MetalType</option>
+                        {metalTypeOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Color">
+                      <select className={selectCls} value={color}
+                        onChange={(e) => setColor(e.target.value)}>
+                        <option value="">Select Color</option>
+                        {colorOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Purity">
+                      <select className={selectCls} value={metalPurity} disabled={!metal || purityLoading}
+                        onChange={(e) => handlePurityChange(e.target.value)}>
+                        <option value="">
+                          {!metal ? "Select Metal Type first" : purityLoading ? "Loading…" : "Select Metal Purity"}
+                        </option>
+                        {purityOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
+                    <FieldRow label="Purity Ratio">
+                      <input type="text" className={`${roCls} text-end`} placeholder="Pure Ratio"
+                        value={purityRatio} readOnly />
+                    </FieldRow>
+                    <FieldRow label="Gross Weight">
+                      <input type="text" className={`${inputCls} text-end`} placeholder="Gross Weight"
+                        value={grossWeight} onChange={(e) => setGrossWeight(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Net Weight">
+                      <input type="text" className={`${roCls} text-end`}
+                        placeholder="Net Weight" value={netWeight} readOnly />
+                    </FieldRow>
+                    <FieldRow label="Metal Price/Gm">
+                      <input type="text" className={`${inputCls} text-end`} placeholder="Metal Price/Gm"
+                        value={metalPricePerGm} onChange={(e) => setMetalPricePerGm(e.target.value)} />
+                    </FieldRow>
+                    <FieldRow label="Metal Amount">
+                      <input type="text" className={`${roCls} text-end`}
+                        placeholder="Metal Amount" value={metalAmount} readOnly />
+                    </FieldRow>
+                    <FieldRow label="Diamond">
+                      <div className="d-flex gap-1">
+                        <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
+                          placeholder="Amt" value={diamondAmount} readOnly />
+                        <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
+                          placeholder="Pcs" value={diamondQty} readOnly />
+                      </div>
+                    </FieldRow>
+                    <FieldRow label="Stone">
+                      <div className="d-flex gap-1">
+                        <input type="number" className={`${roCls} text-end`} style={{ flex: 1 }}
+                          placeholder="Amt" value={stoneAmount} readOnly />
+                        <input type="number" className={`${roCls} text-end`} style={{ width: 80 }}
+                          placeholder="Pcs" value={stoneQty} readOnly />
+                      </div>
+                    </FieldRow>
+                  </div>
 
-                  {midTab === "images" && (
+                  <div style={{ display: midTab === "images" ? "block" : "none" }}>
                     <JewStockDrivePathFields
                       stockId={stockID}
                       imagePath={imagePath}
@@ -1396,8 +1617,9 @@ export default function AddMountingMaster() {
                       onCertPathChange={setCertPath}
                       inputCls={inputCls}
                       FieldRow={FieldRow}
+                      disableAutoFetch={true}
                     />
-                  )}
+                  </div>
                 </CardBody>
               </Card>
             </Col>

@@ -334,6 +334,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
   const [lotSel, setLotSel] = useState(null);
 
   const [mOp, setMOp] = useState("*");
+  const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
   const [entry, setEntry] = useState(emptyItem());
@@ -348,8 +349,8 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
   const [emailCc, setEmailCc] = useState("");
   const [emailBcc, setEmailBcc] = useState("");
 
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
 
   const [header, setHeader] = useState({
     code: 0,
@@ -424,12 +425,25 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      const sSym = company?.stockSymbol || cached.stockSymbol || "";
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      const mSym =
+        auth?.MSymbol ||
+        auth?.mSymbol ||
+        auth?.data?.MSymbol ||
+        company?.masterSymbol ||
+        cached.masterSymbol ||
+        "";
+      if (sSym) setStockSymbol(sSym);
+      if (mSym) setMasterSymbol(mSym);
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -497,17 +511,30 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [lotInput]);
 
-  const applyCurrencyRates = async (curCode) => {
+  const applyCurrencyRates = async (curCode, { overwriteRates = true } = {}) => {
     if (!curCode) return;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
-        setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
-        setHeader((prev) => ({
-          ...prev,
-          baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
-          sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
-        }));
+        const raw = res?.data || res?.Data || res;
+        const target = Array.isArray(raw) ? raw[0] : (raw?.data && Array.isArray(raw.data) ? raw.data[0] : raw) || {};
+        const base = toNum(target.baseRate ?? target.BaseRate ?? target.MasterCurrencyRate, 1);
+        const sBase = toNum(target.sBaseRate ?? target.SBaseRate ?? target.StockCurrencyRate, 1);
+        const opM = getVal(target, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
+        const opS = getVal(target, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const mSym = getVal(target, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(target, "StockSymbol", "stockSymbol");
+        setMOp(opM);
+        setSOp(opS);
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
+        if (overwriteRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: base,
+            sBaseRate: sBase
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -574,7 +601,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
 
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
     const loadedCur = String(getVal(h, "CurCode") || "");
-    if (loadedCur) await applyCurrencyRates(loadedCur);
+    if (loadedCur) await applyCurrencyRates(loadedCur, { overwriteRates: false });
   };
 
   useEffect(() => {
@@ -1025,13 +1052,19 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{masterSymbol} Rate</Label>
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{masterSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{mOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
-                          <Label className="form-label mb-1">{stockSymbol} Rate</Label>
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{stockSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{sOp}</span>
+                          </Label>
                           <Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} />
                         </FormGroup>
                       </Col>
@@ -1231,7 +1264,9 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                     </div>
                     <hr className="mb-2" />
                     <div className="d-flex justify-content-between mb-2 gap-2">
-                      <span className="text-primary fw-semibold small">{masterSymbol} {t("Final Amount")}</span>
+                      <span className="text-primary fw-semibold small">
+                        {masterSymbol ? `${masterSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                      </span>
                       <strong className="text-end text-primary">{summary.finalMAmount}</strong>
                     </div>
                   </fieldset>

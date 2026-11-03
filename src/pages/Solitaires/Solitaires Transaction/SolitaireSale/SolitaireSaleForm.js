@@ -30,6 +30,7 @@ import {
   getCurrencyRates,
   getSolitaireLots,
   getSolitaireSaleDetail,
+  getSolitaireSaleBackFromExcel,
   getSolitaireSaleItemFromList,
   getSolitaireSaleLotDetail,
   getSolitaireSaleMemoToSale,
@@ -43,6 +44,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import { parseExcelFile } from "../../../../helpers/excel_helper";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -320,6 +322,8 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const [bulkLotNos, setBulkLotNos] = useState("");
   const [refreshBack, setRefreshBack] = useState("");
   const [refreshRate, setRefreshRate] = useState("");
+  const [excelOpen, setExcelOpen] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
   const [warningModal, setWarningModal] = useState({ open: false, message: "" });
   const showWarning = useCallback((message) => setWarningModal({ open: true, message }), []);
   const closeWarning = useCallback(() => setWarningModal({ open: false, message: "" }), []);
@@ -328,8 +332,8 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const [memoRows, setMemoRows] = useState([]);
   const [memoSort, setMemoSort] = useState({ key: null, direction: "asc" });
 
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
 
   const [header, setHeader] = useState({
     code: 0,
@@ -391,12 +395,25 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      const sSym = company?.stockSymbol || cached.stockSymbol || "";
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      const mSym =
+        auth?.MSymbol ||
+        auth?.mSymbol ||
+        auth?.data?.MSymbol ||
+        company?.masterSymbol ||
+        cached.masterSymbol ||
+        "";
+      if (sSym) setStockSymbol(sSym);
+      if (mSym) setMasterSymbol(mSym);
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -479,18 +496,46 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     return () => clearTimeout(tmr);
   }, [lotInput]);
 
-  const applyCurrencyRates = async (curCode) => {
+  // MVC AddSale: fill #txtLotNo from sessionStorage.selectedLotNumbers (Stock Search → Sale)
+  useEffect(() => {
+    if (isEdit || isView) return;
+    try {
+      const raw = sessionStorage.getItem("selectedLotNumbers");
+      if (!raw) return;
+      const arr = JSON.parse(raw);
+      sessionStorage.removeItem("selectedLotNumbers");
+      if (!Array.isArray(arr)) return;
+      const lots = arr.map((x) => String(x || "").trim()).filter(Boolean);
+      if (lots.length) setBulkLotNos(lots.join(","));
+    } catch {
+      /* ignore */
+    }
+  }, [isEdit, isView]);
+
+  const applyCurrencyRates = async (curCode, { overwriteRates = true } = {}) => {
     if (!curCode) return;
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
-        setMOp(getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*");
-        setSOp(getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*");
-        setHeader((prev) => ({
-          ...prev,
-          baseRate: toNum(res.baseRate ?? res.BaseRate, 1),
-          sBaseRate: toNum(res.sBaseRate ?? res.SBaseRate, 1)
-        }));
+        const raw = res?.data || res?.Data || res;
+        const target = Array.isArray(raw) ? raw[0] : (raw?.data && Array.isArray(raw.data) ? raw.data[0] : raw) || {};
+        const base = toNum(target.baseRate ?? target.BaseRate ?? target.MasterCurrencyRate, 1);
+        const sBase = toNum(target.sBaseRate ?? target.SBaseRate ?? target.StockCurrencyRate, 1);
+        const opM = getVal(target, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
+        const opS = getVal(target, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const mSym = getVal(target, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(target, "StockSymbol", "stockSymbol");
+        setMOp(opM);
+        setSOp(opS);
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
+        if (overwriteRates) {
+          setHeader((prev) => ({
+            ...prev,
+            baseRate: base,
+            sBaseRate: sBase
+          }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -569,7 +614,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
 
     setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
     const loadedCur = String(getVal(h, "CurCode") || "");
-    if (loadedCur) await applyCurrencyRates(loadedCur);
+    if (loadedCur) await applyCurrencyRates(loadedCur, { overwriteRates: false });
   };
 
   useEffect(() => {
@@ -751,6 +796,119 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       console.error(err);
       toast.error(t("Failed to load items."));
     }
+  };
+
+  /** MVC GetItemDetails Excel columns: LotNo, Back, Rate, MRP */
+  const parseGetBackExcelRows = (matrix) => {
+    if (!Array.isArray(matrix) || matrix.length < 2) return [];
+    const norm = (v) => String(v ?? "").trim().toLowerCase().replace(/[\s_/.-]+/g, "");
+    let headerIdx = -1;
+    let headers = [];
+    for (let i = 0; i < Math.min(matrix.length, 15); i++) {
+      const row = (matrix[i] || []).map(norm);
+      if (row.some((h) => h === "lotno" || h === "stoneid" || h === "stockno")) {
+        headerIdx = i;
+        headers = row;
+        break;
+      }
+    }
+    if (headerIdx < 0) return [];
+
+    const col = (...names) => {
+      const targets = names.map(norm);
+      return headers.findIndex((h) => targets.includes(h));
+    };
+    const iLot = col("lotno", "lot", "stoneid", "stockno", "stock");
+    const iBack = col("back", "discount", "purchaseback");
+    const iRate = col("rate", "purprice", "purchaserate", "price");
+    const iMrp = col("mrp");
+    if (iLot < 0) return [];
+
+    const cell = (row, i) => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
+    const rows = [];
+    for (let r = headerIdx + 1; r < matrix.length; r++) {
+      const raw = matrix[r] || [];
+      const lotNo = cell(raw, iLot);
+      if (!lotNo) continue;
+      rows.push({
+        LotNo: lotNo,
+        Back: toNum(cell(raw, iBack)),
+        Rate: toNum(cell(raw, iRate)),
+        MRP: toNum(cell(raw, iMrp))
+      });
+    }
+    return rows;
+  };
+
+  const handleGetBackFromExcelAccept = async () => {
+    if (!excelFile) {
+      toast.warning(t("Please select a file."));
+      return;
+    }
+    const name = (excelFile.name || "").toLowerCase();
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xls") && !name.endsWith(".csv")) {
+      toast.warning(t("File format is not valid."));
+      return;
+    }
+    try {
+      let excelRows = [];
+      if (name.endsWith(".csv")) {
+        const text = await excelFile.text();
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        const matrix = lines.map((line) => line.split(",").map((c) => c.replace(/^"|"$/g, "").trim()));
+        excelRows = parseGetBackExcelRows(matrix);
+      } else {
+        const parsed = await parseExcelFile(excelFile);
+        if (!parsed?.success) {
+          toast.warning(t("File format is not valid."));
+          return;
+        }
+        excelRows = parseGetBackExcelRows(parsed.rows || []);
+      }
+
+      if (!excelRows.length) {
+        toast.warning(t("No valid rows found. Ensure Excel has LotNo, Back, Rate, MRP columns."));
+        return;
+      }
+
+      const res = await getSolitaireSaleBackFromExcel({
+        items: excelRows.map((r) => ({
+          lotNo: r.LotNo,
+          back: r.Back,
+          rate: r.Rate,
+          mrp: r.MRP
+        })),
+        less1: toNum(entry.less1),
+        less2: toNum(entry.less2),
+        less3: toNum(entry.less3),
+        curCode: toNum(header.curCode),
+        sBaseRate: toNum(header.sBaseRate, 1)
+      });
+      if (!(res?.success || res?.Success)) {
+        toast.warning(res?.Data || res?.data || t("Failed to import Excel."));
+        return;
+      }
+      const data = res.Data || res.data || {};
+      const rows = data.ExcelData || data.excelData || [];
+      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
+      else toast.success(t("Excel Import Success!"));
+      setExcelOpen(false);
+      setExcelFile(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to import Excel."));
+    }
+  };
+
+  // MVC: ../../excelfolder/GetBackFromExcel.xlsx (static template; same file for Mix + Solitaire Sale)
+  const downloadGetBackTemplate = () => {
+    const a = document.createElement("a");
+    a.href = (process.env.PUBLIC_URL || "") + "/excelfolder/GetBackFromExcel.xlsx";
+    a.download = "GetBackFromExcel.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const totals = useMemo(() => {
@@ -1161,26 +1319,42 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       <Col md={1} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Due Days")}</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.dueDays} onChange={(e) => setHeaderField("dueDays", e.target.value)} /></FormGroup></Col>
                       <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Due Date")}</Label><Input type="date" className="form-control-sm custom-readonly-input" style={fieldH} value={header.dueDate} readOnly /></FormGroup></Col>
                       <Col md={2} sm={4}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Currency")}</Label><Select styles={customStyles} options={currencyOpts} value={currencyOpts.find((o) => o.value === String(header.curCode)) || null} onChange={async (o) => { const code = o?.value || ""; setHeaderField("curCode", code); await applyCurrencyRates(code); }} placeholder={t("Currency")} isDisabled={readOnly} /></FormGroup></Col>
-                      <Col md={2} sm={4}><FormGroup className="mb-2"><Label className="form-label mb-1">{masterSymbol} Rate</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} /></FormGroup></Col>
-                      <Col md={2} sm={4}><FormGroup className="mb-2"><Label className="form-label mb-1">{stockSymbol} Rate</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} /></FormGroup></Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{masterSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{mOp}</span>
+                          </Label>
+                          <Input type="number" className="form-control-sm" style={fieldH} value={header.baseRate} onChange={(e) => setHeaderField("baseRate", e.target.value)} />
+                        </FormGroup>
+                      </Col>
+                      <Col md={2} sm={4}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1">
+                            <span style={{ color: "cornflowerblue" }}>{stockSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{sOp}</span>
+                          </Label>
+                          <Input type="number" className="form-control-sm" style={fieldH} value={header.sBaseRate} onChange={(e) => setHeaderField("sBaseRate", e.target.value)} />
+                        </FormGroup>
+                      </Col>
 
                       <Col md={3} sm={6}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Comm Agent")}</Label><Select styles={customStyles} options={commOpts} value={commission} onChange={setCommission} onInputChange={(v, meta) => { if (meta.action === "input-change") setCommInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setCommInput(""); setCommOpts([]); } }} isLoading={commLoading} placeholder={t("Search Commission")} isClearable isDisabled={readOnly} /></FormGroup></Col>
                       <Col md={1} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com%")}</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.adatPer} onChange={(e) => setHeaderField("adatPer", e.target.value)} /></FormGroup></Col>
                       <Col md={2} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Com Amount")}</Label><Input
-                            type="number"
-                            className="form-control-sm"
-                            style={fieldH}
-                            value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
-                            disabled={readOnly}
-                            onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
-                            onChange={(e) => setComAmtEdit(e.target.value)}
-                            onBlur={() => {
-                              if (comAmtEdit !== null) {
-                                applyCommissionAmount(comAmtEdit);
-                                setComAmtEdit(null);
-                              }
-                            }}
-                          /></FormGroup></Col>
+                        type="number"
+                        className="form-control-sm"
+                        style={fieldH}
+                        value={comAmtEdit !== null ? comAmtEdit : fmt(summary.comDisplay)}
+                        disabled={readOnly}
+                        onFocus={() => setComAmtEdit(fmt(summary.comDisplay))}
+                        onChange={(e) => setComAmtEdit(e.target.value)}
+                        onBlur={() => {
+                          if (comAmtEdit !== null) {
+                            applyCommissionAmount(comAmtEdit);
+                            setComAmtEdit(null);
+                          }
+                        }}
+                      /></FormGroup></Col>
                       <Col md={3} sm={6} className="d-flex align-items-center">
                         <div className="form-check form-check-md mb-2 d-flex align-items-center gap-2">
                           <Input type="checkbox" className="form-check-input" id="chkoldsale" checked={!!header.chkoldsale} onChange={(e) => setHeaderField("chkoldsale", e.target.checked)} style={{ width: 18, height: 18, marginTop: 0 }} />
@@ -1351,8 +1525,18 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       <Col xs={6}><Label className="form-label mb-1 small">{t("Amt")}</Label><Input className="form-control-sm custom-readonly-input" style={fieldH} value={fmt(summary.igstAmt)} readOnly /></Col>
                     </Row>
                     <hr className="mb-2" />
-                    <div className="d-flex justify-content-between mb-1 gap-2"><span className="text-primary fw-semibold small">{masterSymbol} FINAL AMOUNT</span><strong className="text-end">{summary.finalMAmount}</strong></div>
-                    <div className="d-flex justify-content-between mb-1 gap-2"><span className="text-primary fw-semibold small">{stockSymbol} FINAL AMOUNT</span><strong className="text-end">{summary.finalSAmount}</strong></div>
+                    <div className="d-flex justify-content-between mb-1 gap-2">
+                      <span className="text-primary fw-semibold small">
+                        {masterSymbol ? `${masterSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                      </span>
+                      <strong className="text-end">{summary.finalMAmount}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1 gap-2">
+                      <span className="text-primary fw-semibold small">
+                        {stockSymbol ? `${stockSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                      </span>
+                      <strong className="text-end">{summary.finalSAmount}</strong>
+                    </div>
                     <div className="d-flex justify-content-between gap-2"><span className="text-primary fw-semibold small">{t("TRANSACTION FINAL AMOUNT")}</span><strong className="text-end">{summary.finalMPayRecAmount}</strong></div>
                   </fieldset>
                 </CardBody>
@@ -1363,6 +1547,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                   <CardBody>
                     <FormGroup className="mb-2"><Input type="textarea" rows={4} placeholder={t("Add by lot no")} value={bulkLotNos} onChange={(e) => setBulkLotNos(e.target.value)} /></FormGroup>
                     <Button color="primary" size="sm" className="w-100 mb-2" onClick={handleGetItemFromList}>{t("Get Item From List")}</Button>
+                    <Button color="outline-primary" size="sm" className="w-100 mb-2" onClick={() => { setExcelFile(null); setExcelOpen(true); }}>{t("Get Back from Excel")}</Button>
                     {isEdit && header.invNo && (
                       <Button color="outline-primary" size="sm" className="w-100 mb-2" onClick={() => navigate(`/sale/SaleCurStatusPrintInv?InvNo=${encodeURIComponent(header.invNo)}`)}>
                         {t("Current Status Invoice")}
@@ -1380,6 +1565,30 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
             </Col>
           </Row>
         </Container>
+
+        <Modal isOpen={excelOpen} toggle={() => setExcelOpen(false)} centered>
+          <ModalHeader toggle={() => setExcelOpen(false)}>{t("Import File")}</ModalHeader>
+          <ModalBody>
+            <Label className="form-label">{t("Select File To Import")}</Label>
+            <Input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+            />
+            <div className="mt-3">
+              <Label className="form-label d-block">{t("Download Get Back From Excel File Format")}</Label>
+              <Button color="primary" size="sm" onClick={downloadGetBackTemplate}>
+                <i className="ri-download-2-line me-1" />
+                {t("Download")}
+              </Button>
+              <div className="text-muted small mt-2">{t("Columns: LotNo, Back, Rate, MRP")}</div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="light" onClick={() => setExcelOpen(false)}>{t("Close")}</Button>
+            <Button color="primary" onClick={handleGetBackFromExcelAccept}>{t("Accept")}</Button>
+          </ModalFooter>
+        </Modal>
 
         <Modal isOpen={memoOpen} toggle={() => setMemoOpen(false)} size="xl" centered fullscreen="sm">
           <ModalHeader toggle={() => setMemoOpen(false)}>{t("Memo To Sale")}</ModalHeader>
