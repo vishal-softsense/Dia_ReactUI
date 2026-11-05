@@ -182,11 +182,24 @@ const getLotAvailableCarats = (lot) => {
   return roundCts(getNumVal(lot, "Weight", "IssueCarats", "Carats"));
 };
 
+const STOCK_IN_HAND_WARNING = "Not enough stock in hand to make sale or memo.";
+
 const WarningModal = ({ open, title, message, confirmText, onClose }) => (
   <Modal isOpen={open} toggle={onClose} centered contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
     <ModalBody className="py-4 px-5 text-center">
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ width: 90, height: 90, borderRadius: "50%", border: "4px solid #f27474" }}
+        >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 10L30 30" stroke="#f27474" strokeWidth="4" strokeLinecap="round" />
+            <path d="M30 10L10 30" stroke="#f27474" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        </div>
+      </div>
       <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>{title || "Warning!"}</h3>
-      <p className="text-muted mb-4 fs-14">{message}</p>
+      <p className="text-muted mb-4 fs-14" style={{ lineHeight: "1.6" }}>{message}</p>
       <button type="button" className="btn px-4 py-2 fw-semibold text-white" style={{ backgroundColor: "#13d17c", borderColor: "#13d17c" }} onClick={onClose}>
         {confirmText || "OK"}
       </button>
@@ -1164,7 +1177,8 @@ const MixSaleForm = ({ mode = "add" }) => {
       const isJewellery = resolvedStockType === "Jewellery";
 
       const availableCarats = getLotAvailableCarats(lot);
-      const weight = availableCarats > 0 ? availableCarats : getNumVal(lot, "Carats", "Weight");
+      const balance = getNumVal(lot, "Carats", "Weight");
+      const weight = availableCarats > 0 ? availableCarats : balance;
       const issueCarats = weight;
       // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
       // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
@@ -1199,6 +1213,11 @@ const MixSaleForm = ({ mode = "add" }) => {
           rtnCarats: "0"
         })
       );
+
+      // MVC mix-data.js lot change: warn when Carats is missing or <= 0, still keep filled fields
+      if (!balance || balance <= 0) {
+        showWarning(t(STOCK_IN_HAND_WARNING));
+      }
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load lot detail."));
@@ -1237,7 +1256,11 @@ const MixSaleForm = ({ mode = "add" }) => {
       editIndex >= 0 ? Math.max(toNum(items[editIndex]?.issueCarats), toNum(items[editIndex]?.weight)) : 0
     );
     setEntry((prev) => ({ ...prev, availableCarats: available }));
-    if (saleCts > available) showWarning(saleExceedsStockMessage(saleCts, available, lotNo));
+    if (available <= 0) {
+      showWarning(t(STOCK_IN_HAND_WARNING));
+    } else if (saleCts > available) {
+      showWarning(saleExceedsStockMessage(saleCts, available, lotNo));
+    }
   };
 
   const handleAddItem = async () => {
@@ -1282,6 +1305,10 @@ const MixSaleForm = ({ mode = "add" }) => {
         if (toNum(r.memoTransCode) !== 0) return sum;
         return sum + roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
       }, 0);
+      if (availableCarats <= 0) {
+        showWarning(t(STOCK_IN_HAND_WARNING));
+        return;
+      }
       if (saleCts + alreadyInGrid > availableCarats) {
         showWarning(saleExceedsStockMessage(saleCts + alreadyInGrid, availableCarats, lotNo));
         return;
@@ -1897,7 +1924,12 @@ const MixSaleForm = ({ mode = "add" }) => {
           continue;
         }
         const availableCarats = getLotAvailableCarats(lot);
-        const weight = availableCarats > 0 ? availableCarats : getNumVal(lot, "Carats", "Weight");
+        const balance = getNumVal(lot, "Carats", "Weight");
+        if (!balance || balance <= 0) {
+          showWarning(t(STOCK_IN_HAND_WARNING));
+          continue;
+        }
+        const weight = availableCarats > 0 ? availableCarats : balance;
         const issueCarats = weight;
         const rate = getNumVal(lot, "PurchaseRate", "Rate");
         const sBase = toNum(header.sBaseRate, 1) || 1;
@@ -2131,6 +2163,10 @@ const MixSaleForm = ({ mode = "add" }) => {
           console.error(err);
         }
         const saleCts = roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
+        if (available <= 0) {
+          showWarning(t(STOCK_IN_HAND_WARNING));
+          return;
+        }
         if (saleCts > available) {
           showWarning(saleExceedsStockMessage(saleCts, available, r.lotNo));
           return;
