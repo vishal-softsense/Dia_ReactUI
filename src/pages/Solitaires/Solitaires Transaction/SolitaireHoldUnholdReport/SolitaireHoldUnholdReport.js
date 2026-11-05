@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -141,6 +141,21 @@ const SolitaireHoldUnholdReport = () => {
   const [reportRows, setReportRows] = useState([]);
   const [selectedLots, setSelectedLots] = useState(() => new Set());
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+
+  // MVC HoldUnholdReport: fill #txtLotNo from sessionStorage.selectedLotNumbers (Stock Search → Hold/UnHold)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("selectedLotNumbers");
+      if (!raw) return;
+      const arr = JSON.parse(raw);
+      sessionStorage.removeItem("selectedLotNumbers");
+      if (!Array.isArray(arr)) return;
+      const lots = arr.map((x) => String(x || "").trim()).filter(Boolean);
+      if (lots.length) setFilters((p) => ({ ...p, lotNo: lots.join(",") }));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const buildPayload = () => ({
     Date: todayIso(),

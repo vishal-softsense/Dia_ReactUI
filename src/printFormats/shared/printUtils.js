@@ -270,25 +270,93 @@ export const normalizeMediaPath = (path) => {
   if (!path || typeof path !== "string") return "";
   let trimmed = path.trim();
   if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") return "";
-  return trimmed.replace(/\\/g, "/").replace(/^~\//, "/");
+  // Pipe/semicolon lists — use primary path only (MVC GetPrimaryImagePath)
+  const primary = trimmed.split(/[|;]+/)[0]?.trim() || "";
+  return primary.replace(/\\/g, "/").replace(/^~\//, "/");
+};
+
+const API_STATIC_PREFIXES = ["/JewelleryPhotos/", "/Upload/", "/CRreport/"];
+
+const isApiStaticPath = (path) =>
+  API_STATIC_PREFIXES.some((prefix) => path.toLowerCase().startsWith(prefix.toLowerCase()));
+
+/** Bare Drive file name e.g. Test.png / KJB23115-3.00CT.jpg (not a folder path). */
+const isDriveFileName = (path) => {
+  const val = String(path || "").trim();
+  if (!val || /^https?:\/\//i.test(val) || val.includes("/") || val.includes("\\")) return false;
+  return /\.(png|jpe?g|gif|bmp|webp)$/i.test(val);
+};
+
+const sniffImageMime = (bytes) => {
+  if (!bytes || bytes.length < 3) return "image/jpeg";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e) return "image/png";
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return "image/gif";
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46) return "image/webp";
+  return "image/jpeg";
+};
+
+const bytesToDataUrl = (bytes) => {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < arr.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, arr.subarray(i, i + chunk));
+  }
+  return `data:${sniffImageMime(arr)};base64,${btoa(binary)}`;
 };
 
 export const resolveMediaUrl = (path) => {
   const trimmed = normalizeMediaPath(path);
   if (!trimmed) return "";
   if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return trimmed;
-  const baseUrl = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+
   const clean = trimmed.replace(/^(\.\.\/)+/, "");
-  if (clean.startsWith("/")) return `${baseUrl}${clean}`;
-  return `${baseUrl}/${clean}`;
+  const rel = clean.startsWith("/") ? clean : `/${clean}`;
+  const apiBase = (api.API_URL || "").replace(/\/$/, "");
+  const imageBase = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+
+  // JewelleryPhotos / Upload live on the API host (same as JewStockMediaPreview)
+  const baseUrl = isApiStaticPath(rel) ? apiBase || imageBase : imageBase;
+  if (!baseUrl) return rel;
+  return clean.startsWith("/") ? `${baseUrl}${clean}` : `${baseUrl}/${clean}`;
 };
 
-export const getItemImageUrl = (item) =>
-  resolveMediaUrl(
-    getVal(item, "ImagePath", "imagePath", "AssetImagePath", "assetImagePath", "Image", "image")
-  );
+/** Candidate URLs for a print item image (try in order; hide on error). */
+export const getItemImageCandidates = (item) => {
+  const list = [];
+  const embedded = resolveImageFullPath(item);
+  if (embedded) list.push(embedded);
 
-/** MVC jewsale/JewSaleprintinv — ImageFullPath byte[] → data:image/png;base64,... */
+  const rawPath = getVal(item, "ImagePath", "imagePath", "AssetImagePath", "assetImagePath", "Image", "image");
+  const path = normalizeMediaPath(typeof rawPath === "string" ? rawPath : "");
+  if (!path) return [...new Set(list.filter(Boolean))];
+
+  if (path.startsWith("data:") || /^https?:\/\//i.test(path) || path.startsWith("blob:")) {
+    list.push(path);
+  } else if (isDriveFileName(path)) {
+    const apiBase = (api.API_URL || "").replace(/\/$/, "");
+    if (apiBase) {
+      list.push(
+        `${apiBase}/api/JewelleryStockMaster/jew-drive-image?name=${encodeURIComponent(path)}&mediaType=image`
+      );
+    }
+  } else {
+    const clean = path.replace(/^(\.\.\/)+/, "");
+    const rel = clean.startsWith("/") ? clean : `/${clean}`;
+    const apiBase = (api.API_URL || "").replace(/\/$/, "");
+    const imageBase = (api.IMAGE_URL || api.API_URL || "").replace(/\/$/, "");
+    if (isApiStaticPath(rel) && apiBase) list.push(`${apiBase}${rel}`);
+    if (imageBase) list.push(clean.startsWith("/") ? `${imageBase}${clean}` : `${imageBase}/${clean}`);
+    if (apiBase && !isApiStaticPath(rel)) list.push(`${apiBase}${rel}`);
+  }
+
+  return [...new Set(list.filter(Boolean))];
+};
+
+export const getItemImageUrl = (item) => getItemImageCandidates(item)[0] || "";
+
+/** MVC jewsale/JewSaleprintinv — ImageFullPath byte[] → data URL (MIME sniffed). */
 export const resolveImageFullPath = (item) => {
   const raw = item?.ImageFullPath ?? item?.imageFullPath;
   if (!raw) return "";
@@ -297,16 +365,15 @@ export const resolveImageFullPath = (item) => {
     const trimmed = raw.trim();
     if (!trimmed || trimmed.toLowerCase() === "null") return "";
     if (trimmed.startsWith("data:")) return trimmed;
-    return `data:image/png;base64,${trimmed}`;
+    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:")) return trimmed;
+    // Path strings must not be wrapped as base64 (would show broken icon)
+    if (trimmed.includes("/") || trimmed.includes("\\") || isDriveFileName(trimmed)) return "";
+    if (!/^[A-Za-z0-9+/=\s]+$/.test(trimmed)) return "";
+    return `data:image/jpeg;base64,${trimmed.replace(/\s+/g, "")}`;
   }
 
   if (Array.isArray(raw) && raw.length > 0) {
-    const bytes = new Uint8Array(raw);
-    let binary = "";
-    bytes.forEach((b) => {
-      binary += String.fromCharCode(b);
-    });
-    return `data:image/png;base64,${btoa(binary)}`;
+    return bytesToDataUrl(raw);
   }
 
   return "";

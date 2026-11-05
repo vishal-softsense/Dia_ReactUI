@@ -86,9 +86,27 @@ const MixSalePrintView = () => {
     ? `MixSale_${invDisplay}_${partyDisplay}`
     : `MixSale_${invDisplay || "Print"}`;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const prevTitle = document.title;
     document.title = pdfFileName;
+    // Wait for ITEM thumbs (Drive → data URL) so print is not blank
+    const root = document.getElementById("mix-sale-print-area");
+    const imgs = root ? Array.from(root.querySelectorAll("img.mix-sale-item-thumb")) : [];
+    await Promise.all(
+      imgs.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            setTimeout(done, 4000);
+          })
+      )
+    );
     window.print();
     setTimeout(() => {
       document.title = prevTitle;
@@ -191,6 +209,14 @@ const MixSalePrintView = () => {
             }
             #mix-sale-print-area th {
               background-color: #BFBFBF !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #mix-sale-print-area .mix-sale-item-thumb {
+              width: 70px !important;
+              height: 50px !important;
+              max-width: 100% !important;
+              object-fit: contain !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }

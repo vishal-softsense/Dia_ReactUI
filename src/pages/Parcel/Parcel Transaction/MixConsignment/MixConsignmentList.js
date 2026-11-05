@@ -438,7 +438,7 @@ const MixConsignmentList = () => {
                 </Button>
                 <Link to="/MixConsignment/add-MixConsignment" className="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center">
                   <i className="ri-add-line me-1" />
-                  {t("+ Create consignment")}
+                  {t("Create Consignment")}
                 </Link>
               </div>
             </CardBody>

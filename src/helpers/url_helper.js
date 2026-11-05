@@ -517,6 +517,7 @@ export const MIX_SALE_DELETE = "/api/MixSale/delete";
 export const MIX_SALE_LOT_DETAIL = "/api/MixSale/lot-detail";
 export const MIX_SALE_CONSIGNMENT = "/api/MixSale/consignment";
 export const MIX_SALE_ADD_SINGLE_LOT = "/api/MixSale/add-single-lot";
+export const MIX_SALE_GET_BACK_FROM_EXCEL = "/api/MixSale/get-back-from-excel";
 export const MIX_SALE_PRINT_VIEW = "/api/MixSale/print-view"; // append /{id or invNo}
 export const MIX_SALE_CURRENT_STATUS = "/api/MixSale/current-status"; // append /{id or invNo}
 export const MIX_SALE_LOTS = "/api/MixSale/lots";
@@ -657,6 +658,7 @@ export const SOLITAIRE_SALE_DELETE = "/api/SolitaireSale/delete";
 export const SOLITAIRE_SALE_LOT_DETAIL = "/api/SolitaireSale/lot-detail";
 export const SOLITAIRE_SALE_ADD_SINGLE_LOT = "/api/SolitaireSale/add-single-lot";
 export const SOLITAIRE_SALE_GET_ITEM_FROM_LIST = "/api/SolitaireSale/get-item-from-list";
+export const SOLITAIRE_SALE_GET_BACK_FROM_EXCEL = "/api/SolitaireSale/get-back-from-excel";
 export const SOLITAIRE_SALE_REFRESH_BACK = "/api/SolitaireSale/refresh-back";
 export const SOLITAIRE_SALE_MEMO_TO_SALE = "/api/SolitaireSale/memo-to-sale";
 export const SOLITAIRE_SALE_PRINT_VIEW = "/api/SolitaireSale/print-view"; // append /{invNo}
@@ -716,6 +718,7 @@ export const JEW_DRIVE_LIST_STOCK_IMAGES = "/api/JewelleryStockMaster/jew-drive-
 export const JEW_DRIVE_LIST_STOCK_VIDEOS = "/api/JewelleryStockMaster/jew-drive-list-stock-videos";
 export const GET_ALL_LOTNO_LIST = "/api/JewelleryStockMaster/get-alllotno-listall";
 export const GET_JEW_LOTNO_DATA = "/api/JewelleryStockMaster/get-jewlotno-data";
+export const CHECK_STOCK_ID_EXISTS = "/api/JewelleryStockMaster/check-stockid";
 export const GET_SOLITAIRE_LOTS = "/api/SolitaireStockSearchReport/get-solitaire-lots";
 
 

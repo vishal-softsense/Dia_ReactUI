@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import {
     Container,
     Row,
@@ -2194,33 +2195,46 @@ const ParcelStockSearchReport = () => {
                                                                     </button>
                                                                 </div>
                                                             )}
-                                                            <a
-                                                                href="../memo/add-memo"
+                                                            {/* MVC Parcel: memoparcel/saleparcel; Core maps Memo→MixMemo, Sale→MixSale via sessionStorage.selectedLotNumbers */}
+                                                            <Link
+                                                                to="/mixmemoform/add-mixmemo"
                                                                 className={classnames("btn btn-primary btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
-                                                                role="button"
-                                                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                                                                onClick={(e) => {
+                                                                    if (selectedLotNos.length === 0) {
+                                                                        e.preventDefault();
+                                                                        toast.warning(t("Please Select Lotnumbers"));
+                                                                    }
+                                                                }}
                                                             >
                                                                 <i className="ri-file-text-line me-1 align-bottom" />
                                                                 {t("Memo")}
-                                                            </a>
-                                                            <a
-                                                                href="../sale/add-sale"
+                                                            </Link>
+                                                            <Link
+                                                                to="/mixform/add-mixdata"
                                                                 className={classnames("btn btn-success btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
-                                                                role="button"
-                                                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                                                                onClick={(e) => {
+                                                                    if (selectedLotNos.length === 0) {
+                                                                        e.preventDefault();
+                                                                        toast.warning(t("Please Select Lotnumbers"));
+                                                                    }
+                                                                }}
                                                             >
                                                                 <i className="ri-shopping-cart-2-line me-1 align-bottom" />
                                                                 {t("Sale")}
-                                                            </a>
-                                                            <a
-                                                                href="../report/Hold-Unhold-report"
+                                                            </Link>
+                                                            <Link
+                                                                to="/report/Hold-Unhold-report"
                                                                 className={classnames("btn btn-warning btn-sm px-3 fw-medium", { disabled: selectedLotNos.length === 0 })}
-                                                                role="button"
-                                                                onClick={(e) => { if (selectedLotNos.length === 0) e.preventDefault(); }}
+                                                                onClick={(e) => {
+                                                                    if (selectedLotNos.length === 0) {
+                                                                        e.preventDefault();
+                                                                        toast.warning(t("Please Select Lotnumbers"));
+                                                                    }
+                                                                }}
                                                             >
                                                                 <i className="ri-lock-2-line me-1 align-bottom" />
                                                                 {t("Hold/UnHold")}
-                                                            </a>
+                                                            </Link>
                                                             <Button
                                                                 color="info"
                                                                 size="sm"

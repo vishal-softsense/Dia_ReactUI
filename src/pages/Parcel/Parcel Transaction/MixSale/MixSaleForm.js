@@ -32,6 +32,7 @@ import {
   getCurrencyRates,
   getMixMemoOutShipVia,
   getMixSaleLots,
+  getMixSaleBackFromExcel,
   getMixSaleConsignment,
   getMixSaleDetail,
   getMixSaleLotDetail,
@@ -43,6 +44,7 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import { parseExcelFile } from "../../../../helpers/excel_helper";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -126,25 +128,25 @@ const mapMixLotOptions = (res) =>
       }
       const value = String(
         item.name ??
-          item.Name ??
-          item.lotNo ??
-          item.LotNo ??
-          item.id ??
-          item.ID ??
-          item.value ??
-          ""
+        item.Name ??
+        item.lotNo ??
+        item.LotNo ??
+        item.id ??
+        item.ID ??
+        item.value ??
+        ""
       ).trim();
       const label = String(
         item.text ??
-          item.Text ??
-          item.textName ??
-          item.TextName ??
-          item.Name ??
-          item.name ??
-          item.LotNo ??
-          item.lotNo ??
-          item.label ??
-          value
+        item.Text ??
+        item.textName ??
+        item.TextName ??
+        item.Name ??
+        item.name ??
+        item.LotNo ??
+        item.lotNo ??
+        item.label ??
+        value
       ).trim();
       if (!value && !label) return null;
       const stockType =
@@ -312,6 +314,7 @@ const mapGradingFromSource = (src) => ({
 let mixSaleRowSeq = 0;
 const nextRowId = () => `sale-row-${Date.now()}-${++mixSaleRowSeq}`;
 
+<<<<<<< HEAD
 const mapItemFromApi = (r, idx) => ({
   rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
   srNo: idx + 1,
@@ -350,6 +353,50 @@ const mapItemFromApi = (r, idx) => ({
   rtnCts: getNumVal(r, "RtnCts", "RtnCarats", "ReturnCarats"),
   sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
 });
+=======
+const mapItemFromApi = (r, idx) => {
+  // MVC EditMixDetails: jewellery lines use Stock_Id as LotNo when LotNo is empty
+  const lotNo = getStrVal(r, "LotNo", "lotNo", "Lotno", "Stock_ID", "Stock_Id", "stock_ID", "stockId");
+  const stockTypeRaw = getStrVal(r, "StockType", "stockType");
+  return {
+    rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
+    srNo: idx + 1,
+    lotNo,
+    itemName: getStrVal(r, "ItemName"),
+    weight: getNumVal(r, "Weight", "Carats"),
+    issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    // MVC FillMixDataTable / Meotosalefill: use lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
+    pcs: getNumVal(r, "Pcs"),
+    mrp: getNumVal(r, "MRP", "PurchaseMRP"),
+    back: getNumVal(r, "PurchaseBack", "PMRPDown", "Back"),
+    rate: getNumVal(r, "PurchaseRate", "Rate"),
+    less1: getNumVal(r, "Less1"),
+    less2: getNumVal(r, "Less2"),
+    less3: getNumVal(r, "Less3"),
+    amount: getNumVal(r, "PurAmount", "Amount"),
+    shape: getStrVal(r, "Shape", "ShapeId", "PShape"),
+    color: getStrVal(r, "Color", "ColorId", "PColor"),
+    clarity: getStrVal(r, "Clarity", "ClarityId", "PClarity"),
+    size: getStrVal(r, "Size", "SizeId", "PSize"),
+    sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
+    stockType: resolveStockType(lotNo, stockTypeRaw) || stockTypeRaw || "Diamond",
+    invDescription: getStrVal(r, "InvDescription", "invDescription"),
+    suppLotNo: getStrVal(r, "SuppLotNo"),
+    askingRate: getNumVal(r, "AskingRate"),
+    actualRate: getNumVal(r, "ActualRate"),
+    groupId: getStrVal(r, "GroupId", "ItemGroup"),
+    stoneType: getStrVal(r, "StoneType"),
+    rmk: getStrVal(r, "RMK", "MemberRemarks"),
+    memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
+    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+    cogs: getNumVal(r, "COGS", "cogs"),
+    exportNo: getStrVal(r, "ExportNo", "exportNo"),
+    sRate: getNumVal(r, "SRate", "sRate", "StockRate"),
+    rtnCts: getNumVal(r, "RtnCts", "RtnCarats", "ReturnCarats"),
+    sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
+  };
+};
+>>>>>>> 6a9c3c6b7d5b23387b4412e5d7d7166e2caf6472
 
 const emptyItem = () => ({
   rowId: nextRowId(),
@@ -465,28 +512,61 @@ const syncRejectionFields = (next, changedKey) => {
   const rejectionRaw = toNum(next.rtnCarats);
   const selectionRaw = toNum(next.weight);
 
-  let rejP = rejPRaw;
-  let rejection = rejectionRaw;
-  let selectionCarats = selectionRaw;
+  let rejP = Number.isFinite(rejPRaw) ? rejPRaw : 0;
+  let rejection = Number.isFinite(rejectionRaw) ? rejectionRaw : 0;
+  let selectionCarats = Number.isFinite(selectionRaw) ? selectionRaw : 0;
 
   if (changedKey === "issueCarats") {
-    selectionCarats = issueCarats - rejectionRaw;
+    selectionCarats = issueCarats - rejection;
   } else if (changedKey === "back") {
-    rejection = (issueCarats * rejPRaw) / 100;
+    rejection = (issueCarats * rejP) / 100;
     selectionCarats = issueCarats - rejection;
   } else if (changedKey === "rtnCarats") {
-    rejP = issueCarats !== 0 ? (rejectionRaw * 100) / issueCarats : 0;
-    selectionCarats = issueCarats - rejectionRaw;
+    rejP = issueCarats !== 0 ? (rejection * 100) / issueCarats : 0;
+    selectionCarats = issueCarats - rejection;
   } else if (changedKey === "weight") {
-    rejP = issueCarats !== 0 ? 100 - (100 * selectionRaw) / issueCarats : 0;
+    rejP = issueCarats !== 0 ? 100 - (100 * selectionCarats) / issueCarats : 0;
     rejection = (issueCarats * rejP) / 100;
   }
+
+  if (!Number.isFinite(selectionCarats)) selectionCarats = 0;
+  if (selectionCarats < 0) selectionCarats = 0;
+  if (!Number.isFinite(rejection)) rejection = 0;
+  if (rejection < 0) rejection = 0;
+  if (!Number.isFinite(rejP)) rejP = 0;
 
   return {
     ...next,
     back: changedKey === "back" ? next.back : roundN(rejP, 2),
     rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : roundN(rejection, 3),
     weight: changedKey === "weight" ? next.weight : roundN(selectionCarats, 3)
+  };
+};
+
+/** MixMemoToMixSale: Issue / Rejection / Selection / RejP% from modal Sale + Return. */
+const buildMemoSaleRejection = (row) => {
+  const saleCts = toNum(row.purchase);
+  const rtnCts = toNum(row.rtn);
+  const memoCts = toNum(row.cts);
+  let rejection = rtnCts > 0 ? rtnCts : 0;
+  let selection = saleCts;
+  let issue = rejection > 0 ? Math.round((selection + rejection) * 1000) / 1000 : selection;
+  if (issue <= 0 && memoCts > 0) issue = memoCts;
+  if (rejection > issue) rejection = issue;
+  const synced = syncRejectionFields(
+    {
+      issueCarats: issue,
+      back: 0,
+      rtnCarats: rejection,
+      weight: selection
+    },
+    rejection > 0 ? "rtnCarats" : "issueCarats"
+  );
+  return {
+    issueCarats: toNum(synced.issueCarats),
+    rtnCarats: toNum(synced.rtnCarats),
+    weight: toNum(synced.weight),
+    back: toNum(synced.back)
   };
 };
 
@@ -645,19 +725,32 @@ const MixSaleForm = ({ mode = "add" }) => {
   const [consignLotFilter, setConsignLotFilter] = useState("");
   const [consignSearch, setConsignSearch] = useState("");
 
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const [masterSymbol, setMasterSymbol] = useState("");
+  const [stockSymbol, setStockSymbol] = useState("");
   const [caratFormat, setCaratFormat] = useState("0.000");
 
   useEffect(() => {
     const loadSymbols = async () => {
       const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
+      const cached = getCachedReportCompany();
+      const sSym = company?.stockSymbol || cached.stockSymbol || "";
       const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
+      const mSym =
+        auth?.MSymbol ||
+        auth?.mSymbol ||
+        auth?.data?.MSymbol ||
+        company?.masterSymbol ||
+        cached.masterSymbol ||
+        "";
+      if (sSym) setStockSymbol(sSym);
+      if (mSym) setMasterSymbol(mSym);
     };
     loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
+    const refresh = () => {
+      const cached = getCachedReportCompany();
+      if (cached.stockSymbol) setStockSymbol(cached.stockSymbol);
+      if (cached.masterSymbol) setMasterSymbol(cached.masterSymbol);
+    };
     window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
     return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
   }, []);
@@ -835,16 +928,22 @@ const MixSaleForm = ({ mode = "add" }) => {
   // Live master rates apply on Add and when the user changes Currency.
   const applyCurrencyRates = async (curCode, options = {}) => {
     if (!curCode) return;
-    const preserveRates = !!options.preserveRates;
+    const preserveRates = !!(options.preserveRates ?? (options.overwriteRates === false));
     try {
       const res = await getCurrencyRates(curCode);
       if (res?.success || res?.Success) {
-        const base = toNum(res.baseRate ?? res.BaseRate, 1);
-        const sBase = toNum(res.sBaseRate ?? res.SBaseRate, 1);
-        const opM = getVal(res, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
-        const opS = getVal(res, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const raw = res?.data || res?.Data || res;
+        const target = Array.isArray(raw) ? raw[0] : (raw?.data && Array.isArray(raw.data) ? raw.data[0] : raw) || {};
+        const base = toNum(target.baseRate ?? target.BaseRate ?? target.MasterCurrencyRate, 1);
+        const sBase = toNum(target.sBaseRate ?? target.SBaseRate ?? target.StockCurrencyRate, 1);
+        const opM = getVal(target, "MasterCurrencyOperator", "masterCurrencyOperator") || "*";
+        const opS = getVal(target, "StockCurrencyOperator", "stockCurrencyOperator") || "*";
+        const mSym = getVal(target, "MasterSymbol", "masterSymbol");
+        const sSym = getVal(target, "StockSymbol", "stockSymbol");
         setMOp(opM);
         setSOp(opS);
+        if (mSym) setMasterSymbol(mSym);
+        if (sSym) setStockSymbol(sSym);
         if (!preserveRates) {
           setHeader((prev) => ({ ...prev, baseRate: base, sBaseRate: sBase }));
         }
@@ -982,6 +1081,22 @@ const MixSaleForm = ({ mode = "add" }) => {
       toast.error(t("Failed to load purchase detail."));
     }
   };
+
+  // MVC Mix Add (AddSingParcelJew): fill #txtLotNo from sessionStorage.selectedLotNumbers (Parcel Stock → Sale)
+  useEffect(() => {
+    if (isEdit || isView) return;
+    try {
+      const raw = sessionStorage.getItem("selectedLotNumbers");
+      if (!raw) return;
+      const arr = JSON.parse(raw);
+      sessionStorage.removeItem("selectedLotNumbers");
+      if (!Array.isArray(arr)) return;
+      const lots = arr.map((x) => String(x || "").trim()).filter(Boolean);
+      if (lots.length) setBulkLotNos(lots.join(","));
+    } catch {
+      /* ignore */
+    }
+  }, [isEdit, isView]);
 
   useEffect(() => {
     (async () => {
@@ -1399,106 +1514,113 @@ const MixSaleForm = ({ mode = "add" }) => {
     }));
   }, [summary.comDisplay, summary.broDisplay, summary.vatAmt, summary.cgstAmt, summary.sgstAmt, summary.igstAmt]);
 
-  const parseCsv = (text) => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
-    const idx = (names) => headers.findIndex((h) => names.includes(h));
-    const iLot = idx(["lotno", "lot no", "lot", "stockno", "stock #"]);
-    const iName = idx(["itemname", "item name", "description", "item"]);
-    const iWt = idx(["weight", "carat", "cts", "wt"]);
-    const iPcs = idx(["pcs", "qty", "quantity"]);
-    const iMrp = idx(["mrp"]);
-    const iBack = idx(["back", "purchaseback", "discount"]);
-    const iRate = idx(["rate", "purchaserate", "price"]);
-    const iL1 = idx(["less1"]);
-    const iL2 = idx(["less2"]);
-    const iL3 = idx(["less3"]);
-    const iShape = idx(["shape"]);
-    const iColor = idx(["color"]);
-    const iClarity = idx(["clarity"]);
+  /** MVC MixController.GetItemDetails Excel columns: LotNo, Back, Rate, MRP */
+  const parseGetBackExcelRows = (matrix) => {
+    if (!Array.isArray(matrix) || matrix.length < 2) return [];
+    const norm = (v) => String(v ?? "").trim().toLowerCase().replace(/[\s_/.-]+/g, "");
+    let headerIdx = -1;
+    let headers = [];
+    for (let i = 0; i < Math.min(matrix.length, 15); i++) {
+      const row = (matrix[i] || []).map(norm);
+      if (row.some((h) => h === "lotno" || h === "stoneid" || h === "stockno")) {
+        headerIdx = i;
+        headers = row;
+        break;
+      }
+    }
+    if (headerIdx < 0) return [];
 
-    const cell = (cols, i) => (i >= 0 ? (cols[i] || "").replace(/^"|"$/g, "").trim() : "");
+    const col = (...names) => {
+      const targets = names.map(norm);
+      return headers.findIndex((h) => targets.includes(h));
+    };
+    const iLot = col("lotno", "lot", "stoneid", "stockno", "stock");
+    const iBack = col("back", "discount", "purchaseback");
+    const iRate = col("rate", "purprice", "purchaserate", "price");
+    const iMrp = col("mrp", "purchasemrp");
+    if (iLot < 0) return [];
 
-    return lines.slice(1).map((line) => {
-      const cols = line.split(",").map((c) => c.trim());
-      const weight = toNum(cell(cols, iWt));
-      const rate = toNum(cell(cols, iRate));
-      const less1 = toNum(cell(cols, iL1));
-      const less2 = toNum(cell(cols, iL2));
-      const less3 = toNum(cell(cols, iL3));
-      return {
-        lotNo: cell(cols, iLot),
-        itemName: cell(cols, iName),
-        weight,
-        pcs: toNum(cell(cols, iPcs), 1),
-        mrp: toNum(cell(cols, iMrp)),
-        back: toNum(cell(cols, iBack)),
-        rate,
-        less1,
-        less2,
-        less3,
-        amount: calcItemAmount(weight, rate, less1, less2, less3),
-        shape: cell(cols, iShape),
-        color: cell(cols, iColor),
-        clarity: cell(cols, iClarity),
-        size: "",
-        polish: "",
-        symmetry: "",
-        fl: "",
-        lab: "",
-        certificateNo: "",
-        memoTransCode: 0,
-        rtnCarats: 0
-      };
-    }).filter((r) => r.lotNo);
+    const cell = (row, i) => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
+    const rows = [];
+    for (let r = headerIdx + 1; r < matrix.length; r++) {
+      const raw = matrix[r] || [];
+      const lotNo = cell(raw, iLot);
+      if (!lotNo) continue;
+      rows.push({
+        lotNo,
+        back: toNum(cell(raw, iBack)),
+        rate: toNum(cell(raw, iRate)),
+        mrp: toNum(cell(raw, iMrp))
+      });
+    }
+    return rows;
   };
 
-  const handleExcelAccept = () => {
+  const handleExcelAccept = async () => {
     if (!excelFile) {
       toast.warning(t("Please select a file."));
       return;
     }
     const name = (excelFile.name || "").toLowerCase();
-    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-      toast.warning(t("XLSX not supported. Please upload CSV (SheetJS not installed)."));
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xls") && !name.endsWith(".csv")) {
+      toast.warning(t("File format is not valid."));
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const rows = parseCsv(String(e.target?.result || ""));
-        if (!rows.length) {
-          toast.warning(t("No valid rows found in CSV."));
+    try {
+      let excelRows = [];
+      if (name.endsWith(".csv")) {
+        const text = await excelFile.text();
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        const matrix = lines.map((line) => line.split(",").map((c) => c.replace(/^"|"$/g, "").trim()));
+        excelRows = parseGetBackExcelRows(matrix);
+      } else {
+        const parsed = await parseExcelFile(excelFile);
+        if (!parsed?.success) {
+          toast.warning(t("File format is not valid."));
           return;
         }
-        setItems((prev) => {
-          const map = new Map(prev.map((x) => [String(x.lotNo).toLowerCase(), x]));
-          rows.forEach((r) => map.set(String(r.lotNo).toLowerCase(), r));
-          return Array.from(map.values());
-        });
-        toast.success(t("Excel Import Success!"));
-        setExcelOpen(false);
-        setExcelFile(null);
-      } catch (err) {
-        console.error(err);
-        toast.error(t("Failed to parse CSV."));
+        excelRows = parseGetBackExcelRows(parsed.rows || []);
       }
-    };
-    reader.readAsText(excelFile);
+
+      if (!excelRows.length) {
+        toast.warning(t("No valid rows found. Ensure Excel has LotNo, Back, Rate, MRP columns."));
+        return;
+      }
+
+      const res = await getMixSaleBackFromExcel({
+        items: excelRows,
+        less1: toNum(entry.less1),
+        less2: toNum(entry.less2),
+        less3: toNum(entry.less3),
+        curCode: toNum(header.curCode),
+        sBaseRate: toNum(header.sBaseRate, 1)
+      });
+      if (!(res?.success || res?.Success)) {
+        toast.warning(res?.Data || res?.data || t("Failed to import Excel."));
+        return;
+      }
+      const data = res.Data || res.data || {};
+      const rows = data.ExcelData || data.excelData || [];
+      // MVC replaces the grid (TempData["GSale"] = itemsToAdd)
+      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
+      else toast.success(t("Avg Back/Rate Updated"));
+      setExcelOpen(false);
+      setExcelFile(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to import Excel."));
+    }
   };
 
+  // MVC: ../../excelfolder/GetBackFromExcel.xlsx (static template)
   const downloadTemplate = () => {
-    const csv =
-      "LotNo,ItemName,Weight,Pcs,MRP,Back,Rate,Less1,Less2,Less3,Shape,Color,Clarity\n" +
-      "SAMPLE-001,ROUND D VS1,1.000,1,5000,-10,4500,0,0,0,ROUND,D,VS1\n";
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "MixSaleTemplate.csv";
+    a.href = (process.env.PUBLIC_URL || "") + "/excelfolder/GetBackFromExcel.xlsx";
+    a.download = "GetBackFromExcel.xlsx";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
   };
 
   const viewMixMemo = async () => {
@@ -1539,16 +1661,13 @@ const MixSaleForm = ({ mode = "add" }) => {
           await applyCurrencyRates(String(curCode));
         }
       }
-      // MVC FillConToPurTable: Cts=carats, Purchase=carats, Rtn=RtnCts, BalCts=BalanceCts
+      // MVC FillMemoToSaleTable: Cts=carats, Sale=carats, Rcts display, BalCts=Cts-Sale.
+      // Invoice Rejection starts at 0 (MVC Meotosalefill does not copy ReturnCarats).
       const rows = rawList.map((r, i) => {
         const cts = getNumVal(r, "carats", "Carats", "Cts", "cts", "Weight", "weight");
         const purchase = cts;
-        const rtn = getNumVal(r, "RtnCts", "rtnCts", "Rtn", "rtn");
-        const balFromApi = getVal(r, "BalanceCts", "balanceCts", "BalCts", "balCts");
-        const balCts =
-          balFromApi !== "" && balFromApi != null
-            ? toNum(balFromApi)
-            : Math.max(0, cts - purchase);
+        const rtn = 0;
+        const balCts = Math.round((cts - purchase) * 1000) / 1000;
         const rawDate = getVal(r, "Date", "date", "TrnDate", "trnDate");
         const formattedDate =
           toLocalDateStr(rawDate) ||
@@ -1565,6 +1684,7 @@ const MixSaleForm = ({ mode = "add" }) => {
           purchase,
           originalPurchase: purchase,
           rtn,
+          originalRtn: getNumVal(r, "RtnCts", "rtnCts", "Rtn", "rtn"),
           balCts,
           rate: getNumVal(r, "rate", "Rate"),
           mrp: getNumVal(r, "MRP", "mrp", "Mrp"),
@@ -1591,19 +1711,52 @@ const MixSaleForm = ({ mode = "add" }) => {
     }
   };
 
-  /** MVC CtsCal: BalCts = Cts - Purchase (min 0); warn if Purchase > Cts */
+  /** MVC CtsCal: SaleCts cannot exceed Cts; BalCts = Cts - SaleCts; reset Return when invalid. */
   const updateConsignPurchase = (idx, purchaseRaw) => {
     setConsignRows((prev) =>
       prev.map((x, i) => {
         if (i !== idx) return x;
-        const purchase = toNum(purchaseRaw);
         const total = toNum(x.cts);
-        if (purchase > total) {
-          toast.warning(t("PurCts should not be greater than TotalCts"));
+        let saleCts = toNum(purchaseRaw);
+        let rtnCts = toNum(x.rtn);
+        if (saleCts > total) {
+          toast.warning(t("SaleCts should not be greater than TotalCts"));
+          saleCts = 0;
+          rtnCts = 0;
+          return {
+            ...x,
+            purchase: 0,
+            rtn: 0,
+            balCts: Math.round(total * 1000) / 1000
+          };
         }
-        let balance = total - purchase;
-        if (balance < 0) balance = 0;
-        return { ...x, purchase: purchaseRaw, balCts: Math.round(balance * 1000) / 1000 };
+        if (saleCts + rtnCts > total) {
+          rtnCts = Math.max(0, Math.round((total - saleCts) * 1000) / 1000);
+        }
+        const balance = Math.round((total - saleCts) * 1000) / 1000;
+        return { ...x, purchase: purchaseRaw, rtn: rtnCts, balCts: balance < 0 ? 0 : balance };
+      })
+    );
+  };
+
+  /** MixMemoToMixSale Return column = Rejection; cannot exceed remaining after Sale. */
+  const updateConsignReturn = (idx, rtnRaw) => {
+    setConsignRows((prev) =>
+      prev.map((x, i) => {
+        if (i !== idx) return x;
+        const total = toNum(x.cts);
+        const saleCts = toNum(x.purchase);
+        let rtnCts = toNum(rtnRaw);
+        if (rtnCts > total) {
+          toast.warning(t("Rejection should not be greater than TotalCts"));
+          rtnCts = 0;
+        }
+        if (saleCts + rtnCts > total) {
+          toast.warning(t("SaleCts + Rejection should not be greater than TotalCts"));
+          rtnCts = Math.max(0, Math.round((total - saleCts) * 1000) / 1000);
+        }
+        const balance = Math.round((total - saleCts) * 1000) / 1000;
+        return { ...x, rtn: rtnRaw === "" ? "" : rtnCts, balCts: balance < 0 ? 0 : balance };
       })
     );
   };
@@ -1658,59 +1811,101 @@ const MixSaleForm = ({ mode = "add" }) => {
       });
   }, [consignRows, consignSearch]);
 
-  const consignToPurchase = () => {
+  /**
+   * MVC MMemoToMSale → /mixsale/fill-mixmemo-to-mixsale (Meotosalefill):
+   * Pcs comes from GetMemoReport1 / lot master (SaleParcel.Pcs = row.Pcs), not hardcoded 1.
+   * Jewellery briefly sets Pcs = Weight then overwrites with lot Pcs when found.
+   */
+  const consignToPurchase = async () => {
     const selected = consignRows.filter((r) => r.selected && toNum(r.purchase) > 0);
     if (!selected.length) {
       toast.warning(t("Select at least one consignment row."));
       return;
     }
-    // MVC MixController.Meotosalefill (fill-mixmemo-to-mixsale): always SExcel.Add — never overwrite by LotNo.
-    // Duplicate LotNo rows are kept as separate lines (same as MVC grid).
+    // MVC MixController.Meotosalefill: always SExcel.Add — never overwrite by LotNo.
     let skipAlert = "";
-    setItems((prev) => {
-      const next = [...prev];
-      selected.forEach((r) => {
-        const lotNo = r.lotNo;
-        // MVC: IssueCarats = Weight = Purchase; Rate = PurchaseRate
-        const weight = toNum(r.purchase);
-        const rate = toNum(r.rate);
-        // MVC: skip tiny residual weight with "Lotno On Memo or Sold"
-        if (weight > 0 && weight <= 0.001) {
-          skipAlert += ` Lotno On Memo or Sold: ${lotNo}`;
-          return;
+    const built = [];
+    for (const r of selected) {
+      const lotNo = r.lotNo;
+      const rej = buildMemoSaleRejection(r);
+      const weight = rej.weight;
+      const rate = toNum(r.rate);
+      if (weight > 0 && weight <= 0.001) {
+        skipAlert += ` Lotno On Memo or Sold: ${lotNo}`;
+        continue;
+      }
+      const sBase = toNum(header.sBaseRate, 1) || toNum(header.baseRate, 1) || 1;
+      const rowStockType = resolveStockType(lotNo, r.stockType);
+      const isJewellery = rowStockType === "Jewellery";
+
+      // MVC: GetMemoReport1(" AND titem.Lotno = ''...'') → Pcs / shape attrs
+      let pcs = isJewellery ? Math.trunc(weight) : 0;
+      let shape = "";
+      let color = "";
+      let clarity = "";
+      let size = "";
+      let sieve = "";
+      let cogs = 0;
+      let exportNo = "";
+      let invDescription = "";
+      try {
+        const res = await getMixSaleLotDetail(lotNo);
+        if (res?.success || res?.Success) {
+          const rows = res.Data || res.data || [];
+          const lot = Array.isArray(rows) ? rows[0] : rows;
+          if (lot) {
+            // Keep 0 when lot Pcs is 0 (parcel lots); do not coerce with || 1
+            pcs = getNumVal(lot, "Pcs");
+            shape = isJewellery ? "" : getStrVal(lot, "Shape", "ShapeId", "PShape");
+            color = isJewellery ? "" : getStrVal(lot, "Color", "ColorId", "PColor");
+            clarity = isJewellery ? "" : getStrVal(lot, "Clarity", "ClarityId", "PClarity");
+            size = isJewellery ? "" : getStrVal(lot, "Size", "SizeId", "PSize");
+            sieve = isJewellery ? "" : getStrVal(lot, "Sieve", "SieveId", "PSieve");
+            cogs = getNumVal(lot, "COGS", "CPAVG");
+            exportNo = getStrVal(lot, "ExportNo");
+            invDescription = getStrVal(lot, "InvDescription");
+          }
         }
-        const rowStockType = resolveStockType(lotNo, r.stockType);
-        const row = {
+      } catch (err) {
+        console.error(err);
+      }
+
+      built.push(
+        recalcEntryAmount({
           ...emptyItem(),
           lotNo,
           itemName: r.itemName,
           weight,
-          issueCarats: weight,
-          pcs: 1,
+          issueCarats: rej.issueCarats,
+          pcs,
           mrp: toNum(r.mrp),
-          back: 0,
+          back: rej.back,
           rate,
-          sRate: "",
+          sRate: rate && sBase ? fmt(rate / sBase, 2) : "",
           less1: 0,
           less2: 0,
           less3: 0,
-          amount: calcItemAmount(weight, rate, 0, 0, 0, 1, rowStockType),
-          shape: "",
-          color: "",
-          clarity: "",
-          size: "",
-          sieve: "",
+          shape,
+          color,
+          clarity,
+          size,
+          sieve,
           stockType: rowStockType,
           memoTransCode: toNum(r.memoTransCode),
-          rtnCarats: toNum(r.rtn)
-        };
-        next.push(row);
-      });
-      return next;
-    });
+          rtnCarats: rej.rtnCarats,
+          cogs,
+          exportNo,
+          invDescription
+        })
+      );
+    }
+
+    if (built.length) {
+      setItems((prev) => [...prev, ...built]);
+    }
     setConsignOpen(false);
     if (skipAlert) toast.warning(skipAlert.trim());
-    else toast.success(t("Memo items added."));
+    else if (built.length) toast.success(t("Memo items added."));
   };
 
   const handleGetItemFromList = async () => {
@@ -1878,7 +2073,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       Weight: toNum(r.weight),
       Carats: toNum(r.weight),
       IssueCarats: toNum(r.issueCarats) || toNum(r.weight),
-      Pcs: toNum(r.pcs, 1),
+      Pcs: toNum(r.pcs),
       MRP: toNum(r.mrp),
       PurchaseBack: toNum(r.back),
       PurchaseRate: toNum(r.rate),
@@ -2217,7 +2412,8 @@ const MixSaleForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={3} md={3} lg={1}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
-                            {masterSymbol} <span className="text-danger">{mOp}</span>
+                            <span style={{ color: "cornflowerblue" }}>{masterSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{mOp}</span>
                           </Label>
                           <Input
                             type="number"
@@ -2231,7 +2427,8 @@ const MixSaleForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={3} md={3} lg={1}>
                         <FormGroup className="mb-2 mb-sm-0">
                           <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>
-                            {stockSymbol} <span className="text-danger">{sOp}</span>
+                            <span style={{ color: "cornflowerblue" }}>{stockSymbol || "\u00A0"}</span>{" "}
+                            <span className="text-danger" style={{ color: "red" }}>{sOp}</span>
                           </Label>
                           <Input
                             type="number"
@@ -2526,11 +2723,15 @@ const MixSaleForm = ({ mode = "add" }) => {
 
                     <div className="pt-2 border-top">
                       <div className="d-flex align-items-center justify-content-between mb-2">
-                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>{masterSymbol} FINAL AMOUNT</span>
+                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>
+                          {masterSymbol ? `${masterSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                        </span>
                         <span className="fw-bold" style={{ fontSize: "13px" }}>{summary.finalMAmount}</span>
                       </div>
                       <div className="d-flex align-items-center justify-content-between mb-2">
-                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>{stockSymbol} FINAL AMOUNT</span>
+                        <span className="text-uppercase fw-semibold text-primary" style={{ fontSize: "11px" }}>
+                          {stockSymbol ? `${stockSymbol} FINAL AMOUNT` : t("FINAL AMOUNT")}
+                        </span>
                         <span className="fw-bold" style={{ fontSize: "13px" }}>{summary.finalSAmount}</span>
                       </div>
                       <div className="d-flex align-items-center justify-content-between">
@@ -2863,37 +3064,37 @@ const MixSaleForm = ({ mode = "add" }) => {
                             return (
                               <tr key={r.rowId || `${r.lotNo}-${idx}`} style={rowStyle}>
                                 <td style={rowStyle}>
-                                {!readOnly ? (
-                                  <div className="d-flex gap-1">
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-primary btn-sm p-1"
-                                      onClick={() => handleEditRow(idx)}
-                                    >
-                                      <i className="ri-pencil-line" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-soft-danger btn-sm p-1"
-                                      onClick={() => handleDeleteRow(idx)}
-                                    >
-                                      <i className="ri-delete-bin-line" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
-                              </td>
-                              {PURCHASE_ITEM_COLUMNS.map((col) => (
-                                <td
-                                  key={col.key}
-                                  className={col.align === "end" ? "text-end" : ""}
-                                  style={{ ...rowStyle, whiteSpace: "nowrap" }}
-                                >
-                                  {renderItemCell(r, col)}
+                                  {!readOnly ? (
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-primary btn-sm p-1"
+                                        onClick={() => handleEditRow(idx)}
+                                      >
+                                        <i className="ri-pencil-line" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-soft-danger btn-sm p-1"
+                                        onClick={() => handleDeleteRow(idx)}
+                                      >
+                                        <i className="ri-delete-bin-line" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted">-</span>
+                                  )}
                                 </td>
-                              ))}
-                            </tr>
+                                {PURCHASE_ITEM_COLUMNS.map((col) => (
+                                  <td
+                                    key={col.key}
+                                    className={col.align === "end" ? "text-end" : ""}
+                                    style={{ ...rowStyle, whiteSpace: "nowrap" }}
+                                  >
+                                    {renderItemCell(r, col)}
+                                  </td>
+                                ))}
+                              </tr>
                             );
                           })}
                         </tbody>
@@ -3006,12 +3207,12 @@ const MixSaleForm = ({ mode = "add" }) => {
               onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
             />
             <div className="mt-3">
-              <Label className="form-label d-block">{t("Download Sale File Format")}</Label>
+              <Label className="form-label d-block">{t("Download Get Back From Excel File Format")}</Label>
               <Button color="primary" size="sm" onClick={downloadTemplate}>
                 <i className="ri-download-2-line me-1" />
                 {t("Download")}
               </Button>
-              <div className="text-muted small mt-2">{t("CSV preferred (XLSX requires SheetJS).")}</div>
+              <div className="text-muted small mt-2">{t("Columns: LotNo, Back, Rate, MRP")}</div>
             </div>
           </ModalBody>
           <ModalFooter>
@@ -3060,7 +3261,7 @@ const MixSaleForm = ({ mode = "add" }) => {
                         <th style={{ whiteSpace: "nowrap" }}>{t("LotNo")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Cts")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Sale")}</th>
-                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Return")}</th>
+                        <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Rejection")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("BalCts")}</th>
                         <th className="text-end" style={{ whiteSpace: "nowrap" }}>{t("Rate")}</th>
                         <th style={{ whiteSpace: "nowrap" }}>{t("Cur")}</th>
@@ -3096,7 +3297,16 @@ const MixSaleForm = ({ mode = "add" }) => {
                               onChange={(e) => updateConsignPurchase(r._idx, e.target.value)}
                             />
                           </td>
-                          <td className="text-end">{fmt(r.rtn, 2)}</td>
+                          <td>
+                            <Input
+                              type="number"
+                              step="any"
+                              className="form-control-sm text-end"
+                              style={{ height: 28, minWidth: 75 }}
+                              value={r.rtn}
+                              onChange={(e) => updateConsignReturn(r._idx, e.target.value)}
+                            />
+                          </td>
                           <td className="text-end">{fmt(r.balCts, 3)}</td>
                           <td>
                             <Input
