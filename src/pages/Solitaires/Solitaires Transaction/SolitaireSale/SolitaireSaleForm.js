@@ -115,6 +115,8 @@ const emptyItem = () => ({
   exportNo: "",
   memoTransCode: "",
   weight: "",
+  // Available / purchase (on-hand) weight from lot detail — used to validate sale weight
+  availableWeight: "",
   pcs: "",
   mrp: "",
   back: "",
@@ -128,6 +130,28 @@ const emptyItem = () => ({
   returnCarats: "",
   sRtnStatus: ""
 });
+
+const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
+
+/** Prefer closing-stock on-hand / purchase carats over item-master Weight. */
+const getLotAvailableWeight = (lot) =>
+  roundCts(
+    getNumVal(lot, "OnHandCarats3Dec", "onHandCarats3Dec", "BalanceCarats3Dec", "balanceCarats3Dec", "Weight", "Carats")
+  );
+
+/** Sale weight must not exceed the lot's purchase/on-hand weight. */
+const isSaleWeightInvalid = (saleWeight, availableWeight) => {
+  const sale = roundCts(saleWeight);
+  const available = roundCts(availableWeight);
+  return sale > 0 && sale > available;
+};
+
+const saleExceedsStockMessage = (saleWeight, availableWeight, lotNo) => {
+  const sale = roundCts(saleWeight);
+  const available = roundCts(availableWeight);
+  const lot = lotNo ? ` for lot ${lotNo}` : "";
+  return `Sale weight (${sale}) cannot exceed available stock weight (${available})${lot}.`;
+};
 
 const mapBasic = (list = []) =>
   (list || []).map((x) => ({
@@ -634,18 +658,20 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       }
       const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
       if (!lot) return;
-      const weight = getNumVal(lot, "Weight", "Carats");
+      const availableWeight = getLotAvailableWeight(lot);
+      const weight = availableWeight > 0 ? availableWeight : getNumVal(lot, "Weight", "Carats");
       const mrp = getNumVal(lot, "MRP");
       const back = getNumVal(lot, "Back");
       const pcs = getNumVal(lot, "Pcs") || 0;
       let rate = getNumVal(lot, "Rate");
       if (rate === 0 && mrp !== 0) rate = Math.round(((100 + back) * mrp) / 100 * 10000) / 10000;
-      if (weight <= 0) showWarning(t("Not enough stock in hand to make sale or memo."));
+      if (availableWeight <= 0) showWarning(t("Not enough stock in hand to make sale or memo."));
       setEntry((prev) => recalcEntryAmount({
         ...prev,
         lotNo: getStrVal(lot, "LotNo") || lotNo,
         itemName: getStrVal(lot, "ItemName"),
         weight,
+        availableWeight,
         pcs,
         mrp,
         back,
@@ -660,7 +686,49 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     }
   };
 
-  const handleAddItem = () => {
+  const fetchLotOnHand = async (lotNo) => {
+    const res = await getSolitaireSaleLotDetail({
+      lotNo,
+      curCode: toNum(header.curCode),
+      sBaseRate: toNum(header.sBaseRate, 1)
+    });
+    if (!(res?.success || res?.Success)) return 0;
+    const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
+    return getLotAvailableWeight(lot);
+  };
+
+  const resolveAvailableWeight = async (lotNo, fallback, rowWeight = 0) => {
+    let onHand = toNum(fallback);
+    try {
+      const live = await fetchLotOnHand(lotNo);
+      if (live > 0) onHand = live;
+    } catch (err) {
+      console.error(err);
+    }
+    // Saved invoice edit: on-hand already excludes this line — add it back.
+    if (isEdit && editIndex >= 0) {
+      return roundCts(onHand + toNum(rowWeight));
+    }
+    return roundCts(onHand);
+  };
+
+  const handleWeightBlur = async () => {
+    if (readOnly || toNum(entry.memoTransCode) !== 0) return;
+    const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
+    const weight = toNum(entry.weight);
+    if (!lotNo || weight <= 0) return;
+    const availableWeight = await resolveAvailableWeight(
+      lotNo,
+      entry.availableWeight,
+      editIndex >= 0 ? items[editIndex]?.weight : 0
+    );
+    setEntry((prev) => ({ ...prev, availableWeight }));
+    if (isSaleWeightInvalid(weight, availableWeight)) {
+      showWarning(saleExceedsStockMessage(weight, availableWeight, lotNo));
+    }
+  };
+
+  const handleAddItem = async () => {
     const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
     const weight = toNum(entry.weight);
     const rate = toNum(entry.rate);
@@ -669,6 +737,19 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     if (!lotNo) return showWarning(t("Lot Number is required."));
     if (weight <= 0) return showWarning(t("Carat or Rate can not be 0"));
     if (mrp === 0 && rate === 0) return showWarning(t("Carat or Rate can not be 0"));
+
+    let availableWeight = toNum(entry.availableWeight);
+    if (toNum(entry.memoTransCode) === 0) {
+      availableWeight = await resolveAvailableWeight(
+        lotNo,
+        entry.availableWeight,
+        editIndex >= 0 ? items[editIndex]?.weight : 0
+      );
+    }
+
+    if (isSaleWeightInvalid(weight, availableWeight)) {
+      return showWarning(saleExceedsStockMessage(weight, availableWeight, lotNo));
+    }
     let purchaseBack = back;
     if (rate !== 0 && mrp !== 0) purchaseBack = (rate * 100) / mrp - 100;
     const row = {
@@ -676,6 +757,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
       weight: Math.round(weight * 1000) / 1000,
+      availableWeight: availableWeight > 0 ? Math.round(availableWeight * 1000) / 1000 : availableWeight,
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -707,12 +789,21 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     setEntry(emptyItem());
   };
 
-  const handleEditRow = (idx) => {
+  const handleEditRow = async (idx) => {
     const r = items[idx];
     if (!r) return;
     setEditIndex(idx);
     setLotSel({ value: r.lotNo, label: r.lotNo });
-    setEntry({ ...emptyItem(), ...r });
+    let availableWeight = toNum(r.availableWeight);
+    if (r.lotNo && toNum(r.memoTransCode) === 0) {
+      try {
+        const onHand = await fetchLotOnHand(r.lotNo);
+        availableWeight = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setEntry({ ...emptyItem(), ...r, availableWeight: availableWeight || r.availableWeight || "" });
   };
 
   const handleDeleteRow = (idx) => {
@@ -744,7 +835,11 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       }
       const data = res.Data || res.data || {};
       const rows = data.ExcelData || data.excelData || [];
-      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      setItems(rows.map((r, idx) => {
+        const mapped = mapItemFromApi(r, idx);
+        const availableWeight = getLotAvailableWeight(r) || mapped.weight;
+        return { ...mapped, weight: availableWeight, availableWeight };
+      }));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Items loaded."));
     } catch (err) {
@@ -938,6 +1033,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
           itemName: r.itemName,
           exportNo: "",
           weight,
+          availableWeight: toNum(r.cts),
           pcs: 1,
           mrp: toNum(r.mrp),
           back: toNum(r.back),
@@ -1076,6 +1172,21 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     if (readOnly) return;
     if (!party?.value) return toast.warning(t("Please select Party."));
     if (!items.length) return toast.warning(t("Please add at least one item."));
+    for (const r of items) {
+      if (toNum(r.memoTransCode) !== 0) continue;
+      let available = toNum(r.availableWeight);
+      if (!isEdit) {
+        try {
+          const onHand = await fetchLotOnHand(r.lotNo);
+          if (onHand > 0 || !(available > 0)) available = onHand;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (isSaleWeightInvalid(r.weight, available)) {
+        return showWarning(saleExceedsStockMessage(r.weight, available, r.lotNo));
+      }
+    }
     setSaving(true);
     try {
       const payload = buildPayload();
@@ -1251,7 +1362,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       </div>
                       <div className="txn-item-field">
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleWeightBlur} />
                       </div>
                       <div className="txn-item-field">
                         <Label className="form-label mb-1">{t("Pcs")}</Label>

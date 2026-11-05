@@ -937,7 +937,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
         consignmentNo: isConsignmentMode ? memoInv : getVal(h, "ConsignmentNo"),
         chkGrading: !!(getVal(h, "chkGrading") === true || getVal(h, "chkGrading") === "true"),
         chkoldpur: !!(getVal(h, "chkoldpur") === true || getVal(h, "chkoldpur") === "true"),
-        plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
+        plusMinusAmount: toNum(getVal(h, "PlusMinusAmount", "PlusMinAmount")),
         roundAmount: toNum(getVal(h, "RoundAmount")),
         vatPer: getNumVal(h, "VatPer", "VATPer", "Vat", "VatPercentage", "VatRate"),
         cgstPer: getNumVal(h, "CGSTPer", "CgstPer", "CGST", "CgstPercentage", "CGSTRate"),

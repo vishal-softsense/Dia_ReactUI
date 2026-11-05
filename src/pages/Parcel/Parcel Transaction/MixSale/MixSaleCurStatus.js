@@ -244,6 +244,7 @@ const MixSaleCurStatus = () => {
                   white-space: nowrap !important;
                 }
                 .mix-sale-curstatus-host .invoice-item-table td:first-child,
+                .mix-sale-curstatus-host .invoice-item-table .date-cell,
                 .mix-sale-curstatus-host .invoice-item-table .money-cell,
                 .mix-sale-curstatus-host .invoice-item-table .balance-value,
                 .mix-sale-curstatus-host .invoice-item-table .balance-label {
@@ -334,7 +335,8 @@ const MixSaleCurStatus = () => {
                 line-height: 1.25;
               }
               .mix-sale-curstatus-host .invoice-item-table td:first-child,
-              .mix-sale-curstatus-host .invoice-item-table th:first-child {
+              .mix-sale-curstatus-host .invoice-item-table th:first-child,
+              .mix-sale-curstatus-host .invoice-item-table .date-cell {
                 white-space: nowrap !important;
                 word-break: normal !important;
                 overflow-wrap: normal !important;
@@ -554,15 +556,15 @@ const MixSaleCurStatus = () => {
                   <table className="invoice-item-table">
                     <colgroup>
                       <col style={{ width: "8%" }} />
-                      <col style={{ width: "9%" }} />
+                      <col style={{ width: "12%" }} />
                       <col style={{ width: "5%" }} />
-                      <col style={{ width: "6%" }} />
+                      <col style={{ width: "7%" }} />
                       <col style={{ width: "10%" }} />
-                      <col style={{ width: "20%" }} />
+                      <col style={{ width: "17%" }} />
                       <col style={{ width: "11%" }} />
-                      <col style={{ width: "5%" }} />
-                      <col style={{ width: "16%" }} />
-                      <col style={{ width: "10%" }} />
+                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "13%" }} />
+                      <col style={{ width: "6%" }} />
                     </colgroup>
                     <thead>
                       <tr style={{ background: "#d3d3d3" }}>
@@ -583,8 +585,14 @@ const MixSaleCurStatus = () => {
                         const isPay = Number(getVal(item, "IsPayment", "isPayment")) === 1;
                         const amtRaw = getVal(item, "Amount", "amount");
                         const rateRaw = getVal(item, "Rate", "rate");
+                        const taxRaw = getVal(item, "Tax", "tax");
                         const wtRaw = getVal(item, "Wt", "wt");
                         const qtyRaw = getVal(item, "Qty", "qty");
+                        const taxNum = Number(taxRaw);
+                        const taxStr =
+                          taxRaw === "" || taxRaw == null || !Number.isFinite(taxNum)
+                            ? ""
+                            : `$${fmtMoney(taxNum)}`;
                         const amtStr =
                           amtRaw === "" || amtRaw === null || amtRaw === undefined
                             ? ""
@@ -596,13 +604,13 @@ const MixSaleCurStatus = () => {
                             <td style={{ textAlign: "left", paddingLeft: 6, whiteSpace: "nowrap" }}>
                               {getVal(item, "Type", "type")}
                             </td>
-                            <td style={{ textAlign: "center" }}>
+                            <td className="date-cell" style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                               {fmtDate(getVal(item, "Date", "date"))}
                             </td>
                             <td className="text-right" style={{ paddingRight: 8 }}>
                               {qtyRaw !== "" && qtyRaw != null ? String(qtyRaw) : ""}
                             </td>
-                            <td className="text-right" style={{ paddingRight: 8 }}>
+                            <td className="text-right" style={{ paddingRight: 8, whiteSpace: "nowrap" }}>
                               {wtRaw !== "" && wtRaw != null
                                 ? Number(wtRaw).toLocaleString("en-US", {
                                     minimumFractionDigits: 2,
@@ -622,7 +630,12 @@ const MixSaleCurStatus = () => {
                             >
                               {rateRaw !== "" && rateRaw != null ? `$${fmtMoney(rateRaw)}` : ""}
                             </td>
-                            <td />
+                            <td
+                              className="text-right money-cell"
+                              style={{ paddingRight: 6, whiteSpace: "nowrap" }}
+                            >
+                              {taxStr}
+                            </td>
                             <td
                               className="text-right money-cell"
                               style={{ paddingRight: 6, whiteSpace: "nowrap" }}

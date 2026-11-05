@@ -518,6 +518,7 @@ import MixConsignmentInRtnReport from "../pages/Parcel/Parcel Reports/MixConsign
 
 // Jewellery Stock Search Report
 import JewelleryStockSearchReport from "../pages/Jewellery/Jewellery Reports/JewelleryStockSearchReport";
+import JewelleryQuotationReport from "../pages/Jewellery/Jewellery Reports/JewelleryQuotationReport";
 
 // Ledger Report (MVC: /Account/LedgerRpt)
 import LedgerReport from "../pages/Reports/Financial Reports/LedgerReport";
@@ -866,6 +867,9 @@ const authProtectedRoutes = [
 
   // Jewellery Stock Search Report (MVC: /report/jew-stock-report)
   { path: "/report/jew-stock-report", component: <JewelleryStockSearchReport /> },
+  { path: "/jew/JewelleryQuotationReport", component: <JewelleryQuotationReport /> },
+  { path: "/Jewellery/JewelleryQuotationReport", component: <JewelleryQuotationReport /> },
+  { path: "/jewreport/JewelleryQuotation-report", component: <JewelleryQuotationReport /> },
 
   // Ledger Report (MVC: /Account/LedgerRpt)
   { path: "/Account/LedgerRpt", component: <LedgerReport /> },

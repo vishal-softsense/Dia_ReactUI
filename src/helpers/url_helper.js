@@ -973,6 +973,10 @@ export const JEWELLERY_STOCK_SEARCH_REPORT = "/api/JewelleryStockReport/search";
 export const JEWELLERY_STOCK_SEARCH_DROPDOWNS = "/api/JewelleryStockReport/dropdowns";
 export const JEWELLERY_STOCK_SEARCH_STOCK_IDS = "/api/JewelleryStockReport/stock-ids";
 
+export const JEWELLERY_QUOTATION_REPORT = "/api/JewelleryQuotationReport/search";
+export const JEWELLERY_QUOTATION_DROPDOWNS = "/api/JewelleryQuotationReport/dropdowns";
+export const JEWELLERY_QUOTATION_STOCK_IDS = "/api/JewelleryQuotationReport/stock-ids";
+
 // DiaAnalytics / Stock Analyze (MVC: /data/StockAnalyze)
 export const GET_STOCK_ANALYZE_CONFIG = "/api/StockAnalyze/config";
 
