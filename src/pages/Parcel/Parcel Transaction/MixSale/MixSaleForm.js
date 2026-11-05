@@ -314,46 +314,6 @@ const mapGradingFromSource = (src) => ({
 let mixSaleRowSeq = 0;
 const nextRowId = () => `sale-row-${Date.now()}-${++mixSaleRowSeq}`;
 
-<<<<<<< HEAD
-const mapItemFromApi = (r, idx) => ({
-  rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
-  srNo: idx + 1,
-  lotNo: getStrVal(r, "LotNo"),
-  itemName: getStrVal(r, "ItemName"),
-  weight: getNumVal(r, "Weight", "Carats"),
-  issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
-  availableCarats: getLotAvailableCarats(r),
-  pcs: getNumVal(r, "Pcs") || 1,
-  mrp: getNumVal(r, "MRP", "PurchaseMRP"),
-  back: getNumVal(r, "PurchaseBack", "PMRPDown", "Back"),
-  rate: getNumVal(r, "PurchaseRate", "Rate"),
-  less1: getNumVal(r, "Less1"),
-  less2: getNumVal(r, "Less2"),
-  less3: getNumVal(r, "Less3"),
-  amount: getNumVal(r, "PurAmount", "Amount"),
-  shape: getStrVal(r, "Shape", "ShapeId", "PShape"),
-  color: getStrVal(r, "Color", "ColorId", "PColor"),
-  clarity: getStrVal(r, "Clarity", "ClarityId", "PClarity"),
-  size: getStrVal(r, "Size", "SizeId", "PSize"),
-  sieve: getStrVal(r, "Sieve", "SieveId", "PSieve"),
-  stockType: resolveStockType(getStrVal(r, "LotNo", "lotNo"), getStrVal(r, "StockType")),
-  stockType: getStrVal(r, "StockType") || "Diamond",
-  invDescription: getStrVal(r, "InvDescription", "invDescription"),
-  suppLotNo: getStrVal(r, "SuppLotNo"),
-  askingRate: getNumVal(r, "AskingRate"),
-  actualRate: getNumVal(r, "ActualRate"),
-  groupId: getStrVal(r, "GroupId", "ItemGroup"),
-  stoneType: getStrVal(r, "StoneType"),
-  rmk: getStrVal(r, "RMK", "MemberRemarks"),
-  memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
-  rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
-  cogs: getNumVal(r, "COGS", "cogs"),
-  exportNo: getStrVal(r, "ExportNo", "exportNo"),
-  sRate: getNumVal(r, "SRate", "sRate", "StockRate"),
-  rtnCts: getNumVal(r, "RtnCts", "RtnCarats", "ReturnCarats"),
-  sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
-});
-=======
 const mapItemFromApi = (r, idx) => {
   // MVC EditMixDetails: jewellery lines use Stock_Id as LotNo when LotNo is empty
   const lotNo = getStrVal(r, "LotNo", "lotNo", "Lotno", "Stock_ID", "Stock_Id", "stock_ID", "stockId");
@@ -365,6 +325,7 @@ const mapItemFromApi = (r, idx) => {
     itemName: getStrVal(r, "ItemName"),
     weight: getNumVal(r, "Weight", "Carats"),
     issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    availableCarats: getLotAvailableCarats(r),
     // MVC FillMixDataTable / Meotosalefill: use lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
     pcs: getNumVal(r, "Pcs"),
     mrp: getNumVal(r, "MRP", "PurchaseMRP"),
@@ -396,7 +357,6 @@ const mapItemFromApi = (r, idx) => {
     sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
   };
 };
->>>>>>> 6a9c3c6b7d5b23387b4412e5d7d7166e2caf6472
 
 const emptyItem = () => ({
   rowId: nextRowId(),
