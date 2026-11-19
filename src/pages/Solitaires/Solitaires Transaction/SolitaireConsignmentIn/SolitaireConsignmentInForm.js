@@ -1816,8 +1816,8 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
@@ -2063,8 +2063,8 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       <Col xs={12} sm={6} md={2}>
                         <Label className="form-label mb-1">
                           {t("Lot Number")}
-                          <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
-                            {t("Add Item")}
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                            {t("ADD ITEM")}
                           </Link>
                         </Label>
                         <CreatableSelect

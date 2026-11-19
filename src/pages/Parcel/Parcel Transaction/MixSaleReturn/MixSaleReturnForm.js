@@ -1841,8 +1841,8 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1 text-uppercase small">
                             {t("PARTY")}{" "}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="badge bg-soft-primary text-primary ms-1" target="_blank">
-                                NEW
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
@@ -2057,15 +2057,15 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-0">
                             <div className="d-flex align-items-center gap-2 mb-1">
                               <Label className="form-label mb-0 text-uppercase small">{t("LOT NUMBER")}</Label>
-                              <a
-                                href="/parcel/add-ParcelItemMaster"
+                              <Link
+                                to="/parcel/add-ParcelItemMaster"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="badge text-primary border border-primary text-decoration-none"
-                                style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", fontWeight: 500, backgroundColor: "transparent" }}
+                                className="border border-primary text-primary px-1 rounded"
+                                style={{ fontSize: "10px", textDecoration: "none" }}
                               >
-                                ADD ITEM
-                              </a>
+                                {t("ADD ITEM")}
+                              </Link>
                               <div className="form-check m-0 p-0 d-flex align-items-center">
                                 <Input
                                   type="checkbox"

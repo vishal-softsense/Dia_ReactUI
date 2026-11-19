@@ -1175,8 +1175,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
@@ -1300,7 +1300,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="ms-1 border border-primary text-primary px-1 rounded"
-                                style={{ fontSize: "10px", textDecoration: "none", lineHeight: 1.4 }}
+                                style={{ fontSize: "10px", textDecoration: "none" }}
                               >
                                 {t("ADD ITEM")}
                               </Link>
