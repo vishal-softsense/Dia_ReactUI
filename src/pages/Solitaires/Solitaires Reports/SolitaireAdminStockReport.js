@@ -66,7 +66,7 @@ const SelectionCell = React.memo(({ index, isSelected, onChange }) => {
   return (
     <input
       type="checkbox"
-      className="form-check-input"
+      className="form-check-input m-0"
       checked={isSelected}
       onChange={handleChange}
     />
@@ -663,10 +663,15 @@ const SolitaireAdminStockReport = () => {
     const cols = [
       {
         id: "selection",
+        sticky: "left",
+        className: "table-sticky-left text-center",
+        headerStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
+        cellStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
+        footerStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
         header: () => (
           <input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             onChange={handleSelectAll}
             checked={
               searchResults.length > 0 &&
@@ -685,6 +690,7 @@ const SolitaireAdminStockReport = () => {
           );
         },
         enableColumnFilter: false,
+        enableSorting: false,
         footer: () => <span className="fw-bold text-center d-block">{t("Total")}</span>
       },
       {

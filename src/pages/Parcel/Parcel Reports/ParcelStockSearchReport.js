@@ -78,7 +78,7 @@ const SelectionCell = React.memo(({ index, selectedRows, onChange }) => {
     return (
         <input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             checked={isChecked}
             onChange={handleChange}
         />
@@ -688,10 +688,14 @@ const ParcelStockSearchReport = () => {
         const cols = [
             {
                 id: "selection",
+                sticky: "left",
+                className: "table-sticky-left text-center",
+                headerStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
+                cellStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
                 header: () => (
                     <input
                         type="checkbox"
-                        className="form-check-input"
+                        className="form-check-input m-0"
                         onChange={handleSelectAll}
                         checked={
                             searchResults.length > 0 &&
@@ -710,6 +714,7 @@ const ParcelStockSearchReport = () => {
                     );
                 },
                 enableColumnFilter: false,
+                enableSorting: false,
             },
             // {
             //     id: "actions",

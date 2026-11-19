@@ -30,6 +30,21 @@ import {
 } from "../../Components/Common/GlobalSearchFilter";
 
 // Column Filter
+const isColumnStickyLeft = (col) => {
+  if (!col) return false;
+  const colDef = col.columnDef || col;
+  return (
+    colDef.sticky === "left" ||
+    colDef.meta?.sticky === "left" ||
+    (typeof colDef.className === "string" && (
+      colDef.className.includes("table-sticky-left") ||
+      colDef.className.includes("sticky-col-left")
+    )) ||
+    col.id === "selection" ||
+    col.id === "select"
+  );
+};
+
 const Filter = ({
   column,
   // table
@@ -264,41 +279,115 @@ const TableContainer = ({
       </Row>}
 
 
+      <style>{`
+        .table-sticky-left {
+          position: sticky !important;
+          left: 0 !important;
+          border-right: 1px solid #dee2e6 !important;
+          box-shadow: 3px 0 5px -2px rgba(0,0,0,0.18) !important;
+        }
+        thead th.table-sticky-left {
+          z-index: 5 !important;
+          background-color: #f3f6f9 !important;
+        }
+        tbody td.table-sticky-left {
+          z-index: 2 !important;
+          background-color: #ffffff !important;
+        }
+        .table-striped > tbody > tr:nth-of-type(odd) > td.table-sticky-left {
+          background-color: #f8f9fa !important;
+        }
+        .table-hover > tbody > tr:hover > td.table-sticky-left {
+          background-color: #f3f6f9 !important;
+        }
+        tbody tr.table-selected-row > td.table-sticky-left,
+        tbody tr.table-active > td.table-sticky-left {
+          background-color: #e8f0fe !important;
+        }
+        tfoot th.table-sticky-left,
+        tfoot td.table-sticky-left {
+          z-index: 5 !important;
+          background-color: #f2f2f2 !important;
+        }
+        [data-bs-theme="dark"] thead th.table-sticky-left {
+          background-color: #212529 !important;
+          border-right-color: #32383e !important;
+        }
+        [data-bs-theme="dark"] tbody td.table-sticky-left {
+          background-color: #1a1d21 !important;
+          border-right-color: #32383e !important;
+        }
+        [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td.table-sticky-left {
+          background-color: #24282c !important;
+        }
+        [data-bs-theme="dark"] .table-hover > tbody > tr:hover > td.table-sticky-left {
+          background-color: #2a2f34 !important;
+        }
+        [data-bs-theme="dark"] tbody tr.table-selected-row > td.table-sticky-left,
+        [data-bs-theme="dark"] tbody tr.table-active > td.table-sticky-left {
+          background-color: rgba(64, 81, 137, 0.35) !important;
+        }
+        [data-bs-theme="dark"] tfoot th.table-sticky-left,
+        [data-bs-theme="dark"] tfoot td.table-sticky-left {
+          background-color: #212529 !important;
+          border-right-color: #32383e !important;
+        }
+      `}</style>
       <div className={divClass} style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto", overflowX: "auto" }}>
         <Table hover className={tableClass}>
           <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 2 }}>
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className={`${thClass || ""} ${header.column.columnDef.className || ""}`.trim()}>
-                    {header.isPlaceholder ? null : (
-                      <React.Fragment>
-                        <div
-                          className={`d-flex align-items-center ${header.column.getCanSort() ? 'cursor-pointer' : ''}`}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getCanSort() && (
-                            <span className="ms-2">
-                              {{
-                                asc: <i className="mdi mdi-chevron-up text-muted"></i>,
-                                desc: <i className="mdi mdi-chevron-down text-muted"></i>,
-                              }[header.column.getIsSorted()] ?? <i className="mdi mdi-unfold-more-horizontal text-muted"></i>}
-                            </span>
-                          )}
-                        </div>
-                        {header.column.getCanFilter() ? (
-                          <div className="mt-1">
-                            <Filter column={header.column} table={table} />
+                {headerGroup.headers.map((header) => {
+                  const isSticky = isColumnStickyLeft(header.column);
+                  return (
+                    <th
+                      key={header.id}
+                      className={`${thClass || ""} ${header.column.columnDef.className || ""} ${isSticky ? "table-sticky-left" : ""}`.trim()}
+                      style={{
+                        ...(header.column.columnDef.headerStyle || {}),
+                        ...(header.column.columnDef.style || {}),
+                        ...(isSticky
+                          ? {
+                              position: "sticky",
+                              left: 0,
+                              zIndex: 5,
+                              backgroundColor: "#f3f6f9",
+                              borderRight: "1px solid #dee2e6",
+                              boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
+                            }
+                          : {}),
+                      }}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <React.Fragment>
+                          <div
+                            className={`d-flex align-items-center ${isSticky ? 'justify-content-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer' : ''}`}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {header.column.getCanSort() && (
+                              <span className="ms-2">
+                                {{
+                                  asc: <i className="mdi mdi-chevron-up text-muted"></i>,
+                                  desc: <i className="mdi mdi-chevron-down text-muted"></i>,
+                                }[header.column.getIsSorted()] ?? <i className="mdi mdi-unfold-more-horizontal text-muted"></i>}
+                              </span>
+                            )}
                           </div>
-                        ) : null}
-                      </React.Fragment>
-                    )}
-                  </th>
-                ))}
+                          {header.column.getCanFilter() ? (
+                            <div className="mt-1">
+                              <Filter column={header.column} table={table} />
+                            </div>
+                          ) : null}
+                        </React.Fragment>
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -317,8 +406,26 @@ const TableContainer = ({
                 <Fragment key={row.id}>
                   <tr className={`${trClass || ""} ${customRowClass}`.trim()}>
                     {row.getVisibleCells().map((cell) => {
+                      const isSticky = isColumnStickyLeft(cell.column);
                       return (
-                        <td key={cell.id} className={cell.column.columnDef.className || ""}>
+                        <td
+                          key={cell.id}
+                          className={`${cell.column.columnDef.className || ""} ${isSticky ? "table-sticky-left" : ""}`.trim()}
+                          style={{
+                            ...(cell.column.columnDef.cellStyle || {}),
+                            ...(cell.column.columnDef.style || {}),
+                            ...(isSticky
+                              ? {
+                                  position: "sticky",
+                                  left: 0,
+                                  zIndex: 2,
+                                  backgroundColor: "#ffffff",
+                                  borderRight: "1px solid #dee2e6",
+                                  boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
+                                }
+                              : {}),
+                          }}
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -339,12 +446,24 @@ const TableContainer = ({
                         if (!React.isValidElement(td)) return td;
                         const column = row.getVisibleCells()[idx]?.column;
                         const colClassName = column?.columnDef?.className || "";
-                        if (colClassName) {
-                          return React.cloneElement(td, {
-                            className: `${td.props.className || ""} ${colClassName}`.trim()
-                          });
-                        }
-                        return td;
+                        const isSticky = isColumnStickyLeft(column);
+                        const finalClass = `${td.props.className || ""} ${colClassName} ${isSticky ? "table-sticky-left" : ""}`.trim();
+                        return React.cloneElement(td, {
+                          className: finalClass,
+                          style: {
+                            ...(td.props.style || {}),
+                            ...(isSticky
+                              ? {
+                                  position: "sticky",
+                                  left: 0,
+                                  zIndex: 2,
+                                  backgroundColor: "#ffffff",
+                                  borderRight: "1px solid #dee2e6",
+                                  boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
+                                }
+                              : {}),
+                          }
+                        });
                       });
                       
                       return React.cloneElement(tr, {}, newChildren);
@@ -358,16 +477,36 @@ const TableContainer = ({
             <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
               {table.getFooterGroups().map(footerGroup => (
                 <tr key={footerGroup.id}>
-                  {footerGroup.headers.map(header => (
-                    <th key={header.id} className={header.column.columnDef.className || ""}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.footer,
-                            header.getContext()
-                          )}
-                    </th>
-                  ))}
+                  {footerGroup.headers.map(header => {
+                    const isSticky = isColumnStickyLeft(header.column);
+                    return (
+                      <th
+                        key={header.id}
+                        className={`${header.column.columnDef.className || ""} ${isSticky ? "table-sticky-left" : ""}`.trim()}
+                        style={{
+                          ...(header.column.columnDef.footerStyle || {}),
+                          ...(header.column.columnDef.style || {}),
+                          ...(isSticky
+                            ? {
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 5,
+                                backgroundColor: "#f2f2f2",
+                                borderRight: "1px solid #dee2e6",
+                                boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
+                              }
+                            : {}),
+                        }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.footer,
+                              header.getContext()
+                            )}
+                      </th>
+                    );
+                  })}
                 </tr>
               ))}
             </tfoot>

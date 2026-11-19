@@ -242,7 +242,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "exportNo", label: "ExportNo" },
   { key: "memoTransCode", label: "MemoTrnCode", align: "end" },
   { key: "stockType", label: "StockType" },
-  { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3 },
+  { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3, footer: "rtnCts" },
   { key: "sRtnStatus", label: "Status" },
   { key: "sRtnStatus", label: "SRtnStatus" },
   { key: "invDescription", label: "ItemDescription" }
@@ -380,8 +380,13 @@ const mapItemFromApi = (r, idx) => {
       const derivedRejection =
         issueRaw > selection ? Math.round((issueRaw - selection) * 1000) / 1000 : 0;
       const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
-      if (derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005) return "";
-      return storedReturn ? storedReturn : "";
+      const isRejectionInReturnCol =
+        derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005;
+      if (isRejectionInReturnCol) return 0;
+      if (derivedRejection > 0 && storedReturn > derivedRejection) {
+        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+      }
+      return storedReturn || 0;
     })(),
     sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
   };
@@ -421,7 +426,7 @@ const emptyItem = () => ({
   rtnCarats: "",
   cogs: "",
   exportNo: "",
-  rtnCts: "",
+  rtnCts: 0,
   sRtnStatus: ""
 });
 
@@ -432,8 +437,7 @@ const renderItemCell = (row, col) => {
   }
   const v = row[col.key];
   if (col.decimals != null) {
-    if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
-    return fmt(v, col.decimals);
+    return fmt(toNum(v, 0), col.decimals);
   }
   if (typeof v === "number") return v === 0 ? "0" : String(v);
   return v ?? "";
@@ -455,6 +459,8 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
       return fmt(totals.totAmount);
     case "rejection":
       return fmt(totals.totRejection, 3);
+    case "rtnCts":
+      return fmt(itemRows.reduce((s, r) => s + toNum(r.rtnCts), 0), 3);
     default:
       return "";
   }
@@ -1361,7 +1367,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       invDescription: entry.invDescription || "",
       memoTransCode: toNum(entry.memoTransCode),
       rtnCarats: Math.round(rtnCarats * 1000) / 1000,
-      rtnCts: entry.rtnCts === "" || entry.rtnCts == null ? "" : Math.round(toNum(entry.rtnCts) * 1000) / 1000
+      rtnCts: toNum(entry.rtnCts, 0)
     };
 
     // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
@@ -2097,6 +2103,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
       RtnCarats: toNum(r.rtnCts),
       ReturnCarats: toNum(r.rtnCts),
+      RtnCts: toNum(r.rtnCts),
       StockType: resolveStockType(r.lotNo, r.stockType),
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",

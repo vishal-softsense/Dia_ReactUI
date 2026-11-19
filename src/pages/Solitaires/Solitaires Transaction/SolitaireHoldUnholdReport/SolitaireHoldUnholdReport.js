@@ -267,10 +267,14 @@ const SolitaireHoldUnholdReport = () => {
     () => [
       {
         id: "select",
+        sticky: "left",
+        className: "table-sticky-left text-center",
+        headerStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
+        cellStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
         header: () => (
           <Input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             checked={allSelected}
             onChange={(e) => toggleSelectAll(e.target.checked)}
           />
@@ -282,7 +286,7 @@ const SolitaireHoldUnholdReport = () => {
           return (
             <Input
               type="checkbox"
-              className="form-check-input"
+              className="form-check-input m-0"
               checked={selectedLots.has(lotNo)}
               onChange={(e) => toggleLot(lotNo, e.target.checked)}
             />
