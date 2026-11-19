@@ -166,7 +166,7 @@ const MixPurchaseCurStatus = () => {
                   border-radius: 4px;
                 }
                 .mix-pur-curstatus-host .mpc-sheet {
-                  width: 8.5in;
+                  width: 11in;
                   min-height: 11in;
                   max-width: 100%;
                   margin: 0 auto 24px;
@@ -229,6 +229,11 @@ const MixPurchaseCurStatus = () => {
                 .mix-pur-curstatus-host .invoice-item-table th,
                 .mix-pur-curstatus-host .invoice-item-table td {
                   padding: 2px 3px !important;
+                }
+                .mix-pur-curstatus-host .invoice-item-table .mpc-money {
+                  white-space: nowrap !important;
+                  overflow: visible !important;
+                  font-size: 10px !important;
                 }
                 .mix-pur-curstatus-host .invoice-item-table th,
                 .mix-pur-curstatus-host .invoice-item-table tbody tr:nth-child(even) {
@@ -308,10 +313,18 @@ const MixPurchaseCurStatus = () => {
               .mix-pur-curstatus-host .invoice-item-table td {
                 border-left: 2px solid #666;
                 border-right: 2px solid #666;
-                padding: 2px 3px;
+                padding: 2px 4px;
                 border-top: none;
                 border-bottom: none;
                 line-height: 1.25;
+              }
+              .mix-pur-curstatus-host .invoice-item-table .mpc-money {
+                text-align: right;
+                white-space: nowrap;
+                overflow: visible;
+                font-size: 11px;
+                padding-left: 4px;
+                padding-right: 6px;
               }
               .mix-pur-curstatus-host .invoice-item-table tbody tr:last-child td {
                 border-bottom: 2px solid #666;
@@ -333,6 +346,8 @@ const MixPurchaseCurStatus = () => {
                 font-weight: bold;
                 text-align: right;
                 padding: 5px;
+                white-space: nowrap;
+                font-size: 11px;
               }
               .mix-pur-curstatus-host .footer-section {
                 position: absolute;
@@ -517,14 +532,14 @@ const MixPurchaseCurStatus = () => {
 
                   <table className="invoice-item-table">
                     <colgroup>
-                      <col style={{ width: "10%" }} />
-                      <col style={{ width: "12%" }} />
-                      <col style={{ width: "6%" }} />
                       <col style={{ width: "8%" }} />
-                      <col style={{ width: "32%" }} />
                       <col style={{ width: "10%" }} />
-                      <col style={{ width: "6%" }} />
+                      <col style={{ width: "5%" }} />
+                      <col style={{ width: "8%" }} />
+                      <col style={{ width: "22%" }} />
+                      <col style={{ width: "14%" }} />
                       <col style={{ width: "16%" }} />
+                      <col style={{ width: "17%" }} />
                     </colgroup>
                     <thead>
                       <tr style={{ background: "#d3d3d3" }}>
@@ -543,10 +558,16 @@ const MixPurchaseCurStatus = () => {
                         const isPay = Number(getVal(item, "IsPayment", "isPayment")) === 1;
                         const amtRaw = getVal(item, "Amount", "amount");
                         const rateRaw = getVal(item, "Rate", "rate");
+                        const taxRaw = getVal(item, "Tax", "tax");
                         const wtRaw = getVal(item, "Wt", "wt");
                         const qtyRaw = getVal(item, "Qty", "qty");
+                        const taxNum = Number(taxRaw);
+                        const taxStr =
+                          taxRaw === "" || taxRaw == null || !Number.isFinite(taxNum)
+                            ? ""
+                            : `$${fmtMoney(taxNum)}`;
                         const amtStr =
-                          amtRaw === "" || amtRaw === null || amtRaw === undefined
+                          amtRaw === "" || amtRaw == null
                             ? ""
                             : isPay
                               ? `($${fmtMoney(amtRaw)})`
@@ -560,7 +581,9 @@ const MixPurchaseCurStatus = () => {
                               {fmtDate(getVal(item, "Date", "date"))}
                             </td>
                             <td style={{ textAlign: "right", paddingRight: 6 }}>
-                              {qtyRaw !== "" && qtyRaw != null ? String(qtyRaw) : ""}
+                              {qtyRaw !== "" && qtyRaw != null && Number(qtyRaw) !== 0
+                                ? String(qtyRaw)
+                                : ""}
                             </td>
                             <td style={{ textAlign: "right", paddingRight: 6 }}>
                               {wtRaw !== "" && wtRaw != null
@@ -573,11 +596,11 @@ const MixPurchaseCurStatus = () => {
                             <td style={{ textAlign: "left" }}>
                               {getVal(item, "Description", "description")}
                             </td>
-                            <td style={{ textAlign: "right", paddingRight: 6 }}>
+                            <td className="mpc-money">
                               {rateRaw !== "" && rateRaw != null ? `$${fmtMoney(rateRaw)}` : ""}
                             </td>
-                            <td />
-                            <td style={{ textAlign: "right", paddingRight: 6 }}>{amtStr}</td>
+                            <td className="mpc-money">{taxStr}</td>
+                            <td className="mpc-money">{amtStr}</td>
                           </tr>
                         );
                       })}

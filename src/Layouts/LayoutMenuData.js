@@ -119,6 +119,22 @@ const Navdata = () => {
         // 1. Find root level items (MenuLevel === "1")
         const rootItems = rawData.filter(item => item.menuLevel === "1" || item.MenuLevel === "1");
 
+        const menuKey = (value) =>
+            String(value || "")
+                .trim()
+                .toLowerCase()
+                .replace(/[\s_-]+/g, "")
+                .replace(/s$/, "");
+
+        const isMenuChild = (item, parent) => {
+            const group = item.form_MenuGroup || item.Form_MenuGroup || "";
+            const parentForm = parent.formName || parent.FormName || "";
+            const parentMenu = parent.menuName || parent.MenuName || "";
+            if (group === parentForm || group === parentMenu) return true;
+            const g = menuKey(group);
+            return !!g && (g === menuKey(parentForm) || g === menuKey(parentMenu));
+        };
+
         const cleanLink = (link) => {
             if (!link || link === "#" || link === "") return "/#";
             if (link.toLowerCase().includes("stockanalyze")) return "/data/StockAnalyze";
@@ -151,9 +167,9 @@ const Navdata = () => {
             };
 
             // 2. Find Level 2 items (Children of root)
-            const level2Items = rawData.filter(item => 
-                (item.menuLevel === "2" || item.MenuLevel === "2") && 
-                (item.form_MenuGroup === rootId || item.Form_MenuGroup === rootId)
+            const level2Items = rawData.filter(item =>
+                (item.menuLevel === "2" || item.MenuLevel === "2") &&
+                isMenuChild(item, root)
             );
 
             if (level2Items.length > 0) {
@@ -169,9 +185,9 @@ const Navdata = () => {
                     };
 
                     // 3. Find Level 3+ items (Children of Level 2)
-                    const level3Items = rawData.filter(item => 
-                        (item.menuLevel !== "1" && item.MenuLevel !== "1" && item.menuLevel !== "2" && item.MenuLevel !== "2") && 
-                        (item.form_MenuGroup === l2Id || item.Form_MenuGroup === l2Id)
+                    const level3Items = rawData.filter(item =>
+                        (item.menuLevel !== "1" && item.MenuLevel !== "1" && item.menuLevel !== "2" && item.MenuLevel !== "2") &&
+                        isMenuChild(item, l2)
                     );
 
                     if (level3Items.length > 0) {

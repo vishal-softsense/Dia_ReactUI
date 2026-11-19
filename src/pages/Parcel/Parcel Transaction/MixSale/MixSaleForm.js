@@ -171,6 +171,47 @@ const toNum = (v, d = 0) => {
 
 const fmt = (v, decimals = 2) => toNum(v).toFixed(decimals);
 
+const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
+
+/** Prefer closing-stock on-hand; do not treat item-master Carats as available stock. */
+const getLotAvailableCarats = (lot) => {
+  const onHand = roundCts(
+    getNumVal(lot, "OnHandCarats3Dec", "onHandCarats3Dec", "BalanceCarats3Dec", "balanceCarats3Dec")
+  );
+  if (onHand > 0) return onHand;
+  return roundCts(getNumVal(lot, "Weight", "IssueCarats", "Carats"));
+};
+
+const STOCK_IN_HAND_WARNING = "Not enough stock in hand to make sale or memo.";
+
+const WarningModal = ({ open, title, message, confirmText, onClose }) => (
+  <Modal isOpen={open} toggle={onClose} centered contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
+    <ModalBody className="py-4 px-5 text-center">
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ width: 90, height: 90, borderRadius: "50%", border: "4px solid #f27474" }}
+        >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 10L30 30" stroke="#f27474" strokeWidth="4" strokeLinecap="round" />
+            <path d="M30 10L10 30" stroke="#f27474" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        </div>
+      </div>
+      <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>{title || "Warning!"}</h3>
+      <p className="text-muted mb-4 fs-14" style={{ lineHeight: "1.6" }}>{message}</p>
+      <button type="button" className="btn px-4 py-2 fw-semibold text-white" style={{ backgroundColor: "#13d17c", borderColor: "#13d17c" }} onClick={onClose}>
+        {confirmText || "OK"}
+      </button>
+    </ModalBody>
+  </Modal>
+);
+
+const saleExceedsStockMessage = (saleCts, available, lotNo) => {
+  const lot = lotNo ? ` for lot ${lotNo}` : "";
+  return `Sale carats (${roundCts(saleCts)}) cannot exceed available stock (${roundCts(available)})${lot}.`;
+};
+
 /** MVC CaratFormatNew: N3 or truncate last digit when format is not 0.000 */
 const formatCaratWeight = (weight, caratFormat = "0.000") => {
   const weight3D = toNum(weight).toFixed(3);
@@ -297,6 +338,7 @@ const mapItemFromApi = (r, idx) => {
     itemName: getStrVal(r, "ItemName"),
     weight: getNumVal(r, "Weight", "Carats"),
     issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    availableCarats: getLotAvailableCarats(r),
     // MVC FillMixDataTable / Meotosalefill: use lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
     pcs: getNumVal(r, "Pcs"),
     mrp: getNumVal(r, "MRP", "PurchaseMRP"),
@@ -351,6 +393,7 @@ const emptyItem = () => ({
   itemName: "",
   weight: "",
   issueCarats: "",
+  availableCarats: "",
   // First load / Clearall: empty — do not show 0/1 until LotNo fill or user entry
   pcs: "",
   mrp: "",
@@ -554,6 +597,10 @@ const MixSaleForm = ({ mode = "add" }) => {
     "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+
+  const [warningModal, setWarningModal] = useState({ open: false, message: "" });
+  const showWarning = useCallback((message) => setWarningModal({ open: true, message }), []);
+  const closeWarning = useCallback(() => setWarningModal({ open: false, message: "" }), []);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1145,7 +1192,9 @@ const MixSaleForm = ({ mode = "add" }) => {
       );
       const isJewellery = resolvedStockType === "Jewellery";
 
-      const weight = getNumVal(lot, "Carats", "Weight");
+      const availableCarats = getLotAvailableCarats(lot);
+      const balance = getNumVal(lot, "Carats", "Weight");
+      const weight = availableCarats > 0 ? availableCarats : balance;
       const issueCarats = weight;
       // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
       // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
@@ -1159,6 +1208,7 @@ const MixSaleForm = ({ mode = "add" }) => {
           itemName: getStrVal(lot, "ItemName"),
           weight,
           issueCarats,
+          availableCarats,
           pcs,
           mrp: getNumVal(lot, "PurchaseMRP", "MRP"),
           back: "0",
@@ -1173,25 +1223,63 @@ const MixSaleForm = ({ mode = "add" }) => {
           size: isJewellery ? "" : getStrVal(lot, "Size", "SizeId"),
           sieve: isJewellery ? "" : getStrVal(lot, "Sieve", "SieveId"),
           stockType: resolvedStockType,
-          shape: getStrVal(lot, "Shape", "ShapeId"),
-          color: getStrVal(lot, "Color", "ColorId"),
-          clarity: getStrVal(lot, "Clarity", "ClarityId"),
-          size: getStrVal(lot, "Size", "SizeId"),
-          sieve: getStrVal(lot, "Sieve", "SieveId"),
-          stockType: getStrVal(lot, "StockType") || "Diamond",
           invDescription: getStrVal(lot, "InvDescription"),
           cogs: getNumVal(lot, "COGS", "CPAVG") || "0",
           memoTransCode: 0,
           rtnCarats: "0"
         })
       );
+
+      // MVC mix-data.js lot change: warn when Carats is missing or <= 0, still keep filled fields
+      if (!balance || balance <= 0) {
+        showWarning(t(STOCK_IN_HAND_WARNING));
+      }
     } catch (err) {
       console.error(err);
       toast.error(t("Failed to load lot detail."));
     }
   };
 
-  const handleAddItem = () => {
+  const fetchLotOnHand = async (lotNo) => {
+    const res = await getMixSaleLotDetail(lotNo);
+    if (!(res?.success || res?.Success)) return 0;
+    const rows = res.Data || res.data || [];
+    const lot = Array.isArray(rows) ? rows[0] : rows;
+    return getLotAvailableCarats(lot);
+  };
+
+  const resolveAvailableCarats = async (lotNo, fallback, rowCts = 0) => {
+    let onHand = toNum(fallback);
+    try {
+      const live = await fetchLotOnHand(lotNo);
+      if (live > 0) onHand = live;
+    } catch (err) {
+      console.error(err);
+    }
+    if (isEdit && editIndex >= 0) return roundCts(onHand + toNum(rowCts));
+    return roundCts(onHand);
+  };
+
+  const handleCaratsBlur = async () => {
+    if (readOnly || toNum(entry.memoTransCode) !== 0) return;
+    const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
+    const saleCts = roundCts(Math.max(toNum(entry.issueCarats), toNum(entry.weight)));
+    if (!lotNo || saleCts <= 0) return;
+    if (resolveStockType(lotNo, entry.stockType) === "Jewellery") return;
+    const available = await resolveAvailableCarats(
+      lotNo,
+      entry.availableCarats,
+      editIndex >= 0 ? Math.max(toNum(items[editIndex]?.issueCarats), toNum(items[editIndex]?.weight)) : 0
+    );
+    setEntry((prev) => ({ ...prev, availableCarats: available }));
+    if (available <= 0) {
+      showWarning(t(STOCK_IN_HAND_WARNING));
+    } else if (saleCts > available) {
+      showWarning(saleExceedsStockMessage(saleCts, available, lotNo));
+    }
+  };
+
+  const handleAddItem = async () => {
     const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
     const weight = toNum(entry.weight);
     const rate = toNum(entry.rate);
@@ -1220,6 +1308,31 @@ const MixSaleForm = ({ mode = "add" }) => {
     }
 
     // PurchaseBack = RejP; Weight = Selection carats. Return carats stay independent of rejection.
+    let availableCarats = toNum(entry.availableCarats);
+    if (!isJewellery && toNum(entry.memoTransCode) === 0) {
+      const saleCts = roundCts(Math.max(issueCarats, weight));
+      availableCarats = await resolveAvailableCarats(
+        lotNo,
+        entry.availableCarats,
+        editIndex >= 0 ? Math.max(toNum(items[editIndex]?.issueCarats), toNum(items[editIndex]?.weight)) : 0
+      );
+      const alreadyInGrid = items.reduce((sum, r, i) => {
+        if (i === editIndex) return sum;
+        if (String(r.lotNo).toLowerCase() !== lotNo.toLowerCase()) return sum;
+        if (toNum(r.memoTransCode) !== 0) return sum;
+        return sum + roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
+      }, 0);
+      if (availableCarats <= 0) {
+        showWarning(t(STOCK_IN_HAND_WARNING));
+        return;
+      }
+      if (saleCts + alreadyInGrid > availableCarats) {
+        showWarning(saleExceedsStockMessage(saleCts + alreadyInGrid, availableCarats, lotNo));
+        return;
+      }
+    }
+
+    // MVC AddItem: PurchaseBack = RejeP; Weight = SelectionCarat; ReturnCarats = Reje
     const amount = calcItemAmount(weight, rate, entry.less1, entry.less2, entry.less3, entry.pcs, entry.stockType);
 
     // MVC MixSale add-single-lot: duplicate LotNo check is commented out — always append
@@ -1230,6 +1343,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       itemName: entry.itemName || lotSel?.label || "",
       weight: Math.round(weight * 1000) / 1000,
       issueCarats: Math.round(issueCarats * 1000) / 1000,
+      availableCarats,
       pcs: toNum(entry.pcs, 1),
       mrp,
       back: Math.round(back * 100) / 100,
@@ -1273,12 +1387,21 @@ const MixSaleForm = ({ mode = "add" }) => {
     setLotFocusToken((n) => n + 1);
   };
 
-  const handleEditRow = (idx) => {
+  const handleEditRow = async (idx) => {
     const r = items[idx];
     if (!r) return;
     setEditIndex(idx);
     setLotSel({ value: r.lotNo, label: r.lotNo });
-    setEntry({ ...emptyItem(), ...r });
+    let availableCarats = toNum(r.availableCarats);
+    if (r.lotNo && toNum(r.memoTransCode) === 0 && resolveStockType(r.lotNo, r.stockType) !== "Jewellery") {
+      try {
+        const onHand = await fetchLotOnHand(r.lotNo);
+        availableCarats = isEdit ? roundCts(onHand + Math.max(toNum(r.issueCarats), toNum(r.weight))) : onHand;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setEntry({ ...emptyItem(), ...r, availableCarats: availableCarats || r.availableCarats || "" });
   };
 
   const handleDeleteRow = (idx) => {
@@ -1818,7 +1941,13 @@ const MixSaleForm = ({ mode = "add" }) => {
           alertMsg += ` ${lotNo}`;
           continue;
         }
-        const weight = getNumVal(lot, "Carats", "Weight");
+        const availableCarats = getLotAvailableCarats(lot);
+        const balance = getNumVal(lot, "Carats", "Weight");
+        if (!balance || balance <= 0) {
+          showWarning(t(STOCK_IN_HAND_WARNING));
+          continue;
+        }
+        const weight = availableCarats > 0 ? availableCarats : balance;
         const issueCarats = weight;
         const rate = getNumVal(lot, "PurchaseRate", "Rate");
         const sBase = toNum(header.sBaseRate, 1) || 1;
@@ -1834,6 +1963,7 @@ const MixSaleForm = ({ mode = "add" }) => {
             itemName: getStrVal(lot, "ItemName"),
             weight,
             issueCarats,
+            availableCarats,
             // MVC: $('#Pcs').val(jsonData[0].Pcs) — keep 0; do not coerce with || 1
             pcs: getNumVal(lot, "Pcs"),
             mrp: getNumVal(lot, "PurchaseMRP", "MRP"),
@@ -2039,6 +2169,28 @@ const MixSaleForm = ({ mode = "add" }) => {
     if (!items.length) {
       toast.warning(t("Please add at least one item."));
       return;
+    }
+    if (!isEdit) {
+      for (const r of items) {
+        if (toNum(r.memoTransCode) !== 0) continue;
+        if (resolveStockType(r.lotNo, r.stockType) === "Jewellery") continue;
+        let available = toNum(r.availableCarats);
+        try {
+          const onHand = await fetchLotOnHand(r.lotNo);
+          if (onHand > 0 || !(available > 0)) available = onHand;
+        } catch (err) {
+          console.error(err);
+        }
+        const saleCts = roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
+        if (available <= 0) {
+          showWarning(t(STOCK_IN_HAND_WARNING));
+          return;
+        }
+        if (saleCts > available) {
+          showWarning(saleExceedsStockMessage(saleCts, available, r.lotNo));
+          return;
+        }
+      }
     }
     setSaving(true);
     try {
@@ -2793,7 +2945,7 @@ const MixSaleForm = ({ mode = "add" }) => {
                         <Col style={{ flex: "1 0 0%", minWidth: "65px" }}>
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold text-nowrap" style={{ fontSize: "11px" }}>{t("ISS.CTS")}</Label>
-                            <Input type="number" step="any" className="form-control-sm" style={fieldH} value={entry.issueCarats} onChange={(e) => onEntryChange("issueCarats", e.target.value)} />
+                            <Input type="number" step="any" className="form-control-sm" style={fieldH} value={entry.issueCarats} onChange={(e) => onEntryChange("issueCarats", e.target.value)} onBlur={handleCaratsBlur} />
                           </FormGroup>
                         </Col>
                         <Col style={{ flex: "1 0 0%", minWidth: "65px" }}>
@@ -2811,7 +2963,7 @@ const MixSaleForm = ({ mode = "add" }) => {
                         <Col style={{ flex: "1 0 0%", minWidth: "75px" }}>
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold text-nowrap" style={{ fontSize: "11px" }}>{t("SELECT.CTS")}</Label>
-                            <Input type="number" step="any" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                            <Input type="number" step="any" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleCaratsBlur} />
                           </FormGroup>
                         </Col>
                         <Col style={{ flex: "1 0 0%", minWidth: "65px" }}>
@@ -3225,6 +3377,13 @@ const MixSaleForm = ({ mode = "add" }) => {
           </ModalFooter>
         </Modal>
 
+        <WarningModal
+          open={warningModal.open}
+          title={t("Warning!")}
+          message={warningModal.message}
+          confirmText={t("OK")}
+          onClose={closeWarning}
+        />
         <ToastContainer autoClose={2000} />
       </div>
     </React.Fragment>
