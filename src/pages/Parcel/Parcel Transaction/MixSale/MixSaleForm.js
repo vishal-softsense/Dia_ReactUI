@@ -362,11 +362,27 @@ const mapItemFromApi = (r, idx) => {
     stoneType: getStrVal(r, "StoneType"),
     rmk: getStrVal(r, "RMK", "MemberRemarks"),
     memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
-    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+    // Rejection is the unsold part of issue (Issue − Selection). Do not read it from
+    // ReturnCarats — that column is the stock return and was being filled with rejection.
+    rtnCarats: (() => {
+      const issueRaw = getNumVal(r, "IssueCarats");
+      const selection = getNumVal(r, "Weight", "Carats");
+      if (issueRaw > selection) return Math.round((issueRaw - selection) * 1000) / 1000;
+      if (issueRaw > 0) return 0;
+      return getNumVal(r, "RtnCarats", "ReturnCarats");
+    })(),
     cogs: getNumVal(r, "COGS", "cogs"),
     exportNo: getStrVal(r, "ExportNo", "exportNo"),
     sRate: getNumVal(r, "SRate", "sRate", "StockRate"),
-    rtnCts: getNumVal(r, "RtnCts", "RtnCarats", "ReturnCarats"),
+    rtnCts: (() => {
+      const issueRaw = getNumVal(r, "IssueCarats");
+      const selection = getNumVal(r, "Weight", "Carats");
+      const derivedRejection =
+        issueRaw > selection ? Math.round((issueRaw - selection) * 1000) / 1000 : 0;
+      const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
+      if (derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005) return "";
+      return storedReturn ? storedReturn : "";
+    })(),
     sRtnStatus: getStrVal(r, "SRtnStatus", "sRtnStatus", "SRtnstatus", "Status", "status")
   };
 };
@@ -1291,6 +1307,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       return;
     }
 
+    // PurchaseBack = RejP; Weight = Selection carats. Return carats stay independent of rejection.
     let availableCarats = toNum(entry.availableCarats);
     if (!isJewellery && toNum(entry.memoTransCode) === 0) {
       const saleCts = roundCts(Math.max(issueCarats, weight));
@@ -1343,7 +1360,8 @@ const MixSaleForm = ({ mode = "add" }) => {
       stockType: entry.stockType || "Diamond",
       invDescription: entry.invDescription || "",
       memoTransCode: toNum(entry.memoTransCode),
-      rtnCarats: Math.round(rtnCarats * 1000) / 1000
+      rtnCarats: Math.round(rtnCarats * 1000) / 1000,
+      rtnCts: entry.rtnCts === "" || entry.rtnCts == null ? "" : Math.round(toNum(entry.rtnCts) * 1000) / 1000
     };
 
     // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
@@ -2076,8 +2094,9 @@ const MixSaleForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
+      RtnCarats: toNum(r.rtnCts),
+      ReturnCarats: toNum(r.rtnCts),
       StockType: resolveStockType(r.lotNo, r.stockType),
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",
