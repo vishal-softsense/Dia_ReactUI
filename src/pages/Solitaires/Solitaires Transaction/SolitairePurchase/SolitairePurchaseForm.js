@@ -2242,6 +2242,17 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </Button>
                     )}
                     {!readOnly && (
+                      <Button
+                        color="primary"
+                        outline
+                        size="sm"
+                        className="btn-outline-primary text-nowrap"
+                        onClick={() => navigate("/data/getlabdata")}
+                      >
+                        {t("Get Lab Data")}
+                      </Button>
+                    )}
+                    {!readOnly && (
                       <Button color="soft-success" size="sm" onClick={() => setExcelOpen(true)}>
                         <i className="ri-file-excel-2-line me-1" />
                         {t("Import Excel")}

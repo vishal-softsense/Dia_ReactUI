@@ -474,7 +474,7 @@ const PayWithExDiffForm = () => {
     SOp: sOp || "*",
     adjinramount: pendingRows.reduce((s, r) => s + toNum(r.AdINRCurAmt), 0),
     adjusdTotalAmt: pendingRows.reduce((s, r) => s + toNum(r.AdUSDAmount), 0),
-    TotalExDiff: pendingRows.reduce((s, r) => s + toNum(r.ExDiffINR), 0),
+    TotalExDiff: Number(pendingRows.reduce((s, r) => s + toNum(r.ExDiffINR), 0).toFixed(2)),
     PayType: form.payType || "Payment",
     Lines: pendingRows
       .filter((r) => toNum(r.AdUSDAmount) > 0 || toNum(r.AdINRCurAmt) > 0 || toNum(r.ExDiffINR) !== 0)
