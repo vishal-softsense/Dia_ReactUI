@@ -1108,7 +1108,7 @@ const SolitaireSaleReturnForm = ({ mode = "add" }) => {
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">
                             {t("Party")}
-                            {!readOnly && <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">{t("Add Account/Group")}</Link>}
+                            {!readOnly && <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">{t("NEW")}</Link>}
                           </Label>
                           <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
@@ -1193,9 +1193,9 @@ const SolitaireSaleReturnForm = ({ mode = "add" }) => {
                   {!readOnly && (
                     <div className="txn-item-entry-grid">
                       <div className="txn-item-field txn-item-field--wide">
-                        <Label className="form-label mb-1">
+                        <Label className="form-label mb-1" style={{ overflow: "visible", lineHeight: "18px" }}>
                           {t("Lot Number")}
-                          <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">{t("Add Item")}</Link>
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none", display: "inline-block", lineHeight: "14px", verticalAlign: "middle" }} target="_blank">{t("ADD ITEM")}</Link>
                         </Label>
                         <CreatableSelect styles={customStyles} options={lotOpts} value={lotSel} onChange={(o) => { setLotSel(o); onEntryChange("lotNo", o?.value || ""); if (o?.value) fillFromLot(o.value); }} onInputChange={(v, meta) => { if (meta.action === "input-change") setLotInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setLotInput(""); setLotOpts([]); } }} isLoading={lotLoading} placeholder={t("Lot...")} isClearable />
                       </div>
