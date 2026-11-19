@@ -171,7 +171,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "issueCarats", label: "IssueCarats", align: "end", decimals: 3 },
   { key: "back", label: "Rejection %", align: "end", decimals: 2 },
-  { key: "rtnCarats", label: "Rejection", align: "end", decimals: 3 },
+  { key: "rtnCarats", label: "Rejection", align: "end", decimals: 3, footer: "rejection" },
   { key: "weight", label: "Carats", align: "end", decimals: 3, footer: "weight" },
   { key: "rate", label: "PurchaseRate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "amount", label: "PurchaseAmount", align: "end", decimals: 2, footer: "totAmount" },
@@ -183,6 +183,8 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "rmk", label: "RMK" },
   { key: "memoTransCode", label: "MemoTransCode", align: "end" },
   { key: "stockType", label: "StockType" },
+  { key: "rtnCts", label: "RtnCts", align: "end", decimals: 3, footer: "rtnCts" },
+  { key: "status", label: "Status" },
   { key: "invDescription", label: "ItemDescription" }
 ];
 
@@ -274,13 +276,21 @@ const mapItemFromApi = (r, idx) => {
     if (first) lotNo = first;
   }
 
+  const issueRaw = getNumVal(r, "IssueCarats");
+  const selection = getNumVal(r, "Weight", "Carats");
+  const derivedRejection =
+    issueRaw > selection ? Math.round((issueRaw - selection) * 1000) / 1000 : 0;
+  const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
+  const isRejectionInReturnCol =
+    derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005;
+
   return {
     rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
     srNo: idx + 1,
     lotNo,
     itemName: getStrVal(r, "ItemName"),
-    weight: getNumVal(r, "Weight", "Carats"),
-    issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    weight: selection,
+    issueCarats: issueRaw || selection,
     // Keep lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
     pcs: getNumVal(r, "Pcs"),
     mrp: getNumVal(r, "MRP", "PurchaseMRP"),
@@ -304,7 +314,16 @@ const mapItemFromApi = (r, idx) => {
     stoneType: getStrVal(r, "StoneType"),
     rmk: getStrVal(r, "RMK", "MemberRemarks"),
     memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
-    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+    rtnCarats: derivedRejection > 0
+      ? derivedRejection
+      : (issueRaw > 0 && issueRaw === selection ? 0 : getNumVal(r, "RtnCarats", "ReturnCarats")),
+    rtnCts: (() => {
+      if (isRejectionInReturnCol) return 0;
+      if (derivedRejection > 0 && storedReturn > derivedRejection) {
+        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+      }
+      return storedReturn || 0;
+    })(),
     status: getStrVal(r, "Status", "status")
   };
 };
@@ -455,7 +474,9 @@ const emptyItem = () => ({
   rmk: "",
   memoTransCode: "",
   // MVC Clearall: $('#Reje').val("") — clear REJECTION after Add Item
-  rtnCarats: ""
+  rtnCarats: "",
+  rtnCts: 0,
+  status: ""
 });
 
 const pickNonEmpty = (primary, fallback) => {
@@ -535,8 +556,7 @@ const mergeEntryWithFallback = (apiEntry, fallbackEntry) => {
 const renderItemCell = (row, col) => {
   const v = row[col.key];
   if (col.decimals != null) {
-    if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
-    return fmt(v, col.decimals);
+    return fmt(toNum(v, 0), col.decimals);
   }
   if (typeof v === "number") return v === 0 ? "0" : String(v);
   return v ?? "";
@@ -548,6 +568,10 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
       return fmt(totals.totCts, 3);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
+    case "rejection":
+      return fmt(itemRows.reduce((s, r) => s + toNum(r.rtnCarats), 0), 3);
+    case "rtnCts":
+      return fmt(itemRows.reduce((s, r) => s + toNum(r.rtnCts), 0), 3);
     case "avgMrp":
       return fmt(totals.avgMrp, 2);
     case "avgBack":
@@ -1426,7 +1450,9 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       sieve: entry.sieve || "",
       stockType: entry.stockType || "Diamond",
       memoTransCode: toNum(entry.memoTransCode),
-      rtnCarats: Math.round(rtnCarats * 1000) / 1000
+      rtnCarats: Math.round(rtnCarats * 1000) / 1000,
+      rtnCts: toNum(entry.rtnCts, 0),
+      status: entry.status || ""
     };
 
     // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
@@ -1607,8 +1633,11 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
+      RtnCarats: toNum(r.rtnCts),
+      ReturnCarats: toNum(r.rtnCts),
+      RtnCts: toNum(r.rtnCts),
+      Status: r.status || "",
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
@@ -1888,7 +1917,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
         sieve,
         stockType: rowStockType,
         memoTransCode: toNum(r.memoTransCode),
-        rtnCarats: toNum(r.rtn),
+        rtnCarats: 0,
+        rtnCts: toNum(r.rtn),
         invDescription,
         status: "Purchase"
       });
@@ -1982,8 +2012,11 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
+      RtnCarats: toNum(r.rtnCts),
+      ReturnCarats: toNum(r.rtnCts),
+      RtnCts: toNum(r.rtnCts),
+      Status: r.status || "",
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
