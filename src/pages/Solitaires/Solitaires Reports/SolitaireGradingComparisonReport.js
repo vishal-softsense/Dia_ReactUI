@@ -195,12 +195,12 @@ const CompareCell = ({ value, colorFlag, boldFlag, decimals, align = "center" })
   const style = {
     ...(colorInfo && !isEmpty
       ? {
-          backgroundColor: colorInfo.bg,
-          color: colorInfo.color,
-          padding: "1px 5px",
-          borderRadius: "4px",
-          display: "inline-block"
-        }
+        backgroundColor: colorInfo.bg,
+        color: colorInfo.color,
+        padding: "1px 5px",
+        borderRadius: "4px",
+        display: "inline-block"
+      }
       : {}),
     ...(isEmpty ? { color: "var(--vz-text-muted, #878a99)", fontSize: "0.85em" } : {}),
     fontWeight: boldFlag && !isEmpty ? "bold" : "normal",
@@ -237,6 +237,7 @@ const SolitaireGradingComparisonReport = () => {
   const [labWeightRows, setLabWeightRows] = useState([]);
   const [selectedLabLots, setSelectedLabLots] = useState({});
   const [showLabWeightDiff, setShowLabWeightDiff] = useState(false);
+  const [hideZeroDiff, setHideZeroDiff] = useState(false);
   const [useLabWeightDate, setUseLabWeightDate] = useState(false);
   const [labWeightDate, setLabWeightDate] = useState(formatLocalDate(new Date()));
   const [makingEntry, setMakingEntry] = useState(false);
@@ -379,6 +380,7 @@ const SolitaireGradingComparisonReport = () => {
     setReportRows([]);
     setLabWeightRows([]);
     setSelectedLabLots({});
+    setHideZeroDiff(false);
     setUseLabWeightDate(false);
     setLabWeightDate(formatLocalDate(new Date()));
     setFilters(mergeDates({
@@ -453,21 +455,40 @@ const SolitaireGradingComparisonReport = () => {
     setSelectedLabLots({});
   };
 
-  const allLabSelected = useMemo(() => {
-    if (!labWeightRows.length) return false;
-    return labWeightRows.every((row, idx) => {
-      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
-      return !!selectedLabLots[key];
+  const getLabOldWeight = useCallback((row) => {
+    const hasLabDiffEntry = !!(row?.hasLabWeightDiffEntry ?? row?.HasLabWeightDiffEntry);
+    if (hasLabDiffEntry) {
+      return toNum(getRowVal(row, "labW", "LabW", "oldWeight", "OldWeight"));
+    }
+    return toNum(getRowVal(row, "oldWeight", "OldWeight"));
+  }, []);
+
+  const visibleLabWeightRows = useMemo(() => {
+    const indexed = labWeightRows.map((row, idx) => ({
+      row,
+      key: String(getRowVal(row, "lotNo", "LotNo") || idx)
+    }));
+    if (!hideZeroDiff) return indexed;
+    return indexed.filter(({ row }) => {
+      const oldWeight = getLabOldWeight(row);
+      const newWeight = toNum(getRowVal(row, "newWeight", "NewWeight"));
+      return Number(Math.abs(oldWeight - newWeight).toFixed(3)) !== 0;
     });
-  }, [labWeightRows, selectedLabLots]);
+  }, [labWeightRows, hideZeroDiff, getLabOldWeight]);
+
+  const allLabSelected = useMemo(() => {
+    if (!visibleLabWeightRows.length) return false;
+    return visibleLabWeightRows.every(({ key }) => !!selectedLabLots[key]);
+  }, [visibleLabWeightRows, selectedLabLots]);
 
   const handleSelectAllLab = (checked) => {
-    const next = {};
-    labWeightRows.forEach((row, idx) => {
-      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
-      next[key] = checked;
+    setSelectedLabLots((prev) => {
+      const next = { ...prev };
+      visibleLabWeightRows.forEach(({ key }) => {
+        next[key] = checked;
+      });
+      return next;
     });
-    setSelectedLabLots(next);
   };
 
   const handleSelectLabRow = (key, checked) => {
@@ -485,10 +506,9 @@ const SolitaireGradingComparisonReport = () => {
   const handleMakeLabWeightDiffEntry = async () => {
     if (makingEntry) return;
 
-    const selectedRows = labWeightRows.filter((row, idx) => {
-      const key = String(getRowVal(row, "lotNo", "LotNo") || idx);
-      return !!selectedLabLots[key];
-    });
+    const selectedRows = visibleLabWeightRows
+      .filter(({ key }) => !!selectedLabLots[key])
+      .map(({ row }) => row);
 
     if (!selectedRows.length) {
       toast.warning(t("Please select at least one lot."));
@@ -496,32 +516,73 @@ const SolitaireGradingComparisonReport = () => {
     }
 
     setMakingEntry(true);
+
     try {
       const payload = {
         UseLabWeightDate: !!useLabWeightDate,
         LabWeightDate: useLabWeightDate ? labWeightDate : null,
+
         Rows: selectedRows.map((row) => ({
           LotNo: getRowVal(row, "lotNo", "LotNo"),
-          OldWeight: Number(getRowVal(row, "oldWeight", "OldWeight") || 0),
-          NewWeight: Number(getRowVal(row, "newWeight", "NewWeight") || 0)
+          OldWeight: getLabOldWeight(row),
+          NewWeight: toNum(getRowVal(row, "newWeight", "NewWeight"))
         }))
       };
 
       const response = await makeSolitaireLabWeightDiffEntry(payload);
+
       const ok = response?.success || response?.Success;
+
       if (ok) {
-        toast.success(response?.Message || response?.message || t("LabWeightDiff Done!!!"));
+        toast.success(
+          response?.Message ||
+          response?.message ||
+          t("LabWeightDiff Done!!!")
+        );
+
+        try {
+          const refreshRes = await getSolitaireGradingComparisonReport({
+            FromDate: filters.fromDate,
+            ToDate: filters.toDate,
+            Shape: filters.shape,
+            Color: filters.color,
+            Clarity: filters.clarity,
+            Size: filters.size,
+            Proportion: filters.proportion,
+            Polish: filters.polish,
+            Symmetry: filters.symmetry,
+            LAB: filters.lab,
+            Fluorescence: filters.fluorescence,
+            LotNo: filters.lotNo,
+            LabWeightDifference: true
+          });
+          if (refreshRes?.success || refreshRes?.Success) {
+            const refreshedData = refreshRes.Data || refreshRes.data || [];
+            setLabWeightRows(Array.isArray(refreshedData) ? refreshedData : []);
+            resetLabWeightSelection(Array.isArray(refreshedData) ? refreshedData : []);
+          }
+        } catch (refreshErr) {
+          console.error(refreshErr);
+        }
       } else {
-        toast.error(response?.Message || response?.message || t("Failed to make Lab Weight Diff entry."));
+        toast.error(
+          response?.Message ||
+          response?.message ||
+          t("Failed to make Lab Weight Diff entry.")
+        );
       }
+
     } catch (err) {
       console.error(err);
+
       const msg =
         err?.response?.data?.Message ||
         err?.response?.data?.message ||
         err?.message ||
         t("Server Connection Problem..");
+
       toast.error(msg);
+
     } finally {
       setMakingEntry(false);
     }
@@ -1005,7 +1066,7 @@ const SolitaireGradingComparisonReport = () => {
                       color="primary"
                       className="btn-sm rounded-2 px-3 py-1"
                       onClick={handleMakeLabWeightDiffEntry}
-                      disabled={makingEntry || !labWeightRows.length}
+                      disabled={makingEntry || !visibleLabWeightRows.length}
                     >
                       {makingEntry ? (
                         <>
@@ -1026,65 +1087,85 @@ const SolitaireGradingComparisonReport = () => {
                   <div className="text-center py-4 text-muted">{t("No lab weight difference data available.")}</div>
                 ) : (
                   <>
-                    <FormGroup check className="mb-3">
-                      <Input
-                        id="chkSelectAllLabWeight"
-                        type="checkbox"
-                        checked={allLabSelected}
-                        onChange={(e) => handleSelectAllLab(e.target.checked)}
-                        disabled={makingEntry}
-                      />
-                      <Label check htmlFor="chkSelectAllLabWeight" className="fw-medium">
-                        {t("Select All")}
-                      </Label>
-                    </FormGroup>
-                    <div className="table-responsive table-card mb-0">
-                      <Table className="align-middle table-nowrap mb-0 table-hover table-striped" size="sm">
-                        <thead className="table-light">
-                          <tr>
-                            <th style={{ width: "60px" }}>{t("Select")}</th>
-                            <th style={{ width: "50px" }}>#</th>
-                            <th>{t("Lot No")}</th>
-                            <th className="text-end">{t("Old Weight")}</th>
-                            <th className="text-end">{t("New Weight")}</th>
-                            <th className="text-end">{t("Difference")}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {labWeightRows.map((row, idx) => {
-                            const lotNo = String(getRowVal(row, "lotNo", "LotNo") || "");
-                            const key = lotNo || String(idx);
-                            const oldWeight = Number(getRowVal(row, "oldWeight", "OldWeight") || 0);
-                            const newWeight = Number(getRowVal(row, "newWeight", "NewWeight") || 0);
-                            const difference = Math.abs(
-                              Number(getRowVal(row, "difference", "Difference") || (oldWeight - newWeight))
-                            );
-                            return (
-                              <tr key={key}>
-                                <td>
-                                  <Input
-                                    type="checkbox"
-                                    checked={!!selectedLabLots[key]}
-                                    onChange={(e) => handleSelectLabRow(key, e.target.checked)}
-                                    disabled={makingEntry}
-                                  />
-                                </td>
-                                <td>{idx + 1}</td>
-                                <td>{lotNo || "-"}</td>
-                                <td className="text-end">{oldWeight.toFixed(3)}</td>
-                                <td className="text-end">{newWeight.toFixed(3)}</td>
-                                <td
-                                  className="text-end fw-semibold"
-                                  style={{ color: getDiffColor(oldWeight, newWeight) }}
-                                >
-                                  {difference.toFixed(3)}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </Table>
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                      <div className="d-flex flex-wrap align-items-center gap-4">
+                        <FormGroup check className="mb-0">
+                          <Input
+                            id="chkSelectAllLabWeight"
+                            type="checkbox"
+                            checked={allLabSelected}
+                            onChange={(e) => handleSelectAllLab(e.target.checked)}
+                            disabled={makingEntry || !visibleLabWeightRows.length}
+                          />
+                          <Label check htmlFor="chkSelectAllLabWeight" className="fw-medium mb-0">
+                            {t("Select All")}
+                          </Label>
+                        </FormGroup>
+                        <FormGroup check className="mb-0">
+                          <Input
+                            id="chkHideZeroDifference"
+                            type="checkbox"
+                            checked={hideZeroDiff}
+                            onChange={(e) => setHideZeroDiff(e.target.checked)}
+                            disabled={makingEntry}
+                          />
+                          <Label check htmlFor="chkHideZeroDifference" className="fw-medium mb-0">
+                            {t("Hide Zero Difference")}
+                          </Label>
+                        </FormGroup>
+                      </div>
+                      <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1">
+                        {t("Total Records")} : {visibleLabWeightRows.length}
+                      </span>
                     </div>
+                    {visibleLabWeightRows.length === 0 ? (
+                      <div className="text-center py-4 text-muted">{t("No lab weight difference data available.")}</div>
+                    ) : (
+                      <div className="table-responsive table-card mb-0">
+                        <Table className="align-middle table-nowrap mb-0 table-hover table-striped" size="sm">
+                          <thead className="table-light">
+                            <tr>
+                              <th style={{ width: "60px" }}>{t("Select")}</th>
+                              <th style={{ width: "50px" }}>#</th>
+                              <th>{t("Lot No")}</th>
+                              <th className="text-end">{t("Old Weight")}</th>
+                              <th className="text-end">{t("New Weight")}</th>
+                              <th className="text-end">{t("Difference")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visibleLabWeightRows.map(({ row, key }, idx) => {
+                              const lotNo = String(getRowVal(row, "lotNo", "LotNo") || "");
+                              const oldWeight = getLabOldWeight(row);
+                              const newWeight = toNum(getRowVal(row, "newWeight", "NewWeight"));
+                              const difference = Math.abs(oldWeight - newWeight);
+                              return (
+                                <tr key={key}>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={!!selectedLabLots[key]}
+                                      onChange={(e) => handleSelectLabRow(key, e.target.checked)}
+                                      disabled={makingEntry}
+                                    />
+                                  </td>
+                                  <td>{idx + 1}</td>
+                                  <td>{lotNo || "-"}</td>
+                                  <td className="text-end">{oldWeight.toFixed(3)}</td>
+                                  <td className="text-end">{newWeight.toFixed(3)}</td>
+                                  <td
+                                    className="text-end fw-semibold"
+                                    style={{ color: getDiffColor(oldWeight, newWeight) }}
+                                  >
+                                    {difference.toFixed(3)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </Table>
+                      </div>
+                    )}
                   </>
                 )}
               </CardBody>
@@ -1098,11 +1179,16 @@ const SolitaireGradingComparisonReport = () => {
                   <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                 ) : (
                   <>
-                    <div className="d-flex justify-content-end gap-4 mb-3 small fw-semibold">
-                      <span>{t("Total")}:</span>
-                      <span>{t("Carats")}: {footerTotals.caratTotal.toFixed(2)}</span>
-                      <span>{t("Rate")}: {footerTotals.rate.toFixed(2)}</span>
-                      <span>{t("Amount")}: {footerTotals.amtTotal.toFixed(2)}</span>
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 small fw-semibold">
+                      <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1 mb-1">
+                        {t("Total Records")} : {reportRows.length}
+                      </span>
+                      <div className="d-flex flex-wrap justify-content-end gap-4">
+                        <span>{t("Total")}:</span>
+                        <span>{t("Carats")}: {footerTotals.caratTotal.toFixed(2)}</span>
+                        <span>{t("Rate")}: {footerTotals.rate.toFixed(2)}</span>
+                        <span>{t("Amount")}: {footerTotals.amtTotal.toFixed(2)}</span>
+                      </div>
                     </div>
                     <TableContainer
                       columns={columns}
