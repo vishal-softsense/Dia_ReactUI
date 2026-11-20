@@ -95,7 +95,7 @@ const Navbar = () => {
                                 "services",
                                 "features",
                                 "faqs",
-                                // "pricing",
+                                "pricing",
                                 "contact",
                             ]}
                             currentClassName="active"
@@ -114,9 +114,9 @@ const Navbar = () => {
                             <li className="nav-item">
                                 <NavLink href="/#faqs" onClick={closeMenu}>FAQ</NavLink>
                             </li>
-                            {/* <li className="nav-item">
+                            <li className="nav-item">
                                 <NavLink href="/#pricing" onClick={closeMenu}>Pricing</NavLink>
-                            </li> */}
+                            </li>
                             <li className="nav-item">
                                 <NavLink href="/#contact" onClick={closeMenu}>Contact</NavLink>
                             </li>

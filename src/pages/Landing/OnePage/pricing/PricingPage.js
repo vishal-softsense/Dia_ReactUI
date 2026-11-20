@@ -15,7 +15,7 @@ const PricingPage = () => {
 
   return (
     <>
-      {/* <section className="section bg-light pricing-page" id="pricing">
+      <section className="section bg-light pricing-page" id="pricing">
         <Container fluid className="pricing-page-container px-3 px-lg-4 px-xl-5">
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pricing-page-header">
             <div>
@@ -53,7 +53,7 @@ const PricingPage = () => {
           </div>
 
         </Container>
-      </section> */}
+      </section>
     </>
   );
 };
