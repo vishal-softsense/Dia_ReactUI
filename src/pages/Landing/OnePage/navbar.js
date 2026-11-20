@@ -95,7 +95,7 @@ const Navbar = () => {
                                 "services",
                                 "features",
                                 "faqs",
-                                "pricing",
+                                // "pricing",
                                 "contact",
                             ]}
                             currentClassName="active"
@@ -114,15 +114,15 @@ const Navbar = () => {
                             <li className="nav-item">
                                 <NavLink href="/#faqs" onClick={closeMenu}>FAQ</NavLink>
                             </li>
-                            <li className="nav-item">
+                            {/* <li className="nav-item">
                                 <NavLink href="/#pricing" onClick={closeMenu}>Pricing</NavLink>
-                            </li>
+                            </li> */}
                             <li className="nav-item">
                                 <NavLink href="/#contact" onClick={closeMenu}>Contact</NavLink>
                             </li>
                         </Scrollspy>
 
-                        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 ms-lg-auto navbar-landing-actions">
+                        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2  navbar-landing-actions">
                             <Link to="/login" className="btn btn-link fw-medium text-decoration-none" onClick={closeMenu}>
                                 Sign in
                             </Link>
