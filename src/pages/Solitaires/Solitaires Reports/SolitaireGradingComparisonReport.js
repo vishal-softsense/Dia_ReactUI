@@ -1115,7 +1115,7 @@ const SolitaireGradingComparisonReport = () => {
                         </FormGroup>
                       </div>
                       <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1">
-                        {t("Total Records")} : {visibleLabWeightRows.length}
+                        {t("Total Records")}: {visibleLabWeightRows.length}
                       </span>
                     </div>
                     {visibleLabWeightRows.length === 0 ? (
@@ -1180,8 +1180,8 @@ const SolitaireGradingComparisonReport = () => {
                 ) : (
                   <>
                     <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 small fw-semibold">
-                      <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1 mb-1">
-                        {t("Total Records")} : {reportRows.length}
+                      <span className="badge bg-primary-subtle text-primary fs-12 fw-semibold px-2 py-1">
+                        {t("Total Records")}: {reportRows.length}
                       </span>
                       <div className="d-flex flex-wrap justify-content-end gap-4">
                         <span>{t("Total")}:</span>
