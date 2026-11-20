@@ -1316,26 +1316,11 @@ const MixSaleForm = ({ mode = "add" }) => {
     // PurchaseBack = RejP; Weight = Selection carats. Return carats stay independent of rejection.
     let availableCarats = toNum(entry.availableCarats);
     if (!isJewellery && toNum(entry.memoTransCode) === 0) {
-      const saleCts = roundCts(Math.max(issueCarats, weight));
       availableCarats = await resolveAvailableCarats(
         lotNo,
         entry.availableCarats,
         editIndex >= 0 ? Math.max(toNum(items[editIndex]?.issueCarats), toNum(items[editIndex]?.weight)) : 0
       );
-      const alreadyInGrid = items.reduce((sum, r, i) => {
-        if (i === editIndex) return sum;
-        if (String(r.lotNo).toLowerCase() !== lotNo.toLowerCase()) return sum;
-        if (toNum(r.memoTransCode) !== 0) return sum;
-        return sum + roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
-      }, 0);
-      if (availableCarats <= 0) {
-        showWarning(t(STOCK_IN_HAND_WARNING));
-        return;
-      }
-      if (saleCts + alreadyInGrid > availableCarats) {
-        showWarning(saleExceedsStockMessage(saleCts + alreadyInGrid, availableCarats, lotNo));
-        return;
-      }
     }
 
     // MVC AddItem: PurchaseBack = RejeP; Weight = SelectionCarat; ReturnCarats = Reje
@@ -1362,8 +1347,7 @@ const MixSaleForm = ({ mode = "add" }) => {
       exportNo: entry.exportNo || "",
       sRate: toNum(entry.sRate),
       sieve: entry.sieve || "",
-      stockType: resolveStockType(lotNo, entry.stockType),
-      stockType: entry.stockType || "Diamond",
+      stockType: resolveStockType(lotNo, entry.stockType) || "Diamond",
       invDescription: entry.invDescription || "",
       memoTransCode: toNum(entry.memoTransCode),
       rtnCarats: Math.round(rtnCarats * 1000) / 1000,
@@ -2176,28 +2160,6 @@ const MixSaleForm = ({ mode = "add" }) => {
     if (!items.length) {
       toast.warning(t("Please add at least one item."));
       return;
-    }
-    if (!isEdit) {
-      for (const r of items) {
-        if (toNum(r.memoTransCode) !== 0) continue;
-        if (resolveStockType(r.lotNo, r.stockType) === "Jewellery") continue;
-        let available = toNum(r.availableCarats);
-        try {
-          const onHand = await fetchLotOnHand(r.lotNo);
-          if (onHand > 0 || !(available > 0)) available = onHand;
-        } catch (err) {
-          console.error(err);
-        }
-        const saleCts = roundCts(Math.max(toNum(r.issueCarats), toNum(r.weight)));
-        if (available <= 0) {
-          showWarning(t(STOCK_IN_HAND_WARNING));
-          return;
-        }
-        if (saleCts > available) {
-          showWarning(saleExceedsStockMessage(saleCts, available, r.lotNo));
-          return;
-        }
-      }
     }
     setSaving(true);
     try {
