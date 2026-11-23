@@ -808,6 +808,8 @@ const authProtectedRoutes = [
   { path: "/Payment/Paymentlist", component: <PaymentList /> },
   { path: "/payment/add-payment", component: <PaymentAdd /> },
   { path: "/payment/edit-payment", component: <PaymentEdit /> },
+  { path: "/Payment/GetPayment", component: <PaymentEdit /> },
+  { path: "/Payment/GetJVEdit", component: <PaymentEdit /> },
 
   // Payment & Receipt With ExDiff (MVC: /Payment/PayWithExDiffList)
   { path: "/payment/pay-with-exdiff-list", component: <PayWithExDiffList /> },
