@@ -322,7 +322,8 @@ const StockPriceComparison = () => {
             } else {
                 setReportData([]);
                 setHasRun(true);
-                toast.error(t("Unable to fetch data. Please try again."));
+                const msg = response?.Data || response?.data || response?.message || t("Unable to fetch data. Please try again.");
+                toast.error(msg);
             }
         } catch (err) {
             setReportData([]);
@@ -331,7 +332,13 @@ const StockPriceComparison = () => {
             if (status === 403) {
                 toast.error(t("You are not authorized to perform this task."));
             } else {
-                toast.error(err?.response?.data?.Data || err?.message || t("Unable to fetch data. Please try again."));
+                const serverMsg =
+                    err?.response?.data?.Data ||
+                    err?.response?.data?.data ||
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
+                    err?.message;
+                toast.error(serverMsg || t("Unable to fetch data. Please try again."));
             }
         } finally {
             setBusy(false);

@@ -132,7 +132,7 @@ const MissingStock = () => {
     const [authorized, setAuthorized] = useState(true);
     const [busy, setBusy] = useState(false);
     const [stoneTypes, setStoneTypes] = useState("All");
-    const [filters, setFilters] = useState("");
+    const [filters, setFilters] = useState("LotNo");
     const [lotNo, setLotNo] = useState("");
     const [gridRows, setGridRows] = useState([]);
     const [hasRun, setHasRun] = useState(false);
@@ -190,18 +190,28 @@ const MissingStock = () => {
 
     const handleClear = () => {
         setStoneTypes("All");
-        setFilters("");
+        setFilters("LotNo");
         setLotNo("");
         setGridRows([]);
         setHasRun(false);
     };
 
     const handleReport = async () => {
+        if (!lotNo || !lotNo.trim()) {
+            toast.warning(t("Please enter lot number(s)."));
+            return;
+        }
+
+        if (!filters) {
+            toast.warning(t("Please select Option in Enter Lot No."));
+            return;
+        }
+
         setBusy(true);
         try {
             const payload = {
                 StoneTypes: stoneTypes,
-                LotNo: lotNo,
+                LotNo: lotNo.trim(),
                 Filters: filters
             };
 
@@ -217,7 +227,8 @@ const MissingStock = () => {
             } else {
                 setGridRows([]);
                 setHasRun(true);
-                toast.error(response?.Data || response?.data || t("Unable to fetch data. Please try again."));
+                const msg = response?.Data || response?.data || response?.message || t("Unable to fetch data. Please try again.");
+                toast.error(msg);
             }
         } catch (err) {
             setGridRows([]);
@@ -227,7 +238,13 @@ const MissingStock = () => {
                 setAuthorized(false);
                 toast.error(t("You are not authorized to perform this task."));
             } else {
-                toast.error(err?.response?.data?.Data || err?.message || t("Unable to fetch data. Please try again."));
+                const serverMsg =
+                    err?.response?.data?.Data ||
+                    err?.response?.data?.data ||
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
+                    err?.message;
+                toast.error(serverMsg || t("Unable to fetch data. Please try again."));
             }
         } finally {
             setBusy(false);
