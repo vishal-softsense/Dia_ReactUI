@@ -132,7 +132,7 @@ const MissingStock = () => {
     const [authorized, setAuthorized] = useState(true);
     const [busy, setBusy] = useState(false);
     const [stoneTypes, setStoneTypes] = useState("All");
-    const [filters, setFilters] = useState("LotNo");
+    const [filters, setFilters] = useState("");
     const [lotNo, setLotNo] = useState("");
     const [gridRows, setGridRows] = useState([]);
     const [hasRun, setHasRun] = useState(false);
@@ -190,29 +190,36 @@ const MissingStock = () => {
 
     const handleClear = () => {
         setStoneTypes("All");
-        setFilters("LotNo");
+        setFilters("");
         setLotNo("");
         setGridRows([]);
         setHasRun(false);
     };
 
     const handleReport = async () => {
-        if (!lotNo || !lotNo.trim()) {
+        // If lot number(s) entered but no filter option selected
+        if (lotNo && lotNo.trim() && !filters) {
+            toast.warning(t("Please select Option in Enter Lot No."));
+            return;
+        }
+
+        // If specific lot comparison/filter option selected but no lot numbers entered
+        if (filters === "LotNo" && (!lotNo || !lotNo.trim())) {
             toast.warning(t("Please enter lot number(s)."));
             return;
         }
 
-        if (!filters) {
-            toast.warning(t("Please select Option in Enter Lot No."));
+        if ((filters === "LotNo Not" || filters === "LotNo Like") && (!lotNo || !lotNo.trim())) {
+            toast.warning(t("Please enter lot number(s)."));
             return;
         }
 
         setBusy(true);
         try {
             const payload = {
-                StoneTypes: stoneTypes,
-                LotNo: lotNo.trim(),
-                Filters: filters
+                StoneTypes: stoneTypes || "All",
+                LotNo: (lotNo || "").trim(),
+                Filters: filters || ""
             };
 
             const response = await getMissingStockReport(payload);
@@ -239,6 +246,7 @@ const MissingStock = () => {
                 toast.error(t("You are not authorized to perform this task."));
             } else {
                 const serverMsg =
+                    (typeof err === "string" ? err : null) ||
                     err?.response?.data?.Data ||
                     err?.response?.data?.data ||
                     err?.response?.data?.message ||
