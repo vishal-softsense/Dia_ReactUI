@@ -675,8 +675,8 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      baseRate: toNum(getVal(h, "BaseRate", "MasterCurrencyRate"), 1) || 1,
+      sBaseRate: toNum(getVal(h, "SBaseRate", "StockCurrencyRate"), 1) || 1,
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundAmount: toNum(getVal(h, "RoundAmount")),
@@ -759,7 +759,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const fillFromLot = async (lotNo) => {
     if (!lotNo) return;
     try {
-      const res = await getSolitaireSaleLotDetail({ lotNo, curCode: toNum(header.curCode), sBaseRate: toNum(header.sBaseRate, 1) });
+      const res = await getSolitaireSaleLotDetail({ lotNo, curCode: toNum(header.curCode), sBaseRate: toNum(header.sBaseRate, 1) || 1 });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Lot detail not found."));
         return;
@@ -798,7 +798,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     const res = await getSolitaireSaleLotDetail({
       lotNo,
       curCode: toNum(header.curCode),
-      sBaseRate: toNum(header.sBaseRate, 1)
+      sBaseRate: toNum(header.sBaseRate, 1) || 1
     });
     if (!(res?.success || res?.Success)) return 0;
     const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
@@ -932,7 +932,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Failed to load items."));
@@ -1037,7 +1037,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Failed to import Excel."));
