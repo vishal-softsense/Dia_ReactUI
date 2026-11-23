@@ -34,6 +34,7 @@ import {
   getMixMemoOutPageData,
   getMixMemoOutShipVia
 } from "../../../../helpers/fakebackend_helper";
+import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -422,6 +423,15 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   /** MVC #cleardata — when checked, Clearall() after Add Item */
   const [clearData, setClearData] = useState(false);
@@ -1543,7 +1553,19 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col)}
+                                  {col.key === "lotNo" ? (
+                                    <span
+                                      role="button"
+                                      className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpenStockHistory(r.lotNo)}
+                                      title={t("View Stock History")}
+                                    >
+                                      {r.lotNo}
+                                    </span>
+                                  ) : (
+                                    renderItemCell(r, col)
+                                  )}
                                 </td>
                               ))}
                             </tr>
@@ -1627,6 +1649,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
             </Col>
           </Row>
         </Container>
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={true}
+        />
         <WarningModal
           open={warningModal.open}
           title={t("Warning!")}
