@@ -1089,7 +1089,7 @@ const LoanOutstandingReport = () => {
                           setPage(1);
                         }}
                       >
-                        {[10, 25, 50, 100, 500].map((n) => (
+                        {[500, 1000, 1500].map((n) => (
                           <option key={n} value={n}>
                             {n}
                           </option>
