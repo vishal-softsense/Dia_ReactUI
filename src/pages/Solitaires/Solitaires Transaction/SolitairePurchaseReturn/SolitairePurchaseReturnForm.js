@@ -273,9 +273,9 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isEdit = mode === "edit";
-  const editId = searchParams.get("Id") || searchParams.get("id") || "";
-  const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
+  const editId = searchParams.get("Id") || searchParams.get("id") || searchParams.get("ID") || "";
+  const isView = String(searchParams.get("Mode") || searchParams.get("mode") || searchParams.get("MODE") || "").toLowerCase() === "view";
+  const isEdit = mode === "edit" || !!editId;
   const readOnly = isView;
 
   const [loading, setLoading] = useState(true);
@@ -599,7 +599,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
     (async () => {
       setLoading(true);
       const page = await loadPageData();
-      if (isEdit) {
+      if (isEdit || isView) {
         await loadDetail(page);
       } else if (page?.curs?.length) {
         const defaultCur = page.defaultCurrencyCode
@@ -1012,9 +1012,21 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                     {title}
                   </h5>
                   <div className="d-flex gap-2 flex-wrap">
-                    <Link to="/purchasereturn/purchasereturn-list" className="btn btn-soft-secondary btn-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.opener && window.history.length <= 1) {
+                          window.close();
+                        } else if (window.history.length > 1) {
+                          navigate(-1);
+                        } else {
+                          navigate("/purchasereturn/purchasereturn-list");
+                        }
+                      }}
+                      className="btn btn-soft-secondary btn-sm"
+                    >
                       {t("Back")}
-                    </Link>
+                    </button>
                     {!readOnly && (
                       <Button color="primary" size="sm" disabled={saving} onClick={handleSubmit}>
                         {saving ? t("Saving...") : t("Submit")}
@@ -1046,19 +1058,19 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Type")}</Label>
-                          <Select styles={customStyles} options={typeOpts} value={typeOpts.find((o) => String(o.value) === String(header.invType)) || null} onChange={(o) => setHeaderField("invType", o?.value || "")} placeholder={t("Type")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={typeOpts} value={typeOpts.find((o) => String(o.value) === String(header.invType)) || (header.invType ? { value: header.invType, label: header.invType } : null)} onChange={(o) => setHeaderField("invType", o?.value || "")} placeholder={t("Type")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("SubType")}</Label>
-                          <Select styles={customStyles} options={subTypeOpts} value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || null} onChange={(o) => setHeaderField("subType", o?.value || "")} placeholder={t("SubType")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={subTypeOpts} value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || (header.subType ? { value: header.subType, label: header.subType } : null)} onChange={(o) => setHeaderField("subType", o?.value || "")} placeholder={t("SubType")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Category")}</Label>
-                          <Select styles={customStyles} options={categoryOpts} value={categoryOpts.find((o) => String(o.value) === String(header.category)) || null} onChange={(o) => setHeaderField("category", o?.value || "")} placeholder={t("Category")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={categoryOpts} value={categoryOpts.find((o) => String(o.value) === String(header.category)) || (header.category ? { value: header.category, label: header.category } : null)} onChange={(o) => setHeaderField("category", o?.value || "")} placeholder={t("Category")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
 
@@ -1090,7 +1102,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Currency")}</Label>
-                          <Select styles={customStyles} options={currencyOpts} value={currencyOpts.find((o) => o.value === String(header.curCode)) || null} onChange={async (o) => { const code = o?.value || ""; setHeaderField("curCode", code); await applyCurrencyRates(code); }} placeholder={t("Currency")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={currencyOpts} value={currencyOpts.find((o) => o.value === String(header.curCode)) || (header.curCode ? { value: String(header.curCode), label: String(header.curCode) } : null)} onChange={async (o) => { const code = o?.value || ""; setHeaderField("curCode", code); await applyCurrencyRates(code); }} placeholder={t("Currency")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
