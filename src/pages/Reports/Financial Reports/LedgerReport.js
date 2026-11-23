@@ -364,13 +364,13 @@ const VTYPE_URL_MAP = {
     CSaleRtn: "/MixSaleReturn/edit-mixsalereturnParcel",
     SJEWRtn: "/jewsalertn/edit-jew-salereturn",
     MJEW: "/jewMemo/edit-jew-Memo",
-    JV: "/JournalEntry/GetJournalEntries",
-    JVPAY: "/Payment/GetJVEdit",
-    JVREC: "/Payment/GetJVEdit",
-    PAY: "/Payment/GetIncomeExpense",
-    REC: "/Payment/GetIncomeExpense",
-    IPAY: "/Payment/GetPayment",
-    IREC: "/Payment/GetPayment"
+    JV: "/payment/edit-journal-entry",
+    JVPAY: "/payment/edit-payment?mode=jv",
+    JVREC: "/payment/edit-payment?mode=jv",
+    PAY: "/payment/edit-income-expense",
+    REC: "/payment/edit-income-expense",
+    IPAY: "/payment/edit-payment",
+    IREC: "/payment/edit-payment"
 };
 
 const getRowVal = (row, ...keys) => {
@@ -457,10 +457,10 @@ const mapDualLedgerRow = (row) => ({
     sCredit: getRowVal(row, "SCreditAmount", "sCreditAmount", "SCredit", "sCredit"),
     mCredit: getRowVal(row, "MCreditAmount", "mCreditAmount", "MCredit", "mCredit"),
     invDesc1: safeText(getRowVal(row, "InvDescription1", "invDescription1", "Description1")),
-    gCode: getRowVal(row, "GCode", "gCode"),
-    vCode: getRowVal(row, "VCode", "vCode", "Vcode", "vcode"),
-    gCode1: getRowVal(row, "GCode1", "gCode1"),
-    vCode1: getRowVal(row, "VCode1", "vCode1")
+    gCode: getRowVal(row, "GCode", "gCode", "GCODE", "gcode", "JvCode", "jvCode"),
+    vCode: getRowVal(row, "VCode", "vCode", "Vcode", "vcode", "VCODE", "InvCode", "invCode"),
+    gCode1: getRowVal(row, "GCode1", "gCode1", "GCODE1", "gcode1", "JvCode1", "jvCode1"),
+    vCode1: getRowVal(row, "VCode1", "vCode1", "Vcode1", "vcode1", "VCODE1", "InvCode1", "invCode1")
 });
 
 const fmtCarats = (value) => {
@@ -477,15 +477,27 @@ const fmtAmt = (value) => {
 
 const openVTypeLink = (id, vtype) => {
     if (!vtype || !id) return;
-    const path = VTYPE_URL_MAP[vtype];
+    const typeUpper = String(vtype).trim().toUpperCase();
+    const entry = Object.entries(VTYPE_URL_MAP).find(
+        ([k]) => k.toUpperCase() === typeUpper
+    );
+    const path = entry ? entry[1] : VTYPE_URL_MAP[vtype];
     if (!path) return;
-    window.open(`${path}?Id=${encodeURIComponent(id)}&Mode=view`, "_blank");
+    const sep = path.includes("?") ? "&" : "?";
+    window.open(`${path}${sep}Id=${encodeURIComponent(id)}&Mode=view`, "_blank");
 };
+
+const isValidId = (val) => val !== null && val !== undefined && val !== "" && val !== 0 && val !== "0";
 
 const VTypeLink = ({ vtype, gCode, vCode }) => {
     if (!vtype) return null;
-    const linkId = JV_LINK_TYPES.has(vtype) ? gCode : vCode;
-    if (linkId === null || linkId === undefined || linkId === "") {
+    const typeUpper = String(vtype).trim().toUpperCase();
+    const isJv = JV_LINK_TYPES.has(typeUpper);
+    const primaryId = isJv ? gCode : vCode;
+    const secondaryId = isJv ? vCode : gCode;
+    const linkId = isValidId(primaryId) ? primaryId : (isValidId(secondaryId) ? secondaryId : null);
+
+    if (!linkId) {
         return <span>{vtype}</span>;
     }
     return (
@@ -494,7 +506,7 @@ const VTypeLink = ({ vtype, gCode, vCode }) => {
             className="ledger-vtype-link"
             onClick={(e) => {
                 e.preventDefault();
-                openVTypeLink(linkId, vtype);
+                openVTypeLink(linkId, typeUpper);
             }}
         >
             {vtype}
@@ -1204,8 +1216,8 @@ ${printArea.innerHTML}
                     ) : (
                         runningRows.map((row, idx) => {
                             const vtype = safeText(getRowVal(row, "VType", "vType"));
-                            const gCode = getRowVal(row, "GCode", "gCode");
-                            const vCode = getRowVal(row, "vcode", "Vcode", "VCode", "vCode");
+                            const gCode = getRowVal(row, "GCode", "gCode", "gcode", "GCODE");
+                            const vCode = getRowVal(row, "vcode", "Vcode", "VCode", "vCode", "VCODE");
                             return (
                                 <tr key={`run-${idx}`}>
                                     <td className="text-nowrap">

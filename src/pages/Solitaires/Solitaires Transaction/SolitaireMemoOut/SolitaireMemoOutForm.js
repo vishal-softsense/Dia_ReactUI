@@ -650,8 +650,8 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      baseRate: toNum(getVal(h, "BaseRate", "MasterCurrencyRate"), 1) || 1,
+      sBaseRate: toNum(getVal(h, "SBaseRate", "StockCurrencyRate"), 1) || 1,
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundDate: toLocalDateStr(getVal(h, "RoundDate")) || todayIso(),
@@ -725,7 +725,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       const res = await getSolitaireMemoOutLotDetail({
         lotNo,
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Lot detail not found."));
@@ -844,7 +844,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       };
       const res = await getSolitaireMemoOutItemFromList(payload);
       if (!(res?.success || res?.Success)) {

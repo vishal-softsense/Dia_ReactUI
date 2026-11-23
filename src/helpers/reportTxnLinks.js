@@ -15,7 +15,14 @@ export const VTYPE_URL_MAP = {
   CPurrtn: "/MixPurchaseReturn/edit-mixpurchasertndata",
   CSaleRtn: "/MixSaleReturn/edit-mixsalereturnParcel",
   SJEWRtn: "/jewsalertn/edit-jew-salereturn",
-  MJEW: "/jewMemo/edit-jew-Memo"
+  MJEW: "/jewMemo/edit-jew-Memo",
+  IPAY: "/payment/edit-payment",
+  IREC: "/payment/edit-payment",
+  PAY: "/payment/edit-income-expense",
+  REC: "/payment/edit-income-expense",
+  JV: "/payment/edit-journal-entry",
+  JVPAY: "/payment/edit-payment",
+  JVREC: "/payment/edit-payment"
 };
 
 /** MVC OutstandingReport.cshtml #TrnType dropdown values */
