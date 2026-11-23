@@ -38,6 +38,7 @@ import {
   getSolitaireSaleShipVia,
   refreshSolitaireSaleBack
 } from "../../../../helpers/fakebackend_helper";
+import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -342,6 +343,15 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [bulkLotNos, setBulkLotNos] = useState("");
   const [refreshBack, setRefreshBack] = useState("");
@@ -1598,7 +1608,23 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                                   </div>
                                 ) : <span className="text-muted">-</span>}
                               </td>
-                              {ITEM_COLUMNS.map((col) => <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>{renderItemCell(r, col)}</td>)}
+                              {ITEM_COLUMNS.map((col) => (
+                                <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
+                                  {col.key === "lotNo" ? (
+                                    <span
+                                      role="button"
+                                      className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpenStockHistory(r.lotNo)}
+                                      title={t("View Stock History")}
+                                    >
+                                      {r.lotNo}
+                                    </span>
+                                  ) : (
+                                    renderItemCell(r, col)
+                                  )}
+                                </td>
+                              ))}
                             </tr>
                           ))}
                         </tbody>
@@ -1732,7 +1758,17 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       <td><Input type="checkbox" checked={!!r.selected} onChange={(e) => { const checked = e.target.checked; setMemoRows((prev) => prev.map((x) => (x.key === r.key ? { ...x, selected: checked } : x))); }} /></td>
                       <td>{r.date}</td>
                       <td>{r.memoNo}</td>
-                      <td>{r.lotNo}</td>
+                      <td>
+                        <span
+                          role="button"
+                          className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleOpenStockHistory(r.lotNo)}
+                          title={t("View Stock History")}
+                        >
+                          {r.lotNo}
+                        </span>
+                      </td>
                       <td className="text-end">{fmt(r.cts, 3)}</td>
                       <td>
                         <Input type="number" className="form-control-sm" style={{ height: 28, width: "65px", padding: "1px 5px", fontSize: "11px" }} value={r.sale} onChange={(e) => {
@@ -1777,6 +1813,12 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
           </ModalFooter>
         </Modal>
 
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={false}
+        />
         <WarningModal open={warningModal.open} title={t("Warning!")} message={warningModal.message} confirmText={t("OK")} onClose={closeWarning} />
         <ToastContainer autoClose={2000} />
         <style>{`
