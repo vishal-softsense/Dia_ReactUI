@@ -38,6 +38,7 @@ import {
   getSolitairePurchasePageData,
   getSolitairePurchaseRapRate
 } from "../../../../helpers/fakebackend_helper";
+import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -594,6 +595,15 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [selectedLab, setSelectedLab] = useState("GIA");
   const [certNo, setCertNo] = useState("");
@@ -2861,6 +2871,16 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                                           }
                                         }}
                                       />
+                                    ) : col.key === "lotNo" ? (
+                                      <span
+                                        role="button"
+                                        className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => handleOpenStockHistory(r.lotNo)}
+                                        title={t("View Stock History")}
+                                      >
+                                        {r.lotNo}
+                                      </span>
                                     ) : (
                                       renderItemCell(r, col)
                                     )}
@@ -3063,7 +3083,17 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </td>
                       <td>{r.date}</td>
                       <td>{r.memoNo}</td>
-                      <td>{r.lotNo}</td>
+                      <td>
+                        <span
+                          role="button"
+                          className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleOpenStockHistory(r.lotNo)}
+                          title={t("View Stock History")}
+                        >
+                          {r.lotNo}
+                        </span>
+                      </td>
                       <td className="text-end">{fmt(r.cts, 3)}</td>
                       <td>
                         <Input
@@ -3179,6 +3209,13 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
             </Button>
           </ModalFooter>
         </Modal>
+
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={false}
+        />
 
         <ToastContainer autoClose={2000} />
       </div>

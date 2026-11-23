@@ -4,17 +4,33 @@ import { Button, Modal, ModalBody, ModalHeader, Spinner, Table } from "reactstra
 import { toast } from "react-toastify";
 
 import { exportToExcel } from "../../../helpers/excel_helper";
-import { getSolitaireStockSearchHistory } from "../../../helpers/fakebackend_helper";
+import {
+  getSolitaireStockHistoryReport,
+  getParcelStockHistoryReport,
+  getSolitaireStockSearchHistory
+} from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 
-const formatDateYMDToDMY = (dateStr) => {
-  if (!dateStr) return "";
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return dateStr;
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+const formatDateToDMY = (dateVal) => {
+  if (!dateVal) return "";
+  const s = String(dateVal).split("T")[0].split(" ")[0].trim();
+  const parts = s.split("-");
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      return `${parts[2].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[0]}`;
+    }
+    return s;
+  }
+  const slashParts = s.split("/");
+  if (slashParts.length === 3) {
+    if (slashParts[2].length === 4) {
+      return `${slashParts[0].padStart(2, "0")}-${slashParts[1].padStart(2, "0")}-${slashParts[2]}`;
+    }
+  }
+  return s;
 };
 
-const fmtFixed = (value, decimals) => {
+const fmtFixed = (value, decimals = 2) => {
   if (value === null || value === undefined || value === "") return "";
   const num = Number(value);
   if (Number.isNaN(num)) return "";
@@ -43,23 +59,23 @@ const getNumVal = (row, ...keys) => {
 const getParticulars = (row) => {
   const value = getRowVal(
     row,
+    "relatedRemark",
+    "RelatedRemark",
+    "perticulors",
+    "Perticulors",
     "particulars",
     "Particulars",
     "partyName",
     "PartyName",
     "accName",
-    "AccName",
-    "relatedRemark",
-    "RelatedRemark",
-    "perticulors",
-    "Perticulors"
+    "AccName"
   );
   if (value) return value;
-  const trnType = getRowVal(row, "trnType", "TrnType");
+  const trnType = getRowVal(row, "trntype", "Trntype", "trnType", "TrnType");
   return trnType === "OpStk" ? "OpStk" : "";
 };
 
-const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
+const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) => {
   const { t } = useTranslation();
   const { getDates } = useSettingReportDates();
   const [rows, setRows] = useState([]);
@@ -82,27 +98,103 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
       try {
         const { fromDate, toDate } = await getDates();
         if (!cancelled) {
-          setHistoryFromDate(formatDateYMDToDMY(fromDate));
+          setHistoryFromDate(formatDateToDMY(fromDate));
         }
 
-        const payload = {
+        const solPayload = {
           FromDate: fromDate,
           ToDate: toDate,
-          LotNo: stockId,
+          LotNo: String(stockId).trim(),
           SelectedTypes: ["ALL"],
-          StkEff: true
+          SalpurAvg: true
         };
 
-        const response = await getSolitaireStockSearchHistory(payload);
-        const ok = response?.Success || response?.success;
+        const parcelPayload = {
+          FromDate: fromDate,
+          ToDate: toDate,
+          LotNo: String(stockId).trim(),
+          SelectedTypes: ["ALL"],
+          selectedTypes: ["ALL"],
+          selectedTypesTrn: ["ALL"],
+          SalpurAvg: true,
+          RadioValue: "sale-pur-avg-price"
+        };
+
+        let data = [];
+
+        if (isParcel) {
+          // Parcel first, fallback to Solitaire
+          try {
+            const res = await getParcelStockHistoryReport(parcelPayload);
+            const raw = res?.Data || res?.data || res?.reportData;
+            if (Array.isArray(raw) && raw.length > 0) {
+              data = raw;
+            }
+          } catch (e) {
+            // fallback
+          }
+
+          if (!data || data.length === 0) {
+            try {
+              const res = await getSolitaireStockHistoryReport(solPayload);
+              const raw = res?.Data || res?.data;
+              if (Array.isArray(raw) && raw.length > 0) {
+                data = raw;
+              }
+            } catch (e) {
+              // fallback
+            }
+          }
+        } else {
+          // Solitaire first, fallback to Parcel
+          try {
+            const res = await getSolitaireStockHistoryReport(solPayload);
+            const raw = res?.Data || res?.data;
+            if (Array.isArray(raw) && raw.length > 0) {
+              data = raw;
+            }
+          } catch (e) {
+            // fallback
+          }
+
+          if (!data || data.length === 0) {
+            try {
+              const res = await getParcelStockHistoryReport(parcelPayload);
+              const raw = res?.Data || res?.data || res?.reportData;
+              if (Array.isArray(raw) && raw.length > 0) {
+                data = raw;
+              }
+            } catch (e) {
+              // fallback
+            }
+          }
+        }
+
+        // Secondary fallback to stock search history if still empty
+        if (!data || data.length === 0) {
+          try {
+            const res = await getSolitaireStockSearchHistory({
+              FromDate: fromDate,
+              ToDate: toDate,
+              LotNo: String(stockId).trim(),
+              SelectedTypes: ["ALL"],
+              StkEff: true
+            });
+            const raw = res?.Data || res?.data;
+            if (Array.isArray(raw) && raw.length > 0) {
+              data = raw;
+            }
+          } catch (e) {
+            // fallback
+          }
+        }
 
         if (cancelled) return;
 
-        if (ok) {
-          const data = response.Data || response.data || [];
-          setRows(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) {
+          setRows(data);
         } else {
-          toast.warning(response?.Message || response?.message || t("No history found."));
+          setRows([]);
         }
       } catch (err) {
         if (!cancelled) {
@@ -119,18 +211,20 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, stockId, t, getDates]);
+  }, [isOpen, stockId, isParcel, t, getDates]);
 
   const totals = useMemo(() => {
     return rows.reduce(
       (acc, item) => {
-        acc.stockIn += getNumVal(item, "stockIn", "StockIn");
-        acc.stockInAmount += getNumVal(item, "stockInAmount", "StockInAmount");
-        acc.stockOut += getNumVal(item, "stockOut", "StockOut");
-        acc.stockOutAmount += getNumVal(item, "stockOutAmount", "StockOutAmount");
+        acc.stockIn += getNumVal(item, "inCts", "InCts", "stockIn", "StockIn");
+        acc.stockInPrice += getNumVal(item, "inRate", "InRate", "stockInPrice", "StockInPrice");
+        acc.stockInAmount += getNumVal(item, "inAmount", "InAmount", "stockInAmount", "StockInAmount");
+        acc.stockOut += getNumVal(item, "outCts", "OutCts", "stockOut", "StockOut");
+        acc.stockOutPrice += getNumVal(item, "outRate", "OutRate", "stockOutPrice", "StockOutPrice");
+        acc.stockOutAmount += getNumVal(item, "outAmount", "OutAmount", "stockOutAmount", "StockOutAmount");
         return acc;
       },
-      { stockIn: 0, stockInAmount: 0, stockOut: 0, stockOutAmount: 0 }
+      { stockIn: 0, stockInPrice: 0, stockInAmount: 0, stockOut: 0, stockOutPrice: 0, stockOutAmount: 0 }
     );
   }, [rows]);
 
@@ -158,40 +252,72 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
     const excelRows = [[`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]];
 
     rows.forEach((item) => {
-      const trnType = getRowVal(item, "trnType", "TrnType");
-      const trnDate = trnType === "OpStk" ? historyFromDate : getRowVal(item, "trnDate", "TrnDate");
+      const trnType = getRowVal(item, "trntype", "Trntype", "trnType", "TrnType");
+      let trnDate = getRowVal(item, "trnDate", "TrnDate", "trndate", "Trndate");
+      trnDate =
+        trnType === "OpStk" && (!trnDate || trnDate.startsWith("01-01-1900") || trnDate.startsWith("1900"))
+          ? historyFromDate
+          : formatDateToDMY(trnDate);
+
+      const stockIn = getNumVal(item, "inCts", "InCts", "stockIn", "StockIn");
+      const stockInPrice = getNumVal(item, "inRate", "InRate", "stockInPrice", "StockInPrice");
+      const stockInAmount = getNumVal(item, "inAmount", "InAmount", "stockInAmount", "StockInAmount");
+
+      const stockOut = getNumVal(item, "outCts", "OutCts", "stockOut", "StockOut");
+      const stockOutPrice = getNumVal(item, "outRate", "OutRate", "stockOutPrice", "StockOutPrice");
+      const stockOutAmount = getNumVal(item, "outAmount", "OutAmount", "stockOutAmount", "StockOutAmount");
+
+      const balanceStock = getNumVal(item, "balCts", "BalCts", "balanceStock", "BalanceStock");
+      const balancePrice = getNumVal(item, "balRate", "BalRate", "balancePrice", "BalancePrice");
+      const balanceAmount = getNumVal(item, "balAmount", "BalAmount", "balanceAmount", "BalanceAmount");
+
       excelRows.push([
         trnDate,
         trnType,
         getParticulars(item),
-        fmtFixed(getNumVal(item, "stockIn", "StockIn"), 2),
-        fmtFixed(getNumVal(item, "stockInPrice", "StockInPrice"), 2),
-        fmtFixed(getNumVal(item, "stockInAmount", "StockInAmount"), 2),
-        fmtFixed(getNumVal(item, "stockOut", "StockOut"), 2),
-        fmtFixed(getNumVal(item, "stockOutPrice", "StockOutPrice"), 2),
-        fmtFixed(getNumVal(item, "stockOutAmount", "StockOutAmount"), 2),
-        fmtFixed(getNumVal(item, "balanceStock", "BalanceStock"), 2),
-        fmtFixed(getNumVal(item, "balancePrice", "BalancePrice"), 2),
-        fmtFixed(getNumVal(item, "balanceAmount", "BalanceAmount"), 2)
+        fmtFixed(stockIn, 2),
+        fmtFixed(stockInPrice, 2),
+        fmtFixed(stockInAmount, 2),
+        fmtFixed(stockOut, 2),
+        fmtFixed(stockOutPrice, 2),
+        fmtFixed(stockOutAmount, 2),
+        fmtFixed(balanceStock, 2),
+        fmtFixed(balancePrice, 2),
+        fmtFixed(balanceAmount, 2)
       ]);
     });
 
     excelRows.push([
-      "Grand Total :",
+      "Total:",
       "",
       "",
       totals.stockIn.toFixed(2),
-      "",
+      totals.stockInPrice.toFixed(2),
       totals.stockInAmount.toFixed(2),
       totals.stockOut.toFixed(2),
-      "",
+      totals.stockOutPrice.toFixed(2),
       totals.stockOutAmount.toFixed(2),
       "",
       "",
       ""
     ]);
 
-    await exportToExcel(columns, excelRows, "StockHistoryList", "Stock-History");
+    excelRows.push([
+      "Grand Total:",
+      "",
+      "",
+      totals.stockIn.toFixed(2),
+      totals.stockInPrice.toFixed(2),
+      totals.stockInAmount.toFixed(2),
+      totals.stockOut.toFixed(2),
+      totals.stockOutPrice.toFixed(2),
+      totals.stockOutAmount.toFixed(2),
+      "",
+      "",
+      ""
+    ]);
+
+    await exportToExcel(columns, excelRows, `StockHistory_${stockId}`, "Stock-History");
   };
 
   return (
@@ -222,12 +348,12 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
           <div className="text-center py-5 text-muted">{t("No history found.")}</div>
         ) : (
           <div className="table-responsive">
-            <Table bordered striped size="sm" className="align-middle mb-0">
+            <Table bordered hover size="sm" className="align-middle mb-0 text-nowrap" style={{ fontSize: "12px" }}>
               <thead className="table-light">
                 <tr>
-                  <th className="text-center">{t("TrnDate")}</th>
-                  <th className="text-center">{t("TrnType")}</th>
-                  <th className="text-center">{t("Particulars")}</th>
+                  <th className="text-start">{t("TrnDate")}</th>
+                  <th className="text-start">{t("TrnType")}</th>
+                  <th className="text-start">{t("Particulars")}</th>
                   <th className="text-end">{t("StockIn")}</th>
                   <th className="text-end">{t("StockInPrice")}</th>
                   <th className="text-end">{t("StockInAmount")}</th>
@@ -240,37 +366,65 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId }) => {
                 </tr>
               </thead>
               <tbody>
+                <tr className="bg-light-subtle">
+                  <td colSpan={12} className="fw-bold py-2 ps-3" style={{ fontSize: "13px" }}>
+                    <strong>StockID: {stockId}</strong>
+                  </td>
+                </tr>
                 {rows.map((item, idx) => {
-                  const trnType = getRowVal(item, "trnType", "TrnType");
-                  const trnDate =
-                    trnType === "OpStk" ? historyFromDate : getRowVal(item, "trnDate", "TrnDate");
+                  const trnType = getRowVal(item, "trntype", "Trntype", "trnType", "TrnType");
+                  let trnDate = getRowVal(item, "trnDate", "TrnDate", "trndate", "Trndate");
+                  trnDate =
+                    trnType === "OpStk" && (!trnDate || trnDate.startsWith("01-01-1900") || trnDate.startsWith("1900"))
+                      ? historyFromDate
+                      : formatDateToDMY(trnDate);
+
+                  const stockIn = getNumVal(item, "inCts", "InCts", "stockIn", "StockIn");
+                  const stockInPrice = getNumVal(item, "inRate", "InRate", "stockInPrice", "StockInPrice");
+                  const stockInAmount = getNumVal(item, "inAmount", "InAmount", "stockInAmount", "StockInAmount");
+
+                  const stockOut = getNumVal(item, "outCts", "OutCts", "stockOut", "StockOut");
+                  const stockOutPrice = getNumVal(item, "outRate", "OutRate", "stockOutPrice", "StockOutPrice");
+                  const stockOutAmount = getNumVal(item, "outAmount", "OutAmount", "stockOutAmount", "StockOutAmount");
+
+                  const balanceStock = getNumVal(item, "balCts", "BalCts", "balanceStock", "BalanceStock");
+                  const balancePrice = getNumVal(item, "balRate", "BalRate", "balancePrice", "BalancePrice");
+                  const balanceAmount = getNumVal(item, "balAmount", "BalAmount", "balanceAmount", "BalanceAmount");
 
                   return (
                     <tr key={idx}>
-                      <td className="text-center">{trnDate}</td>
-                      <td className="text-center">{trnType}</td>
-                      <td className="text-center">{getParticulars(item)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockIn", "StockIn"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockInPrice", "StockInPrice"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockInAmount", "StockInAmount"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockOut", "StockOut"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockOutPrice", "StockOutPrice"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "stockOutAmount", "StockOutAmount"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "balanceStock", "BalanceStock"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "balancePrice", "BalancePrice"), 2)}</td>
-                      <td className="text-end">{fmtFixed(getNumVal(item, "balanceAmount", "BalanceAmount"), 2)}</td>
+                      <td className="text-start">{trnDate}</td>
+                      <td className="text-start">{trnType}</td>
+                      <td className="text-start">{getParticulars(item)}</td>
+                      <td className="text-end">{fmtFixed(stockIn, 2)}</td>
+                      <td className="text-end">{fmtFixed(stockInPrice, 2)}</td>
+                      <td className="text-end">{fmtFixed(stockInAmount, 2)}</td>
+                      <td className="text-end">{fmtFixed(stockOut, 2)}</td>
+                      <td className="text-end">{fmtFixed(stockOutPrice, 2)}</td>
+                      <td className="text-end">{fmtFixed(stockOutAmount, 2)}</td>
+                      <td className="text-end">{fmtFixed(balanceStock, 2)}</td>
+                      <td className="text-end">{fmtFixed(balancePrice, 2)}</td>
+                      <td className="text-end">{fmtFixed(balanceAmount, 2)}</td>
                     </tr>
                   );
                 })}
-                <tr className="fw-bold table-active">
-                  <td colSpan={3} className="text-end">
-                    {t("Grand Total")} :
-                  </td>
+                <tr className="fw-bold table-light border-top">
+                  <td colSpan={3} className="text-start ps-3">{t("Total:")}</td>
                   <td className="text-end">{totals.stockIn.toFixed(2)}</td>
-                  <td />
+                  <td className="text-end">{totals.stockInPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockInAmount.toFixed(2)}</td>
                   <td className="text-end">{totals.stockOut.toFixed(2)}</td>
-                  <td />
+                  <td className="text-end">{totals.stockOutPrice.toFixed(2)}</td>
+                  <td className="text-end">{totals.stockOutAmount.toFixed(2)}</td>
+                  <td colSpan={3} />
+                </tr>
+                <tr className="fw-bold table-light border-top">
+                  <td colSpan={3} className="text-start ps-3">{t("Grand Total:")}</td>
+                  <td className="text-end">{totals.stockIn.toFixed(2)}</td>
+                  <td className="text-end">{totals.stockInPrice.toFixed(2)}</td>
+                  <td className="text-end">{totals.stockInAmount.toFixed(2)}</td>
+                  <td className="text-end">{totals.stockOut.toFixed(2)}</td>
+                  <td className="text-end">{totals.stockOutPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockOutAmount.toFixed(2)}</td>
                   <td colSpan={3} />
                 </tr>
