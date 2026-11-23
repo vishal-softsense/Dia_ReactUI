@@ -749,6 +749,7 @@ const authProtectedRoutes = [
   { path: "/purchasereturn/purchasereturn-list", component: <SolitairePurchaseReturnList /> },
   { path: "/purchasereturn/add-purchasereturn", component: <SolitairePurchaseReturnAdd /> },
   { path: "/purchasereturn/edit-purchasereturn", component: <SolitairePurchaseReturnEdit /> },
+  { path: "/purchase-return/edit-purchase-return", component: <SolitairePurchaseReturnEdit /> },
 
   // Solitaire Consignment In entry (MVC: /consignment/*)
   { path: "/consignment/consignment-list", component: <SolitaireConsignmentInList /> },

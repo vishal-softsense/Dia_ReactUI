@@ -466,14 +466,15 @@ const SolitairePurchaseReturnReport = () => {
         cell: ({ row }) => {
           const r = row.original;
           if (r?.isParent) return "";
-          const code = getRowVal(r, "Code", "code");
+          const code = getRowVal(r, "Code", "code", "InvCode", "invCode", "Id", "id");
           return (
             <div className="report-action">
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  const url = `../purchase/edit-purchase?Id=${code}&Mode=view`;
+                  if (!code) return;
+                  const url = `../purchasereturn/edit-purchasereturn?Id=${code}&Mode=view`;
                   const win = window.open(url, "_blank");
                   if (win) win.focus();
                 }}
