@@ -106,10 +106,34 @@ const calcItemAmount = (weight, rate, less1, less2, less3) => {
   return Math.round(amount * 100) / 100;
 };
 
+const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
+
+/** Prefer closing-stock on-hand; do not treat item-master Carats as available stock. */
+const getLotAvailableWeight = (lot) => {
+  const onHand = roundCts(
+    getNumVal(lot, "OnHandCarats3Dec", "onHandCarats3Dec", "BalanceCarats3Dec", "balanceCarats3Dec")
+  );
+  if (onHand > 0) return onHand;
+  const balance = roundCts(getNumVal(lot, "Weight", "Carats"));
+  return balance > 0 ? balance : 0;
+};
+
+const memoExceedsStockMessage = (memoWeight, available, lotNo) => {
+  const lot = lotNo ? ` for lot ${lotNo}` : "";
+  return `Memo weight (${roundCts(memoWeight)}) cannot exceed available stock weight (${roundCts(available)})${lot}.`;
+};
+
+const isMemoWeightInvalid = (memoWeight, available) => {
+  const memo = roundCts(memoWeight);
+  const avail = roundCts(available);
+  return memo > 0 && memo > avail;
+};
+
 const emptyItem = () => ({
   lotNo: "",
   itemName: "",
   weight: "",
+  availableWeight: "",
   pcs: "",
   mrp: "",
   back: "",
@@ -153,6 +177,7 @@ const mapItemFromApi = (r, idx) => ({
   lotNo: getStrVal(r, "LotNo"),
   itemName: getStrVal(r, "ItemName"),
   weight: getNumVal(r, "Weight", "Carats"),
+  availableWeight: getLotAvailableWeight(r) || getNumVal(r, "Weight", "Carats"),
   pcs: getNumVal(r, "Pcs") || 0,
   mrp: getNumVal(r, "MRP"),
   back: getNumVal(r, "Back", "PMRPDown"),
@@ -719,6 +744,56 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
     });
   };
 
+  const fetchLotOnHand = async (lotNo) => {
+    if (!lotNo) return 0;
+    try {
+      const res = await getSolitaireMemoOutLotDetail({
+        lotNo,
+        curCode: toNum(header.curCode),
+        sBaseRate: toNum(header.sBaseRate, 1)
+      });
+      if (!(res?.success || res?.Success)) return 0;
+      const rows = res.Data || res.data || [];
+      const lot = Array.isArray(rows) ? rows[0] : rows;
+      return getLotAvailableWeight(lot);
+    } catch {
+      return 0;
+    }
+  };
+
+  const resolveAvailableWeight = async (lotNo, fallback, rowWeight = 0) => {
+    let onHand = toNum(fallback);
+    try {
+      const live = await fetchLotOnHand(lotNo);
+      if (live > 0) onHand = live;
+    } catch (err) {
+      console.error(err);
+    }
+    // Saved invoice edit: on-hand already excludes this line — add it back.
+    if (isEdit && editIndex >= 0) {
+      return roundCts(onHand + toNum(rowWeight));
+    }
+    return roundCts(onHand);
+  };
+
+  const handleWeightBlur = async () => {
+    if (readOnly) return;
+    const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
+    const weight = toNum(entry.weight);
+    if (!lotNo || weight <= 0) return;
+    const availableWeight = await resolveAvailableWeight(
+      lotNo,
+      entry.availableWeight,
+      editIndex >= 0 ? items[editIndex]?.weight : 0
+    );
+    setEntry((prev) => ({ ...prev, availableWeight }));
+    if (availableWeight <= 0) {
+      showWarning(t("Not enough stock in hand to make sale or memo."));
+    } else if (isMemoWeightInvalid(weight, availableWeight)) {
+      showWarning(memoExceedsStockMessage(weight, availableWeight, lotNo));
+    }
+  };
+
   const fillFromLot = async (lotNo) => {
     if (!lotNo) return;
     try {
@@ -734,6 +809,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
       if (!lot) return;
 
+      const availableWeight = getLotAvailableWeight(lot) || getNumVal(lot, "Weight", "Carats");
       const weight = getNumVal(lot, "Weight", "Carats");
       const mrp = getNumVal(lot, "MRP");
       const back = getNumVal(lot, "Back");
@@ -751,6 +827,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
           lotNo: getStrVal(lot, "LotNo") || lotNo,
           itemName: getStrVal(lot, "ItemName"),
           weight,
+          availableWeight,
           pcs,
           mrp,
           back,
@@ -785,6 +862,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
       weight: Math.round(weight * 1000) / 1000,
+      availableWeight: toNum(entry.availableWeight),
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -815,12 +893,21 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
     setEntry(emptyItem());
   };
 
-  const handleEditRow = (idx) => {
+  const handleEditRow = async (idx) => {
     const r = items[idx];
     if (!r) return;
     setEditIndex(idx);
     setLotSel({ value: r.lotNo, label: r.lotNo });
-    setEntry({ ...emptyItem(), ...r });
+    let availableWeight = toNum(r.availableWeight);
+    if (r.lotNo) {
+      try {
+        const onHand = await fetchLotOnHand(r.lotNo);
+        availableWeight = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setEntry({ ...emptyItem(), ...r, availableWeight: availableWeight || r.availableWeight || "" });
   };
 
   const handleDeleteRow = (idx) => {
@@ -853,7 +940,11 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       }
       const data = res.Data || res.data || {};
       const rows = data.ExcelData || data.excelData || [];
-      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      setItems(rows.map((r, idx) => {
+        const mapped = mapItemFromApi(r, idx);
+        const availableWeight = getLotAvailableWeight(r) || mapped.weight;
+        return { ...mapped, availableWeight };
+      }));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Items loaded."));
     } catch (err) {
@@ -882,7 +973,11 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       }
       const data = res.Data || res.data || {};
       const rows = data.ExcelData || data.excelData || [];
-      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      setItems(rows.map((r, idx) => {
+        const mapped = mapItemFromApi(r, idx);
+        const availableWeight = getLotAvailableWeight(r) || mapped.weight;
+        return { ...mapped, availableWeight };
+      }));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Avg Back/Rate Updated"));
     } catch (err) {
@@ -1240,7 +1335,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleWeightBlur} />
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Pcs")}</Label>
