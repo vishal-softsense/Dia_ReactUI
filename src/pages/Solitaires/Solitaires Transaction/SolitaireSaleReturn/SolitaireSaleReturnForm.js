@@ -241,17 +241,70 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
-const WarningModal = ({ open, title, message, confirmText, onClose }) => (
-  <Modal isOpen={open} toggle={onClose} centered contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
-    <ModalBody className="py-4 px-5 text-center">
-      <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>{title || "Warning!"}</h3>
-      <p className="text-muted mb-4 fs-14">{message}</p>
-      <button type="button" className="btn px-4 py-2 fw-semibold text-white" style={{ backgroundColor: "#13d17c", borderColor: "#13d17c" }} onClick={onClose}>
-        {confirmText || "OK"}
-      </button>
-    </ModalBody>
-  </Modal>
-);
+const WarningModal = ({ open, title, message, confirmText, onClose }) => {
+  return (
+    <Modal isOpen={open} toggle={onClose} centered={true} contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
+      <ModalBody className="py-4 px-5 text-center">
+        <div className="mt-2">
+          <div className="d-flex justify-content-center align-items-center mb-4">
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                border: "4px solid #f27474",
+              }}
+            >
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 10L30 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M30 10L10 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>
+            {title || "Warning!"}
+          </h3>
+          <p className="text-muted mb-4 fs-14" style={{ lineHeight: "1.6" }}>
+            {message}
+          </p>
+          <div className="d-flex justify-content-center">
+            <button
+              type="button"
+              className="btn px-4 py-2 fw-semibold text-white"
+              style={{
+                backgroundColor: "#13d17c",
+                borderColor: "#13d17c",
+                fontSize: "15px",
+                borderRadius: "5px",
+                minWidth: "90px",
+              }}
+              onClick={onClose}
+            >
+              {confirmText || "OK"}
+            </button>
+          </div>
+        </div>
+      </ModalBody>
+    </Modal>
+  );
+};
 
 const SolitaireSaleReturnForm = ({ mode = "add" }) => {
   const { t } = useTranslation();
