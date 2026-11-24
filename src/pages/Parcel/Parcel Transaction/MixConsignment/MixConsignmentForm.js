@@ -170,7 +170,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "issueCarats", label: "IssueCarats", align: "end", decimals: 3 },
   { key: "back", label: "Rejection %", align: "end", decimals: 2 },
-  { key: "rtnCarats", label: "Rejection", align: "end", decimals: 3 },
+  { key: "rtnCarats", label: "Rejection", align: "end", decimals: 3, footer: "rejection" },
   { key: "weight", label: "Carats", align: "end", decimals: 3, footer: "weight" },
   { key: "rate", label: "PurchaseRate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "amount", label: "PurchaseAmount", align: "end", decimals: 2, footer: "totAmount" },
@@ -185,7 +185,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "invDescription", label: "ItemDescription" },
   { key: "status", label: "Status" },
   { key: "spCarats", label: "SpCarats", align: "end", decimals: 3 },
-  { key: "returnCaratsCol", label: "ReturnCarats", align: "end", decimals: 3, valueKey: "rtnCarats" }
+  { key: "returnCaratsCol", label: "ReturnCarats", align: "end", decimals: 3, valueKey: "rtnCts" }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -277,13 +277,21 @@ const mapItemFromApi = (r, idx) => {
     if (first) lotNo = first;
   }
 
+  const issueRaw = getNumVal(r, "IssueCarats");
+  const selection = getNumVal(r, "Weight", "Carats");
+  const derivedRejection =
+    issueRaw > selection ? Math.round((issueRaw - selection) * 1000) / 1000 : 0;
+  const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
+  const isRejectionInReturnCol =
+    derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005;
+
   return {
     rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
     srNo: idx + 1,
     lotNo,
     itemName: getStrVal(r, "ItemName"),
-    weight: getNumVal(r, "Weight", "Carats"),
-    issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    weight: selection,
+    issueCarats: issueRaw || selection,
     pcs: getNumVal(r, "Pcs") || 1,
     mrp: getNumVal(r, "MRP", "PurchaseMRP"),
     back: getNumVal(r, "PurchaseBack", "PMRPDown", "Back"),
@@ -305,9 +313,25 @@ const mapItemFromApi = (r, idx) => {
     groupId: getStrVal(r, "GroupId", "ItemGroup"),
     stoneType: getStrVal(r, "StoneType"),
     rmk: getStrVal(r, "RMK", "MemberRemarks"),
-    memoTransCode: getNumVal(r, "MemoTransCode"),
-    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
-    status: getStrVal(r, "Status"),
+    memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
+    rtnCarats: derivedRejection > 0
+      ? derivedRejection
+      : (issueRaw > 0 && issueRaw === selection ? 0 : getNumVal(r, "RtnCarats")),
+    rtnCts: (() => {
+      if (isRejectionInReturnCol) return 0;
+      if (derivedRejection > 0 && storedReturn > derivedRejection) {
+        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+      }
+      return storedReturn || 0;
+    })(),
+    returnCarats: (() => {
+      if (isRejectionInReturnCol) return 0;
+      if (derivedRejection > 0 && storedReturn > derivedRejection) {
+        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+      }
+      return storedReturn || 0;
+    })(),
+    status: getStrVal(r, "Status", "status"),
     spCarats: getNumVal(r, "SpCarats", "SPCarats")
   };
 };
@@ -402,6 +426,8 @@ const buildEntryFromAddItemForm = (form, lotNo, header, opts = {}) => {
     weight: "0",
     issueCarats: "0",
     rtnCarats: "0",
+    rtnCts: 0,
+    returnCarats: 0,
     less1: "0",
     less2: "0",
     less3: "0",
@@ -456,6 +482,8 @@ const emptyItem = () => ({
   rmk: "",
   memoTransCode: "",
   rtnCarats: "",
+  rtnCts: 0,
+  returnCarats: 0,
   status: "",
   spCarats: ""
 });
@@ -503,6 +531,8 @@ const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
     issueCarats: caratStr,
     weight: caratStr,
     rtnCarats: "0",
+    rtnCts: 0,
+    returnCarats: 0,
     rate: "0.00",
     sRate: "0.00",
     less1: "0",
@@ -548,6 +578,8 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   switch (footerKey) {
     case "weight":
       return fmt(totals.totCts, 3);
+    case "rejection":
+      return fmt(itemRows.reduce((s, r) => s + toNum(r.rtnCarats), 0), 3);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -1443,6 +1475,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       stockType: entry.stockType || "Diamond",
       memoTransCode: toNum(entry.memoTransCode),
       rtnCarats: Math.round(rtnCarats * 1000) / 1000,
+      rtnCts: toNum(entry.rtnCts ?? entry.returnCarats ?? 0),
+      returnCarats: toNum(entry.rtnCts ?? entry.returnCarats ?? 0),
       status: entry.status || "",
       spCarats: toNum(entry.spCarats)
     };
@@ -1642,7 +1676,9 @@ const MixConsignmentForm = ({ mode = "add" }) => {
         lab: "",
         certificateNo: "",
         memoTransCode: 0,
-        rtnCarats: 0
+        rtnCarats: 0,
+        rtnCts: 0,
+        returnCarats: 0
       };
     }).filter((r) => r.lotNo);
   };
@@ -1797,7 +1833,9 @@ const MixConsignmentForm = ({ mode = "add" }) => {
           sieve: "",
           stockType: r.stockType || "Diamond",
           memoTransCode: toNum(r.memoTransCode),
-          rtnCarats: toNum(r.rtn)
+          rtnCarats: 0,
+          rtnCts: toNum(r.rtn),
+          returnCarats: toNum(r.rtn)
         };
         const idx = next.findIndex((x) => String(x.lotNo).toLowerCase() === String(lotNo).toLowerCase());
         if (idx >= 0) next[idx] = row;
@@ -1890,8 +1928,9 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      RtnCarats: toNum(r.rtnCts ?? r.returnCarats ?? 0),
+      ReturnCarats: toNum(r.rtnCts ?? r.returnCarats ?? 0),
+      RtnCts: toNum(r.rtnCts ?? r.returnCarats ?? 0),
       SpCarats: toNum(r.spCarats),
       Status: r.status || "",
       StockType: r.stockType || "Diamond",
