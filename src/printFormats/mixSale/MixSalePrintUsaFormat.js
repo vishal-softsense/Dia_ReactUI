@@ -9,6 +9,7 @@ import {
   fmtDateSlash,
   fmtNum,
   getItemImageCandidates,
+  getPrintAmountHeader,
   getVal,
   paginateVariable,
   resolveImageFullPath
@@ -231,11 +232,53 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
     middle: MIDDLE_PAGE,
     last: LAST_PAGE
   });
+
+  const stockSymbol =
+    getVal(data, "StockSymbol", "stockSymbol") ||
+    company?.stockSymbol ||
+    "USD";
+  const masterSymbol =
+    getVal(data, "MasterSymbol", "masterSymbol") ||
+    company?.masterSymbol ||
+    "INR";
+  const rawCurrency = String(
+    getVal(data, "Currency", "currency") ||
+    getVal(data, "Symbol", "symbol") ||
+    ""
+  ).trim();
+  const curCode = String(getVal(data, "CurCode", "curCode") || "").trim();
+
+  const isUsd =
+    rawCurrency.toUpperCase() === "USD" ||
+    rawCurrency === "$" ||
+    (rawCurrency && stockSymbol && rawCurrency.toUpperCase() === stockSymbol.toUpperCase()) ||
+    curCode === "7" ||
+    (!rawCurrency && !curCode);
+
+  const isMaster =
+    !isUsd &&
+    (rawCurrency.toUpperCase() === "INR" ||
+     rawCurrency === "₹" ||
+     (rawCurrency && masterSymbol && rawCurrency.toUpperCase() === masterSymbol.toUpperCase()) ||
+     curCode === "1");
+
+  const currencySymbol =
+    getVal(data, "CurrencySymbol", "currencySymbol") ||
+    (isUsd ? "$" : (isMaster ? "₹" : (rawCurrency || "$")));
+
+  const amountHeader = isUsd
+    ? "Amount US $"
+    : (isMaster ? "Amount INR (₹)" : getPrintAmountHeader(data, company));
+
   const totalAmount = totals.amount;
+  const chargesVal = Number(getVal(data, "Charges", "charges")) || 0;
+  const discountVal = Number(getVal(data, "Discount", "discount")) || 0;
+  const rawFinal = Number(getVal(data, "FinalAmount", "finalAmount")) || 0;
+  // If entry is in USD but rawFinal holds master currency (INR, > 5x of subtotal), use computed final
   const finalTotal =
-    Number(getVal(data, "FinalAmount", "finalAmount")) > 0
-      ? Number(getVal(data, "FinalAmount", "finalAmount"))
-      : totalAmount;
+    rawFinal > 0 && !(isUsd && rawFinal > (totalAmount + chargesVal - discountVal) * 5)
+      ? rawFinal
+      : totalAmount + chargesVal - discountVal;
 
   const printedOn =
     fmtDateSlash(getVal(data, "RoundDate", "roundDate")) || fmtDateSlash(new Date().toISOString());
@@ -418,7 +461,7 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                     ["TDC", "9%"],
                     ["DESCRIPTION", "22%"],
                     ["Price/Carat", "13%"],
-                    ["Amount US $", "13%"]
+                    [amountHeader, "13%"]
                   ].map(([h, w]) => (
                     <th key={h} style={{ ...th, width: w }}>
                       {h}
@@ -453,10 +496,10 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                       {getVal(item, "ItemName", "itemName", "Description", "description")}
                     </td>
                     <td style={{ ...itemCell, textAlign: "right" }}>
-                      {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
+                      {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
                     </td>
                     <td style={{ ...itemCell, textAlign: "right" }}>
-                      {fmtNum(getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount"), 2)}
+                      {fmtNum(getVal(item, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount"), 2)}
                     </td>
                   </tr>
                 ))}
@@ -573,12 +616,15 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                         fontSize: 13,
                         lineHeight: 1.8,
                         verticalAlign: "top",
-                        padding: "0 6px"
+                        padding: "0 6px",
+                        whiteSpace: "nowrap"
                       }}
                     >
                       {fmtNum(totalAmount, 2)}
                       <br />
+                      {chargesVal > 0 ? fmtNum(chargesVal, 2) : ""}
                       <br />
+                      {discountVal > 0 ? fmtNum(discountVal, 2) : ""}
                       <br />
                       <b>{fmtNum(finalTotal, 2)}</b>
                     </td>
