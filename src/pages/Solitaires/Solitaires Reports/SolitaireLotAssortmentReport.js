@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireLotAssortmentReport } from "../../../helpers/fakebackend_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 
 const getRowVal = (row, ...keys) => {
   if (!row || typeof row !== "object") return "";
@@ -53,7 +55,7 @@ const parseLotList = (raw) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
+const buildLotTableModel = (rows, caratFormat = getCachedCaratFormat("solitaire"), amtDecimal = 2) => {
   const data = [...(rows || [])].sort((a, b) => {
     const shapeA = String(getRowVal(a, "Shape", "shape") ?? "");
     const shapeB = String(getRowVal(b, "Shape", "shape") ?? "");
@@ -116,7 +118,7 @@ const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
         carats,
         rate,
         amount,
-        caratsFmt: fmt(carats, caratDecimal),
+        caratsFmt: formatCarat(carats, caratFormat),
         rateFmt: fmt(rate, amtDecimal),
         amountFmt: fmt(amount, amtDecimal)
       };
@@ -132,7 +134,7 @@ const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
       subtotalCarats,
       subtotalRate,
       subtotalAmount,
-      subtotalCaratsFmt: fmt(subtotalCarats, caratDecimal),
+      subtotalCaratsFmt: formatCarat(subtotalCarats, caratFormat),
       subtotalRateFmt: fmt(subtotalRate, amtDecimal),
       subtotalAmountFmt: fmt(subtotalAmount, amtDecimal)
     };
@@ -145,7 +147,7 @@ const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
     grandTotalCarats,
     grandTotalRate,
     grandTotalAmount,
-    grandTotalCaratsFmt: fmt(grandTotalCarats, caratDecimal),
+    grandTotalCaratsFmt: formatCarat(grandTotalCarats, caratFormat),
     grandTotalRateFmt: fmt(grandTotalRate, amtDecimal),
     grandTotalAmountFmt: fmt(grandTotalAmount, amtDecimal)
   };
@@ -153,6 +155,7 @@ const buildLotTableModel = (rows, caratDecimal = 2, amtDecimal = 2) => {
 
 const SolitaireLotAssortmentReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
@@ -160,7 +163,6 @@ const SolitaireLotAssortmentReport = () => {
   const [lotGroups, setLotGroups] = useState([]);
   const [filters, setFilters] = useState({ lotNo: "" });
 
-  const caratDecimal = 2;
   const amtDecimal = 2;
 
   const lotModels = useMemo(
@@ -172,10 +174,10 @@ const SolitaireLotAssortmentReport = () => {
         return {
           lotNo,
           hasData: list.length > 0,
-          model: list.length ? buildLotTableModel(list, caratDecimal, amtDecimal) : null
+          model: list.length ? buildLotTableModel(list, caratFormat, amtDecimal) : null
         };
       }),
-    [lotGroups, caratDecimal, amtDecimal]
+    [lotGroups, caratFormat, amtDecimal]
   );
 
   const handleClear = () => {

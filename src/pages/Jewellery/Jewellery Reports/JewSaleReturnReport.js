@@ -18,6 +18,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getJewMetalMastersPurity,
@@ -25,6 +27,7 @@ import {
   getJewellerySaleReturnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -80,7 +83,13 @@ const CERTIFICATE_OPTIONS = [
 
 const JewSaleReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -569,12 +578,12 @@ const JewSaleReturnReport = () => {
       {
         header: t("Pcs"),
         accessorKey: "carats",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), 2),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "carats", "Carats", "Pcs", "pcs"), 2),
+        accessorFn: (row) => formatCarat(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "carats", "Carats", "Pcs", "pcs"), caratFormat),
         sortingFn: numericSortFn,
         footer: ({ table }) => {
           const { parentPcs } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentPcs, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentPcs, caratFormat)}</span>;
         }
       },
       {
@@ -624,7 +633,7 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol"))
       },
       {
-        header: t("INR Rate"),
+        header: masterRateHeader,
         accessorKey: "MasterCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "MasterCurrencyRate", "masterCurrencyRate");
@@ -637,7 +646,7 @@ const JewSaleReturnReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -648,7 +657,7 @@ const JewSaleReturnReport = () => {
         }
       },
       {
-        header: t("USD Rate"),
+        header: stockRateHeader,
         accessorKey: "StockCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "StockCurrencyRate", "stockCurrencyRate");
@@ -661,7 +670,7 @@ const JewSaleReturnReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -672,7 +681,7 @@ const JewSaleReturnReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -684,7 +693,7 @@ const JewSaleReturnReport = () => {
     const headers = [
       "Date", "InvNo", "BillNo", "Due", "InvType", "Party", "Category", "Broker", "DesignName", "Sub Type",
       "SubCategory", "JewelleryCertificate", "Metal Type", "Color", "Purity", "LotNo", "ItemName",
-      "Pcs", "Less1", "Less2", "Less3", "Rate", "Amount", "Symbol", "INR Rate", "INR Amount", "USD Rate", "USD Amount"
+      "Pcs", "Less1", "Less2", "Less3", "Rate", "Amount", "Symbol", masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -705,7 +714,7 @@ const JewSaleReturnReport = () => {
       dashText(getRowVal(row, "Purity", "purity")),
       dashText(getRowVal(row, "StockItem", "stockItem", "Item", "item")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), 2),
+      formatCarat(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), caratFormat),
       dashText(getRowVal(row, "Less1", "less1")),
       dashText(getRowVal(row, "Less2", "less2")),
       dashText(getRowVal(row, "Less3", "less3")),

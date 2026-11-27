@@ -1,4 +1,5 @@
 /** Shared helpers — parity with MVC JewDesign.js */
+import { formatCarat as formatCaratBySetting, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 
 /** MVC AddStockMaster.cshtml #Making-Type — fixed options, not SettingMaster. */
 export const MAKING_TYPE_OPTIONS = [
@@ -126,10 +127,9 @@ export function summarizeTableRows(rows) {
   };
 }
 
-/** Display/store formats — Carat 3dp, Price/Amount 2dp (MVC parity). */
-export function formatCarat(value) {
-  const n = parseFloat(value);
-  return Number.isNaN(n) ? "0.000" : n.toFixed(3);
+/** Display/store formats — Carat driven by SettingMaster CaratFormatNew, Price/Amount 2dp (MVC parity). */
+export function formatCarat(value, format) {
+  return formatCaratBySetting(value, format ?? getCachedCaratFormat());
 }
 
 export function formatPrice(value) {

@@ -44,6 +44,13 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat as formatCaratValue,
+  getCachedCaratFormat,
+  sanitizeCaratInput,
+  truncateCaratNumber
+} from "../../../../helpers/caratFormatDefaults";
+import useCaratFormat from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -279,8 +286,9 @@ const mapItemFromApi = (r, idx) => {
 
   const issueRaw = getNumVal(r, "IssueCarats");
   const selection = getNumVal(r, "Weight", "Carats");
+  const caratFmt = getCachedCaratFormat();
   const derivedRejection =
-    issueRaw > selection ? Math.round((issueRaw - selection) * 1000) / 1000 : 0;
+    issueRaw > selection ? truncateCaratNumber(issueRaw - selection, caratFmt) : 0;
   const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
   const isRejectionInReturnCol =
     derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005;
@@ -320,14 +328,14 @@ const mapItemFromApi = (r, idx) => {
     rtnCts: (() => {
       if (isRejectionInReturnCol) return 0;
       if (derivedRejection > 0 && storedReturn > derivedRejection) {
-        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+        return truncateCaratNumber(storedReturn - derivedRejection, caratFmt);
       }
       return storedReturn || 0;
     })(),
     returnCarats: (() => {
       if (isRejectionInReturnCol) return 0;
       if (derivedRejection > 0 && storedReturn > derivedRejection) {
-        return Math.round((storedReturn - derivedRejection) * 1000) / 1000;
+        return truncateCaratNumber(storedReturn - derivedRejection, caratFmt);
       }
       return storedReturn || 0;
     })(),
@@ -506,7 +514,7 @@ const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
   } = opts;
 
   const carats = getNumVal(lot, "Carats", "Weight");
-  const caratStr = fmt(carats, 2);
+  const caratStr = formatCarat(carats, getCachedCaratFormat());
   // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
   // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
   const pcs = getNumVal(lot, "Pcs");
@@ -564,8 +572,14 @@ const mergeEntryWithFallback = (apiEntry, fallbackEntry) => {
   };
 };
 
-const renderItemCell = (row, col) => {
+const CARAT_COLUMN_KEYS = new Set(["issueCarats", "rtnCarats", "weight", "spCarats", "returnCaratsCol"]);
+
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.valueKey || col.key];
+  if (CARAT_COLUMN_KEYS.has(col.key)) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCaratValue(0, caratFormat ?? getCachedCaratFormat()) : "";
+    return formatCaratValue(v, caratFormat ?? getCachedCaratFormat());
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -574,12 +588,13 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
+  const resolvedFmt = caratFormat ?? getCachedCaratFormat();
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCaratValue(totals.totCts, resolvedFmt);
     case "rejection":
-      return fmt(itemRows.reduce((s, r) => s + toNum(r.rtnCarats), 0), 3);
+      return formatCaratValue(itemRows.reduce((s, r) => s + truncateCaratNumber(r.rtnCarats, resolvedFmt), 0), resolvedFmt);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -641,7 +656,8 @@ const roundN = (n, d) => {
  * Selection  -> RejeP = 100 - (100 * Selection / Issue) ; Rejection = Issue * RejeP / 100
  * (back = RejeP / PurchaseBack, rtnCarats = Rejection, weight = SelectionCarat)
  */
-const syncRejectionFields = (next, changedKey) => {
+const syncRejectionFields = (next, changedKey, caratFormat) => {
+  const resolvedFmt = caratFormat ?? getCachedCaratFormat();
   const issueCarats = toNum(next.issueCarats);
   const rejPRaw = toNum(next.back);
   const rejectionRaw = toNum(next.rtnCarats);
@@ -667,8 +683,8 @@ const syncRejectionFields = (next, changedKey) => {
   return {
     ...next,
     back: changedKey === "back" ? next.back : roundN(rejP, 2),
-    rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : roundN(rejection, 3),
-    weight: changedKey === "weight" ? next.weight : roundN(selectionCarats, 3)
+    rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : formatCaratValue(rejection, resolvedFmt),
+    weight: changedKey === "weight" ? next.weight : formatCaratValue(selectionCarats, resolvedFmt)
   };
 };
 
@@ -742,6 +758,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
     masterCurrencyRate: "0.00",
     stoneTypes: "Single"
   });
+
+  const { caratFormat } = useCaratFormat();
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOpts, setPartyOpts] = useState([]);
@@ -1354,14 +1372,17 @@ const MixConsignmentForm = ({ mode = "add" }) => {
   };
 
   const onEntryChange = (key, value) => {
+    const cleanValue = ["issueCarats", "rtnCarats", "weight"].includes(key)
+      ? sanitizeCaratInput(value, caratFormat)
+      : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanValue };
       // Stock currency rate for $Rate (MVC Calculate uses SBaseRate)
       const sRateBase = toNum(header.sBaseRate, 1) || toNum(header.baseRate, 1) || 1;
 
       // MVC: IssueCarats / RejeP / Rejection / SelectionCarat linked calculations
       if (["issueCarats", "back", "rtnCarats", "weight"].includes(key)) {
-        next = syncRejectionFields(next, key);
+        next = syncRejectionFields(next, key, caratFormat);
       }
 
       // MVC Calculate(): Rate -> $Rate = Rate / SBaseRate; Amount from Selection * Rate
@@ -1461,8 +1482,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
-      issueCarats: Math.round(issueCarats * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
+      issueCarats: truncateCaratNumber(issueCarats, caratFormat),
       pcs: toNum(entry.pcs, 1),
       mrp,
       back: Math.round(back * 100) / 100,
@@ -1474,7 +1495,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       sieve: entry.sieve || "",
       stockType: entry.stockType || "Diamond",
       memoTransCode: toNum(entry.memoTransCode),
-      rtnCarats: Math.round(rtnCarats * 1000) / 1000,
+      rtnCarats: truncateCaratNumber(rtnCarats, caratFormat),
       rtnCts: toNum(entry.rtnCts ?? entry.returnCarats ?? 0),
       returnCarats: toNum(entry.rtnCts ?? entry.returnCarats ?? 0),
       status: entry.status || "",
@@ -1529,14 +1550,14 @@ const MixConsignmentForm = ({ mode = "add" }) => {
     let totMrp = 0;
     let totWithoutLess = 0;
     items.forEach((r) => {
-      const w = toNum(r.weight);
+      const w = truncateCaratNumber(r.weight, caratFormat);
       totCts += w;
       totAmount += toNum(r.amount);
       totMrp += w * toNum(r.mrp);
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       totMrp,
       totWithoutLess,
@@ -1544,7 +1565,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const deci = Math.min(4, Math.max(0, toNum(header.decimalPlaces, 2)));
@@ -1743,7 +1764,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
         }
         let balance = total - purchase;
         if (balance < 0) balance = 0;
-        return { ...x, purchase: purchaseRaw, balCts: Math.round(balance * 1000) / 1000 };
+        return { ...x, purchase: purchaseRaw, balCts: truncateCaratNumber(balance, caratFormat) };
       })
     );
   };
@@ -1768,14 +1789,14 @@ const MixConsignmentForm = ({ mode = "add" }) => {
             ...x,
             selected: true,
             purchase,
-            balCts: Math.round(bal * 1000) / 1000
+            balCts: truncateCaratNumber(bal, caratFormat)
           };
         }
         return {
           ...x,
           selected: false,
           purchase: 0,
-          balCts: Math.round(toNum(x.cts) * 1000) / 1000
+          balCts: truncateCaratNumber(toNum(x.cts), caratFormat)
         };
       })
     );
@@ -2761,7 +2782,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ISSUE CARATS")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.issueCarats}
@@ -2785,7 +2807,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("REJECTION")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.rtnCarats}
@@ -2797,7 +2820,8 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("SELECTED CARAT")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.weight}
@@ -2982,7 +3006,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                                       {r.lotNo}
                                     </span>
                                   ) : (
-                                    renderItemCell(r, col)
+                                    renderItemCell(r, col, caratFormat)
                                   )}
                                 </td>
                               ))}
@@ -2998,7 +3022,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
                                 >
-                                  {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                  {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                                 </td>
                               ))}
                             </tr>

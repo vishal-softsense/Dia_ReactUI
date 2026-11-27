@@ -24,6 +24,8 @@ import {
   getSolitaireConsignmentReturnReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -56,6 +58,7 @@ const getTableTotals = (table) => {
 
 const SolitaireConsignmentReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -363,10 +366,10 @@ const SolitaireConsignmentReturnReport = () => {
         header: t("Return"),
         accessorKey: "Return",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { parentReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentReturn, caratFormat)}</span>;
         }
       },
       {
@@ -393,7 +396,7 @@ const SolitaireConsignmentReturnReport = () => {
       { header: t("invtype"), accessorKey: "invtype", cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "invType")) }
 
     ],
-    [expandedMemos, t]
+    [expandedMemos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -406,11 +409,12 @@ const SolitaireConsignmentReturnReport = () => {
 
     const rows = [];
     groupedVisibleRows.forEach((p) => {
-      rows.push(p);
+      rows.push({ ...p, Return: formatCarat(getRowVal(p, "Return", "return"), caratFormat) });
       if (expandedMemos.has(String(p.MemoNo))) {
         (p.childRecords || []).forEach((c) => {
           rows.push({
             ...c,
+            Return: formatCarat(getRowVal(c, "Return", "return"), caratFormat),
             isParent: false
           });
         });

@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getCommissionOutstandingReport,
@@ -183,6 +185,7 @@ const isNumericCell = (col) =>
 
 const CommissionOutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -662,6 +665,7 @@ const CommissionOutstandingReport = () => {
       );
     }
     if (isNumericCell(col)) {
+      if (col.key === "Totcts") return formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat);
       return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), cellDecimals(col.key));
     }
     return dashText(getRowVal(row, col.key, ...(col.altKeys || [])));
@@ -673,6 +677,7 @@ const CommissionOutstandingReport = () => {
       return fmtFixed(rateVal, 2);
     }
     if (!col.sum) return "";
+    if (col.key === "Totcts") return formatCarat(subtotal.Totcts || 0, caratFormat);
     return fmtFixed(subtotal[col.key] || 0, cellDecimals(col.key));
   };
 
@@ -721,6 +726,7 @@ const CommissionOutstandingReport = () => {
       rows.push(
         cols.map((c, idx) => {
           if (idx === 0) return t("Total");
+          if (c.key === "Totcts") return formatCarat(allTotals.Totcts || 0, caratFormat);
           if (c.sum) return fmtFixed(allTotals[c.key] || 0, cellDecimals(c.key));
           return "";
         })
@@ -1278,6 +1284,7 @@ const CommissionOutstandingReport = () => {
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
                           if (idx === 0) content = t("Total");
+                          else if (col.key === "Totcts") content = formatCarat(allTotals.Totcts || 0, caratFormat);
                           else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, cellDecimals(col.key));
                           return (
                             <td

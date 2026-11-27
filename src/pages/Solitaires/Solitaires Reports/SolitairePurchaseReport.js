@@ -27,6 +27,8 @@ import {
   exportPurchaseReportPrintExcel,
   exportSolitairePurchaseExportReportExcel
 } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 
 import {
   getSolitairePurchaseDropdowns,
@@ -39,6 +41,7 @@ import {
   resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -125,11 +128,14 @@ const getTableTotals = (table) => {
 const getRowDueDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "Date", "date");
 
 const GROUPED_SUM_COLUMNS = ["Carats", "ReturnCarats", "Amount"];
+const CARAT_GROUP_KEYS = new Set(["Carats", "ReturnCarats"]);
 const GROUPED_DECIMALS = {
-  Carats: 3,
-  ReturnCarats: 2,
   Amount: 2
 };
+const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat("solitaire")) =>
+  CARAT_GROUP_KEYS.has(key)
+    ? formatCarat(value, caratFmt)
+    : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
 const getGroupedNumeric = (row, key) => {
   const aliases = {
@@ -342,6 +348,12 @@ const calcGroupedAvgRate = (subtotal) =>
 
 const SolitairePurchaseReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -680,8 +692,8 @@ const SolitairePurchaseReport = () => {
                         <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
                         <td class="col-text">${escapeHtml(getGroupedInvNo(row))}</td>
                         <td class="col-text">${escapeHtml(getGroupedLotNo(row))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "ReturnCarats"), GROUPED_DECIMALS.ReturnCarats))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Carats"), "Carats", caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "ReturnCarats"), "ReturnCarats", caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getRowVal(row, "Rate", "rate"), 2))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Amount"), GROUPED_DECIMALS.Amount))}</td>
                     </tr>
@@ -693,8 +705,8 @@ const SolitairePurchaseReport = () => {
                 <tr class="subtotal">
                     <td colspan="2" class="col-label" style="padding-left:50px;"><strong>${escapeHtml(t("Total"))}</strong></td>
                     <td></td>
-                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.ReturnCarats, "ReturnCarats", caratFormat))}</strong></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(section.subtotal), 2))}</strong></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
                 </tr>
@@ -705,8 +717,8 @@ const SolitairePurchaseReport = () => {
             <tr class="grand-total">
                 <td colspan="2" class="col-label" style="padding-left:50px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
                 <td></td>
-                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.Carats, "Carats", caratFormat))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.ReturnCarats, "ReturnCarats", caratFormat))}</strong></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(grandTotal), 2))}</strong></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
             </tr>
@@ -752,8 +764,8 @@ const SolitairePurchaseReport = () => {
   };
 
   const renderGroupedValue = (row, key) => {
-    if (GROUPED_DECIMALS[key] !== undefined) {
-      return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+    if (CARAT_GROUP_KEYS.has(key) || GROUPED_DECIMALS[key] !== undefined) {
+      return formatGroupedMetric(getGroupedNumeric(row, key), key, caratFormat);
     }
     return dashText(getRowVal(row, "Rate", "rate"));
   };
@@ -977,10 +989,10 @@ const SolitairePurchaseReport = () => {
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { parentCarat } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentCarat, caratFormat)}</span>;
         }
       },
       {
@@ -1030,9 +1042,9 @@ const SolitairePurchaseReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentMRPAmt, 2)}</span>;
         }
       },
-      { header: t("INR Rate"), accessorKey: "MasterCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
+      { header: masterRateHeader, accessorKey: "MasterCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         footer: ({ table }) => {
@@ -1040,9 +1052,9 @@ const SolitairePurchaseReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentINR, 2)}</span>;
         }
       },
-      { header: t("USD Rate"), accessorKey: "StockCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
+      { header: stockRateHeader, accessorKey: "StockCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         footer: ({ table }) => {
@@ -1051,7 +1063,7 @@ const SolitairePurchaseReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   // MVC PurchasePrint: DP = Direct Print (table Excel), PR = PurchaseReport Print, SPR = Solitaire Purchase Report Print
@@ -1098,10 +1110,10 @@ const SolitairePurchaseReport = () => {
       "SinglePcs",
       "InvType",
       "MRP Amt",
-      "INR Rate",
-      "INR Amount",
-      "USD Rate",
-      "USD Amount"
+      masterRateHeader,
+      masterAmtHeader,
+      stockRateHeader,
+      stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -1117,7 +1129,7 @@ const SolitairePurchaseReport = () => {
       fmtFixed(getRowVal(row, "MRP", "mrp"), 2),
       fmtFixed(getRowVal(row, "Discount", "discount"), 2),
       dashText(getRowVal(row, "ColCla", "colCla", "colcla")),
-      fmtFixed(getRowVal(row, "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
       fmtFixed(getRowVal(row, "Rate", "rate"), 2),
       fmtFixed(getRowVal(row, "Less1", "less1"), 2),
       fmtFixed(getRowVal(row, "Less2", "less2"), 2),
@@ -1911,10 +1923,10 @@ const SolitairePurchaseReport = () => {
                               </td>
                               <td />
                               <td className="text-end">
-                                <strong>{fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                                <strong>{formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat)}</strong>
                               </td>
                               <td className="text-end">
-                                <strong>{fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                                <strong>{formatGroupedMetric(section.subtotal.ReturnCarats, "ReturnCarats", caratFormat)}</strong>
                               </td>
                               <td className="text-end">
                                 <strong>{fmtFixed(calcGroupedAvgRate(section.subtotal), 2)}</strong>
@@ -1932,10 +1944,10 @@ const SolitairePurchaseReport = () => {
                           </td>
                           <td />
                           <td className="text-end">
-                            <strong>{fmtFixed(groupedReportData.grandTotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                            <strong>{formatGroupedMetric(groupedReportData.grandTotal.Carats, "Carats", caratFormat)}</strong>
                           </td>
                           <td className="text-end">
-                            <strong>{fmtFixed(groupedReportData.grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                            <strong>{formatGroupedMetric(groupedReportData.grandTotal.ReturnCarats, "ReturnCarats", caratFormat)}</strong>
                           </td>
                           <td className="text-end">
                             <strong>{fmtFixed(calcGroupedAvgRate(groupedReportData.grandTotal), 2)}</strong>

@@ -10,6 +10,8 @@ import {
   getSolitaireStockSearchHistory
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const formatDateToDMY = (dateVal) => {
   if (!dateVal) return "";
@@ -77,6 +79,7 @@ const getParticulars = (row) => {
 
 const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat(isParcel ? "parcel" : "solitaire");
   const { getDates } = useSettingReportDates();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -275,13 +278,13 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) =
         trnDate,
         trnType,
         getParticulars(item),
-        fmtFixed(stockIn, 2),
+        formatCarat(stockIn, caratFormat),
         fmtFixed(stockInPrice, 2),
         fmtFixed(stockInAmount, 2),
-        fmtFixed(stockOut, 2),
+        formatCarat(stockOut, caratFormat),
         fmtFixed(stockOutPrice, 2),
         fmtFixed(stockOutAmount, 2),
-        fmtFixed(balanceStock, 2),
+        formatCarat(balanceStock, caratFormat),
         fmtFixed(balancePrice, 2),
         fmtFixed(balanceAmount, 2)
       ]);
@@ -291,10 +294,10 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) =
       "Total:",
       "",
       "",
-      totals.stockIn.toFixed(2),
+      formatCarat(totals.stockIn, caratFormat),
       totals.stockInPrice.toFixed(2),
       totals.stockInAmount.toFixed(2),
-      totals.stockOut.toFixed(2),
+      formatCarat(totals.stockOut, caratFormat),
       totals.stockOutPrice.toFixed(2),
       totals.stockOutAmount.toFixed(2),
       "",
@@ -306,10 +309,10 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) =
       "Grand Total:",
       "",
       "",
-      totals.stockIn.toFixed(2),
+      formatCarat(totals.stockIn, caratFormat),
       totals.stockInPrice.toFixed(2),
       totals.stockInAmount.toFixed(2),
-      totals.stockOut.toFixed(2),
+      formatCarat(totals.stockOut, caratFormat),
       totals.stockOutPrice.toFixed(2),
       totals.stockOutAmount.toFixed(2),
       "",
@@ -396,13 +399,13 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) =
                       <td className="text-start">{trnDate}</td>
                       <td className="text-start">{trnType}</td>
                       <td className="text-start">{getParticulars(item)}</td>
-                      <td className="text-end">{fmtFixed(stockIn, 2)}</td>
+                      <td className="text-end">{formatCarat(stockIn, caratFormat)}</td>
                       <td className="text-end">{fmtFixed(stockInPrice, 2)}</td>
                       <td className="text-end">{fmtFixed(stockInAmount, 2)}</td>
-                      <td className="text-end">{fmtFixed(stockOut, 2)}</td>
+                      <td className="text-end">{formatCarat(stockOut, caratFormat)}</td>
                       <td className="text-end">{fmtFixed(stockOutPrice, 2)}</td>
                       <td className="text-end">{fmtFixed(stockOutAmount, 2)}</td>
-                      <td className="text-end">{fmtFixed(balanceStock, 2)}</td>
+                      <td className="text-end">{formatCarat(balanceStock, caratFormat)}</td>
                       <td className="text-end">{fmtFixed(balancePrice, 2)}</td>
                       <td className="text-end">{fmtFixed(balanceAmount, 2)}</td>
                     </tr>
@@ -410,20 +413,20 @@ const StockHistoryPopupModal = ({ isOpen, toggle, stockId, isParcel = false }) =
                 })}
                 <tr className="fw-bold table-light border-top">
                   <td colSpan={3} className="text-start ps-3">{t("Total:")}</td>
-                  <td className="text-end">{totals.stockIn.toFixed(2)}</td>
+                  <td className="text-end">{formatCarat(totals.stockIn, caratFormat)}</td>
                   <td className="text-end">{totals.stockInPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockInAmount.toFixed(2)}</td>
-                  <td className="text-end">{totals.stockOut.toFixed(2)}</td>
+                  <td className="text-end">{formatCarat(totals.stockOut, caratFormat)}</td>
                   <td className="text-end">{totals.stockOutPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockOutAmount.toFixed(2)}</td>
                   <td colSpan={3} />
                 </tr>
                 <tr className="fw-bold table-light border-top">
                   <td colSpan={3} className="text-start ps-3">{t("Grand Total:")}</td>
-                  <td className="text-end">{totals.stockIn.toFixed(2)}</td>
+                  <td className="text-end">{formatCarat(totals.stockIn, caratFormat)}</td>
                   <td className="text-end">{totals.stockInPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockInAmount.toFixed(2)}</td>
-                  <td className="text-end">{totals.stockOut.toFixed(2)}</td>
+                  <td className="text-end">{formatCarat(totals.stockOut, caratFormat)}</td>
                   <td className="text-end">{totals.stockOutPrice.toFixed(2)}</td>
                   <td className="text-end">{totals.stockOutAmount.toFixed(2)}</td>
                   <td colSpan={3} />

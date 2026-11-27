@@ -18,6 +18,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 import {
   getSolitairePartyHoldDropdowns,
@@ -64,6 +66,7 @@ const getTableTotals = (table) => {
 
 const SolitairePartyHoldReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({ includeReturnDates: true });
 
@@ -448,10 +451,10 @@ const SolitairePartyHoldReport = () => {
         header: t("Return"),
         accessorKey: "Return",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { totalReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
       { header: t("ReturnDate"), accessorKey: "MemoReturnDate", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate", "ReturnDate")) },
@@ -459,10 +462,10 @@ const SolitairePartyHoldReport = () => {
         header: t("Balance"),
         accessorKey: "Balance",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Balance", "balance"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Balance", "balance"), caratFormat),
         footer: ({ table }) => {
           const { totalBalance } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalBalance, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalBalance, caratFormat)}</span>;
         }
       },
       {
@@ -476,10 +479,10 @@ const SolitairePartyHoldReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { totalCarats } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
         }
       },
       { header: t("IssUser"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
@@ -504,7 +507,7 @@ const SolitairePartyHoldReport = () => {
       { header: t("MemoReturnDate"), accessorKey: "MemoReturnDate2", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate")) },
       { header: t("MemoReturnTime"), accessorKey: "MemoReturnTime", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime")) }
     ],
-    [expandedMemoNos, t]
+    [expandedMemoNos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -531,12 +534,12 @@ const SolitairePartyHoldReport = () => {
       fmtFixed(r.Discount || r.discount, 2),
       fmtFixed(r.Price || r.price, 2),
       fmtFixed(r.Amount || r.amount, 2),
-      fmtFixed(r.Return || r.return, 3),
+      formatCarat(r.Return ?? r.return, caratFormat),
       dashText(r.MemoReturnDate || r.memoReturnDate),
-      fmtFixed(r.Balance || r.balance, 2),
+      formatCarat(r.Balance ?? r.balance, caratFormat),
       fmtFixed(r.BalanceAmt || r.balanceAmt, 2),
       dashText(r.Broker || r.broker),
-      fmtFixed(r.Carats || r.carats, 3),
+      formatCarat(r.Carats ?? r.carats, caratFormat),
       dashText(r.IssUser || r.issUser),
       dashText(r.Seller || r.seller),
       dashText(r.RtnUser || r.rtnUser),

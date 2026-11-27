@@ -14,6 +14,8 @@ import {
     getMixMemoOutRtnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 /** MVC safe(): empty → blank; numbers → fixed decimals */
 const safeText = (value) => {
@@ -128,6 +130,7 @@ const getRowDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate");
 
 const MixMemoOutRtnReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -544,10 +547,13 @@ const MixMemoOutRtnReport = () => {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => {
+                    const v = getRowVal(row.original, "Return", "return");
+                    return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+                },
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
@@ -583,7 +589,7 @@ const MixMemoOutRtnReport = () => {
                 cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType"))
             }
         ],
-        [expandedMemoNos, t]
+        [expandedMemoNos, t, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -614,7 +620,10 @@ const MixMemoOutRtnReport = () => {
             safeText(getRowVal(r, "AccGrpName", "accGrpName", "Party", "party")),
             safeText(getRowVal(r, "Lotno", "lotno")),
             safeText(getRowVal(r, "ItemName", "itemName")),
-            safeFixed(getRowVal(r, "Return", "return"), 3),
+            (() => {
+                const v = getRowVal(r, "Return", "return");
+                return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+            })(),
             safeFixed(getRowVal(r, "Price", "price"), 2),
             safeFixed(getRowVal(r, "Amount", "amount"), 2),
             safeText(getRowVal(r, "Broker", "broker")),
@@ -633,7 +642,7 @@ const MixMemoOutRtnReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalReturn, 3),
+            formatCarat(totalReturn, caratFormat),
             fmtFixed(totalPrice, 2),
             fmtFixed(totalAmount, 2),
             "",

@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getOutstandingReport,
@@ -216,6 +218,7 @@ const STATEMENT_COLUMNS = [
 
 const OutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const isPrintingRef = useRef(false);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
@@ -847,6 +850,7 @@ const OutstandingReport = () => {
     const headers = cols.map((c) => c.header);
     const rows = filteredAllRows.map((r) =>
       cols.map((c) => {
+        if (c.key === "Totcts") return formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat);
         if (c.sum || c.key === "Rate") return fmtFixed(numVal(r, c.key, ...(c.altKeys || [])));
         return dashText(getRowVal(r, c.key, ...(c.altKeys || [])));
       })
@@ -854,7 +858,7 @@ const OutstandingReport = () => {
     rows.push(
       cols.map((c, idx) => {
         if (idx === 0) return t("Total");
-        if (c.key === "Totcts") return fmtFixed(allTotals.Totcts, 3);
+        if (c.key === "Totcts") return formatCarat(allTotals.Totcts, caratFormat);
         if (c.key === "Amount") return fmtFixed(allTotals.Amount);
         if (c.key === "PaidAmount") return fmtFixed(allTotals.PaidAmount);
         if (c.key === "RemainAmount") return fmtFixed(allTotals.RemainAmount);
@@ -886,6 +890,7 @@ const OutstandingReport = () => {
         rows.push([
           "",
           ...cols.map((c) => {
+            if (c.key === "Totcts") return formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat);
             if (c.sum || c.key === "Rate") return fmtFixed(numVal(r, c.key, ...(c.altKeys || [])));
             return dashText(getRowVal(r, c.key, ...(c.altKeys || [])));
           })
@@ -893,7 +898,10 @@ const OutstandingReport = () => {
       });
       rows.push([
         t("Total"),
-        ...cols.map((c) => (c.sum ? fmtFixed(subtotal[c.key] || 0) : ""))
+        ...cols.map((c) => {
+          if (c.key === "Totcts") return formatCarat(subtotal.Totcts || 0, caratFormat);
+          return c.sum ? fmtFixed(subtotal[c.key] || 0) : "";
+        })
       ]);
       Object.keys(grand).forEach((k) => {
         grand[k] += subtotal[k] || 0;
@@ -901,7 +909,10 @@ const OutstandingReport = () => {
     });
     rows.push([
       t("Grand Total"),
-      ...cols.map((c) => (c.sum ? fmtFixed(grand[c.key] || 0) : ""))
+      ...cols.map((c) => {
+        if (c.key === "Totcts") return formatCarat(grand.Totcts || 0, caratFormat);
+        return c.sum ? fmtFixed(grand[c.key] || 0) : "";
+      })
     ]);
     const fileName =
       mode === "required" ? "Required-Partywise-Outstanding-Report" : "Partywise-Outstanding-Report";
@@ -1320,9 +1331,11 @@ const OutstandingReport = () => {
         </button>
       );
     }
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat);
+    }
     if (col.sum || col.key === "Rate" || col.key === "Amount" || col.key === "PaidAmount" || col.key === "RemainAmount") {
-      const decimals = col.key === "Totcts" ? 3 : 2;
-      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), decimals);
+      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2);
     }
     return dashText(getRowVal(row, col.key, ...(col.altKeys || [])));
   };
@@ -2032,8 +2045,10 @@ const OutstandingReport = () => {
                           let content = "";
                           if (idx === 0) {
                             content = t("Total");
+                          } else if (col.key === "Totcts") {
+                            content = formatCarat(allTotals.Totcts || 0, caratFormat);
                           } else if (col.sum) {
-                            content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                            content = fmtFixed(allTotals[col.key] || 0, 2);
                           }
                           return (
                             <td
@@ -2336,9 +2351,11 @@ const OutstandingReport = () => {
                                     key={`sub-${col.key}`}
                                     className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
                                   >
-                                    {col.sum
-                                      ? fmtFixed(subtotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
-                                      : ""}
+                                    {col.key === "Totcts"
+                                      ? formatCarat(subtotal.Totcts || 0, caratFormat)
+                                      : col.sum
+                                        ? fmtFixed(subtotal[col.key] || 0, 2)
+                                        : ""}
                                   </td>
                                 ))}
                               </tr>
@@ -2365,9 +2382,11 @@ const OutstandingReport = () => {
                                 key={`grand-${col.key}`}
                                 className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
                               >
-                                {col.sum
-                                  ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
-                                  : ""}
+                                {col.key === "Totcts"
+                                  ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+                                  : col.sum
+                                    ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2)
+                                    : ""}
                               </td>
                             ))}
                           </tr>

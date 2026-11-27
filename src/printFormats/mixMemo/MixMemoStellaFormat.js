@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmtDateSlash, fmtNum, getVal, paginateStella } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmtCaratNum, fmtDateSlash, fmtNum, getVal, paginateStella } from "../shared/printUtils";
 
 // MVC Views/GeneralMemo/MixMemoOutPrint_Single.cshtml (MixMemoUSA_Stella) — 20 records per page
 const ITEMS_PER_PAGE = 20;
@@ -273,7 +273,7 @@ const MixMemoStellaFormat = ({ data, items, totals, company, logoUrl, isCurrentS
                       {getVal(item, "Qty", "qty", "Pcs", "pcs")}
                     </td>
                     <td style={{ ...tdRight, width: COL_W[3], paddingRight: 8, fontSize: FS_ITEM }}>
-                      {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
+                      {fmtCaratNum(getVal(item, "Weight", "weight", "Carats", "carats"))}
                     </td>
                     <td style={{ ...td, width: COL_W[4], textAlign: "left", fontSize: FS_ITEM }}>
                       {getVal(item, "Description", "description", "ItemName", "itemName")}
@@ -321,7 +321,7 @@ const MixMemoStellaFormat = ({ data, items, totals, company, logoUrl, isCurrentS
                       {totals.qty}
                     </td>
                     <td style={{ ...tdFull, width: COL_W[3], textAlign: "right", paddingRight: 8, verticalAlign: "top", fontSize: FS }}>
-                      {fmtNum(totals.wt, 2)}
+                      {fmtCaratNum(totals.wt)}
                     </td>
                     <td style={{ ...tdFull, width: COL_W[4] }} />
                     <td

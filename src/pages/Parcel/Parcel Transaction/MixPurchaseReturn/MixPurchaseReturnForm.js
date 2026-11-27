@@ -39,6 +39,12 @@ import {
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -250,10 +256,10 @@ const mapItemFromApi = (r, idx, sBaseRate = 1) => {
 
   if (issueCarats !== 0) {
     if (rejection === 0 && selectionCarats !== 0 && issueCarats > selectionCarats) {
-      rejection = Math.round((issueCarats - selectionCarats) * 1000) / 1000;
+      rejection = truncateCaratNumber(issueCarats - selectionCarats);
     }
     if (selectionCarats === 0 && issueCarats !== 0) {
-      selectionCarats = Math.round((issueCarats - rejection) * 1000) / 1000;
+      selectionCarats = truncateCaratNumber(issueCarats - rejection);
     }
     if (rejP === 0 && rejection !== 0) {
       rejP = Math.round(((rejection * 100) / issueCarats) * 100) / 100;
@@ -320,10 +326,10 @@ const ITEM_COLUMNS = [
   { key: "size", label: "Size", lookup: "size" },
   { key: "sieve", label: "Sieve", lookup: "sieve" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
-  { key: "issueCarats", label: "IssueCarats", align: "end", decimals: 3, footer: "issueCarats" },
+  { key: "issueCarats", label: "IssueCarats", align: "end", isCarat: true, footer: "issueCarats" },
   { key: "rejP", label: "RejP%", align: "end", decimals: 2 },
-  { key: "rejection", label: "Rejection", align: "end", decimals: 3, footer: "rejection" },
-  { key: "selectionCarats", label: "SelectedCarats", align: "end", decimals: 3, footer: "selectionCarats" },
+  { key: "rejection", label: "Rejection", align: "end", isCarat: true, footer: "rejection" },
+  { key: "selectionCarats", label: "SelectedCarats", align: "end", isCarat: true, footer: "selectionCarats" },
   { key: "cogs", label: "COGS", align: "end", decimals: 2 },
   { key: "rate", label: "Rate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "sRate", label: "$Rate", align: "end", decimals: 2 },
@@ -336,16 +342,16 @@ const ITEM_COLUMNS = [
   { key: "invDescription", label: "ItemDescription" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "issueCarats":
-      return fmt(totals.totIssueCts, 3);
+      return formatCarat(totals.totIssueCts, caratFormat);
     case "rejection":
-      return fmt(totals.totRejection, 3);
+      return formatCarat(totals.totRejection, caratFormat);
     case "selectionCarats":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "avgRate":
       return fmt(totals.avgRate, 2);
     case "totAmount":
@@ -355,12 +361,16 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col, lookupOpts = {}) => {
+const renderItemCell = (row, col, lookupOpts = {}, caratFormat) => {
   if (col.lookup) {
     const opts = lookupOpts[col.lookup] || [];
     return optLabel(opts, row[col.key]);
   }
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -511,6 +521,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
     return () => window.clearTimeout(timer);
   }, [lotFocusToken, focusLotNoField]);
 
+  const { caratFormat } = useCaratFormat();
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
@@ -1012,15 +1023,18 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       ...next,
       // Keep the field the user is typing as-entered; format only calculated fields.
       rejP: changedKey === "rejP" ? next.rejP : roundN(rejP, 2),
-      rejection: changedKey === "rejection" ? next.rejection : roundN(rejection, 3),
+      rejection: changedKey === "rejection" ? next.rejection : String(truncateCaratNumber(rejection, caratFormat)),
       selectionCarats:
-        changedKey === "selectionCarats" ? next.selectionCarats : roundN(selectionCarats, 3)
+        changedKey === "selectionCarats" ? next.selectionCarats : String(truncateCaratNumber(selectionCarats, caratFormat))
     };
   };
 
   const onEntryChange = (key, value) => {
+    const cleanVal = ["issueCarats", "rejection", "selectionCarats"].includes(key)
+      ? sanitizeCaratInput(value, caratFormat)
+      : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
 
       if (["issueCarats", "rejP", "rejection", "selectionCarats"].includes(key)) {
         next = syncRejectionFields(next, key);
@@ -1124,10 +1138,10 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       clarity: entry.clarity || "",
       size: entry.size || "",
       sieve: entry.sieve || "",
-      issueCarats: Math.round(toNum(entry.issueCarats) * 1000) / 1000,
+      issueCarats: truncateCaratNumber(toNum(entry.issueCarats), caratFormat),
       rejP: Math.round(toNum(entry.rejP) * 100) / 100,
-      rejection: Math.round(toNum(entry.rejection) * 1000) / 1000,
-      selectionCarats: Math.round(selectionCarats * 1000) / 1000,
+      rejection: truncateCaratNumber(toNum(entry.rejection), caratFormat),
+      selectionCarats: truncateCaratNumber(selectionCarats, caratFormat),
       pcs: toNum(entry.pcs, 0),
       cogs: toNum(entry.cogs),
       rate,
@@ -1241,13 +1255,13 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
-      totIssueCts: Math.round(totIssueCts * 1000) / 1000,
-      totRejection: Math.round(totRejection * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
+      totIssueCts: truncateCaratNumber(totIssueCts, caratFormat),
+      totRejection: truncateCaratNumber(totRejection, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1969,8 +1983,8 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               {t("ISS.CTS")}
                             </Label>
                             <Input
-                              type="number"
-                              step="any"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.issueCarats}
@@ -2001,8 +2015,8 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               {t("REJE")}
                             </Label>
                             <Input
-                              type="number"
-                              step="any"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.rejection}
@@ -2017,8 +2031,8 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               {t("SELECT.CTS")}
                             </Label>
                             <Input
-                              type="number"
-                              step="any"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.selectionCarats}
@@ -2194,7 +2208,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col, lookupOpts)}
+                                  {renderItemCell(r, col, lookupOpts, caratFormat)}
                                 </td>
                               ))}
                             </tr>
@@ -2205,7 +2219,7 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end text-nowrap" : "text-nowrap"} style={{ whiteSpace: "nowrap" }}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>

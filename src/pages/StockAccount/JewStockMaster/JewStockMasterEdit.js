@@ -35,6 +35,8 @@ import {
   resolveOtherChargesExtra,
   summarizeTableRows,
 } from "./jewStockFormUtils";
+import { sanitizeCaratInput } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const FieldRow = ({ label, children, wide = false }) => (
   <div className="row mb-2" style={{ alignItems: "center" }}>
@@ -110,6 +112,7 @@ export default function JewStockMasterEdit() {
   const isView =
     String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat();
 
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -1616,7 +1619,7 @@ export default function JewStockMasterEdit() {
                         {/* Pcs / Carat / Price / Amount */}
                         {[
                           ["Pcs", pcs, setPcs, false],
-                          ["Carat", carats, setCarats, false],
+                          ["Carat", carats, (v) => setCarats(sanitizeCaratInput(v, caratFormat)), false],
                           ["Price", rate, setRate, false],
                           ["Amount", amount, null, true],
                         ].map(([lbl, val, setter, ro]) => (
@@ -1727,7 +1730,7 @@ export default function JewStockMasterEdit() {
                                 </td>
                                 {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
                                 row.color, row.clarity, row.pcs,
-                                formatCarat(row.carats), formatPrice(row.rate),
+                                formatCarat(row.carats, caratFormat), formatPrice(row.rate),
                                 formatAmount(row.amount), row.lab
                                 ].map((v, i) => (
                                   <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
@@ -1743,7 +1746,7 @@ export default function JewStockMasterEdit() {
                                   {tableRows.reduce((s, r) => s + (parseFloat(r.pcs) || 0), 0)}
                                 </td>
                                 <td style={{ padding: "6px 10px" }}>
-                                  {tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0).toFixed(3)}
+                                  {formatCarat(tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0), caratFormat)}
                                 </td>
                                 <td style={{ padding: "6px 10px" }}></td>
                                 <td style={{ padding: "6px 10px" }}>

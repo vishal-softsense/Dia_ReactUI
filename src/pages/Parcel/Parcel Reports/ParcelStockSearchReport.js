@@ -41,6 +41,8 @@ import {
     getParcelLots
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, getExcelBase64 } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 
 const debounce = (func, delay) => {
@@ -258,6 +260,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const ParcelStockSearchReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const [activeTab, setActiveTab] = useState("1"); // Filter Tabs
     // Filter lists fetched from API
     const [masterDropdowns, setMasterDropdowns] = useState({});
@@ -781,19 +784,19 @@ const ParcelStockSearchReport = () => {
                 if (col.key === "carats") {
                     footerCallback = ({ table }) => {
                         const { totalCarats } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "onHand") {
                     footerCallback = ({ table }) => {
                         const { totalOnHand } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalOnHand, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalOnHand, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "memoOut") {
                     footerCallback = ({ table }) => {
                         const { totalMemoOut } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalMemoOut, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalMemoOut, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "rapa") {
@@ -857,7 +860,7 @@ const ParcelStockSearchReport = () => {
 
                         let displayVal = val;
                         if (col.type === "carats") {
-                            displayVal = parseFloat(val || 0).toFixed(3);
+                            displayVal = formatCarat(val, caratFormat);
                         } else if (col.type === "discount") {
                             displayVal = parseFloat(val || 0).toFixed(2);
                         } else if (col.type === "number") {
@@ -1008,7 +1011,7 @@ const ParcelStockSearchReport = () => {
             // }))
         ];
         return cols;
-    }, [searchResults, selectedRows, t]);
+    }, [searchResults, selectedRows, t, caratFormat]);
 
     // Sync selected lot numbers with sessionStorage
     useEffect(() => {
@@ -1117,13 +1120,13 @@ const ParcelStockSearchReport = () => {
 
         return {
             pcs,
-            carats: carats.toFixed(3),
+            carats: formatCarat(carats, caratFormat),
             amount: amount.toFixed(2),
             avgMRP,
             avgRate,
             avgDis
         };
-    }, [selectedRows, searchResults]);
+    }, [selectedRows, searchResults, caratFormat]);
 
     const selectedLotNos = useMemo(() => {
         return Object.keys(selectedRows)
@@ -1147,9 +1150,9 @@ const ParcelStockSearchReport = () => {
                 item.lotNo || item.LotNo || "",
                 item.itemName || item.itemName || "",
                 item.shape || item.Shape || "",
-                item.carats || item.Carats || 0,
-                item.onHand || item.onHand || 0,
-                item.memoOut || item.memoOut || 0,
+                formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
+                formatCarat(item.onHand ?? item.OnHand ?? 0, caratFormat),
+                formatCarat(item.memoOut ?? item.MemoOut ?? 0, caratFormat),
                 item.size || item.Size || "",
                 item.color || item.Color || "",
                 item.clarity || item.Clarity || "",
@@ -1404,9 +1407,9 @@ const ParcelStockSearchReport = () => {
             "",               // Stock ID
             "",               // Item
             "",               // Shape
-            totalCarats.toFixed(3),
-            totalOnHand.toFixed(3),
-            totalMemoOut.toFixed(3),
+            formatCarat(totalCarats, caratFormat),
+            formatCarat(totalOnHand, caratFormat),
+            formatCarat(totalMemoOut, caratFormat),
             "",               // Size
             "",               // Color
             "",               // Clarity
@@ -2338,7 +2341,7 @@ const ParcelStockSearchReport = () => {
                                                 <td className="fw-bold bg-light">{t("Clarity")}</td>
                                                 <td>{get("clarity", "Clarity")}</td>
                                                 <td className="fw-bold bg-light">{t("Carats")}</td>
-                                                <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                                                <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                                             </tr>
                                             <tr>
                                                 <td className="fw-bold bg-light">{t("LAB")}</td>

@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getLoanOutstandingReport,
@@ -132,6 +134,7 @@ const PARTYWISE_COLUMNS = [
 
 const LoanOutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -583,41 +586,48 @@ const LoanOutstandingReport = () => {
         groupRows.forEach((r) => {
           rows.push(
             cols.map((c) =>
-              c.sum || c.key === "Rate"
-                ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), c.key === "Totcts" ? 3 : 2)
-                : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
+              c.key === "Totcts"
+                ? formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat)
+                : c.sum || c.key === "Rate"
+                  ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), 2)
+                  : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
             )
           );
         });
         rows.push([
           t("Total"),
           ...cols.slice(1).map((c) =>
-            c.sum ? fmtFixed(subtotal[c.key === "Totcts" ? "Totcts" : c.key] || 0, c.key === "Totcts" ? 3 : 2) : ""
+            c.key === "Totcts"
+              ? formatCarat(subtotal.Totcts || 0, caratFormat)
+              : c.sum ? fmtFixed(subtotal[c.key] || 0, 2) : ""
           )
         ]);
       });
       rows.push([
         t("Grand Total"),
         ...cols.slice(1).map((c) =>
-          c.sum
-            ? fmtFixed(invoicePartyGrandTotal[c.key === "Totcts" ? "Totcts" : c.key] || 0, c.key === "Totcts" ? 3 : 2)
-            : ""
+          c.key === "Totcts"
+            ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+            : c.sum ? fmtFixed(invoicePartyGrandTotal[c.key] || 0, 2) : ""
         )
       ]);
     } else {
       filteredAllRows.forEach((r) => {
         rows.push(
           cols.map((c) =>
-            c.sum || c.key === "Rate"
-              ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), c.key === "Totcts" ? 3 : 2)
-              : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
+            c.key === "Totcts"
+              ? formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat)
+              : c.sum || c.key === "Rate"
+                ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), 2)
+                : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
           )
         );
       });
       rows.push(
         cols.map((c, idx) => {
           if (idx === 0) return t("Total");
-          if (c.sum) return fmtFixed(allTotals[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") return formatCarat(allTotals.Totcts || 0, caratFormat);
+          if (c.sum) return fmtFixed(allTotals[c.key] || 0, 2);
           return "";
         })
       );
@@ -1153,12 +1163,11 @@ const LoanOutstandingReport = () => {
                                   col.align === "right" ? "text-end" : "text-start"
                                 }`}
                               >
-                                {col.sum || col.key === "Rate"
-                                  ? fmtFixed(
-                                      numVal(row, col.key, ...(col.altKeys || [])),
-                                      col.key === "Totcts" ? 3 : 2
-                                    )
-                                  : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
+                                {col.key === "Totcts"
+                                  ? formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat)
+                                  : col.sum || col.key === "Rate"
+                                    ? fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2)
+                                    : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
                               </td>
                             ))}
                           </tr>
@@ -1179,7 +1188,8 @@ const LoanOutstandingReport = () => {
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
                           if (idx === 0) content = t("Total");
-                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                          else if (col.key === "Totcts") content = formatCarat(allTotals.Totcts || 0, caratFormat);
+                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, 2);
                           return (
                             <td
                               key={`t-${col.key}`}
@@ -1335,12 +1345,11 @@ const LoanOutstandingReport = () => {
                                         col.align === "right" ? "text-end" : "text-start"
                                       }`}
                                     >
-                                      {col.sum || col.key === "Rate"
-                                        ? fmtFixed(
-                                            numVal(row, col.key, ...(col.altKeys || [])),
-                                            col.key === "Totcts" ? 3 : 2
-                                          )
-                                        : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
+                                      {col.key === "Totcts"
+                                        ? formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat)
+                                        : col.sum || col.key === "Rate"
+                                          ? fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2)
+                                          : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
                                     </td>
                                   ))}
                                 </tr>
@@ -1352,12 +1361,11 @@ const LoanOutstandingReport = () => {
                                 <td />
                                 {PARTYWISE_COLUMNS.slice(7).map((col) => (
                                   <td key={`sub-${col.key}`} className="text-end fw-bold">
-                                    {col.sum
-                                      ? fmtFixed(
-                                          subtotal[col.key === "Totcts" ? "Totcts" : col.key] || 0,
-                                          col.key === "Totcts" ? 3 : 2
-                                        )
-                                      : ""}
+                                    {col.key === "Totcts"
+                                      ? formatCarat(subtotal.Totcts || 0, caratFormat)
+                                      : col.sum
+                                        ? fmtFixed(subtotal[col.key] || 0, 2)
+                                        : ""}
                                   </td>
                                 ))}
                               </tr>
@@ -1383,12 +1391,11 @@ const LoanOutstandingReport = () => {
                             <td />
                             {PARTYWISE_COLUMNS.slice(7).map((col) => (
                               <td key={`grand-${col.key}`} className="text-end fw-bold">
-                                {col.sum
-                                  ? fmtFixed(
-                                      invoicePartyGrandTotal[col.key === "Totcts" ? "Totcts" : col.key] || 0,
-                                      col.key === "Totcts" ? 3 : 2
-                                    )
-                                  : ""}
+                                {col.key === "Totcts"
+                                  ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+                                  : col.sum
+                                    ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2)
+                                    : ""}
                               </td>
                             ))}
                           </tr>

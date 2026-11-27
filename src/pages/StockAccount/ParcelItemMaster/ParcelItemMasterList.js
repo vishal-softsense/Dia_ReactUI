@@ -7,9 +7,12 @@ import TableContainer from "../../../Components/Common/TableContainer";
 import { getParcelItemMasters, deleteParcelItemMaster } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from 'react-toastify';
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const ParcelItemMasterList = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const navigate = useNavigate();
     const location = useLocation();
     const [parcelItems, setParcelItems] = useState([]);
@@ -86,7 +89,7 @@ const ParcelItemMasterList = () => {
             item.sizeId || item.SizeId || "",
             item.clarityId || item.ClarityId || "",
             item.sieveId || item.SieveId || "",
-            item.weight || item.Weight || 0,
+            truncateCaratNumber(item.weight || item.Weight || 0, caratFormat),
             item.purchaseAmount || item.PurchaseAmount || 0
         ]);
 
@@ -182,10 +185,7 @@ const ParcelItemMasterList = () => {
                 accessorKey: "weight",
                 accessorFn: (row) => row.weight || row.Weight,
                 enableColumnFilter: true,
-                cell: (cellProps) => {
-                    const val = cellProps.getValue();
-                    return typeof val === 'number' ? val.toFixed(3) : val;
-                }
+                cell: (cellProps) => formatCarat(cellProps.getValue(), caratFormat)
             },
             {
                 header: t("MRP"),
@@ -199,7 +199,7 @@ const ParcelItemMasterList = () => {
             }
 
         ],
-        [navigate, t]);
+        [navigate, t, caratFormat]);
 
     document.title = `${t("Parcel Item Master")} | ${t("Admin")}`;
 

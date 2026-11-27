@@ -14,6 +14,8 @@ import {
     getMixConsignmentInRtnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 /** MVC safe(): empty → blank; numbers → fixed decimals */
 const safeText = (value) => {
@@ -119,6 +121,7 @@ const getRowDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate", "ConDATE", "
 
 const MixConsignmentInRtnReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -521,10 +524,13 @@ const MixConsignmentInRtnReport = () => {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => {
+                    const v = getRowVal(row.original, "Return", "return");
+                    return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+                },
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
@@ -563,7 +569,7 @@ const MixConsignmentInRtnReport = () => {
                     row.original?.isParent ? "" : safeText(getRowVal(row.original, "StockType", "stockType"))
             }
         ],
-        [expandedMemoNos, t]
+        [expandedMemoNos, t, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -594,7 +600,10 @@ const MixConsignmentInRtnReport = () => {
             safeText(getRowVal(r, "Party", "party", "AccGrpName", "accGrpName")),
             safeText(getRowVal(r, "Lotno", "lotno", "LotNo")),
             safeText(getRowVal(r, "ItemName", "itemName")),
-            safeFixed(getRowVal(r, "Return", "return"), 3),
+            (() => {
+                const v = getRowVal(r, "Return", "return");
+                return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+            })(),
             safeFixed(getRowVal(r, "Price", "price"), 2),
             safeFixed(getRowVal(r, "Amount", "amount"), 2),
             safeText(getRowVal(r, "Broker", "broker")),
@@ -612,7 +621,7 @@ const MixConsignmentInRtnReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalReturn, 3),
+            formatCarat(totalReturn, caratFormat),
             "",
             fmtFixed(totalAmount, 2),
             "",

@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getBrokerageOutstandingReport
@@ -191,6 +193,7 @@ const NUMERIC_SORT_KEYS = [
 
 const BrokerageOutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -465,8 +468,11 @@ const BrokerageOutstandingReport = () => {
         </button>
       );
     }
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat);
+    }
     if (col.sum || col.key === "Rate" || col.key === "stockrate") {
-      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), col.key === "Totcts" ? 3 : 2);
+      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2);
     }
     return dashText(getRowVal(row, col.key, ...(col.altKeys || [])));
   };
@@ -620,8 +626,10 @@ const BrokerageOutstandingReport = () => {
         rows.push([
           t("Total"),
           ...cols.slice(1).map((c) => {
-            if (c.sum) {
-              return fmtFixed(subtotal[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+            if (c.key === "Totcts") {
+              return formatCarat(subtotal.Totcts || 0, caratFormat);
+            } else if (c.sum) {
+              return fmtFixed(subtotal[c.key] || 0, 2);
             } else if (c.key === "Rate") {
               const rateSub = subtotal.Totcts > 0 ? subtotal.BrokerAmount / subtotal.Totcts : 0;
               return fmtFixed(rateSub, 2);
@@ -633,8 +641,10 @@ const BrokerageOutstandingReport = () => {
       rows.push([
         t("Grand Total"),
         ...cols.slice(1).map((c) => {
-          if (c.sum) {
-            return fmtFixed(invoicePartyGrandTotal[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") {
+            return formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat);
+          } else if (c.sum) {
+            return fmtFixed(invoicePartyGrandTotal[c.key] || 0, 2);
           } else if (c.key === "Rate") {
             const rateGrand = invoicePartyGrandTotal.Totcts > 0 ? invoicePartyGrandTotal.BrokerAmount / invoicePartyGrandTotal.Totcts : 0;
             return fmtFixed(rateGrand, 2);
@@ -649,7 +659,8 @@ const BrokerageOutstandingReport = () => {
       rows.push(
         cols.map((c, idx) => {
           if (idx === 0) return t("Total");
-          if (c.sum) return fmtFixed(allTotals[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") return formatCarat(allTotals.Totcts || 0, caratFormat);
+          if (c.sum) return fmtFixed(allTotals[c.key] || 0, 2);
           return "";
         })
       );
@@ -1187,7 +1198,8 @@ const BrokerageOutstandingReport = () => {
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
                           if (idx === 0) content = t("Total");
-                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                          else if (col.key === "Totcts") content = formatCarat(allTotals.Totcts || 0, caratFormat);
+                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, 2);
                           return (
                             <td
                               key={`t-${col.key}`}
@@ -1354,8 +1366,10 @@ const BrokerageOutstandingReport = () => {
                                 </td>
                                 {PARTYWISE_COLUMNS.slice(6).map((col) => {
                                   let content = "";
-                                  if (col.sum) {
-                                    content = fmtFixed(subtotal[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                                  if (col.key === "Totcts") {
+                                    content = formatCarat(subtotal.Totcts || 0, caratFormat);
+                                  } else if (col.sum) {
+                                    content = fmtFixed(subtotal[col.key] || 0, 2);
                                   } else if (col.key === "Rate") {
                                     const rateSub = subtotal.Totcts > 0 ? subtotal.BrokerAmount / subtotal.Totcts : 0;
                                     content = fmtFixed(rateSub, 2);
@@ -1391,8 +1405,10 @@ const BrokerageOutstandingReport = () => {
                             </td>
                             {PARTYWISE_COLUMNS.slice(6).map((col) => {
                               let content = "";
-                              if (col.sum) {
-                                content = fmtFixed(invoicePartyGrandTotal[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                              if (col.key === "Totcts") {
+                                content = formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat);
+                              } else if (col.sum) {
+                                content = fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2);
                               } else if (col.key === "Rate") {
                                 const rateGrand = invoicePartyGrandTotal.Totcts > 0 ? invoicePartyGrandTotal.BrokerAmount / invoicePartyGrandTotal.Totcts : 0;
                                 content = fmtFixed(rateGrand, 2);

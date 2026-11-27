@@ -28,6 +28,9 @@ import {
   getSolitairePurchaseReturnReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -66,6 +69,12 @@ const getTableTotals = (table) => {
 
 const SolitairePurchaseReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -533,10 +542,10 @@ const SolitairePurchaseReturnReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { parentCarat } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentCarat, caratFormat)}</span>;
         }
       },
       {
@@ -589,9 +598,9 @@ const SolitairePurchaseReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentMRPAmt, 2)}</span>;
         }
       },
-      { header: t("INR Rate"), accessorKey: "MasterCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
+      { header: masterRateHeader, accessorKey: "MasterCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -600,9 +609,9 @@ const SolitairePurchaseReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentINR, 2)}</span>;
         }
       },
-      { header: t("USD Rate"), accessorKey: "StockCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
+      { header: stockRateHeader, accessorKey: "StockCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -612,7 +621,7 @@ const SolitairePurchaseReturnReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -658,10 +667,10 @@ const SolitairePurchaseReturnReport = () => {
       "SinglePcs",
       "InvType",
       "MRP Amt",
-      "INR Rate",
-      "INR Amount",
-      "USD Rate",
-      "USD Amount"
+      masterRateHeader,
+      masterAmtHeader,
+      stockRateHeader,
+      stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -677,7 +686,7 @@ const SolitairePurchaseReturnReport = () => {
       fmtFixed(getRowVal(row, "MRP", "mrp"), 2),
       fmtFixed(getRowVal(row, "Discount", "discount"), 2),
       dashText(getRowVal(row, "ColCla", "colCla", "colcla")),
-      fmtFixed(getRowVal(row, "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
       fmtFixed(getRowVal(row, "Rate", "rate"), 2),
       fmtFixed(getRowVal(row, "Less1", "less1"), 2),
       fmtFixed(getRowVal(row, "Less2", "less2"), 2),

@@ -38,6 +38,8 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import StockHistoryPopupModal from "./StockHistoryPopupModal";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const debounce = (func, delay) => {
   let timer;
@@ -276,6 +278,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitaireAdminStockReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -762,7 +765,7 @@ const SolitaireAdminStockReport = () => {
         if (col.key === "carats") {
           footerCallback = ({ table }) => {
             const { totalCarats } = getAdminStockTableTotals(table);
-            return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+            return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
           };
         } else if (col.key === "rapa") {
           footerCallback = ({ table }) => {
@@ -835,7 +838,7 @@ const SolitaireAdminStockReport = () => {
 
             let displayVal = val;
             if (col.type === "carats") {
-              displayVal = parseFloat(val || 0).toFixed(3);
+              displayVal = formatCarat(val, caratFormat);
             } else if (col.type === "discount") {
               displayVal = parseFloat(val || 0).toFixed(2);
             } else if (col.type === "number") {
@@ -905,7 +908,7 @@ const SolitaireAdminStockReport = () => {
       })
     ];
     return cols;
-  }, [searchResults, selectedRows, t]);
+  }, [searchResults, selectedRows, t, caratFormat]);
 
   const selectedLotNos = useMemo(() => {
     return searchResults
@@ -944,7 +947,7 @@ const SolitaireAdminStockReport = () => {
 
     return {
       pcs,
-      carats: carats.toFixed(3),
+      carats: formatCarat(carats, caratFormat),
       amount: amount.toFixed(2),
       avgRate,
       avgDis,
@@ -956,7 +959,7 @@ const SolitaireAdminStockReport = () => {
       actualAmt: actualAmt.toFixed(2),
       plPer
     };
-  }, [searchResults, selectedRows]);
+  }, [searchResults, selectedRows, caratFormat]);
 
   const handleUpdateLocation = async () => {
     if (selectedLotNos.length === 0) {
@@ -1047,7 +1050,7 @@ const SolitaireAdminStockReport = () => {
     const rows = exportData.map(row => {
       return exportCols.map(col => {
         const val = row[col.key] !== undefined ? row[col.key] : row[col.key.charAt(0).toUpperCase() + col.key.slice(1)];
-        if (col.type === "carats") return parseFloat(val || 0).toFixed(3);
+        if (col.type === "carats") return formatCarat(val, caratFormat);
         if (col.type === "discount") return parseFloat(val || 0).toFixed(2);
         if (col.type === "number") return parseFloat(val || 0).toFixed(2);
         return val !== null && val !== undefined ? String(val) : "";
@@ -1843,7 +1846,7 @@ const SolitaireAdminStockReport = () => {
                       <td className="fw-bold bg-light">{t("Clarity")}</td>
                       <td>{get("clarity", "Clarity")}</td>
                       <td className="fw-bold bg-light">{t("Carats")}</td>
-                      <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                      <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                     </tr>
                     <tr>
                       <td className="fw-bold bg-light">{t("LAB")}</td>

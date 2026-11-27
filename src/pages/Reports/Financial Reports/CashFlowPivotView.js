@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
  * Uses global `ej` from CDN (public/index.html).
  * Pattern aligned with MonthExpensePivotView / ParcelSalePivotReport.
  */
-const CashFlowPivotView = ({ data = [], stockSymbol = "USD", masterSymbol = "INR" }) => {
+const CashFlowPivotView = ({ data = [], stockSymbol = "", masterSymbol = "" }) => {
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
   const heatmapEnabledRef = useRef(false);
@@ -145,8 +145,8 @@ const CashFlowPivotView = ({ data = [], stockSymbol = "USD", masterSymbol = "INR
     const pivotData = mapPivotData(rawArray);
     if (pivotData.length === 0) return;
 
-    const sSym = symbolsRef.current.stockSymbol || "USD";
-    const mSym = symbolsRef.current.masterSymbol || "INR";
+    const sSym = symbolsRef.current.stockSymbol || "";
+    const mSym = symbolsRef.current.masterSymbol || "";
 
     // Refresh existing instance when data updates
     if (pivotRef.current) {
@@ -156,8 +156,8 @@ const CashFlowPivotView = ({ data = [], stockSymbol = "USD", masterSymbol = "INR
             dataSourceSettings: {
               dataSource: pivotData,
               values: [
-                { name: "StockCurrencyAmount", caption: `${sSym} Amount` },
-                { name: "MasterCurrencyAmount", caption: `${mSym} Amount` }
+                { name: "StockCurrencyAmount", caption: sSym ? `${sSym} Amount` : "Stock Amount" },
+                { name: "MasterCurrencyAmount", caption: mSym ? `${mSym} Amount` : "Master Amount" }
               ]
             }
           },
@@ -205,8 +205,8 @@ const CashFlowPivotView = ({ data = [], stockSymbol = "USD", masterSymbol = "INR
           // MVC: rows AccTypeDisc (Account Type) — not AccGrpName
           rows: [{ name: "AccTypeDisc", caption: "Account Type" }],
           values: [
-            { name: "StockCurrencyAmount", caption: `${sSym} Amount` },
-            { name: "MasterCurrencyAmount", caption: `${mSym} Amount` }
+            { name: "StockCurrencyAmount", caption: sSym ? `${sSym} Amount` : "Stock Amount" },
+            { name: "MasterCurrencyAmount", caption: mSym ? `${mSym} Amount` : "Master Amount" }
           ],
           formatSettings: [
             { name: "StockCurrencyAmount", format: "N2" },

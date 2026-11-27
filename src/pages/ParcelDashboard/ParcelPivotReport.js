@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from "react";
+import { useCaratFormat } from "../../Components/Hooks/useCaratFormat";
+import { truncateCaratNumber } from "../../helpers/caratFormatDefaults";
 
 const ParcelPivotReport = ({ data = [] }) => {
+  const { caratFormat } = useCaratFormat();
+  const caratPivotFormat = caratFormat === "0.000" ? "N3" : "N2";
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
   const heatmapEnabledRef = useRef(false);
@@ -47,7 +51,7 @@ const ParcelPivotReport = ({ data = [] }) => {
     Color: toStr(pick(item, "Color", "Col")),
     Clarity: toStr(pick(item, "Clarity", "Cla")),
     Pcs: toNum(pick(item, "Pcs")),
-    Carats: toNum(pick(item, "Carats", "carats")),
+    Carats: truncateCaratNumber(toNum(pick(item, "Carats", "carats")), caratFormat),
     Amount: toNum(pick(item, "Amount")),
     Location: toStr(pick(item, "Location", "Country", "City")),
     ItemGroupId: toStr(pick(item, "ItemGroupId")),
@@ -243,7 +247,7 @@ const ParcelPivotReport = ({ data = [] }) => {
         ],
         formatSettings: [
           { name: "Pcs", format: "N0" },
-          { name: "Carats", format: "N2" },
+          { name: "Carats", format: caratPivotFormat },
           { name: "Amount", format: "N2" }
         ],
         filters: [],
@@ -425,7 +429,7 @@ const ParcelPivotReport = ({ data = [] }) => {
       clearTimeout(timer);
       destroyPivot();
     };
-  }, [data]);
+  }, [data, caratFormat]);
 
   return (
     <div className="parcel-pivot-control-section">

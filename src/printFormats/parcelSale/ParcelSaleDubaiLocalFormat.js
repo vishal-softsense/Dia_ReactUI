@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtCarat, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
 
 const th = { border: "2px solid #454545", padding: 4, background: "#c0c0c0", textAlign: "center" };
 const td = { border: "2px solid #454545", textAlign: "center" };
@@ -112,7 +112,7 @@ const ParcelSaleDubaiLocalFormat = ({ data, items, totals, company, logoUrl }) =
                     <td style={td}>{fmt(getVal(item, "MRP", "Rap", "rap"), 2)}</td>
                     <td style={td}>{fmt(getVal(item, "PMRPDown", "Back", "back"), 2)}</td>
                     <td style={td}>{fmt(getVal(item, "Pcs", "pcs"), 2)}</td>
-                    <td style={td}>{fmt(getVal(item, "Carats"), 2)}</td>
+                    <td style={td}>{fmtCarat(getVal(item, "Carats"))}</td>
                     <td style={td}>{fmt(getVal(item, "Rate"), 2)}</td>
                     <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmt(getVal(item, "Amount"), 2)}</td>
                   </tr>
@@ -135,7 +135,7 @@ const ParcelSaleDubaiLocalFormat = ({ data, items, totals, company, logoUrl }) =
                       <td style={{ borderTop: "2px solid #454545" }}></td>
                       <td style={{ borderTop: "2px solid #454545" }}></td>
                       <td style={{ borderTop: "2px solid #454545" }}></td>
-                      <td style={td}>{fmt(totals.wt, 2)}</td>
+                      <td style={td}>{fmtCarat(totals.wt)}</td>
                       <td style={{ ...td, fontSize: 10 }}>Total</td>
                       <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmt(totals.amount, 2)}</td>
                     </tr>

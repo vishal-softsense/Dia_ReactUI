@@ -6,6 +6,7 @@ import {
   looksLikeDriveMedia
 } from "../../helpers/googleDriveMedia";
 import {
+  fmtCaratNum,
   fmtDateSlash,
   fmtNum,
   getItemImageCandidates,
@@ -222,7 +223,7 @@ const PrintItemThumb = ({ item }) => {
 const formatTdc = (item) => {
   const v = getVal(item, "TotalDiamondCarat", "totalDiamondCarat");
   if (v === "" || v === null || v === undefined) return "";
-  return fmtNum(v, 2);
+  return fmtCaratNum(v);
 };
 
 const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
@@ -489,7 +490,7 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                       {getVal(item, "Pcs", "pcs", "Qty", "qty")}
                     </td>
                     <td style={{ ...itemCell, textAlign: "right", paddingRight: 20 }}>
-                      {fmtNum(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                      {fmtCaratNum(getVal(item, "Carats", "carats", "Weight", "weight"))}
                     </td>
                     <td style={{ ...itemCell, textAlign: "right", paddingRight: 20 }}>{formatTdc(item)}</td>
                     <td style={{ ...itemCell, textAlign: "left" }}>
@@ -562,7 +563,7 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                         paddingRight: 20
                       }}
                     >
-                      {fmtNum(totals.wt, 2)}
+                      {fmtCaratNum(totals.wt)}
                     </td>
                     <td
                       style={{
@@ -575,7 +576,7 @@ const MixSalePrintUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                         paddingRight: 20
                       }}
                     >
-                      {fmtNum(totals.tdc, 2)}
+                      {fmtCaratNum(totals.tdc)}
                     </td>
                     <td
                       style={{

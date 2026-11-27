@@ -2,6 +2,8 @@ import React from "react";
 import {
   FALLBACK_MEMO_CONDITIONS,
   fmt,
+  fmtSolitaireCarat,
+  fmtSolitaireCaratNum,
   fmtNum,
   getVal,
   paginateWithLastCap
@@ -312,7 +314,7 @@ const SaleDubaiExportFormat = ({ data, items, company, logoUrl }) => {
                         {fmt(getVal(item, "PMRPDown", "pmrpDown", "Back", "back", "Discount"), 2)}
                       </td>
                       <td style={td}>{getVal(item, "Qty", "qty", "Pcs", "pcs")}</td>
-                      <td style={td}>{fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}</td>
+                      <td style={td}>{fmtSolitaireCarat(getVal(item, "Weight", "weight", "Carats", "carats"))}</td>
                       <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>
                         {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
                       </td>
@@ -353,7 +355,7 @@ const SaleDubaiExportFormat = ({ data, items, company, logoUrl }) => {
                         <td style={td} />
                         <td style={td} />
                         <td style={td} />
-                        <td style={td}>{fmtNum(totalWt, 2)}</td>
+                        <td style={td}>{fmtSolitaireCaratNum(totalWt)}</td>
                         <td style={{ ...td, textAlign: "center", paddingRight: 3 }}>Total</td>
                         <td style={{ ...td, textAlign: "right", paddingRight: 3 }}>{fmtNum(totalAmt, 2)}</td>
                       </tr>
