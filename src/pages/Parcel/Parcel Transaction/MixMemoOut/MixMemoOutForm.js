@@ -124,14 +124,31 @@ const nextRowId = () => `memo-row-${Date.now()}-${++mixMemoRowSeq}`;
 
 const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
 
-/** Prefer closing-stock on-hand; do not treat item-master Carats as available stock. */
+/** Read first present finite number (including 0 or negative) without skipping 0. */
+const getPresentNumVal = (row, ...keys) => {
+  if (!row) return null;
+  for (const key of keys) {
+    const variants = [
+      key,
+      key.charAt(0).toLowerCase() + key.slice(1),
+      key.charAt(0).toUpperCase() + key.slice(1),
+      key.toLowerCase(),
+      key.toUpperCase()
+    ];
+    for (const k of variants) {
+      if (row[k] === undefined || row[k] === null || row[k] === "") continue;
+      const n = parseFloat(row[k]);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+};
+
+/** MVC MixMemo returns OnHandCarats3Dec as Weight; never fall back to BalanceCarats3Dec. */
 const getLotAvailableCarats = (lot) => {
-  const onHand = roundCts(
-    getNumVal(lot, "OnHandCarats3Dec", "onHandCarats3Dec", "BalanceCarats3Dec", "balanceCarats3Dec")
-  );
-  if (onHand > 0) return onHand;
-  const balance = roundCts(getNumVal(lot, "Carats", "Weight"));
-  return balance > 0 ? balance : 0;
+  const raw = getPresentNumVal(lot, "Weight", "OnHandCarats3Dec", "Carats");
+  const onHand = roundCts(raw ?? 0);
+  return onHand > 0 ? onHand : 0;
 };
 
 const memoExceedsStockMessage = (memoCts, available, lotNo) => {
@@ -823,19 +840,19 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   };
 
   const fetchLotOnHand = async (lotNo) => {
-    if (!lotNo) return 0;
+    if (!lotNo) return null;
     try {
       const res = await getMixMemoOutLotDetail({
         lotNo,
         curCode: toNum(header.curCode),
         sBaseRate: toNum(header.sBaseRate, 1)
       });
-      if (!(res?.success || res?.Success)) return 0;
+      if (!(res?.success || res?.Success)) return null;
       const rows = res.Data || res.data || [];
       const lot = Array.isArray(rows) ? rows[0] : rows;
-      return getLotAvailableCarats(lot);
+      return lot ? getLotAvailableCarats(lot) : null;
     } catch {
-      return 0;
+      return null;
     }
   };
 
@@ -843,7 +860,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     let onHand = toNum(fallback);
     try {
       const live = await fetchLotOnHand(lotNo);
-      if (live > 0) onHand = live;
+      if (live !== null) onHand = live;
     } catch (err) {
       console.error(err);
     }
@@ -885,14 +902,14 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
       if (!lot) return;
 
-      const availableCarats = getLotAvailableCarats(lot);
-      const balance = getNumVal(lot, "Weight", "Carats");
-      const weight = availableCarats > 0 ? availableCarats : balance;
+      const rawWeight = getPresentNumVal(lot, "Weight", "OnHandCarats3Dec", "Carats");
+      const weight = roundCts(rawWeight ?? 0);
+      const availableCarats = weight > 0 ? weight : 0;
       // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
       const pcs = getNumVal(lot, "Pcs");
       const rate = getNumVal(lot, "Rate");
 
-      if (weight <= 0) {
+      if (!weight || weight <= 0) {
         showWarning(t("Not enough stock in hand to make sale or memo."));
       }
 
@@ -910,7 +927,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
           less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
           less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
-          stockType: getStrVal(lot, "StockType") || prev.stockType || "Diamond",
+          stockType: getStrVal(lot, "StockType") || "Diamond",
           invDescription: getStrVal(lot, "InvDescription")
         })
       );
@@ -988,7 +1005,9 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     if (r.lotNo && String(r.stockType).toLowerCase() !== "jewellery") {
       try {
         const onHand = await fetchLotOnHand(r.lotNo);
-        availableCarats = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+        if (onHand !== null) {
+          availableCarats = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+        }
       } catch (err) {
         console.error(err);
       }
