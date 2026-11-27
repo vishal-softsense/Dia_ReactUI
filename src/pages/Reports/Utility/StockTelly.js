@@ -21,6 +21,8 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 import {
     getStockTellyPermission,
     getStockTellyReport,
@@ -32,8 +34,8 @@ const TABLE_COLUMNS = [
     { key: "ItemCode", label: "Code", align: "text-start" },
     { key: "LotNo", label: "LotNo", align: "text-start" },
     { key: "Pcs", label: "Pcs", align: "text-end" },
-    { key: "carats", label: "Carats", align: "text-end", decimals: 3 },
-    { key: "OnHand", label: "On Hand", align: "text-end", decimals: 3 },
+    { key: "carats", label: "Carats", align: "text-end", isCarat: true },
+    { key: "OnHand", label: "On Hand", align: "text-end", isCarat: true },
     { key: "Rate", label: "AskingPrice", align: "text-end", decimals: 2 },
     { key: "Amount", label: "Amount", align: "text-end", decimals: 3 }
 ];
@@ -113,6 +115,7 @@ const computeTotals = (rows) => ({
 
 const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const filteredRows = useMemo(() => filterRows(rows, filters), [rows, filters]);
     const totals = useMemo(() => computeTotals(filteredRows), [filteredRows]);
     const totalFiltered = filteredRows.length;
@@ -156,9 +159,11 @@ const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) =>
                                 <tr key={`${getRowValue(row, "ItemCode")}-${getRowValue(row, "LotNo")}-${index}`}>
                                     {TABLE_COLUMNS.map(col => (
                                         <td key={col.key} className={col.align}>
-                                            {col.decimals !== undefined
-                                                ? formatNumber(getRowValue(row, col.key), col.decimals)
-                                                : (getRowValue(row, col.key) ?? "")}
+                                            {col.isCarat
+                                                ? formatCarat(getRowValue(row, col.key), caratFormat)
+                                                : col.decimals !== undefined
+                                                    ? formatNumber(getRowValue(row, col.key), col.decimals)
+                                                    : (getRowValue(row, col.key) ?? "")}
                                         </td>
                                     ))}
                                 </tr>
@@ -170,8 +175,8 @@ const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) =>
                             <td className="fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{t("Total:") || "Total:"}</td>
                             <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
                             <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.carats, 2)}</td>
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.onHand, 2)}</td>
+                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatCarat(totals.carats, caratFormat)}</td>
+                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatCarat(totals.onHand, caratFormat)}</td>
                             <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
                             <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.amount, 2)}</td>
                         </tr>

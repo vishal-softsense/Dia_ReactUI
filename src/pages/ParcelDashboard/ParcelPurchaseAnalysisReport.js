@@ -42,7 +42,10 @@ import {
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../Components/Hooks/useCompanyCurrencySymbols";
 import { exportToExcel } from "../../helpers/excel_helper";
+import useCaratFormat from "../../Components/Hooks/useCaratFormat";
+import { formatCarat, truncateCaratNumber } from "../../helpers/caratFormatDefaults";
 
 ChartJS.register(
   ArcElement,
@@ -76,6 +79,10 @@ const GROUPING_OPTIONS = [
 const ParcelPurchaseAnalysis = () => {
   document.title = "Parcel Purchase Analysis | Premium Jewellery ERP";
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const mSym = masterSymbol || t("Master");
+  const sSym = stockSymbol || t("Stock");
 
 
   const [searched, setSearched] = useState(false);
@@ -468,7 +475,7 @@ const ParcelPurchaseAnalysis = () => {
       case "carats": {
         const raw = pick(row, "Carats", "carats");
         if (raw === undefined || raw === null) return [];
-        const f = fmtFloat(raw);
+        const f = formatCarat(raw, caratFormat);
         return [String(raw), f];
       }
       case "caratsPer": {
@@ -741,20 +748,20 @@ const ParcelPurchaseAnalysis = () => {
       "Pcs %",
       "Carats",
       "Carats %",
-      "Pur Amt $",
-      "Pur $ %",
-      "Pur Amt INR",
-      "Pur INR %",
-      "$ / Carat",
+      `Pur Amt ${sSym}`,
+      `Pur ${sSym} %`,
+      `Pur Amt ${mSym}`,
+      `Pur ${mSym} %`,
+      `${sSym} / Carat`,
       "Base Rate",
-      "INR / Carat"
+      `${mSym} / Carat`
     ];
 
     const rows = filteredData.map((row) => [
       getGroupingValue(row, activeReportType),
       fmtInt(pick(row, "Pcs", "pcs")),
       Number(fmtFloat(pick(row, "PcsPer", "pcsPer"), 4)),
-      Number(fmtFloat(pick(row, "Carats", "carats"))),
+      truncateCaratNumber(pick(row, "Carats", "carats"), caratFormat),
       Number(fmtFloat(pick(row, "CaratsPer", "caratsPer"), 4)),
       Number(fmtFloat(pick(row, "PurAmtDollar", "purAmtDollar"))),
       Number(fmtFloat(pick(row, "PurDollarPer", "purDollarPer"), 4)),
@@ -769,7 +776,7 @@ const ParcelPurchaseAnalysis = () => {
       "Total",
       totals.pcs,
       "-",
-      totals.carats,
+      truncateCaratNumber(totals.carats, caratFormat),
       "-",
       totals.purAmtDollar,
       "-",
@@ -1281,13 +1288,13 @@ const ParcelPurchaseAnalysis = () => {
                               <th>{t("Pcs%")}</th>
                               <th>{t("Carats")}</th>
                               <th>{t("Carats%")}</th>
-                              <th>{t("Pur Amt $")}</th>
-                              <th>{t("Pur $%")}</th>
-                              <th>{t("Pur Amt INR")}</th>
-                              <th>{t("Pur INR%")}</th>
-                              <th>{t("$ / Carat")}</th>
+                              <th>{`Pur Amt ${sSym}`}</th>
+                              <th>{`Pur ${sSym}%`}</th>
+                              <th>{`Pur Amt ${mSym}`}</th>
+                              <th>{`Pur ${mSym}%`}</th>
+                              <th>{`${sSym} / Carat`}</th>
                               <th>{t("Base Rate")}</th>
-                              <th>{t("INR / Carat")}</th>
+                              <th>{`${mSym} / Carat`}</th>
                             </tr>
                             <tr>
                               <th className="p-1">
@@ -1348,7 +1355,7 @@ const ParcelPurchaseAnalysis = () => {
                                   <td className="text-start"><b>{getGroupingValue(row, activeReportType)}</b></td>
                                   <td>{fmtInt(pick(row, "Pcs", "pcs"))}</td>
                                   <td>{fmtFloat(pick(row, "PcsPer", "pcsPer"), 4)}%</td>
-                                  <td>{fmtFloat(pick(row, "Carats", "carats"))}</td>
+                                  <td>{formatCarat(pick(row, "Carats", "carats"), caratFormat)}</td>
                                   <td>{fmtFloat(pick(row, "CaratsPer", "caratsPer"), 4)}%</td>
                                   <td>{fmtCurrency(pick(row, "PurAmtDollar", "purAmtDollar"))}</td>
                                   <td>{fmtFloat(pick(row, "PurDollarPer", "purDollarPer"), 4)}%</td>
@@ -1367,7 +1374,7 @@ const ParcelPurchaseAnalysis = () => {
                                 <td className="text-start">{t("Total")}</td>
                                 <td>{fmtInt(totals.pcs)}</td>
                                 <td>-</td>
-                                <td>{fmtFloat(totals.carats)}</td>
+                                <td>{formatCarat(totals.carats, caratFormat)}</td>
                                 <td>-</td>
                                 <td>{fmtCurrency(totals.purAmtDollar)}</td>
                                 <td>-</td>

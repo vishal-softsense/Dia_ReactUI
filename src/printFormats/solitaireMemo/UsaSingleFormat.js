@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, FALLBACK_USA_MEMO_INFORMATION, fmtNum, getVal } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, FALLBACK_USA_MEMO_INFORMATION, fmtSolitaireCaratNum, fmtNum, getVal } from "../shared/printUtils";
 
 /**
  * Solitaire Memo USA_SiglePage Format — mirrors MVC
@@ -450,7 +450,7 @@ const UsaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
                         {getVal(item, "Pcs", "pcs", "Qty", "qty")}
                       </td>
                       <td style={{ textAlign: "right" }}>
-                        {fmtNum(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                        {fmtSolitaireCaratNum(getVal(item, "Carats", "carats", "Weight", "weight"))}
                       </td>
                       <td style={{ textAlign: "left" }}>
                         {getVal(item, "ItemName", "itemName", "Description", "description")}
@@ -502,7 +502,7 @@ const UsaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
                       {totalQty}
                     </td>
                     <td style={{ textAlign: "right", verticalAlign: "top", fontSize: 13 }}>
-                      {fmtNum(totalWt, 2)}
+                      {fmtSolitaireCaratNum(totalWt)}
                     </td>
                     <td></td>
                     <td style={{ paddingLeft: 10, fontSize: 12, lineHeight: 1.8, textAlign: "left" }}>

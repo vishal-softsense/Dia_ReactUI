@@ -20,6 +20,8 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../../helpers/excel_helper";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../../helpers/caratFormatDefaults";
 import {
     getGetLabDataPermission,
     getLabDataFromList,
@@ -179,6 +181,7 @@ const ScrollTable = ({ columns, rows, emptyText }) => (
 
 const GetLabData = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const [loading, setLoading] = useState(true);
     const [authorized, setAuthorized] = useState(true);
     const [busy, setBusy] = useState(false);
@@ -713,7 +716,7 @@ const GetLabData = () => {
                                                             <tr key={`${row.LotNo}-${row.CertificateNo}-${index}`}>
                                                                 <td>{row.LotNo}</td>
                                                                 <td>{row.CertificateNo}</td>
-                                                                <td>{parseFloat(row.Carats || 0).toFixed(2)}</td>
+                                                                <td>{formatCarat(row.Carats || 0, caratFormat)}</td>
                                                             </tr>
                                                         ))
                                                     )}

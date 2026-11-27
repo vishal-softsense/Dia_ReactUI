@@ -1,5 +1,5 @@
 import React from "react";
-import { fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
+import { fmtCaratNum, fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
 
 // MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml — source of truth for Mix Purchase (variant=note)
 // MVC layout: 24 on full pages, 20 on single/last page with totals, signature and footer.
@@ -295,7 +295,7 @@ const MixPurPrintUsaFormat = ({
         <td style={{ ...totalCell, width: colWidths[2] }} />
         <td style={{ ...totalCell, width: colWidths[3], textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
         <td style={{ ...totalCell, width: colWidths[4], textAlign: "right", verticalAlign: "top" }}>
-          {fmtNum(totals.wt, 2)}
+          {fmtCaratNum(totals.wt)}
         </td>
         <td style={{ ...totalCell, width: colWidths[5], paddingLeft: 8, verticalAlign: "top" }}>
           <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>Sub Total</div>
@@ -593,7 +593,7 @@ const MixPurPrintUsaFormat = ({
                         {getVal(item, "Qty", "qty", "Pcs", "pcs")}
                       </td>
                       <td style={{ ...itemCell, width: colWidths[4], textAlign: "right" }}>
-                        {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
+                        {fmtCaratNum(getVal(item, "Weight", "weight", "Carats", "carats"))}
                       </td>
                       <td style={{ ...itemCell, width: colWidths[5], textAlign: "right" }}>
                         {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}

@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDateSlash, getVal, paginateVariable } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtCarat, fmtDateSlash, getVal, paginateVariable } from "../shared/printUtils";
 
 const th = { background: "#BFBFBF", border: "1px solid #000", padding: "6px 0", textAlign: "center" };
 const td = { border: "1px solid #000", padding: "0 6px", textAlign: "center", height: 24 };
@@ -92,7 +92,7 @@ const ParcelSaleUsaFormat2 = ({ data, items, totals, company, logoUrl }) => {
                     <td style={td}>{getVal(item, "MemoNo", "memoNo")}</td>
                     <td style={td}>{getVal(item, "Lotno", "lotNo", "lotno")}</td>
                     <td style={td}>{getVal(item, "Pcs", "pcs")}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Carats"), 2)}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{fmtCarat(getVal(item, "Carats"))}</td>
                     <td style={td}>{getVal(item, "ItemName", "itemName")}</td>
                     <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "Rate"), 2)}</td>
                     <td style={{ ...td, textAlign: "right" }}>{fmt(getVal(item, "MasterCurrencyAmount", "Amount"), 2)}</td>
@@ -109,7 +109,7 @@ const ParcelSaleUsaFormat2 = ({ data, items, totals, company, logoUrl }) => {
                   <tr style={{ borderTop: "1px solid #000", borderBottom: "1px solid #000" }}>
                     <td style={td}></td><td style={td}></td><td style={td}></td>
                     <td style={td}>{totals.qty}</td>
-                    <td style={{ ...td, textAlign: "right" }}>{fmt(totals.wt, 2)}</td>
+                    <td style={{ ...td, textAlign: "right" }}>{fmtCarat(totals.wt)}</td>
                     <td style={{ ...td, fontWeight: "bold" }}>Terms: Due upon receipt</td>
                     <td style={{ ...td, textAlign: "left", lineHeight: 1.8 }}>Sub Total<br />Charges<br />Discount<br /><b style={{ fontSize: 15 }}>TOTAL</b></td>
                     <td style={{ ...td, textAlign: "right", lineHeight: 1.8 }}>{fmt(totals.amount, 2)}<br /><br /><br />{fmt(totals.amount, 2)}</td>

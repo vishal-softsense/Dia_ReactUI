@@ -38,6 +38,8 @@ import {
   resolveOtherChargesExtra,
   summarizeTableRows,
 } from "./jewStockFormUtils";
+import { sanitizeCaratInput, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 /*
   ─────────────────────────────────────────────────────────────────────────
@@ -202,6 +204,7 @@ export default function AddMountingMaster() {
   // ════════════════════════════════════════════════════════════════════════════
   // SECTION A  –  Mounting Stock LIST  (from MountingStockList)
   // ════════════════════════════════════════════════════════════════════════════
+  const { caratFormat } = useCaratFormat();
   const [mountingStock, setMountingStock] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [showList, setShowList] = useState(false); // toggle list panel
@@ -256,7 +259,7 @@ export default function AddMountingMaster() {
       item.mountCategory || item.MountCategory || item.designName || "",
       item.metalType || item.MetalType || "",
       item.purity || item.Purity || "",
-      item.totalDiamondCarat || item.TotalDiamondCarat || 0,
+      truncateCaratNumber(item.totalDiamondCarat || item.TotalDiamondCarat || 0, caratFormat),
       Number(item.grossWeight || item.GrossWeight || 0).toFixed(3),
       Number(item.netWeight || item.NetWeight || 0).toFixed(3),
       Number(item.totalMetalAmount || item.TotalMetalAmount || 0).toFixed(2),
@@ -292,7 +295,12 @@ export default function AddMountingMaster() {
     { header: t("JewelleryCategory"), accessorKey: "mountCategory", enableColumnFilter: true },
     { header: t("MetalType"), accessorKey: "metalType", enableColumnFilter: true },
     { header: t("Purity"), accessorKey: "purity", enableColumnFilter: true },
-    { header: t("DiamondWeight"), accessorKey: "totalDiamondCarat", enableColumnFilter: true },
+    {
+      header: t("DiamondWeight"),
+      accessorKey: "totalDiamondCarat",
+      enableColumnFilter: true,
+      cell: ({ getValue }) => formatCarat(getValue() || 0, caratFormat),
+    },
     {
       header: t("GrossWeight"),
       accessorKey: "grossWeight",
@@ -311,7 +319,7 @@ export default function AddMountingMaster() {
       enableColumnFilter: true,
       cell: ({ getValue }) => Number(getValue() || 0).toFixed(2),
     },
-  ], [t]);
+  ], [t, caratFormat]);
 
   // ════════════════════════════════════════════════════════════════════════════
   // SECTION B  –  ADD FORM  (from AddMountingMaster)
@@ -1822,7 +1830,7 @@ export default function AddMountingMaster() {
                         {/* Pcs / Carat / Price / Amount */}
                         {[
                           ["Pcs", pcs, setPcs, false],
-                          ["Carat", carats, setCarats, false],
+                          ["Carat", carats, (v) => setCarats(sanitizeCaratInput(v, caratFormat)), false],
                           ["Price", rate, setRate, false],
                           ["Amount", amount, null, true],
                         ].map(([lbl, val, setter, ro]) => (
@@ -1933,7 +1941,7 @@ export default function AddMountingMaster() {
                                 </td>
                                 {[row.stockID, row.stoneType, row.shape, row.size, row.sieve,
                                 row.color, row.clarity, row.pcs,
-                                formatCarat(row.carats), formatPrice(row.rate),
+                                formatCarat(row.carats, caratFormat), formatPrice(row.rate),
                                 formatAmount(row.amount), row.lab
                                 ].map((v, i) => (
                                   <td key={i} style={{ padding: "6px 10px" }}>{v !== undefined && v !== "" ? v : "—"}</td>
@@ -1949,7 +1957,7 @@ export default function AddMountingMaster() {
                                   {tableRows.reduce((s, r) => s + (parseFloat(r.pcs) || 0), 0)}
                                 </td>
                                 <td style={{ padding: "6px 10px" }}>
-                                  {tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0).toFixed(3)}
+                                  {formatCarat(tableRows.reduce((s, r) => s + (parseFloat(r.carats) || 0), 0), caratFormat)}
                                 </td>
                                 <td style={{ padding: "6px 10px" }}></td>
                                 <td style={{ padding: "6px 10px" }}>

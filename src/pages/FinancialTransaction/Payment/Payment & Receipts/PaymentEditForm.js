@@ -32,6 +32,8 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { formatCarat } from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -210,6 +212,7 @@ const syncAdjFromPayCurrency = (row, { payIsMaster }) => {
 
 const PaymentEditForm = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("Id") || searchParams.get("id");
@@ -999,7 +1002,7 @@ const PaymentEditForm = () => {
                         <Input
                           className="form-control-sm text-end"
                           style={{ color: "cornflowerblue", ...fieldH }}
-                          value={fmtNum(totals.carats)}
+                          value={formatCarat(totals.carats, caratFormat)}
                           readOnly
                         />
                       </th>
@@ -1127,7 +1130,7 @@ const PaymentEditForm = () => {
                           <td>{row.InvNo}</td>
                           <td className="text-nowrap">{fmtDate(row.DueDate)}</td>
                           <td>{row.BillNo}</td>
-                          <td className="text-end">{fmtNum(row.TotCts, 3)}</td>
+                          <td className="text-end">{formatCarat(row.TotCts, caratFormat)}</td>
                           <td>{row.Symbol}</td>
                           <td>
                             <Input

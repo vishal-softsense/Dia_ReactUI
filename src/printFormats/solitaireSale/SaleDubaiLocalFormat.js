@@ -2,6 +2,8 @@ import React from "react";
 import {
   FALLBACK_MEMO_CONDITIONS,
   fmt,
+  fmtSolitaireCarat,
+  fmtSolitaireCaratNum,
   fmtDateMMM,
   fmtNum,
   getVal,
@@ -254,7 +256,7 @@ const SaleDubaiLocalFormat = ({ data, items, company, logoUrl }) => {
                       <td style={td}>{fmt(getVal(item, "MRP", "mrp", "Rap", "rap"), 2)}</td>
                       <td style={td}>{fmt(getVal(item, "PMRPDown", "pmrpDown", "Back", "back", "Discount"), 2)}</td>
                       <td style={td}>{getVal(item, "Qty", "qty", "Pcs", "pcs")}</td>
-                      <td style={td}>{fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}</td>
+                      <td style={td}>{fmtSolitaireCarat(getVal(item, "Weight", "weight", "Carats", "carats"))}</td>
                       <td style={{ ...td, textAlign: "right", paddingRight: 4 }}>
                         {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
                       </td>
@@ -294,7 +296,7 @@ const SaleDubaiLocalFormat = ({ data, items, company, logoUrl }) => {
                         <td style={{ borderTop: "2px solid #454545" }} />
                         <td style={{ borderTop: "2px solid #454545" }} />
                         <td style={{ borderTop: "2px solid #454545" }} />
-                        <td style={td}>{fmtNum(totalWt, 2)}</td>
+                        <td style={td}>{fmtSolitaireCaratNum(totalWt)}</td>
                         <td style={{ ...td, fontSize: 10 }}>Total</td>
                         <td style={{ ...td, textAlign: "right", paddingRight: 4 }}>{fmtNum(totalAmt, 2)}</td>
                       </tr>

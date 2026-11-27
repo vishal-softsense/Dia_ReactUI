@@ -42,6 +42,13 @@ import {
 } from "../../../../helpers/reportCompanyDefaults";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -110,7 +117,7 @@ const fmt = (v, decimals = 2) => toNum(v).toFixed(decimals);
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 2, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "PurchaseBack", align: "end", decimals: 2, footer: "avgBack" },
@@ -191,7 +198,7 @@ const ITEM_COLUMNS = [
   { key: "size", label: "Size" },
   { key: "status", label: "Status" },
   { key: "memoTransCode", label: "Memo Transaction Code", align: "end" },
-  { key: "rtnCarats", label: "Return Carats", align: "end", decimals: 3 }
+  { key: "rtnCarats", label: "Return Carats", align: "end", isCarat: true }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -291,8 +298,12 @@ const mapItemFromApi = (r, idx) => ({
   ...mapGradingFromSource(r)
 });
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -301,10 +312,10 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 2);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -393,6 +404,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   const editId = searchParams.get("Id") || searchParams.get("id") || "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -794,8 +806,9 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   };
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -886,7 +899,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
       pcs: toNum(entry.pcs, 1),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -946,7 +959,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       totMrp,
       totWithoutLess,
@@ -954,7 +967,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const deci = Math.min(4, Math.max(0, toNum(header.decimalPlaces, 2)));
@@ -1238,7 +1251,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
       const certificateNo = cell(cols, iCertNo);
       const cutVal = cell(cols, iCut);
       const proportionVal = cell(cols, iProportion) || cutVal;
-      const roundedWeight = Math.round(weight * 1000) / 1000;
+      const roundedWeight = truncateCaratNumber(weight, caratFormat);
       const roundedRate = Math.round(rate * 100) / 100;
       const roundedBack = Math.round(back * 100) / 100;
 
@@ -1344,7 +1357,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   /** MVC GetRapRate when Excel MRP is 0/blank, then derive Back/Rate. */
   const enrichImportRowsWithRapRate = async (rows) => {
     const list = Array.isArray(rows) ? rows : [];
-    const caratKey = (c) => String(Math.round(toNum(c) * 1000) / 1000);
+    const caratKey = (c) => String(truncateCaratNumber(toNum(c), caratFormat || getCachedCaratFormat("solitaire")));
     const rowKey = (shape, color, clarity, carat) =>
       `${String(shape || "").trim()}|${String(color || "").trim()}|${String(clarity || "").trim()}|${caratKey(carat)}`;
 
@@ -2110,7 +2123,8 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Weight")}</Label>
                         <Input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
                           className="form-control-sm"
                           style={fieldH}
                           value={entry.weight}
@@ -2259,7 +2273,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                                         {r.lotNo}
                                       </span>
                                     ) : (
-                                      renderItemCell(r, col)
+                                      renderItemCell(r, col, caratFormat)
                                     )}
                                   </td>
                                 ))}
@@ -2276,7 +2290,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
                                 >
-                                  {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                  {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                                 </td>
                               ))}
                             </tr>

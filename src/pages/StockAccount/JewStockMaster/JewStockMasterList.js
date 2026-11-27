@@ -8,9 +8,12 @@ import DeleteModal from "../../../Components/Common/DeleteModal";
 import { getMountingStockList, deleteMountingStock } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from "react-toastify";
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const MountingStockList = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const navigate = useNavigate();
     const location = useLocation();
     const [mountingStock, setMountingStock] = useState([]);
@@ -104,7 +107,7 @@ const MountingStockList = () => {
             item.mountCategory || item.MountCategory || item.designName || "",
             item.metalType || item.MetalType || "",
             item.purity || item.Purity || "",
-            item.totalDiamondCarat || item.TotalDiamondCarat || 0,
+            truncateCaratNumber(item.totalDiamondCarat || item.TotalDiamondCarat || 0, caratFormat),
             Number(item.grossWeight || item.GrossWeight || 0).toFixed(3),
             Number(item.netWeight || item.NetWeight || 0).toFixed(3),
             Number(item.totalMetalAmount || item.TotalMetalAmount || 0).toFixed(2),
@@ -190,6 +193,7 @@ const MountingStockList = () => {
                 accessorKey: "totalDiamondCarat",
                 accessorFn: (row) => row.totalDiamondCarat || row.TotalDiamondCarat,
                 enableColumnFilter: true,
+                cell: (cellProps) => formatCarat(cellProps.getValue(), caratFormat),
             },
             {
                 header: t("GrossWeight"),
@@ -232,7 +236,7 @@ const MountingStockList = () => {
                 }
             }
         ],
-        [navigate, t]
+        [navigate, t, caratFormat]
     );
 
     document.title = `${t("Mounting Stock Master")} | ${t("Admin")}`;

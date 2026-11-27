@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, fmtNum, getVal } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtSolitaireCarat, fmtDate, fmtNum, getVal } from "../shared/printUtils";
 
 /**
  * Solitaire Memo India_Single Format — mirrors MVC
@@ -24,7 +24,7 @@ const IndiaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
     });
   }
 
-  const totalCts = fmt(totals?.wt, 2);
+  const totalCts = fmtSolitaireCarat(totals?.wt);
   const totalAmt = fmtNum(totals?.amount, 2);
   const conditions = company?.memoConditions || FALLBACK_MEMO_CONDITIONS;
   const companyName = company?.companyName || "";
@@ -308,7 +308,7 @@ const IndiaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
                           {getVal(item, "ShapeId", "shapeId", "shape")}
                         </td>
                         <td style={{ textAlign: "left" }}>
-                          {fmt(getVal(item, "Carats", "carats", "weight"), 2)}
+                          {fmtSolitaireCarat(getVal(item, "Carats", "carats", "weight"))}
                         </td>
                         <td style={{ textAlign: "center" }}>
                           {getVal(item, "ColorId", "colorId", "color")}

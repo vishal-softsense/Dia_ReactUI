@@ -10,7 +10,7 @@ import {
   getReportCompanySettings,
   resolveCompanyLogoUrl
 } from "../../../../helpers/reportCompanyDefaults";
-import { fmtNum, getPrintAmountHeader, getVal } from "../../../../printFormats/shared/printUtils";
+import { fmtCarat, fmtNum, getPrintAmountHeader, getVal } from "../../../../printFormats/shared/printUtils";
 
 // MVC Views/JewelleryPurchase/Jewellery_PurchaseUSA_Print.cshtml
 const ITEMS_PER_PAGE = 7;
@@ -32,7 +32,7 @@ const td = {
 
 const fmtWt = (v) => {
   const n = Number(v);
-  return Number.isFinite(n) && n !== 0 ? n.toFixed(3) : "";
+  return Number.isFinite(n) && n !== 0 ? fmtCarat(v) : "";
 };
 
 const JewPurchasePrintView = () => {

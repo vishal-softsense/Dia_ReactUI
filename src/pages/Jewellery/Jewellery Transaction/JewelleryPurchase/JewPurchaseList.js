@@ -20,11 +20,8 @@ import {
   deleteJewelleryPurchase,
   getJewelleryPurchaseList
 } from "../../../../helpers/fakebackend_helper";
-import {
-  getCachedReportCompany,
-  getReportCompanySettings,
-  REPORT_COMPANY_SETTINGS_EVENT
-} from "../../../../helpers/reportCompanyDefaults";
+import useCompanyCurrencySymbols from "../../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../../Components/Hooks/useCaratFormat";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -86,8 +83,10 @@ const JewPurchaseList = () => {
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const { formatCarat } = useCaratFormat();
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amt` : t("Master Amt");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt");
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -95,19 +94,6 @@ const JewPurchaseList = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
-  useEffect(() => {
-    const loadSymbols = async () => {
-      const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
-      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
-    };
-    loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
-    window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
-    return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
-  }, []);
 
   const fetchList = async () => {
     setLoading(true);
@@ -164,8 +150,8 @@ const JewPurchaseList = () => {
       "Carats",
       "Amount",
       "Symbol",
-      `${masterSymbol} Amt`,
-      `${stockSymbol} Amt`,
+      masterAmtHeader,
+      stockAmtHeader,
       "DueDate",
       "Payment Status"
     ];
@@ -176,7 +162,7 @@ const JewPurchaseList = () => {
       getVal(r, "InvType"),
       getVal(r, "Subtype"),
       getVal(r, "Category"),
-      fmtNum(getVal(r, "Carats"), 3),
+      formatCarat(getVal(r, "Carats")),
       fmtNum(getVal(r, "Amount")),
       getVal(r, "Symbol"),
       fmtNum(getVal(r, "MasterCurrencyAmount")),
@@ -314,7 +300,7 @@ const JewPurchaseList = () => {
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        accessorFn: (row) => fmtNum(getVal(row, "Carats"), 3),
+        accessorFn: (row) => formatCarat(getVal(row, "Carats")),
         enableColumnFilter: true,
         filterFn: customStringFilterFn,
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
@@ -335,7 +321,7 @@ const JewPurchaseList = () => {
         filterFn: customStringFilterFn
       },
       {
-        header: `${masterSymbol} Amt`,
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtNum(getVal(row, "MasterCurrencyAmount")),
         enableColumnFilter: true,
@@ -343,7 +329,7 @@ const JewPurchaseList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: `${stockSymbol} Amt`,
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtNum(getVal(row, "StockCurrencyAmount")),
         enableColumnFilter: true,
@@ -366,7 +352,7 @@ const JewPurchaseList = () => {
         cell: ({ row }) => statusBadge(getVal(row.original, "Status"), getVal(row.original, "per"))
       }
     ],
-    [t, masterSymbol, stockSymbol, navigate]
+    [t, masterAmtHeader, stockAmtHeader, formatCarat, navigate]
   );
 
   document.title = `${t("Jewellery Purchase List")} | ${t("Admin")}`;

@@ -13,6 +13,8 @@ import {
   getSolitaireRateReviseReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -62,6 +64,7 @@ const getRateReviseTableTotals = (table) => {
 
 const SolitaireRateReviseReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -263,8 +266,8 @@ const SolitaireRateReviseReport = () => {
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "Carats", "carats"), 3),
-        footer: ({ table }) => <span className="fw-bold text-end d-block">{fmtFixedOrZero(getRateReviseTableTotals(table).totalCarats, 3)}</span>
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
+        footer: ({ table }) => <span className="fw-bold text-end d-block">{formatCarat(getRateReviseTableTotals(table).totalCarats, caratFormat)}</span>
       },
       {
         header: t("OldRate"),
@@ -329,7 +332,7 @@ const SolitaireRateReviseReport = () => {
         }
       }
     ],
-    [t]
+    [t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -363,7 +366,7 @@ const SolitaireRateReviseReport = () => {
         : getRowVal(row, "LotNo", "lotNo")
           ? String(getRowVal(row, "LotNo", "lotNo"))
           : "",
-      fmtFixedOrZero(getRowVal(row, "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
       fmtFixedOrZero(getRowVal(row, "OldRate", "oldRate"), 2),
       fmtFixedOrZero(getRowVal(row, "NewRate", "newRate"), 2),
       `${fmtFixedOrZero(getRowVal(row, "OldPer", "oldPer"), 2)}%`,

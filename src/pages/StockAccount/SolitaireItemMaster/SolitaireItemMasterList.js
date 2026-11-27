@@ -7,6 +7,8 @@ import TableContainer from "../../../Components/Common/TableContainer";
 import { getSolitaireItemMasters, deleteSolitaireItemMaster } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from 'react-toastify';
+import { formatCarat, truncateCaratNumber, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const customStringFilterFn = (row, columnId, filterValue) => {
   let val = row.getValue(columnId);
@@ -14,13 +16,14 @@ const customStringFilterFn = (row, columnId, filterValue) => {
   if (columnId === "mrp" && typeof val === 'number') {
     val = val.toFixed(2);
   } else if (columnId === "weight" && typeof val === 'number') {
-    val = val.toFixed(3);
+    val = formatCarat(val, getCachedCaratFormat("solitaire"));
   }
   return String(val).toLowerCase().includes(String(filterValue).toLowerCase());
 };
 
 const SolitaireItemMasterList = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const navigate = useNavigate();
   const location = useLocation();
   const [solitaireItems, setSolitaireItems] = useState([]);
@@ -99,7 +102,7 @@ const SolitaireItemMasterList = () => {
       item.colorId ?? item.ColorId ?? "",
       item.sizeId ?? item.SizeId ?? "",
       item.clarityId ?? item.ClarityId ?? "",
-      item.weight ?? item.Weight ?? 0,
+      truncateCaratNumber(item.weight ?? item.Weight ?? 0, caratFormat),
       item.mrp ?? item.MRP ?? 0
     ]);
 
@@ -213,7 +216,7 @@ const SolitaireItemMasterList = () => {
         cell: (cellProps) => {
           const val = cellProps.getValue();
           if (val === 0) return "0";
-          return typeof val === 'number' ? val.toFixed(3) : val;
+          return formatCarat(val, caratFormat);
         }
       },
       {
@@ -229,7 +232,7 @@ const SolitaireItemMasterList = () => {
         }
       }
     ],
-    [navigate, t]
+    [navigate, t, caratFormat]
   );
 
   document.title = `${t("Solitaire Item Master")} | ${t("Admin")}`;

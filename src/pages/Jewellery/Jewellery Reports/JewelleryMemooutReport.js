@@ -18,6 +18,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getJewelleryMemoOutReport,
@@ -116,14 +118,16 @@ const formatReportDisplayDate = (value) => {
 const getRowDueDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "DueDate", "dueDate");
 
 const GROUPED_SUM_COLUMNS = ["Carats", "Estimate", "Return", "Balance", "Price", "BalanceAmt"];
+const CARAT_GROUP_KEYS = new Set(["Carats", "Return", "Balance"]);
 const GROUPED_DECIMALS = {
-  Carats: 3,
   Estimate: 2,
-  Return: 3,
-  Balance: 2,
   Price: 2,
   BalanceAmt: 2
 };
+const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat()) =>
+  CARAT_GROUP_KEYS.has(key)
+    ? formatCarat(value, caratFmt)
+    : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
 const getGroupedNumeric = (row, key) => {
   const aliases = {
@@ -331,6 +335,7 @@ const TYPE_OPTIONS = [
 
 const JewelleryMemooutReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({
     includeReturnDates: true,
     includePrintDates: true
@@ -641,10 +646,10 @@ const JewelleryMemooutReport = () => {
             <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
             <td class="col-text">${escapeHtml(getGroupedStockId(row))}</td>
             <td class="col-product">${escapeHtml(getRowVal(row, "ItemName", "itemName"))}</td>
-            <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
+            <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Carats"), "Carats", caratFormat))}</td>
             <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Estimate"), GROUPED_DECIMALS.Estimate))}</td>
-            <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Return"), GROUPED_DECIMALS.Return))}</td>
-            <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Balance"), GROUPED_DECIMALS.Balance))}</td>
+            <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Return"), "Return", caratFormat))}</td>
+            <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Balance"), "Balance", caratFormat))}</td>
             <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Price"), GROUPED_DECIMALS.Price))}</td>
             <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "BalanceAmt"), GROUPED_DECIMALS.BalanceAmt))}</td>
           </tr>
@@ -659,7 +664,7 @@ const JewelleryMemooutReport = () => {
           <td></td>
           ${GROUPED_SUM_COLUMNS.map(
             (colKey) =>
-              `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+              `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat))}</strong></td>`
           ).join("")}
         </tr>
       `;
@@ -672,7 +677,7 @@ const JewelleryMemooutReport = () => {
         <td></td>
         ${GROUPED_SUM_COLUMNS.map(
           (colKey) =>
-            `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+            `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal[colKey], colKey, caratFormat))}</strong></td>`
         ).join("")}
       </tr>
     `;
@@ -721,8 +726,8 @@ const JewelleryMemooutReport = () => {
   };
 
   const renderGroupedValue = (row, key) => {
-    if (GROUPED_DECIMALS[key] !== undefined) {
-      return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+    if (CARAT_GROUP_KEYS.has(key) || GROUPED_DECIMALS[key] !== undefined) {
+      return formatGroupedMetric(getGroupedNumeric(row, key), key, caratFormat);
     }
     return dashText(getRowVal(row, key));
   };
@@ -924,11 +929,11 @@ const JewelleryMemooutReport = () => {
       {
         header: t("Carats"),
         accessorKey: "Pcs",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Pcs", "pcs", "Carats", "carats"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Pcs", "pcs", "Carats", "carats"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Pcs", "pcs", "Carats", "carats"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Pcs", "pcs", "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { totalPcs } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalPcs, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalPcs, caratFormat)}</span>;
         }
       },
       {
@@ -954,11 +959,11 @@ const JewelleryMemooutReport = () => {
       {
         header: t("Return"),
         accessorKey: "Return",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Return", "return"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Return", "return"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { totalReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
       {
@@ -970,11 +975,11 @@ const JewelleryMemooutReport = () => {
       {
         header: t("Balance"),
         accessorKey: "Balance",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Balance", "balance"), 2),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Balance", "balance"), 2),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Balance", "balance"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Balance", "balance"), caratFormat),
         footer: ({ table }) => {
           const { totalBalance } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalBalance, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalBalance, caratFormat)}</span>;
         }
       },
       {
@@ -1036,7 +1041,7 @@ const JewelleryMemooutReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime"))
       }
     ],
-    [expandedMemoNos, t]
+    [expandedMemoNos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -1059,12 +1064,12 @@ const JewelleryMemooutReport = () => {
       dashText(getRowVal(row, "Party", "party")),
       dashText(getRowVal(row, "Stock_ID", "stock_ID")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "Pcs", "pcs", "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Pcs", "pcs", "Carats", "carats"), caratFormat),
       fmtFixed(getRowVal(row, "Price", "price"), 2),
       fmtFixed(getRowVal(row, "Amount", "amount"), 2),
-      fmtFixed(getRowVal(row, "Return", "return"), 3),
+      formatCarat(getRowVal(row, "Return", "return"), caratFormat),
       dashText(getRowVal(row, "MemoReturnDate", "memoReturnDate")),
-      fmtFixed(getRowVal(row, "Balance", "balance"), 2),
+      formatCarat(getRowVal(row, "Balance", "balance"), caratFormat),
       fmtFixed(getRowVal(row, "BalanceAmt", "balanceAmt"), 2),
       dashText(getRowVal(row, "Broker", "broker")),
       dashText(getRowVal(row, "IssUser", "issUser")),
@@ -1480,7 +1485,7 @@ const JewelleryMemooutReport = () => {
                               <td />
                               {GROUPED_SUM_COLUMNS.map((colKey) => (
                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                  <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                  <strong>{formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat)}</strong>
                                 </td>
                               ))}
                             </tr>
@@ -1495,7 +1500,7 @@ const JewelleryMemooutReport = () => {
                           <td />
                           {GROUPED_SUM_COLUMNS.map((colKey) => (
                             <td key={`grand-${colKey}`} className="text-end">
-                              <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                              <strong>{formatGroupedMetric(groupedReportData.grandTotal[colKey], colKey, caratFormat)}</strong>
                             </td>
                           ))}
                         </tr>

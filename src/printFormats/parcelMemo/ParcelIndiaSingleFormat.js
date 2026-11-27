@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, getVal, paginateFixed } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtCarat, fmtDate, getVal, paginateFixed } from "../shared/printUtils";
 
 const line = "2px solid #585858";
 const th = { borderLeft: line, borderRight: line, textAlign: "center", fontSize: 14, padding: "4px 2px" };
@@ -95,7 +95,7 @@ const ParcelIndiaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
                       <td style={td}>{rowNo++}</td>
                       <td style={td}>{getVal(item, "Lotno", "lotNo", "lotno")}</td>
                       <td style={td}>{getVal(item, "ShapeId")}</td>
-                      <td style={{ ...td, textAlign: "left" }}>{fmt(getVal(item, "Carats"), 2)}</td>
+                      <td style={{ ...td, textAlign: "left" }}>{fmtCarat(getVal(item, "Carats"))}</td>
                       <td style={td}>{getVal(item, "ColorId")}</td>
                       <td style={td}>{getVal(item, "ClarityId")}</td>
                       <td style={td}>{getVal(item, "PropId")}</td>
@@ -112,7 +112,7 @@ const ParcelIndiaSingleFormat = ({ data, items, totals, company, logoUrl }) => {
                   {isLastPage && (
                     <tr style={{ fontWeight: "bold" }}>
                       <td colSpan={3} style={{ ...td, borderTop: line }}>Total</td>
-                      <td style={{ ...td, borderTop: line, textAlign: "left" }}>{fmt(totals.wt, 2)}</td>
+                      <td style={{ ...td, borderTop: line, textAlign: "left" }}>{fmtCarat(totals.wt)}</td>
                       <td colSpan={10} style={{ ...td, borderTop: line }}></td>
                       <td style={{ ...td, borderTop: line }}>{fmt(totals.amount, 2)}</td>
                     </tr>

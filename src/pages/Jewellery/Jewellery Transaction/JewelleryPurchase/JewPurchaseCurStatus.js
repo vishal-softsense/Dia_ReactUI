@@ -10,6 +10,7 @@ import {
   getReportCompanySettings,
   resolveCompanyLogoUrl
 } from "../../../../helpers/reportCompanyDefaults";
+import { fmtCarat } from "../../../../printFormats/shared/printUtils";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -312,7 +313,7 @@ const JewPurchaseCurStatus = () => {
                       <td style={{ ...tdStyle, textAlign: "center" }}>{fmtDate(getVal(it, "Date", "date"))}</td>
                       <td style={{ ...tdStyle, textAlign: "right" }}>{getVal(it, "Qty", "qty")}</td>
                       <td style={{ ...tdStyle, textAlign: "right" }}>
-                        {getVal(it, "Wt", "wt") !== "" ? Number(getVal(it, "Wt", "wt")).toFixed(2) : ""}
+                        {getVal(it, "Wt", "wt") !== "" ? fmtCarat(getVal(it, "Wt", "wt")) : ""}
                       </td>
                       <td style={{ ...tdStyle, wordBreak: "break-word" }}>
                         {getVal(it, "Description", "description")}

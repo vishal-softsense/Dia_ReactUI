@@ -16,14 +16,15 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getSalePurchaseSummaryReport,
-  getSalePurchaseSummaryReportDropdowns,
-  getSettingData
+  getSalePurchaseSummaryReportDropdowns
 } from "../../../helpers/fakebackend_helper";
-import { getCachedReportCompany } from "../../../helpers/reportCompanyDefaults";
 
 const dashText = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -110,14 +111,14 @@ const buildColumns = (masterSymbol, stockSymbol) => [
   { key: "InvAmt", header: "InvAmt", align: "right", sum: true, altKeys: ["invAmt"] },
   {
     key: "MasterCurrencyFinalAmount",
-    header: `${masterSymbol || "INR"} Amount`,
+    header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount",
     align: "right",
     sum: true,
     altKeys: ["masterCurrencyFinalAmount"]
   },
   {
     key: "baserate",
-    header: `${stockSymbol || "USD"} Rate`,
+    header: stockSymbol ? `${stockSymbol} Rate` : "Stock Rate",
     align: "right",
     decimals: 2,
     altKeys: ["baseRate"]
@@ -156,6 +157,7 @@ const mapBasicOptions = (items, useNameAsValue = false) =>
 
 const SalePurchaseSummaryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -168,8 +170,7 @@ const SalePurchaseSummaryReport = () => {
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "Rate", direction: "asc" });
   const [trnType, setTrnType] = useState("Sale");
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
 
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [typeOptions, setTypeOptions] = useState([]);
@@ -255,44 +256,6 @@ const SalePurchaseSummaryReport = () => {
     }),
     []
   );
-
-  const loadSymbols = useCallback(async () => {
-    try {
-      const cached = getCachedReportCompany();
-      let sSym = cached.stockSymbol || "";
-      let mSym = "";
-
-      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      sSym = sSym || auth?.SSymbol || auth?.sSymbol || auth?.data?.SSymbol || "";
-      mSym = auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "";
-
-      try {
-        const settings = await getSettingData();
-        const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-        const pick = (name) => {
-          const target = String(name).toLowerCase();
-          const row = rows.find(
-            (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-          );
-          return row?.Value ?? row?.value ?? "";
-        };
-        sSym = pick("SSymbol") || sSym;
-        mSym = pick("MSymbol") || mSym;
-      } catch {
-        /* ignore */
-      }
-
-      setStockSymbol(sSym || "USD");
-      setMasterSymbol(mSym || "INR");
-    } catch {
-      setStockSymbol("USD");
-      setMasterSymbol("INR");
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSymbols();
-  }, [loadSymbols]);
 
   useEffect(() => {
     const loadDropdowns = async () => {
@@ -474,6 +437,9 @@ const SalePurchaseSummaryReport = () => {
 
   const formatCell = (row, col) => {
     const altKeys = col.altKeys || [];
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...altKeys), caratFormat);
+    }
     if (col.sum || col.avgRate || col.decimals !== undefined) {
       const decimals = col.decimals ?? 2;
       return fmtFixed(numVal(row, col.key, ...altKeys), decimals);
@@ -580,6 +546,7 @@ const SalePurchaseSummaryReport = () => {
     rows.push(
       columns.map((col, idx) => {
         if (idx === 0) return t("Total");
+        if (col.key === "Totcts") return formatCarat(totals.Totcts || 0, caratFormat);
         if (col.key === "Rate") return fmtFixed(totals.Rate, 2);
         if (col.sum) return fmtFixed(totals[col.key] || 0, col.footerDecimals ?? col.decimals ?? 2);
         return "";
@@ -618,6 +585,7 @@ const SalePurchaseSummaryReport = () => {
 
   const renderFooterCell = (col, idx) => {
     if (idx === 0) return t("Total");
+    if (col.key === "Totcts") return formatCarat(totals.Totcts || 0, caratFormat);
     if (col.key === "Rate") return fmtFixed(totals.Rate, 2);
     if (col.sum) return fmtFixed(totals[col.key] || 0, col.footerDecimals ?? col.decimals ?? 2);
     return "";

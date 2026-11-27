@@ -43,6 +43,8 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, exportCvdExcel, getExcelBase64 } from "../../../helpers/excel_helper";
 import StockHistoryPopupModal from "./StockHistoryPopupModal";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const debounce = (func, delay) => {
   let timer;
@@ -284,6 +286,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitairesStockSearchReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -887,7 +890,7 @@ const SolitairesStockSearchReport = () => {
         if (col.key === "carats") {
           footerCallback = ({ table }) => {
             const { totalCarats } = getStockTableTotals(table);
-            return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+            return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
           };
         } else if (col.key === "rapa") {
           footerCallback = ({ table }) => {
@@ -950,7 +953,7 @@ const SolitairesStockSearchReport = () => {
 
             let displayVal = val;
             if (col.type === "carats") {
-              displayVal = parseFloat(val || 0).toFixed(3);
+              displayVal = formatCarat(val, caratFormat);
             } else if (col.type === "discount") {
               displayVal = parseFloat(val || 0).toFixed(2);
             } else if (col.type === "number") {
@@ -1020,7 +1023,7 @@ const SolitairesStockSearchReport = () => {
       })
     ];
     return cols;
-  }, [searchResults, selectedRows, t]);
+  }, [searchResults, selectedRows, t, caratFormat]);
 
   useEffect(() => {
     const selectedLots = Object.keys(selectedRows)
@@ -1125,13 +1128,13 @@ const SolitairesStockSearchReport = () => {
 
     return {
       pcs,
-      carats: carats.toFixed(3),
+      carats: formatCarat(carats, caratFormat),
       amount: amount.toFixed(2),
       avgMRP,
       avgRate,
       avgDis
     };
-  }, [selectedRows, searchResults]);
+  }, [selectedRows, searchResults, caratFormat]);
 
   const selectedLotNos = useMemo(() => {
     return Object.keys(selectedRows)
@@ -1165,7 +1168,7 @@ const SolitairesStockSearchReport = () => {
         item.pol || item.Pol || "",
         item.sym || item.Sym || "",
         item.fl || item.FL || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.rapa || item.Rapa || 0,
         item.back || item.Back || 0,
         item.askingRate || item.AskingRate || item.rate || item.Rate || 0,
@@ -1183,7 +1186,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1209,7 +1212,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1243,7 +1246,7 @@ const SolitairesStockSearchReport = () => {
         item.lotNo || item.LotNo || "",
         item.curStatus || item.CurStatus || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1281,7 +1284,7 @@ const SolitairesStockSearchReport = () => {
         item.lotNo || item.LotNo || "",
         item.curStatus || item.CurStatus || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.clarity || item.Clarity || "",
         item.color || item.Color || "",
         item.fancyColor || item.FancyColor || "",
@@ -1326,7 +1329,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1481,7 +1484,7 @@ const SolitairesStockSearchReport = () => {
         item.pol || item.Pol || "",
         item.sym || item.Sym || "",
         item.fl || item.FL || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.rapa || item.Rapa || 0,
         item.back || item.Back || 0,
         item.rate || item.Rate || 0,
@@ -2390,7 +2393,7 @@ const SolitairesStockSearchReport = () => {
                         <td className="fw-bold bg-light">{t("Clarity")}</td>
                         <td>{get("clarity", "Clarity")}</td>
                         <td className="fw-bold bg-light">{t("Carats")}</td>
-                        <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                        <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                       </tr>
                       <tr>
                         <td className="fw-bold bg-light">{t("LAB")}</td>

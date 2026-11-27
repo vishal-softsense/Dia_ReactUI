@@ -39,6 +39,8 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { formatCarat } from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -152,6 +154,7 @@ const mapCurrency = (list = []) =>
 
 const PaymentForm = ({ mode }) => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isEditRoute = mode === "edit";
@@ -1177,7 +1180,7 @@ const PaymentForm = ({ mode }) => {
                           <Input
                             className="form-control-sm text-end"
                             style={{ color: "cornflowerblue", ...fieldH }}
-                            value={fmtNum(totals.carats)}
+                            value={formatCarat(totals.carats, caratFormat)}
                             readOnly
                           />
                         </th>
@@ -1307,7 +1310,7 @@ const PaymentForm = ({ mode }) => {
                             <td>{getVal(row, "InvNo", "invNo")}</td>
                             <td className="text-nowrap">{fmtDate(getVal(row, "DueDate", "dueDate"))}</td>
                             <td>{getVal(row, "BillNo", "billNo")}</td>
-                            <td className="text-end">{fmtNum(getVal(row, "TotCts", "totCts"), 3)}</td>
+                            <td className="text-end">{formatCarat(getVal(row, "TotCts", "totCts"), caratFormat)}</td>
                             <td>{getVal(row, "Symbol", "symbol")}</td>
                             <td>
                               <Input

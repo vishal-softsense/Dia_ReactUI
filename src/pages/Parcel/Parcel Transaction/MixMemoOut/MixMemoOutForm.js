@@ -40,6 +40,13 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -122,7 +129,7 @@ const calcItemAmount = (weight, rate, less1, less2, less3, pcs = 1, stockType = 
 let mixMemoRowSeq = 0;
 const nextRowId = () => `memo-row-${Date.now()}-${++mixMemoRowSeq}`;
 
-const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
+const roundCts = (v, fmtStr) => truncateCaratNumber(v, fmtStr || getCachedCaratFormat());
 
 /** Read first present finite number (including 0 or negative) without skipping 0. */
 const getPresentNumVal = (row, ...keys) => {
@@ -262,7 +269,7 @@ const getRowStatusStyle = (status) => {
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "rate", label: "Rate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "less1", label: "Less1", align: "end", decimals: 2 },
@@ -270,16 +277,16 @@ const ITEM_COLUMNS = [
   { key: "less3", label: "Less3", align: "end", decimals: 2 },
   { key: "amount", label: "Amount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "status", label: "Status" },
-  { key: "spCarats", label: "SpCarats", align: "end", decimals: 3 },
-  { key: "returnCarats", label: "ReturnCarats", align: "end", decimals: 3 },
+  { key: "spCarats", label: "SpCarats", align: "end", isCarat: true },
+  { key: "returnCarats", label: "ReturnCarats", align: "end", isCarat: true },
   { key: "stockType", label: "StockType" },
   { key: "invDescription", label: "ItemDescription" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgRate":
@@ -291,8 +298,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -461,6 +472,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     return () => window.clearTimeout(timer);
   }, [lotFocusToken, focusLotNoField]);
 
+  const { caratFormat } = useCaratFormat();
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
@@ -836,7 +848,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   });
 
   const onEntryChange = (key, value) => {
-    setEntry((prev) => recalcEntryAmount({ ...prev, [key]: value }));
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
+    setEntry((prev) => recalcEntryAmount({ ...prev, [key]: cleanVal }));
   };
 
   const fetchLotOnHand = async (lotNo) => {
@@ -952,7 +965,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
       availableCarats: toNum(entry.availableCarats),
       pcs: toNum(entry.pcs, 0),
       mrp: 0,
@@ -1088,13 +1101,13 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1539,7 +1552,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("WEIGHT")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.weight}
@@ -1673,7 +1687,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                                       {r.lotNo}
                                     </span>
                                   ) : (
-                                    renderItemCell(r, col)
+                                    renderItemCell(r, col, caratFormat)
                                   )}
                                 </td>
                               ))}
@@ -1685,7 +1699,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end" : ""}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>

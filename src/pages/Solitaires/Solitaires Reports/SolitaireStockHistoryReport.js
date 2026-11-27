@@ -24,6 +24,8 @@ import {
   getSolitaireAdminLots
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const debounce = (func, delay) => {
   let timer;
@@ -152,6 +154,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitaireStockHistoryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -500,7 +503,6 @@ const SolitaireStockHistoryReport = () => {
       "BalanceAmount"
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -530,13 +532,13 @@ const SolitaireStockHistoryReport = () => {
           trnDate || "",
           item.trntype || "",
           item.perticulors || "",
-          fmtFixed(item.inCts, caratDecimals),
+          formatCarat(item.inCts, caratFormat),
           fmtFixed(item.inRate, priceDecimals),
           fmtFixed(item.inAmount, amtDecimals),
-          fmtFixed(item.outCts, caratDecimals),
+          formatCarat(item.outCts, caratFormat),
           fmtFixed(item.outRate, priceDecimals),
           fmtFixed(item.outAmount, amtDecimals),
-          fmtFixed(item.balCts, caratDecimals),
+          formatCarat(item.balCts, caratFormat),
           fmtFixed(item.balRate, priceDecimals),
           fmtFixed(item.balAmount, amtDecimals)
         ]);
@@ -567,10 +569,10 @@ const SolitaireStockHistoryReport = () => {
         "Total:",
         "",
         "",
-        (subtotal.InCts).toFixed(caratDecimals),
+        formatCarat(subtotal.InCts, caratFormat),
         (subtotal.InRate).toFixed(priceDecimals),
         (subtotal.InAmount).toFixed(amtDecimals),
-        (subtotal.OutCts).toFixed(caratDecimals),
+        formatCarat(subtotal.OutCts, caratFormat),
         (subtotal.OutRate).toFixed(priceDecimals),
         (subtotal.OutAmount).toFixed(amtDecimals),
         "",
@@ -583,10 +585,10 @@ const SolitaireStockHistoryReport = () => {
       "Grand Total:",
       "",
       "",
-      grandTotals.InCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.InCts, caratFormat),
       grandTotals.InRate.toFixed(priceDecimals),
       grandTotals.InAmount.toFixed(amtDecimals),
-      grandTotals.OutCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.OutCts, caratFormat),
       grandTotals.OutRate.toFixed(priceDecimals),
       grandTotals.OutAmount.toFixed(amtDecimals),
       "",
@@ -632,7 +634,6 @@ const SolitaireStockHistoryReport = () => {
       { header: "BalanceAmount", key: "balAmount", numeric: true }
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -708,7 +709,7 @@ const SolitaireStockHistoryReport = () => {
                           }
 
                           if (col.key === "inCts" || col.key === "outCts" || col.key === "balCts") {
-                            val = fmtFixed(val, caratDecimals);
+                            val = formatCarat(val, caratFormat);
                           } else if (col.key === "inRate" || col.key === "outRate" || col.key === "balRate") {
                             val = fmtFixed(val, priceDecimals);
                           } else if (col.key === "inAmount" || col.key === "outAmount" || col.key === "balAmount") {
@@ -775,10 +776,10 @@ const SolitaireStockHistoryReport = () => {
                     <td colSpan={3} style={{ textAlign: "left", fontWeight: "bold", padding: "10px 12px" }}>
                       Total:
                     </td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InCts.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(subtotal.InCts, caratFormat)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InRate.toFixed(priceDecimals)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InAmount.toFixed(amtDecimals)}</td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutCts.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(subtotal.OutCts, caratFormat)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutRate.toFixed(priceDecimals)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutAmount.toFixed(amtDecimals)}</td>
                     <td />
@@ -793,10 +794,10 @@ const SolitaireStockHistoryReport = () => {
               <td colSpan={3} style={{ textAlign: "left", fontWeight: "bold", padding: "10px 12px" }}>
                 Grand Total:
               </td>
-              <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InCts.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(grandTotals.InCts, caratFormat)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InRate.toFixed(priceDecimals)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InAmount.toFixed(amtDecimals)}</td>
-              <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutCts.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(grandTotals.OutCts, caratFormat)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutRate.toFixed(priceDecimals)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutAmount.toFixed(amtDecimals)}</td>
               <td />

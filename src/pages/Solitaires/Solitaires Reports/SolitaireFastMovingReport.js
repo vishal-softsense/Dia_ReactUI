@@ -19,6 +19,8 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getSolitaireFastMovingReport,
   getSolitaireFastMovingDisplay,
@@ -41,6 +43,7 @@ const fmtFixed = (value, decimals = 2) => {
 
 const SolitaireFastMovingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -69,7 +72,6 @@ const SolitaireFastMovingReport = () => {
   const [detailRows, setDetailRows] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  const caratDecimal = 3;
   const amtDecimal = 2;
 
   const customStyles = useMemo(
@@ -499,7 +501,7 @@ const SolitaireFastMovingReport = () => {
                   <td>{r.clarityName || r.ClarityName}</td>
                   <td className="text-end">{r.pcs || r.Pcs}</td>
                   <td className="text-end">{r.age || r.Age}</td>
-                  <td className="text-end">{fmtFixed(r.carats || r.Carats, caratDecimal)}</td>
+                  <td className="text-end">{formatCarat(r.carats ?? r.Carats, caratFormat)}</td>
                   <td className="text-end">{fmtFixed(r.mrp || r.MRP, amtDecimal)}</td>
                   <td className="text-end">{fmtFixed(r.disc || r.Disc, 2)}</td>
                   <td className="text-end">{fmtFixed(r.amount || r.Amount, amtDecimal)}</td>
@@ -509,7 +511,7 @@ const SolitaireFastMovingReport = () => {
                 <td colSpan="3">Total</td>
                 <td className="text-end">{totalPcs}</td>
                 <td></td>
-                <td className="text-end">{fmtFixed(totalCarats, caratDecimal)}</td>
+                <td className="text-end">{formatCarat(totalCarats, caratFormat)}</td>
                 <td></td>
                 <td></td>
                 <td className="text-end">{fmtFixed(totalAmount, amtDecimal)}</td>

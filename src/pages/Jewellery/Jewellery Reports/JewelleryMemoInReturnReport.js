@@ -24,6 +24,8 @@ import {
   getJewelleryMemoInReturnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -65,6 +67,7 @@ const TYPE_OPTIONS = [
 
 const JewelleryMemoInReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -399,11 +402,11 @@ const JewelleryMemoInReturnReport = () => {
       {
         header: t("Return"),
         accessorKey: "Return",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Return", "return"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Return", "return"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { totalReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
       {
@@ -439,7 +442,7 @@ const JewelleryMemoInReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
       }
     ],
-    [expandedMemoNos, t]
+    [expandedMemoNos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -460,7 +463,7 @@ const JewelleryMemoInReturnReport = () => {
       dashText(getRowVal(row, "Party", "party")),
       dashText(getRowVal(row, "Lotno", "LotNo", "Stock_ID")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "Return", "return"), 3),
+      formatCarat(getRowVal(row, "Return", "return"), caratFormat),
       fmtFixed(getRowVal(row, "Price", "price"), 2),
       fmtFixed(getRowVal(row, "Amount", "amount"), 2),
       dashText(getRowVal(row, "Broker", "broker")),

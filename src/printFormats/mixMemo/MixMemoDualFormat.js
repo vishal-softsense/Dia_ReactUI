@@ -1,5 +1,5 @@
 import React from "react";
-import { fmt, fmtDate, fmtNum, getVal, paginateFixed } from "../shared/printUtils";
+import { fmtCarat, fmtDate, fmtNum, getVal, paginateFixed } from "../shared/printUtils";
 import deltaQr from "../../assets/images/print/deltaqr.png";
 import deltaInstaQr from "../../assets/images/print/delta.png";
 
@@ -301,7 +301,7 @@ const MixMemoDualFormat = ({ data, items, totals, company, logoUrl, isCurrentSta
                     Total Carats :
                   </td>
                   <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 4 }}>
-                    {fmt(totals.wt, 2)}
+                    {fmtCarat(totals.wt)}
                   </td>
                   <td colSpan={3} style={{ border: "1px solid #999", textAlign: "right", paddingRight: 10 }}>
                     US $ :
