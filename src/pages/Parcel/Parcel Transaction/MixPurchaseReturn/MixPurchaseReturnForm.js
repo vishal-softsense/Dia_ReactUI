@@ -1925,14 +1925,10 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                           />
                         </FormGroup>
                       </Col>
-                    </Row>
-
-                    {/* Row 6: purchase invoice to return — same pattern as Mix Sale Return */}
-                    <Row className="g-2 align-items-end">
-                      <Col xs={12} sm={8} md={6} lg={5}>
+                      <Col xs={12} sm={6} md={5}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1 text-uppercase small">{t("INVOICE NUMBER")}</Label>
-                          <div className="d-flex flex-wrap flex-sm-nowrap align-items-center gap-1">
+                          <div className="d-flex flex-nowrap align-items-center gap-1">
                             <Input
                               className="form-control-sm flex-grow-1"
                               style={{ ...fieldH, minWidth: 0 }}
