@@ -19,6 +19,7 @@ import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getParcelStockHistoryReport,
   getParcelStockRegisterDropdowns,
@@ -65,7 +66,7 @@ const transactionTypeOptions = [
   { value: "STKTRN", label: "Stock Transfer" }
 ];
 
-const DEFAULT_TRANSACTION_TYPES = ["MEMOIN", "PUR", "MEMOOUT", "SALE", "STKTRN"];
+const DEFAULT_TRANSACTION_TYPES = ["PUR", "SALE", "STKTRN"];
 
 const formatDateYMDToDMY = (dateStr) => {
   if (!dateStr || typeof dateStr !== "string") return dateStr || "";
@@ -274,10 +275,15 @@ const ParcelStockRegisterReport = () => {
   const [loading, setLoading] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [masterDropdowns, setMasterDropdowns] = useState({});
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
   // TYPE (.chkType) — MVC default: none selected ("Select Types")
   const [selectedTypes, setSelectedTypes] = useState([]);
-  // Transaction (.chkTypeall) — MVC cshtml checked: MEMOIN, PUR, MEMOOUT, SALE, STKTRN
+  // Transaction (.chkTypeall) — default checked: PUR, SALE, STKTRN (MEMOIN & MEMOOUT unchecked)
   const [selectedTypesTrn, setSelectedTypesTrn] = useState(DEFAULT_TRANSACTION_TYPES);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [trnDropdownOpen, setTrnDropdownOpen] = useState(false);
@@ -853,13 +859,13 @@ const ParcelStockRegisterReport = () => {
     return (
       <div className="table-responsive">
         <div
+          ref={tableScrollRef}
           id="container-div"
+          className="viewport-table-scroll"
           style={{
-            maxHeight: 750,
-            overflowY: "auto",
-            overflowX: "auto",
+            maxHeight: tableMaxHeight,
             padding: 0,
-            border: "1px solid #dcdcdc",
+            border: "1px solid var(--vz-border-color, #dcdcdc)",
             borderRadius: 8,
             fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"

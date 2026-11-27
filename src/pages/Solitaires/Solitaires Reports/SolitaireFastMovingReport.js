@@ -21,6 +21,7 @@ import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getSolitaireFastMovingReport,
   getSolitaireFastMovingDisplay,
@@ -45,12 +46,17 @@ const SolitaireFastMovingReport = () => {
   const { t } = useTranslation();
   const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
   const [dropdownData, setDropdownData] = useState({});
   const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
 
@@ -762,8 +768,9 @@ const SolitaireFastMovingReport = () => {
 
           {hasSearched && reportRows.length > 0 && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody className="p-4">
-                <div ref={printRef} className="table-responsive" style={{ maxHeight: "65vh" }}>
+              <div ref={printRef} className="d-contents">
+              <CardBody className="p-2 p-sm-3">
+                <div ref={tableScrollRef} className="table-responsive viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <Table
                     id="FastMovingReportT"
                     className="table-bordered align-middle text-center mb-0"
@@ -937,6 +944,7 @@ const SolitaireFastMovingReport = () => {
                   </Table>
                 </div>
               </CardBody>
+              </div>
             </Card>
           )}
 

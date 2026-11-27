@@ -124,7 +124,7 @@ const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) =>
     return (
         <div>
             {title ? <h6 className="fw-semibold text-primary mb-2">{title}</h6> : null}
-            <div className="table-responsive" style={{ maxHeight: 420, overflow: "auto" }}>
+            <div className="table-responsive viewport-table-scroll" style={{ maxHeight: "clamp(200px, 38vh, 400px)" }}>
                 <Table bordered size="sm" className="mb-0 text-nowrap align-middle">
                     <thead className="table-light sticky-top" style={{ position: "sticky", top: 0, zIndex: 3, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>
                         <tr>

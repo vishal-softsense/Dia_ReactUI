@@ -26,6 +26,7 @@ import {
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 
 const debounce = (func, delay) => {
   let timer;
@@ -49,6 +50,8 @@ const trnTypeOptions = [
   { value: "PARTYHOLD", label: "Party Hold" },
   { value: "PARTYHOLDRTN", label: "Party Hold Return" }
 ];
+
+const DEFAULT_SOLITAIRE_TYPES = ["PUR", "SALE", "PURRTN", "SALERTN", "STKTRN", "PARTYHOLD", "PARTYHOLDRTN"];
 
 const formatDateYMDToDMY = (dateStr) => {
   if (!dateStr) return "";
@@ -162,9 +165,14 @@ const SolitaireStockHistoryReport = () => {
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [masterDropdowns, setMasterDropdowns] = useState({});
 
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
 
-  const [selectedTypes, setSelectedTypes] = useState(["ALL"]);
+  const [selectedTypes, setSelectedTypes] = useState(DEFAULT_SOLITAIRE_TYPES);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
 
@@ -384,7 +392,7 @@ const SolitaireStockHistoryReport = () => {
     setHasSearched(false);
     setReportRows([]);
     setPriceMode("SalpurAvg");
-    setSelectedTypes(["ALL"]);
+    setSelectedTypes(DEFAULT_SOLITAIRE_TYPES);
     setFilters(mergeDates({
       shape: [],
       color: [],
@@ -643,13 +651,13 @@ const SolitaireStockHistoryReport = () => {
 
     return (
       <div
+        ref={tableScrollRef}
         id="container-div"
+        className="viewport-table-scroll"
         style={{
-          maxHeight: 750,
-          overflowY: "auto",
-          overflowX: "auto",
+          maxHeight: tableMaxHeight,
           padding: 0,
-          border: "1px solid #dcdcdc",
+          border: "1px solid var(--vz-border-color, #dcdcdc)",
           borderRadius: 8,
           fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"

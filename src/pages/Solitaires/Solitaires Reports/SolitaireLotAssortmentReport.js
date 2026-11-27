@@ -19,6 +19,7 @@ import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireLotAssortmentReport } from "../../../helpers/fakebackend_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 
 const getRowVal = (row, ...keys) => {
   if (!row || typeof row !== "object") return "";
@@ -157,11 +158,16 @@ const SolitaireLotAssortmentReport = () => {
   const { t } = useTranslation();
   const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
+  const listScrollRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [lotGroups, setLotGroups] = useState([]);
   const [filters, setFilters] = useState({ lotNo: "" });
+  const listMaxHeight = useViewportTableHeight(listScrollRef, {
+    enabled: hasSearched && lotGroups.length > 0,
+    deps: [hasSearched, lotGroups.length],
+  });
 
   const amtDecimal = 2;
 
@@ -456,7 +462,8 @@ const SolitaireLotAssortmentReport = () => {
                 {lotModels.length === 0 ? (
                   <div className="text-center py-5 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div ref={printRef} id="lot-assortment-print" className="d-flex flex-column gap-3">
+                  <div ref={listScrollRef} className="viewport-table-scroll" style={{ maxHeight: listMaxHeight }}>
+                    <div ref={printRef} id="lot-assortment-print" className="d-flex flex-column gap-3">
                     {lotModels.map(({ lotNo, hasData, model }, idx) => (
                       <div
                         key={`${lotNo}-${idx}`}
@@ -572,6 +579,7 @@ const SolitaireLotAssortmentReport = () => {
                         </div>
                       </div>
                     ))}
+                    </div>
                   </div>
                 )}
               </CardBody>

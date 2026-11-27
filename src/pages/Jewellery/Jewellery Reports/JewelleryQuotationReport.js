@@ -23,6 +23,7 @@ import { useSettingReportDates } from "../../../Components/Hooks/useSettingRepor
 import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import { getAddMountingStockData, getAllLotNoList, getJewelleryQuotationDropdowns, getJewelleryQuotationReport, getJewelleryQuotationStockIds, getJewelleryStockIds, getJewelleryStockSearchDropdowns, getJewelleryStockSearchReport, getJewPurity, getSettingData } from "../../../helpers/fakebackend_helper";
 import {
   checkGoogleDriveFileExists,
@@ -900,12 +901,19 @@ const JewelleryQuotationReport = () => {
   const { caratFormat } = useCaratFormat();
   const { toDate, getDates } = useSettingReportDates();
   const reportRef = useRef(null);
+  const reportScrollRef = useRef(null);
+  const reportFooterRef = useRef(null);
   const printLock = useRef(false);
 
   const [showReport, setShowReport] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [reportData, setReportData] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(reportScrollRef, {
+    footerRef: reportFooterRef,
+    enabled: showReport,
+    deps: [showReport, reportData.length],
+  });
   const [stockCount, setStockCount] = useState(0);
   const [companyInfo, setCompanyInfo] = useState({});
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -2562,14 +2570,14 @@ ${hideCss} { display: none; }
               <CardBody className="p-0">
                 <div ref={reportRef} id="jew-report-print-root" className="jew-report-shell">
                   <ReportCompanyHeader companyInfo={companyInfo} />
-                  <div className="jew-report-scroll">
+                  <div ref={reportScrollRef} className="jew-report-scroll viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                     <JewelleryQuotationReportTable
                       data={reportData}
                       onStockCountChange={setStockCount}
                       onStockClick={(id) => id && window.open(`/master/edit-Mounting-stock?id=${id}&mode=view`, "_blank")}
                     />
                   </div>
-                  <div className="jew-report-footer-bar">
+                  <div ref={reportFooterRef} className="jew-report-footer-bar">
                     <div id="stock-report-table_info" className="jew-entry-info">
                       Showing {stockCount > 0 ? 1 : 0} to {stockCount} of {stockCount} entries
                     </div>
@@ -2588,8 +2596,6 @@ ${hideCss} { display: none; }
         .jew-report-shell {
           display: flex;
           flex-direction: column;
-          max-height: calc(100vh - 210px);
-          min-height: 420px;
           border: 1px solid var(--vz-border-color, #dee2e6);
           border-radius: 0.5rem;
           background: var(--vz-secondary-bg, #fff);

@@ -1,7 +1,8 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { CardBody, Col, Row, Table } from "reactstrap";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import useViewportTableHeight from "../../helpers/useViewportTableHeight";
 
 import {
   // Table as ReactTable,
@@ -61,12 +62,11 @@ const Filter = ({
         onChange={(value) => column.setFilterValue(value)}
         placeholder={placeholder}
         className="form-control form-control-sm mt-1"
-        style={{ height: "26px", fontSize: "11px", padding: "2px 8px" }}
+        style={{ height: "24px", fontSize: "11px", padding: "1px 6px" }}
         debounce={100}
         list={column.id + 'list'}
         id={`filter-${column.id}`}
       />
-      <div className="h-1" />
     </>
   );
 };
@@ -132,10 +132,19 @@ const TableContainer = ({
   isShowEntries = true,
   getRowClass,
   renderSubRows,
+  maxHeight,
 }) => {
   const { t } = useTranslation();
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const scrollContainerRef = useRef(null);
+  const paginationRef = useRef(null);
+  const computedMaxHeight = useViewportTableHeight(scrollContainerRef, {
+    footerRef: isPagination ? paginationRef : null,
+    maxHeight,
+    bottomGap: 2,
+    deps: [isGlobalFilter, isShowEntries, isPagination, data?.length],
+  });
 
 
 
@@ -203,10 +212,10 @@ const TableContainer = ({
 
   return (
     <Fragment>
-      {isGlobalFilter && <Row className="mb-3">
-        <CardBody className="border border-dashed border-end-0 border-start-0">
+      {isGlobalFilter && (
+        <div className="pb-2 mb-2 border-bottom" style={{ borderColor: "var(--vz-border-color, rgba(135, 138, 153, 0.18))" }}>
           <form>
-            <Row className="align-items-center g-3">
+            <Row className="align-items-center g-2">
               {isShowEntries && (
                 <Col sm={12} md="auto">
                   <div className="d-flex align-items-center">
@@ -261,11 +270,12 @@ const TableContainer = ({
                 <TaskListGlobalFilter />
               )}
 
-              <Col sm={12} md className="d-flex justify-content-md-end mt-2 mt-md-0">
-                <div className="search-box me-2 d-inline-block">
+              <Col sm={12} md className="d-flex justify-content-md-end mt-1 mt-md-0">
+                <div className="search-box d-inline-block w-100 w-md-auto" style={{ maxWidth: "280px" }}>
                   <input
                     type="text"
-                    className="form-control search"
+                    className="form-control form-control-sm search"
+                    style={{ height: "32px" }}
                     value={globalFilter ?? ''}
                     onChange={e => setGlobalFilter(e.target.value)}
                     placeholder={SearchPlaceholder || "Search..."}
@@ -275,11 +285,41 @@ const TableContainer = ({
               </Col>
             </Row>
           </form>
-        </CardBody>
-      </Row>}
+        </div>
+      )}
 
 
       <style>{`
+        .table-container-scroll > table {
+          margin-bottom: 0 !important;
+        }
+        .table-container-scroll thead th {
+          background-color: var(--vz-tertiary-bg, #f3f6f9) !important;
+          padding: 6px 8px !important;
+          font-size: 12px;
+          line-height: 1.25;
+          vertical-align: middle;
+        }
+        .table-container-scroll thead th > div:first-child {
+          white-space: nowrap;
+        }
+        .table-container-scroll tbody td {
+          padding: 5px 8px !important;
+          line-height: 1.25;
+          vertical-align: middle;
+        }
+        .table-container-scroll tfoot th,
+        .table-container-scroll tfoot td {
+          background-color: var(--vz-tertiary-bg, #f2f2f2) !important;
+          padding: 6px 8px !important;
+        }
+        [data-bs-theme="dark"] .table-container-scroll thead th {
+          background-color: #25292e !important;
+        }
+        [data-bs-theme="dark"] .table-container-scroll tfoot th,
+        [data-bs-theme="dark"] .table-container-scroll tfoot td {
+          background-color: #25292e !important;
+        }
         .table-sticky-left {
           position: sticky !important;
           left: 0 !important;
@@ -287,11 +327,11 @@ const TableContainer = ({
           box-shadow: 3px 0 5px -2px rgba(0,0,0,0.18) !important;
         }
         thead th.table-sticky-left {
-          z-index: 5 !important;
+          z-index: 6 !important;
           background-color: #f3f6f9 !important;
         }
         tbody td.table-sticky-left {
-          z-index: 2 !important;
+          z-index: 3 !important;
           background-color: #ffffff !important;
         }
         .table-striped > tbody > tr:nth-of-type(odd) > td.table-sticky-left {
@@ -306,11 +346,11 @@ const TableContainer = ({
         }
         tfoot th.table-sticky-left,
         tfoot td.table-sticky-left {
-          z-index: 5 !important;
+          z-index: 6 !important;
           background-color: #f2f2f2 !important;
         }
         [data-bs-theme="dark"] thead th.table-sticky-left {
-          background-color: #212529 !important;
+          background-color: #25292e !important;
           border-right-color: #32383e !important;
         }
         [data-bs-theme="dark"] tbody td.table-sticky-left {
@@ -329,13 +369,17 @@ const TableContainer = ({
         }
         [data-bs-theme="dark"] tfoot th.table-sticky-left,
         [data-bs-theme="dark"] tfoot td.table-sticky-left {
-          background-color: #212529 !important;
+          background-color: #25292e !important;
           border-right-color: #32383e !important;
         }
       `}</style>
-      <div className={divClass} style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto", overflowX: "auto" }}>
+      <div
+        ref={scrollContainerRef}
+        className={`${divClass || "table-responsive"} table-container-scroll`.trim()}
+        style={{ maxHeight: computedMaxHeight, overflowY: "auto", overflowX: "auto" }}
+      >
         <Table hover className={tableClass}>
-          <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 2 }}>
+          <thead className={theadClass} style={{ position: "sticky", top: 0, zIndex: 4 }}>
             {getHeaderGroups().map((headerGroup) => (
               <tr className={trClass} key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -351,7 +395,7 @@ const TableContainer = ({
                           ? {
                               position: "sticky",
                               left: 0,
-                              zIndex: 5,
+                              zIndex: 6,
                               backgroundColor: "#f3f6f9",
                               borderRight: "1px solid #dee2e6",
                               boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
@@ -418,7 +462,7 @@ const TableContainer = ({
                               ? {
                                   position: "sticky",
                                   left: 0,
-                                  zIndex: 2,
+                                  zIndex: 3,
                                   backgroundColor: "#ffffff",
                                   borderRight: "1px solid #dee2e6",
                                   boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
@@ -456,7 +500,7 @@ const TableContainer = ({
                               ? {
                                   position: "sticky",
                                   left: 0,
-                                  zIndex: 2,
+                                  zIndex: 3,
                                   backgroundColor: "#ffffff",
                                   borderRight: "1px solid #dee2e6",
                                   boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
@@ -474,7 +518,7 @@ const TableContainer = ({
             }))}
           </tbody>
           {table.getFooterGroups() && table.getFooterGroups().some(group => group.headers.some(h => h.column.columnDef.footer)) && (
-            <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 2, borderTop: "2px solid var(--vz-border-color)" }}>
+            <tfoot className="table-light" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-light, #f2f2f2)", zIndex: 4, borderTop: "2px solid var(--vz-border-color)" }}>
               {table.getFooterGroups().map(footerGroup => (
                 <tr key={footerGroup.id}>
                   {footerGroup.headers.map(header => {
@@ -490,7 +534,7 @@ const TableContainer = ({
                             ? {
                                 position: "sticky",
                                 left: 0,
-                                zIndex: 5,
+                                zIndex: 6,
                                 backgroundColor: "#f2f2f2",
                                 borderRight: "1px solid #dee2e6",
                                 boxShadow: "3px 0 5px -2px rgba(0,0,0,0.18)",
@@ -515,8 +559,11 @@ const TableContainer = ({
       </div>
 
       {isPagination && (
-        <div style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
-        <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
+        <div
+          ref={paginationRef}
+          style={{ backgroundColor: "transparent", paddingTop: "8px", paddingBottom: "2px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}
+        >
+        <Row className="align-items-center mt-0 g-2 text-center text-sm-start">
           <div className="col-sm">
             <div className="text-muted">
               {t("Showing")} <span className="fw-semibold">

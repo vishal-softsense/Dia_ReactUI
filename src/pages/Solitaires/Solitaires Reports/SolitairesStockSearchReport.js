@@ -1540,63 +1540,28 @@ const SolitairesStockSearchReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Solitaire Stock Search")} pageTitle={t("Reports")} />
 
-          <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
-            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
-              <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
-              {hasSearched ? t("Stock Search Results") : t("Stock Search Filters")}
-            </h5>
-            <div className="d-flex gap-2">
-              {!hasSearched ? (
-                <>
-                  <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
-                    {t("Email Stock List")}
-                  </Button>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleSearch()} disabled={loading}>
-                    {loading ? t("Searching...") : t("Report")}
-                  </Button>
-                  <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
-                    {t("Clear")}
-                  </Button>
-                  <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
-                    {t("Previous Record")}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
-                    {t("Email Stock List")}
-                  </Button>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
-                    {t("New Search")}
-                  </Button>
-                  {searchResults.length > 0 && (
-                    <div className="d-flex align-items-center gap-1">
-                      <UncontrolledDropdown>
-                        <DropdownToggle
-                          color="success"
-                          className="btn-sm rounded-2 px-3 py-1"
-                          caret
-                        >
-                          <i className="ri-file-excel-2-line align-middle me-1"></i>
-                          {t("Excel")} / {t("Print")}
-                        </DropdownToggle>
-                        <DropdownMenu style={{ minWidth: "160px", zIndex: 1050 }}>
-                          {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
-                            <DropdownItem
-                              key={key}
-                              onClick={() => handleExport(key)}
-                            >
-                              {fmt.label}
-                            </DropdownItem>
-                          ))}
-                        </DropdownMenu>
-                      </UncontrolledDropdown>
-                    </div>
-                  )}
-                </>
-              )}
+          {!hasSearched && (
+            <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+              <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                <i className="ri-search-eye-line fs-20 text-primary"></i>
+                {t("Stock Search Filters")}
+              </h5>
+              <div className="d-flex flex-wrap gap-2">
+                <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
+                  {t("Email Stock List")}
+                </Button>
+                <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleSearch()} disabled={loading}>
+                  {loading ? t("Searching...") : t("Report")}
+                </Button>
+                <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
+                  {t("Clear")}
+                </Button>
+                <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
+                  {t("Previous Record")}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
@@ -2142,7 +2107,7 @@ const SolitairesStockSearchReport = () => {
 
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody>
+              <CardBody className="p-2 px-sm-3 py-sm-2">
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
@@ -2151,33 +2116,68 @@ const SolitairesStockSearchReport = () => {
                   </div>
                 ) : (
                   <React.Fragment>
-                    {searchResults.length > 0 && (
-                      <div className="d-flex flex-wrap gap-4 align-items-center mb-3 py-2 px-3 bg-light rounded border border-light-subtle">
-                        <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
-                          <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
-                          {t("Status Guide")}:
-                        </span>
-                        {[
-                          { color: "#FFB347", label: t("Hold") },
-                          { color: "#FF4444", label: t("Memo") },
-                          { color: "#8A2BE2", label: t("Sold") },
-                          { color: "#22c55e", label: t("Memo In") }
-                        ].map(({ color, label }) => (
-                          <div key={label} className="d-flex align-items-center gap-2">
-                            <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
-                            <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
-                          </div>
-                        ))}
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 py-2 px-3 bg-light rounded border border-light-subtle">
+                      {searchResults.length > 0 ? (
+                        <div className="d-flex flex-wrap gap-2 gap-sm-3 gap-lg-4 align-items-center">
+                          <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
+                            <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
+                            {t("Status Guide")}:
+                          </span>
+                          {[
+                            { color: "#FFB347", label: t("Hold") },
+                            { color: "#FF4444", label: t("Memo") },
+                            { color: "#8A2BE2", label: t("Sold") },
+                            { color: "#22c55e", label: t("Memo In") }
+                          ].map(({ color, label }) => (
+                            <div key={label} className="d-flex align-items-center gap-2">
+                              <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
+                              <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      <div className="d-flex flex-wrap align-items-center gap-2 ms-auto">
+                        <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
+                          {t("Email Stock List")}
+                        </Button>
+                        <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
+                          {t("New Search")}
+                        </Button>
+                        {searchResults.length > 0 && (
+                          <UncontrolledDropdown>
+                            <DropdownToggle
+                              color="success"
+                              className="btn-sm rounded-2 px-3 py-1"
+                              caret
+                            >
+                              <i className="ri-file-excel-2-line align-middle me-1"></i>
+                              {t("Excel")} / {t("Print")}
+                            </DropdownToggle>
+                            <DropdownMenu end style={{ minWidth: "160px", zIndex: 1050 }}>
+                              {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
+                                <DropdownItem
+                                  key={key}
+                                  onClick={() => handleExport(key)}
+                                >
+                                  {fmt.label}
+                                </DropdownItem>
+                              ))}
+                            </DropdownMenu>
+                          </UncontrolledDropdown>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {searchResults.length > 0 && (
-                      <Card className="border shadow-sm mb-3">
-                        <CardBody className="p-3 bg-light-subtle">
-                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                      <Card className="border shadow-sm mb-2">
+                        <CardBody className="p-2 px-3 bg-light-subtle">
+                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 gap-lg-3">
 
-                            <div className="d-flex flex-wrap align-items-center gap-4">
-                              <div className="pe-3 border-end">
+                            <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3 gap-xl-4">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("SELECTED")}
                                 </span>
@@ -2186,28 +2186,28 @@ const SolitairesStockSearchReport = () => {
                                 </span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL CARATS")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">{totals.carats}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL AMOUNT")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.amount).toLocaleString()}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG RATE")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.avgRate).toLocaleString()}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG DISC %")}
                                 </span>
@@ -2324,7 +2324,7 @@ const SolitairesStockSearchReport = () => {
                         isGlobalFilter={true}
                         customPageSize={500}
                         customPageSizes={[500, 1000, 1500]}
-                        divClass="table-responsive table-card mb-3"
+                        divClass="table-responsive table-card mb-0"
                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                         theadClass="table-light"
                         SearchPlaceholder={t("Filter results...")}

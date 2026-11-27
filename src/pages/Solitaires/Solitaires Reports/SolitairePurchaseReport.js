@@ -21,6 +21,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import {
   exportToExcel,
   exportSolitairePurchaseReportExcel,
@@ -1842,7 +1843,7 @@ const SolitairePurchaseReport = () => {
                 {groupedReportData.sections.length === 0 ? (
                   <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div className="table-responsive sol-purchase-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive sol-purchase-grouped-table-wrap">
                     <table className="table table-bordered align-middle mb-0" id="dynamic-sol-purchase-report-table" style={{ tableLayout: "fixed", minWidth: "910px" }}>
                       <colgroup>
                         <col style={{ width: "48px" }} />
@@ -1958,7 +1959,7 @@ const SolitairePurchaseReport = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
                 )}
 
                 {companyInfo?.companyFooter ? (

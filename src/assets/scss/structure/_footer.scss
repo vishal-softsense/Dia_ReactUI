@@ -3,17 +3,46 @@
 // 
 
 .footer {
-    bottom: 0;
-    padding: 20px calc(#{$grid-gutter-width} * 0.5);
-    position: absolute;
-    right: 0;
+    position: static;
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 0 16px;
     color: var(--#{$prefix}footer-color);
-    left: var(--#{$prefix}vertical-menu-width);
-    height: $footer-height;
+    min-height: 42px;
+    height: 42px;
     background-color: var(--#{$prefix}footer-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    z-index: 1;
 
-    @media (max-width: 991.98px) {
+    .footer-brand-link {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.15s ease, opacity 0.15s ease;
+
+        &:hover {
+            color: var(--#{$prefix}body-color);
+            opacity: 0.9;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        padding: 0.45rem 12px;
+        min-height: 40px;
+        height: auto;
+        font-size: 0.75rem;
+    }
+}
+
+.auth-page-wrapper {
+    .footer {
+        position: absolute;
+        bottom: 0;
         left: 0;
+        right: 0;
     }
 }
 

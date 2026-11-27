@@ -17,6 +17,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
@@ -1489,7 +1490,7 @@ const JewellerySaleReport = () => {
                 {groupedReportData.sections.length === 0 ? (
                   <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div className="table-responsive jew-sale-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive jew-sale-grouped-table-wrap">
                     <table className="table table-bordered align-middle mb-0" id="dynamic-jew-sale-report-table" style={{ tableLayout: "fixed", minWidth: "920px" }}>
                       <colgroup>
                         <col style={{ width: "48px" }} />
@@ -1590,7 +1591,7 @@ const JewellerySaleReport = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
                 )}
 
                 {companyInfo?.companyFooter ? (

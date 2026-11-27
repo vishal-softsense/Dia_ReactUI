@@ -15,10 +15,12 @@ import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getOutstandingReport,
@@ -221,6 +223,8 @@ const OutstandingReport = () => {
   const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const isPrintingRef = useRef(false);
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -238,6 +242,12 @@ const OutstandingReport = () => {
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched && reportMode === "all",
+    deps: [hasSearched, reportMode, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
@@ -1983,7 +1993,7 @@ const OutstandingReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0 or-report-table">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>
@@ -2066,7 +2076,7 @@ const OutstandingReport = () => {
                   </table>
                 </div>
 
-                <div className="mt-3" style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
+                <div ref={paginationRef} className="mt-2" style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
                   <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
                     <div className="col-sm">
                       <div className="text-muted">
@@ -2187,9 +2197,9 @@ const OutstandingReport = () => {
                     </Col>
                   </Row>
 
-                  <div className="table-responsive or-print-table-wrap">
+                  <ViewportScrollBox className="table-responsive or-print-table-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
-                      <thead className="table-light">
+                      <thead className="table-light sticky-top" style={{ zIndex: 2 }}>
                         <tr>
                           {STATEMENT_COLUMNS.map(renderHeader)}
                         </tr>
@@ -2226,7 +2236,7 @@ const OutstandingReport = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>
@@ -2279,7 +2289,7 @@ const OutstandingReport = () => {
                     </div>
                   </div>
 
-                  <div className="table-responsive or-print-table-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive or-print-table-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>
@@ -2395,7 +2405,7 @@ const OutstandingReport = () => {
                         </tfoot>
                       ) : null}
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>
