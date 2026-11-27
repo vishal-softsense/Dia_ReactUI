@@ -720,6 +720,7 @@ export const getMixPurchaseReturnLotDetail = (lotNo) => api.create(url.MIX_PURCH
 export const addMixPurchaseReturnSingleLot = (payload) => api.create(url.MIX_PURCHASE_RETURN_ADD_SINGLE_LOT, payload);
 export const getMixPurchaseReturnItemFromList = (payload) => api.create(url.MIX_PURCHASE_RETURN_GET_ITEM_FROM_LIST, payload);
 export const getMixPurchaseReturnPrintView = (invNo) => api.get(`${url.MIX_PURCHASE_RETURN_PRINT_VIEW}/${invNo}`);
+export const getMixPurchaseReturnCPurInvoices = (payload) => api.create(url.MIX_PURCHASE_RETURN_CPUR_LOOKUP, payload);
 export const getMixPurchaseReturnLots = (searchby) => {
   const s = encodeURIComponent(searchby || "");
   return api.get(`${url.MIX_PURCHASE_RETURN_LOTS}?searchby=${s}&search=${s}&q=${s}&term=${s}`);

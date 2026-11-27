@@ -1202,15 +1202,17 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
 
   // MVC: ViewInvoices → /MixSaleReturn/csale-to-csalertn
   const handleViewCSaleInvoices = async () => {
-    if (!party?.value && !String(header.memoNo || "").trim()) {
+    const invNo = String(header.memoNo || "").trim();
+    if (!party?.value && !invNo) {
       toast.warning(t("Please select Party or enter Inv No."));
       return;
     }
     setCsaleLoading(true);
     try {
+      // Invoice number is looked up on its own so a later invoice is not filtered by the previous party.
       const res = await getMixSaleReturnCSaleInvoices({
-        PartyCode: party?.value || "",
-        MemoNo: header.memoNo || ""
+        PartyCode: invNo ? "" : (party?.value || ""),
+        MemoNo: invNo
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("No invoice Found"));
@@ -1219,6 +1221,11 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
         return;
       }
       const rows = Array.isArray(res.Data) ? res.Data : Array.isArray(res.data) ? res.data : [];
+      const partyCode = rows.length ? getVal(rows[0], "PartyCode", "partyCode") : "";
+      const partyName = rows.length ? getVal(rows[0], "PartyName", "partyName", "Party") : "";
+      if (invNo && partyCode) {
+        setParty({ value: String(partyCode), label: partyName || String(partyCode) });
+      }
       const mapped = rows.map((r, idx) => {
         const cts = getNumVal(r, "carats", "Carats", "Cts", "BalanceCts", "BalCts");
         const rtn = getNumVal(r, "RtnCts", "ReturnCarats", "Rtn");
