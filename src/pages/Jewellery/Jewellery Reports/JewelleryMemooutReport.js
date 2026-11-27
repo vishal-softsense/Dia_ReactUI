@@ -380,8 +380,8 @@ const JewelleryMemooutReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "MemoNo", label: t("Group by MemoNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "MemoNo", label: t("Group by Memo No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -691,7 +691,7 @@ const JewelleryMemooutReport = () => {
         <thead>
           <tr>
             <th>${escapeHtml(t("Sale No"))}</th>
-            <th>MemoNo</th>
+            <th>Memo No</th>
             <th>${escapeHtml(t("Jew Stock ID"))}</th>
             <th>${escapeHtml(t("Product"))}</th>
             <th>${escapeHtml(t("Carats"))}</th>
@@ -885,25 +885,25 @@ const JewelleryMemooutReport = () => {
         }
       },
       {
-        header: t("DATE"),
+        header: t("Date"),
         accessorKey: "ConDATE",
         accessorFn: (row) => dashText(getRowVal(row, "ConDATE", "conDATE")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE"))
       },
       {
-        header: t("DateDiff"),
+        header: t("Date Diff"),
         accessorKey: "DateDiff",
         accessorFn: (row) => dashText(getRowVal(row, "DateDiff", "dateDiff")),
         cell: ({ row }) => dashText(getRowVal(row.original, "DateDiff", "dateDiff"))
       },
       {
-        header: t("MemoNo"),
+        header: t("Memo Number"),
         accessorKey: "MemoNo",
         accessorFn: (row) => dashText(getRowVal(row, "MemoNo", "memoNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo"))
@@ -921,7 +921,7 @@ const JewelleryMemooutReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Stock_ID", "stock_ID", "stock_id"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -967,7 +967,7 @@ const JewelleryMemooutReport = () => {
         }
       },
       {
-        header: t("ReturnDate"),
+        header: t("Return Date"),
         accessorKey: "MemoReturnDate",
         accessorFn: (row) => dashText(getRowVal(row, "MemoReturnDate", "memoReturnDate", "ReturnDate")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate", "ReturnDate"))
@@ -983,7 +983,7 @@ const JewelleryMemooutReport = () => {
         }
       },
       {
-        header: t("BalanceAmt"),
+        header: t("Balance Amt"),
         accessorKey: "BalanceAmt",
         accessorFn: (row) => fmtFixed(getRowVal(row, "BalanceAmt", "balanceAmt"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2),
@@ -999,7 +999,7 @@ const JewelleryMemooutReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("IssUser"),
+        header: t("Issue User"),
         accessorKey: "IssUser",
         accessorFn: (row) => dashText(getRowVal(row, "IssUser", "issUser")),
         cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser"))
@@ -1017,25 +1017,25 @@ const JewelleryMemooutReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "CertId", "certId", "Cert"))
       },
       {
-        header: t("InvType"),
+        header: t("Inv Type"),
         accessorKey: "Invtype",
         accessorFn: (row) => dashText(getRowVal(row, "Invtype", "InvType", "invtype")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "InvType", "invtype"))
       },
       {
-        header: t("MemoTime"),
+        header: t("Memo Time"),
         accessorKey: "MemoTime",
         accessorFn: (row) => dashText(getRowVal(row, "MemoTime", "memoTime")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoTime", "memoTime"))
       },
       {
-        header: t("MemoReturnDate"),
+        header: t("Memo Return Date"),
         accessorKey: "MemoReturnDate2",
         accessorFn: (row) => dashText(getRowVal(row, "MemoReturnDate", "memoReturnDate")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate"))
       },
       {
-        header: t("MemoReturnTime"),
+        header: t("Memo Return Time"),
         accessorKey: "MemoReturnTime",
         accessorFn: (row) => dashText(getRowVal(row, "MemoReturnTime", "memoReturnTime")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime"))
@@ -1051,9 +1051,9 @@ const JewelleryMemooutReport = () => {
     }
 
     const headers = [
-      "DATE", "DateDiff", "MemoNo", "BillNo", "Party", "Jew Stock ID", "ItemName",
-      "Carats", "Price", "Amount", "Return", "ReturnDate", "Balance", "BalanceAmt",
-      "Broker", "IssUser", "Symbol", "Cert", "InvType", "MemoTime", "MemoReturnDate", "MemoReturnTime"
+      "Date", "Date Diff", "Memo Number", "Bill No", "Party", "Jew Stock ID", "Item Name",
+      "Carats", "Price", "Amount", "Return", "Return Date", "Balance", "Balance Amt",
+      "Broker", "Issue User", "Symbol", "Cert", "Inv Type", "Memo Time", "Memo Return Date", "Memo Return Time"
     ];
 
     const rows = reportRows.map((row) => [
@@ -1085,7 +1085,7 @@ const JewelleryMemooutReport = () => {
     if (!res?.success) toast.error(t("Excel export failed."));
   };
 
-  document.title = `${t("Jewellery MemoOut Report")} | ${t("Reports")}`;
+  document.title = `${t("Jewellery Memo Out Report")} | ${t("Reports")}`;
 
   return (
     <React.Fragment>
@@ -1093,7 +1093,7 @@ const JewelleryMemooutReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Memo Report")} pageTitle={t("JewMemo Reports")} />
+          <BreadCrumb title={t("Jewellery Memo Report")} pageTitle={t("Jew Memo Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -1177,7 +1177,7 @@ const JewelleryMemooutReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
-                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("MemoNo")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
+                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("Memo No")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1408,7 +1408,7 @@ const JewelleryMemooutReport = () => {
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
                           <th>{t("Sale No")}</th>
-                          <th>MemoNo</th>
+                          <th>Memo No</th>
                           <th>{t("Jew Stock ID")}</th>
                           <th>{t("Product")}</th>
                           <th className="text-end">{t("Carats")}</th>

@@ -423,13 +423,13 @@ const SolitairePartyHoldReport = () => {
         },
         footer: () => <span className="fw-bold text-center d-block">Total</span>
       },
-      { header: t("DATE"), accessorKey: "ConDATE", cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE")) },
-      { header: t("DateDiff"), accessorKey: "DateDiff", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DateDiff", "dateDiff"), 0) },
-      { header: t("PartyHoldNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-      { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+      { header: t("Date"), accessorKey: "ConDATE", cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE")) },
+      { header: t("Date Diff"), accessorKey: "DateDiff", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DateDiff", "dateDiff"), 0) },
+      { header: t("Party Hold Number"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
+      { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
       { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-      { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Lotno", "lotno", "LotNo")) },
-      { header: t("ItemName"), accessorKey: "ItemName", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "ItemName", "itemName")) },
+      { header: t("Lot No"), accessorKey: "Lotno", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Lotno", "lotno", "LotNo")) },
+      { header: t("Item Name"), accessorKey: "ItemName", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "ItemName", "itemName")) },
       { header: t("Discount"), accessorKey: "Discount", cell: ({ row }) => row.original.isParent ? "" : fmtFixed(getRowVal(row.original, "Discount", "discount"), 2) },
       {
         header: t("Price"),
@@ -457,7 +457,7 @@ const SolitairePartyHoldReport = () => {
           return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
-      { header: t("ReturnDate"), accessorKey: "MemoReturnDate", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate", "ReturnDate")) },
+      { header: t("Return Date"), accessorKey: "MemoReturnDate", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate", "ReturnDate")) },
       {
         header: t("Balance"),
         accessorKey: "Balance",
@@ -469,7 +469,7 @@ const SolitairePartyHoldReport = () => {
         }
       },
       {
-        header: t("BalanceAmt"),
+        header: t("Balance Amt"),
         accessorKey: "BalanceAmt",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2)
@@ -485,11 +485,11 @@ const SolitairePartyHoldReport = () => {
           return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
         }
       },
-      { header: t("IssUser"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
+      { header: t("Issue User"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
       { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => dashText(getRowVal(row.original, "Seller", "seller")) },
-      { header: t("RtnUser"), accessorKey: "RtnUser", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "RtnUser", "rtnUser")) },
+      { header: t("Return User"), accessorKey: "RtnUser", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "RtnUser", "rtnUser")) },
       { header: t("Remarks"), accessorKey: "Remarks", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Remarks", "remarks")) },
-      { header: t("CaratsCl"), accessorKey: "BalanceCarats3Dec", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "BalanceCarats3Dec", "balanceCarats3Dec")) },
+      { header: t("Carats Cl"), accessorKey: "BalanceCarats3Dec", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "BalanceCarats3Dec", "balanceCarats3Dec")) },
       { header: t("Estimate"), accessorKey: "Estimate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Estimate", "estimate"), 2) },
       { header: t("MRP"), accessorKey: "MRP", className: "text-end", cell: ({ row }) => row.original.isParent ? "" : fmtFixed(getRowVal(row.original, "MRP", "mrp"), 2) },
       { header: t("Symbol"), accessorKey: "Symbol", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Symbol", "symbol")) },
@@ -501,11 +501,11 @@ const SolitairePartyHoldReport = () => {
       { header: t("Sym"), accessorKey: "SymId", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "SymId", "symId")) },
       { header: t("FL"), accessorKey: "FLId", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "FLId", "flId")) },
       { header: t("Cert"), accessorKey: "CertId", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "CertId", "certId")) },
-      { header: t("CertificateNo"), accessorKey: "CertificateNo", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "CertificateNo", "certificateNo")) },
-      { header: t("InvType"), accessorKey: "Invtype", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Invtype", "invtype")) },
-      { header: t("MemoTime"), accessorKey: "MemoTime", cell: ({ row }) => dashText(getRowVal(row.original, "MemoTime", "memoTime")) },
-      { header: t("MemoReturnDate"), accessorKey: "MemoReturnDate2", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate")) },
-      { header: t("MemoReturnTime"), accessorKey: "MemoReturnTime", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime")) }
+      { header: t("Certificate No"), accessorKey: "CertificateNo", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "CertificateNo", "certificateNo")) },
+      { header: t("Inv Type"), accessorKey: "Invtype", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "Invtype", "invtype")) },
+      { header: t("Memo Time"), accessorKey: "MemoTime", cell: ({ row }) => dashText(getRowVal(row.original, "MemoTime", "memoTime")) },
+      { header: t("Memo Return Date"), accessorKey: "MemoReturnDate2", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate")) },
+      { header: t("Memo Return Time"), accessorKey: "MemoReturnTime", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime")) }
     ],
     [expandedMemoNos, t, caratFormat]
   );
@@ -517,10 +517,10 @@ const SolitairePartyHoldReport = () => {
     }
 
     const headers = [
-      "Date", "DateDiff", "PartyHoldNo", "BillNo", "Party", "LotNo", "ItemName", "Discount",
-      "Price", "Amount", "Return", "ReturnDate", "Balance", "BalanceAmt", "Broker", "Carats",
-      "IssUser", "Seller", "RtnUser", "Remarks", "CaratsCl", "Estimate", "MRP", "Symbol",
-      "Shape", "Color", "Clarity", "Prop", "Polish", "Sym", "FL", "Cert", "CertNo", "InvType"
+      "Date", "Date Diff", "Party Hold Number", "Bill No", "Party", "Lot No", "Item Name", "Discount",
+      "Price", "Amount", "Return", "Return Date", "Balance", "Balance Amt", "Broker", "Carats",
+      "Issue User", "Seller", "Return User", "Remarks", "Carats Cl", "Estimate", "MRP", "Symbol",
+      "Shape", "Color", "Clarity", "Prop", "Polish", "Sym", "FL", "Cert", "Cert No", "Inv Type"
     ];
 
     const rows = reportRows.map((r) => [

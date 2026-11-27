@@ -145,9 +145,9 @@ const JournalEntryList = () => {
             return;
         }
         const headers = [
-            t("GCode"),
+            t("G Code"),
             t("Date"),
-            t("Vtype"),
+            t("V Type"),
             t("Credit Acc"),
             t("Debit Acc"),
             t("Amount"),
@@ -209,7 +209,7 @@ const JournalEntryList = () => {
                 }
             },
             {
-                header: t("GCode"),
+                header: t("G Code"),
                 accessorKey: "GCODE",
                 accessorFn: (row) => getVal(row, "GCODE", "gcode"),
                 enableColumnFilter: true,
@@ -224,7 +224,7 @@ const JournalEntryList = () => {
                 cell: dateCell
             },
             {
-                header: t("Vtype"),
+                header: t("V Type"),
                 accessorKey: "Vtype",
                 accessorFn: (row) => getVal(row, "Vtype", "vtype"),
                 enableColumnFilter: true,
@@ -365,7 +365,7 @@ const JournalEntryList = () => {
                                     {deleteTarget?.gcode && (
                                         <>
                                             <br />
-                                            <strong>{t("GCode")} :</strong> {deleteTarget.gcode}
+                                            <strong>{t("G Code")} :</strong> {deleteTarget.gcode}
                                         </>
                                     )}
                                 </p>

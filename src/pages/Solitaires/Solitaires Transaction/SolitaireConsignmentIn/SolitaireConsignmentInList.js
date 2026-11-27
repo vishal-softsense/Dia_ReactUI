@@ -149,18 +149,18 @@ const SolitaireConsignmentInList = () => {
       return;
     }
     const headers = [
-      "MemoIn No",
+      "Memo In No",
       "Date",
       "Party",
       "Type",
-      "SubType",
+      "Sub Type",
       "Category",
       "Carats",
       "Amount",
       "Symbol",
       masterAmtHeader,
       stockAmtHeader,
-      "DueDate",
+      "Due Date",
       "Status"
     ];
     const excelRows = rows.map((r) => [
@@ -252,7 +252,7 @@ const SolitaireConsignmentInList = () => {
         }
       },
       {
-        header: t("MemoIn No"),
+        header: t("Memo In No"),
         accessorKey: "InvNo",
         accessorFn: (row) => getInvNo(row),
         enableColumnFilter: true,
@@ -282,7 +282,7 @@ const SolitaireConsignmentInList = () => {
         filterFn: customStringFilterFn
       },
       {
-        header: t("SubType"),
+        header: t("Sub Type"),
         accessorKey: "Subtype",
         accessorFn: (row) => getVal(row, "Subtype"),
         enableColumnFilter: true,
@@ -335,7 +335,7 @@ const SolitaireConsignmentInList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: t("DueDate"),
+        header: t("Due Date"),
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,

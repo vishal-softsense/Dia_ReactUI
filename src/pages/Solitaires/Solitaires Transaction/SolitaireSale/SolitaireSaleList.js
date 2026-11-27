@@ -148,19 +148,19 @@ const SolitaireSaleList = () => {
     }
     const headers = [
       "Invoice",
-      "BillNo",
+      "Bill No",
       "Date",
       "Print Date",
       "Party",
       "Type",
-      "SubType",
+      "Sub Type",
       "Category",
       "Carats",
       "Amount",
       "Symbol",
       masterAmtHeader,
       stockAmtHeader,
-      "DueDate",
+      "Due Date",
       "Status"
     ];
     const excelRows = rows.map((r) => [
@@ -273,7 +273,7 @@ const SolitaireSaleList = () => {
         cell: ({ row }) => invBadge(row.original)
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => getVal(row, "BillNo"),
         enableColumnFilter: true,
@@ -310,7 +310,7 @@ const SolitaireSaleList = () => {
         filterFn: customStringFilterFn
       },
       {
-        header: t("SubType"),
+        header: t("Sub Type"),
         accessorKey: "Subtype",
         accessorFn: (row) => getVal(row, "Subtype"),
         enableColumnFilter: true,
@@ -363,7 +363,7 @@ const SolitaireSaleList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: t("DueDate"),
+        header: t("Due Date"),
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,

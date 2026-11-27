@@ -373,7 +373,7 @@ const SolitaireSalePerformanceReport = () => {
   const columns = useMemo(
     () => [
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "lotNo",
         cell: ({ row }) => dashText(getRowVal(row.original, "lotNo", "LotNo")),
         footer: () => <span className="fw-bold text-center d-block">{t("Total")}</span>
@@ -419,7 +419,7 @@ const SolitaireSalePerformanceReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "symId", "SymId"))
       },
       {
-        header: t("PCarats"),
+        header: t("P Carats"),
         accessorKey: "pCarats",
         className: "text-end",
         cell: ({ row }) =>
@@ -430,34 +430,34 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("ConsDate"),
+        header: t("Cons Date"),
         accessorKey: "consDate",
         className: "text-center",
         cell: ({ row }) =>
           cellWithBg(dashText(getRowVal(row.original, "consDate", "ConsDate")), CYAN_BG)
       },
       {
-        header: t("ProcessDays"),
+        header: t("Processing Days"),
         accessorKey: "processDays",
         className: "text-center",
         cell: ({ row }) =>
           cellWithBg(dashText(getRowVal(row.original, "processDays", "ProcessDays")), BLUE_BG)
       },
       {
-        header: t("Pur.Date"),
+        header: t("Purchase Date"),
         accessorKey: "pDate",
         className: "text-center",
         cell: ({ row }) => cellWithBg(dashText(getRowVal(row.original, "pDate", "PDate")), BLUE_BG)
       },
       {
-        header: t("Pur.Price"),
+        header: t("Purchase Price"),
         accessorKey: "purPrice",
         className: "text-end",
         cell: ({ row }) =>
           cellWithBg(fmtFixed(getRowVal(row.original, "purPrice", "PurPrice"), 2), BLUE_BG)
       },
       {
-        header: `Pur.${sSym}`,
+        header: `Pur. ${sSym}`,
         accessorKey: "purDollar",
         className: "text-end",
         cell: ({ row }) =>
@@ -468,14 +468,14 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("BaseRate"),
+        header: t("Base Rate"),
         accessorKey: "purBaseRate",
         className: "text-end",
         cell: ({ row }) =>
           cellWithBg(fmtFixed(getRowVal(row.original, "purBaseRate", "PurBaseRate"), 2), BLUE_BG)
       },
       {
-        header: `Pur.${mSym}`,
+        header: `Pur. ${mSym}`,
         accessorKey: "purRs",
         className: "text-end",
         cell: ({ row }) =>
@@ -534,7 +534,7 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("BaseRate"),
+        header: t("Base Rate"),
         accessorKey: "baseRate",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "baseRate", "BaseRate"), 2), ORANGE_BG)
@@ -694,7 +694,7 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("Itemcode"),
+        header: t("Item Code"),
         accessorKey: "itemcode",
         cell: ({ row }) => dashText(getRowVal(row.original, "itemcode", "Itemcode"))
       },
@@ -713,7 +713,7 @@ const SolitaireSalePerformanceReport = () => {
   );
 
   const excelHeaders = [
-    "LotNo",
+    "Lot No",
     "Status",
     "Cert",
     "Shape",
@@ -722,14 +722,14 @@ const SolitaireSalePerformanceReport = () => {
     "Prop",
     "Polish",
     "Sym",
-    "PCarats",
-    "ConsDate",
-    "ProcessDays",
-    "Pur.Date",
-    "Pur.Price",
-    `Pur.${sSym}`,
-    "BaseRate",
-    `Pur.${mSym}`,
+    "P Carats",
+    "Cons Date",
+    "Processing Days",
+    "Purchase Date",
+    "Purchase Price",
+    `Pur. ${sSym}`,
+    "Base Rate",
+    `Pur. ${mSym}`,
     `Cert Exp ${sSym}`,
     `Cert Exp ${mSym}`,
     `Pur Cost ${sSym}`,
@@ -738,7 +738,7 @@ const SolitaireSalePerformanceReport = () => {
     "Sale Days",
     "Sale Price",
     `Sale ${sSym}`,
-    "BaseRate",
+    "Base Rate",
     `Sale ${mSym}`,
     `PL ${sSym}`,
     `PL ${sSym} Per`,
@@ -760,7 +760,7 @@ const SolitaireSalePerformanceReport = () => {
     `Interest ${mSym}`,
     `Tot Pur Cost ${mSym} With Int`,
     `Final PL ${mSym} After Int`,
-    "Itemcode",
+    "Item Code",
     "Kapan No",
     "Size Id"
   ];

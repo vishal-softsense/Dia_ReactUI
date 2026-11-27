@@ -394,8 +394,8 @@ const JewellerySaleReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "InvNo", label: t("Group by InvNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "InvNo", label: t("Group by Inv No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -673,7 +673,7 @@ const JewellerySaleReport = () => {
           </div>
         </div>
         <div>
-          <div class="report-title">JewSale Report</div>
+          <div class="report-title">Jew Sale Report</div>
           <div id="report-date-range">
             <div><strong>${escapeHtml(t("From"))}:</strong> ${escapeHtml(filters.fromDate)}</div>
             <div><strong>${escapeHtml(t("To"))}:</strong> ${escapeHtml(filters.toDate)}</div>
@@ -737,7 +737,7 @@ const JewellerySaleReport = () => {
         <thead>
           <tr>
             <th>${escapeHtml(t("Sale No"))}</th>
-            <th>Invno</th>
+            <th>Inv No</th>
             <th>Product</th>
             <th>Carats</th>
             <th>Return</th>
@@ -928,7 +928,7 @@ const JewellerySaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "conDate", "Date", "date"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "invno",
         accessorFn: (row) => dashText(getRowVal(row, "invno", "Invno", "InvNo", "invNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invno", "Invno", "InvNo", "invNo"))
@@ -940,7 +940,7 @@ const JewellerySaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Due", "due"))
       },
       {
-        header: t("InvType"),
+        header: t("Invoice Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
@@ -964,7 +964,7 @@ const JewellerySaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("DesignName"),
+        header: t("Design Name"),
         accessorKey: "DesignName",
         accessorFn: (row) => dashText(getRowVal(row, "DesignName", "designName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "DesignName", "designName"))
@@ -976,13 +976,13 @@ const JewellerySaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType"))
       },
       {
-        header: t("SubCategory"),
+        header: t("Sub Category"),
         accessorKey: "SubCategory",
         accessorFn: (row) => dashText(getRowVal(row, "SubCategory", "subCategory")),
         cell: ({ row }) => dashText(getRowVal(row.original, "SubCategory", "subCategory"))
       },
       {
-        header: t("JewelleryCertificate"),
+        header: t("Jewellery Certificate"),
         accessorKey: "JewelleryCertificate",
         accessorFn: (row) => dashText(getRowVal(row, "JewelleryCertificate", "jewelleryCertificate")),
         cell: ({ row }) => dashText(getRowVal(row.original, "JewelleryCertificate", "jewelleryCertificate"))
@@ -1006,13 +1006,13 @@ const JewellerySaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Purity", "purity"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "StockItem",
         accessorFn: (row) => dashText(getRowVal(row, "StockItem", "stockItem", "Item", "item")),
         cell: ({ row }) => dashText(getRowVal(row.original, "StockItem", "stockItem", "Item", "item"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -1029,19 +1029,19 @@ const JewellerySaleReport = () => {
         }
       },
       {
-        header: t("Less1"),
+        header: t("Less 1"),
         accessorKey: "Less1",
         accessorFn: (row) => dashText(getRowVal(row, "Less1", "less1")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less1", "less1"))
       },
       {
-        header: t("Less2"),
+        header: t("Less 2"),
         accessorKey: "Less2",
         accessorFn: (row) => dashText(getRowVal(row, "Less2", "less2")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less2", "less2"))
       },
       {
-        header: t("Less3"),
+        header: t("Less 3"),
         accessorKey: "Less3",
         accessorFn: (row) => dashText(getRowVal(row, "Less3", "less3")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less3", "less3"))
@@ -1133,9 +1133,9 @@ const JewellerySaleReport = () => {
     }
 
     const headers = [
-      "Date", "InvNo", "Due", "InvType", "Party", "Category", "Broker", "DesignName", "Sub Type",
-      "SubCategory", "JewelleryCertificate", "Metal Type", "Color", "Purity", "LotNo", "ItemName",
-      "Pcs", "Less1", "Less2", "Less3", "Rate", "Amount", "Symbol", masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader
+      "Date", "Inv No", "Due", "Invoice Type", "Party", "Category", "Broker", "Design Name", "Sub Type",
+      "Sub Category", "Jewellery Certificate", "Metal Type", "Color", "Purity", "Lot No", "Item Name",
+      "Pcs", "Less 1", "Less 2", "Less 3", "Rate", "Amount", "Symbol", masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -1180,7 +1180,7 @@ const JewellerySaleReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Sale Report")} pageTitle={t("JewSale Reports")} />
+          <BreadCrumb title={t("Jewellery Sale Report")} pageTitle={t("Jew Sale Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -1290,13 +1290,13 @@ const JewellerySaleReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Sub Type")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subType")} value={getOptions("subType").find((o) => o.value === filters.subType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))} placeholder={t("Select SubType")} isLoading={loadingDropdowns} />
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subType")} value={getOptions("subType").find((o) => o.value === filters.subType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))} placeholder={t("Select Sub Type")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("SubCategory")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.subCategory) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subCategory: sel?.value || "" }))} placeholder={t("Select SubCategory")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Sub Category")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.subCategory) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subCategory: sel?.value || "" }))} placeholder={t("Select Sub Category")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1307,8 +1307,8 @@ const JewellerySaleReport = () => {
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("MetalType")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.metalType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, metalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select MetalType")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Metal Type")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.metalType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, metalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select Metal Type")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1473,7 +1473,7 @@ const JewellerySaleReport = () => {
                       </div>
                     </div>
                     <div className="col-sm-2 text-end pt-2">
-                      <div className="fs-5 fw-bold">JewSale Report</div>
+                      <div className="fs-5 fw-bold">Jew Sale Report</div>
                       <div className="small text-muted">
                         <div>
                           <strong>{t("From")}:</strong> {filters.fromDate}
@@ -1505,7 +1505,7 @@ const JewellerySaleReport = () => {
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
                           <th>{t("Sale No")}</th>
-                          <th>Invno</th>
+                          <th>Inv No</th>
                           <th>Product</th>
                           <th className="text-end">Carats</th>
                           <th className="text-end">Return</th>

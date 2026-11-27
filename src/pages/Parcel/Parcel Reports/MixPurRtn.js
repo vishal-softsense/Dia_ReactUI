@@ -599,8 +599,8 @@ const MixPurRtnReport = () => {
                 },
                 cell: ({ getValue }) => dashText(getValue())
             },
-            { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+            { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
             { header: t("Shape"), accessorKey: "ShapeId", cell: ({ row }) => dashText(getRowVal(row.original, "ShapeId", "shapeId")) },
             { header: t("Size"), accessorKey: "SizeId", cell: ({ row }) => dashText(getRowVal(row.original, "SizeId", "sizeId")) },
             { header: t("Color"), accessorKey: "ColorId", cell: ({ row }) => dashText(getRowVal(row.original, "ColorId", "colorId")) },
@@ -608,7 +608,7 @@ const MixPurRtnReport = () => {
             { header: t("Sieve"), accessorKey: "SieveId", cell: ({ row }) => dashText(getRowVal(row.original, "SieveId", "sieveId")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
             {
-                header: t("LotNo"),
+                header: t("Lot No"),
                 accessorKey: "Lotno",
                 cell: ({ row }) => {
                     const val = getRowVal(row.original, "Lotno", "lotno", "Item", "item");
@@ -617,12 +617,12 @@ const MixPurRtnReport = () => {
                 }
             },
             {
-                header: t("IssueCarats"),
+                header: t("Issue Carats"),
                 accessorKey: "IssueCarats",
                 cell: ({ row }) => formatCarat(getRowVal(row.original, "IssueCarats", "issueCarats"), caratFormat)
             },
             {
-                header: t("RejeP"),
+                header: t("Reje P"),
                 accessorKey: "Discount",
                 cell: ({ row }) => fmtFixed(getRowVal(row.original, "Discount", "discount"), 2)
             },
@@ -659,9 +659,9 @@ const MixPurRtnReport = () => {
                 }
             },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("Less1"), accessorKey: "Less1", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
-            { header: t("Less2"), accessorKey: "Less2", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
-            { header: t("Less3"), accessorKey: "Less3", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
+            { header: t("Less 1"), accessorKey: "Less1", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
+            { header: t("Less 2"), accessorKey: "Less2", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
+            { header: t("Less 3"), accessorKey: "Less3", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
             {
                 header: masterAmtHeader,
                 accessorKey: "MasterCurrencyAmount",
@@ -680,7 +680,7 @@ const MixPurRtnReport = () => {
                     return <span className="fw-bold text-end d-block">{fmtFixed(parentUSD, 2)}</span>;
                 }
             },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
         ],
         [expandedInvnos, t, masterAmtHeader, stockAmtHeader, caratFormat]
     );
@@ -693,28 +693,28 @@ const MixPurRtnReport = () => {
 
         const headers = [
             "Date",
-            "InvNo",
-            "BillNo",
+            "Inv No",
+            "Bill No",
             "Shape",
             "Size",
             "Color",
             "Clarity",
             "Sieve",
             "Party",
-            "LotNo",
-            "IssueCarats",
-            "RejeP",
+            "Lot No",
+            "Issue Carats",
+            "Reje P",
             "Rejection",
             "Selection Carats",
             "Rate",
             "Amount",
             "Broker",
-            "Less1",
-            "Less2",
-            "Less3",
+            "Less 1",
+            "Less 2",
+            "Less 3",
             masterAmtHeader,
             stockAmtHeader,
-            "StockType"
+            "Stock Type"
         ];
 
         const rows = filteredReportRows.map((row) => [
