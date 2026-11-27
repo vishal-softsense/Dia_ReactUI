@@ -1,5 +1,5 @@
 import React from "react";
-import { fmt, fmtNum, getVal } from "../shared/printUtils";
+import { fmt, fmtSolitaireCarat, fmtNum, getVal } from "../shared/printUtils";
 import deltaQr from "../../assets/images/print/deltaqr.png";
 import deltaInstaQr from "../../assets/images/print/delta.png";
 
@@ -300,7 +300,7 @@ const MemoCopy = ({
                     {getVal(item, "FLId", "flId", "fl")}
                   </td>
                   <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
-                    {fmt(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                    {fmtSolitaireCarat(getVal(item, "Carats", "carats", "Weight", "weight"))}
                   </td>
                   <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
                     {fmtNum(getVal(item, "Rate", "rate"), 2)}
@@ -340,7 +340,7 @@ const MemoCopy = ({
                     Total Carats :
                   </td>
                   <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
-                    {fmt(totals.wt, 2)}
+                    {fmtSolitaireCarat(totals.wt)}
                   </td>
                   <td colSpan={2} style={{ border: "1px solid #999", textAlign: "right", paddingRight: 15 }}>
                     US $ :

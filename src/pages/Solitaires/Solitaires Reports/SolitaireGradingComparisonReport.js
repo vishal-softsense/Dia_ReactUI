@@ -26,6 +26,8 @@ import {
   makeSolitaireLabWeightDiffEntry
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 
 const fmtNum = (value, decimals = 2) => {
   if (value === null || value === undefined || value === "") return "-";
@@ -187,9 +189,15 @@ const formatLocalDate = (date) => {
 
 
 
-const CompareCell = ({ value, colorFlag, boldFlag, decimals, align = "center" }) => {
+const CompareCell = ({ value, colorFlag, boldFlag, decimals, isCarat = false, caratFormat, align = "center" }) => {
   const colorInfo = compareBg(colorFlag);
-  const rawDisplay = decimals !== undefined ? fmtNum(value, decimals) : (value === "" || value === null || value === undefined ? "-" : value);
+  const rawDisplay = isCarat
+    ? (value === "" || value === null || value === undefined || Number.isNaN(Number(value))
+        ? "-"
+        : formatCarat(value, caratFormat ?? getCachedCaratFormat("solitaire")))
+    : decimals !== undefined
+      ? fmtNum(value, decimals)
+      : (value === "" || value === null || value === undefined ? "-" : value);
   const isEmpty = rawDisplay === "-";
 
   const style = {
@@ -226,6 +234,7 @@ const getGradingCompTableTotals = (table) => {
 
 const SolitaireGradingComparisonReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -639,14 +648,16 @@ const SolitaireGradingComparisonReport = () => {
           <CompareCell
             value={getRowVal(row.original, "carats", "Carats")}
             colorFlag={getRowVal(row.original, "colorCarats", "ColorCarats")}
-            decimals={3}
+            isCarat={true}
+            caratFormat={caratFormat}
             align="right"
           />
         ),
         footer: ({ table }) => (
           <CompareCell
             value={getGradingCompTableTotals(table).totalCarats}
-            decimals={3}
+            isCarat={true}
+            caratFormat={caratFormat}
             align="right"
             boldFlag={true}
           />
@@ -863,7 +874,7 @@ const SolitaireGradingComparisonReport = () => {
         cell: ({ row }) => <CompareCell value={getRowVal(row.original, "fees", "Fees")} decimals={2} align="right" />
       }
     ],
-    [t, lotFinancialMap]
+    [t, lotFinancialMap, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -878,6 +889,7 @@ const SolitaireGradingComparisonReport = () => {
         const key = col.accessorKey;
         const pascal = key.charAt(0).toUpperCase() + key.slice(1);
         if (key === "gDate") return formatGDate(getRowVal(row, "gDate", "GDate"));
+        if (key === "carats") return formatCarat(getRowVal(row, "carats", "Carats"), caratFormat);
         if (key === "rate") return getDisplayRate(row, lotFinancialMap);
         if (key === "amount") return getDisplayAmount(row, lotFinancialMap);
         if (key === "back") return getDisplayBack(row, lotFinancialMap);
@@ -1151,13 +1163,13 @@ const SolitaireGradingComparisonReport = () => {
                                   </td>
                                   <td>{idx + 1}</td>
                                   <td>{lotNo || "-"}</td>
-                                  <td className="text-end">{oldWeight.toFixed(3)}</td>
-                                  <td className="text-end">{newWeight.toFixed(3)}</td>
+                                  <td className="text-end">{formatCarat(oldWeight, caratFormat)}</td>
+                                  <td className="text-end">{formatCarat(newWeight, caratFormat)}</td>
                                   <td
                                     className="text-end fw-semibold"
                                     style={{ color: getDiffColor(oldWeight, newWeight) }}
                                   >
-                                    {difference.toFixed(3)}
+                                    {formatCarat(difference, caratFormat)}
                                   </td>
                                 </tr>
                               );
@@ -1185,7 +1197,7 @@ const SolitaireGradingComparisonReport = () => {
                       </span>
                       <div className="d-flex flex-wrap justify-content-end gap-4">
                         <span>{t("Total")}:</span>
-                        <span>{t("Carats")}: {footerTotals.caratTotal.toFixed(2)}</span>
+                        <span>{t("Carats")}: {formatCarat(footerTotals.caratTotal, caratFormat)}</span>
                         <span>{t("Rate")}: {footerTotals.rate.toFixed(2)}</span>
                         <span>{t("Amount")}: {footerTotals.amtTotal.toFixed(2)}</span>
                       </div>

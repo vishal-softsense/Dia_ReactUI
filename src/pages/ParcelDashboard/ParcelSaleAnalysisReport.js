@@ -31,7 +31,10 @@ import {
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../Components/Hooks/useCompanyCurrencySymbols";
 import { exportToExcel } from "../../helpers/excel_helper";
+import useCaratFormat from "../../Components/Hooks/useCaratFormat";
+import { formatCarat, truncateCaratNumber } from "../../helpers/caratFormatDefaults";
 import ParcelSalePivotReport from "./ParcelSalePivotReport";
 import "chart.js/auto";
 
@@ -116,6 +119,10 @@ const SALE_ANA_OPTIONS = [
 
 const ParcelSaleAnalysisReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const mSym = masterSymbol || t("Master");
+  const sSym = stockSymbol || t("Stock");
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
@@ -526,7 +533,7 @@ const ParcelSaleAnalysisReport = () => {
       case "carats": {
         const raw = pick(row, "Carats", "carats");
         if (raw === undefined || raw === null) return [];
-        const f = fmtFloat(raw);
+        const f = formatCarat(raw, caratFormat);
         return [String(raw), f];
       }
       case "caratsPer": {
@@ -736,15 +743,15 @@ const ParcelSaleAnalysisReport = () => {
     const headers = [
       activeReportType,
       "Pcs", "Pcs%", "Carats", "Carats%",
-      "Sale Amt $", "Sale%", "PL $", "$ PL%", "COGS $", "PL % On COGS $",
-      "Sale Amt INR", "Sale%", "PL INR", "INR PL%", "COGS INR", "PL % On COGS INR"
+      `Sale Amt ${sSym}`, "Sale%", `PL ${sSym}`, `${sSym} PL%`, `COGS ${sSym}`, `PL % On COGS ${sSym}`,
+      `Sale Amt ${mSym}`, "Sale%", `PL ${mSym}`, `${mSym} PL%`, `COGS ${mSym}`, `PL % On COGS ${mSym}`
     ];
 
     const rows = filteredData.map((row) => [
       getGroupingValue(row, activeReportType),
       pick(row, "Pcs", "pcs") ?? 0,
       pick(row, "PcsPer", "pcsPer") ?? 0,
-      pick(row, "Carats", "carats") ?? 0,
+      truncateCaratNumber(pick(row, "Carats", "carats") ?? 0, caratFormat),
       pick(row, "Caratsper", "caratsper") ?? 0,
       pick(row, "SaleAmtdollar", "saleAmtdollar") ?? 0,
       pick(row, "Saleperdollar", "saleperdollar") ?? 0,
@@ -762,7 +769,7 @@ const ParcelSaleAnalysisReport = () => {
 
     rows.push([
       "Total",
-      totals.pcs, "", fmtFloat(totals.carats), "",
+      totals.pcs, "", truncateCaratNumber(totals.carats, caratFormat), "",
       fmtFloat(totals.saleAmtdollar), "", fmtFloat(totals.plDollar), "", fmtFloat(totals.cOGSdollar), "",
       fmtFloat(totals.saleAmtINR), "", fmtFloat(totals.plINR), "", fmtFloat(totals.cOGSINR), ""
     ]);
@@ -1370,18 +1377,18 @@ const ParcelSaleAnalysisReport = () => {
                               <th>{t("Pcs%")}</th>
                               <th>{t("Carats")}</th>
                               <th>{t("Carats%")}</th>
-                              <th className="header-bg-sale-pl">{t("Sale Amt $")}</th>
+                              <th className="header-bg-sale-pl">{`Sale Amt ${sSym}`}</th>
                               <th className="header-bg-sale-pl">{t("Sale%")}</th>
-                              <th>{t("PL $")}</th>
-                              <th>{t("$ PL%")}</th>
-                              <th>{t("COGS $")}</th>
-                              <th>{t("PL % On COGS $")}</th>
-                              <th className="header-bg-sale-pl">{t("Sale Amt INR")}</th>
+                              <th>{`PL ${sSym}`}</th>
+                              <th>{`${sSym} PL%`}</th>
+                              <th>{`COGS ${sSym}`}</th>
+                              <th>{`PL % On COGS ${sSym}`}</th>
+                              <th className="header-bg-sale-pl">{`Sale Amt ${mSym}`}</th>
                               <th className="header-bg-sale-pl">{t("Sale%")}</th>
-                              <th>{t("PL INR")}</th>
-                              <th>{t("INR PL%")}</th>
-                              <th>{t("COGS INR")}</th>
-                              <th>{t("PL % On COGS INR")}</th>
+                              <th>{`PL ${mSym}`}</th>
+                              <th>{`${mSym} PL%`}</th>
+                              <th>{`COGS ${mSym}`}</th>
+                              <th>{`PL % On COGS ${mSym}`}</th>
                             </tr>
                             <tr>
                               <th className="p-1">
@@ -1447,7 +1454,7 @@ const ParcelSaleAnalysisReport = () => {
                                   <td className="text-start"><b>{getGroupingValue(row, activeReportType)}</b></td>
                                   <td>{fmtInt(pick(row, "Pcs", "pcs"))}</td>
                                   <td>{fmtFloat(pick(row, "PcsPer", "pcsPer"))}%</td>
-                                  <td>{fmtFloat(pick(row, "Carats", "carats"))}</td>
+                                  <td>{formatCarat(pick(row, "Carats", "carats"), caratFormat)}</td>
                                   <td>{fmtFloat(pick(row, "Caratsper", "caratsper"))}%</td>
                                   <td className="cell-bg-sale-pl">{fmtCurrency(pick(row, "SaleAmtdollar", "saleAmtdollar"))}</td>
                                   <td className="cell-bg-sale-pl">{fmtFloat(pick(row, "Saleperdollar", "saleperdollar"))}%</td>
@@ -1471,7 +1478,7 @@ const ParcelSaleAnalysisReport = () => {
                                 <td className="text-start">{t("Total")}</td>
                                 <td>{fmtInt(totals.pcs)}</td>
                                 <td>-</td>
-                                <td>{fmtFloat(totals.carats)}</td>
+                                <td>{formatCarat(totals.carats, caratFormat)}</td>
                                 <td>-</td>
                                 <td>{fmtCurrency(totals.saleAmtdollar)}</td>
                                 <td>-</td>

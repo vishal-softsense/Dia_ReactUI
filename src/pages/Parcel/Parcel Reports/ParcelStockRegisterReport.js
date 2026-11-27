@@ -17,6 +17,8 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getParcelStockHistoryReport,
   getParcelStockRegisterDropdowns,
@@ -266,6 +268,7 @@ const mapDropdownItems = (items) => {
 
 const ParcelStockRegisterReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
 
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -688,7 +691,6 @@ const ParcelStockRegisterReport = () => {
       "BalanceAmount"
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -717,14 +719,14 @@ const ParcelStockRegisterReport = () => {
           item.trntype || "",
           item.invno ?? "",
           item.perticulors || "",
-          fmtFixed(item.inCts, caratDecimals),
+          formatCarat(item.inCts, caratFormat),
           fmtFixed(item.inRate, priceDecimals),
           fmtFixed(item.inAmount, amtDecimals),
-          fmtFixed(item.outCts, caratDecimals),
+          formatCarat(item.outCts, caratFormat),
           fmtFixed(item.outRate, priceDecimals),
           fmtFixed(item.outAmount, amtDecimals),
           item.cogs || 0,
-          fmtFixed(item.balCts, caratDecimals),
+          formatCarat(item.balCts, caratFormat),
           fmtFixed(item.balRate, priceDecimals),
           fmtFixed(item.balAmount, amtDecimals)
         ]);
@@ -756,10 +758,10 @@ const ParcelStockRegisterReport = () => {
         "",
         "",
         "",
-        subtotal.InCts.toFixed(caratDecimals),
+        formatCarat(subtotal.InCts, caratFormat),
         subtotal.InRate.toFixed(priceDecimals),
         subtotal.InAmount.toFixed(amtDecimals),
-        subtotal.OutCts.toFixed(caratDecimals),
+        formatCarat(subtotal.OutCts, caratFormat),
         subtotal.OutRate.toFixed(priceDecimals),
         subtotal.OutAmount.toFixed(amtDecimals),
         "",
@@ -774,10 +776,10 @@ const ParcelStockRegisterReport = () => {
       "",
       "",
       "",
-      grandTotals.InCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.InCts, caratFormat),
       grandTotals.InRate.toFixed(priceDecimals),
       grandTotals.InAmount.toFixed(amtDecimals),
-      grandTotals.OutCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.OutCts, caratFormat),
       grandTotals.OutRate.toFixed(priceDecimals),
       grandTotals.OutAmount.toFixed(amtDecimals),
       "",
@@ -819,7 +821,6 @@ const ParcelStockRegisterReport = () => {
       { header: "BalanceAmount", key: "balAmount", numeric: true }
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
     const sumKeys = columns.filter((c) => c.sum).map((c) => c.key);
@@ -830,8 +831,10 @@ const ParcelStockRegisterReport = () => {
     });
     const opStkDate = formatDateYMDToDMY(filters.fromDate);
 
+    const isCaratCol = (key) => key === "inCts" || key === "outCts" || key === "balCts";
+
     const fmtCol = (key, val) => {
-      if (key === "inCts" || key === "outCts" || key === "balCts") return fmtFixed(val, caratDecimals);
+      if (isCaratCol(key)) return formatCarat(val, caratFormat);
       if (key === "inAmount" || key === "outAmount" || key === "balAmount") return fmtFixed(val, amtDecimals);
       if (key === "inRate" || key === "outRate" || key === "balRate" || key === "cogs") {
         return fmtFixed(val, priceDecimals);
@@ -839,8 +842,10 @@ const ParcelStockRegisterReport = () => {
       return val ?? "";
     };
 
+    const fmtSummaryCol = (key, val) =>
+      isCaratCol(key) ? formatCarat(val, caratFormat) : Number(val || 0).toFixed(decFor(key));
+
     const decFor = (key) => {
-      if (key === "inCts" || key === "outCts" || key === "balCts") return caratDecimals;
       if (key === "inAmount" || key === "outAmount" || key === "balAmount") return amtDecimals;
       return priceDecimals;
     };
@@ -975,7 +980,7 @@ const ParcelStockRegisterReport = () => {
                       {columns.slice(3).map((col) =>
                         sumKeys.includes(col.key) ? (
                           <td key={col.key} style={{ textAlign: "right", fontWeight: "bold" }}>
-                            {subtotal[col.key].toFixed(decFor(col.key))}
+                            {fmtSummaryCol(col.key, subtotal[col.key])}
                           </td>
                         ) : (
                           <td key={col.key} />
@@ -993,7 +998,7 @@ const ParcelStockRegisterReport = () => {
                 {columns.slice(3).map((col) =>
                   sumKeys.includes(col.key) ? (
                     <td key={col.key} style={{ textAlign: "right", fontWeight: "bold" }}>
-                      {grandTotals[col.key].toFixed(decFor(col.key))}
+                      {fmtSummaryCol(col.key, grandTotals[col.key])}
                     </td>
                   ) : (
                     <td key={col.key} />

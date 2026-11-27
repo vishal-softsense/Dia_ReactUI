@@ -1,6 +1,8 @@
 import React from "react";
 import {
   fmt,
+  fmtSolitaireCarat,
+  fmtSolitaireCaratNum,
   fmtDateMMM,
   fmtNum,
   getVal,
@@ -243,7 +245,7 @@ const SaleUsaFormat = ({ data, items, company, logoUrl }) => {
                     <td style={cell}>{getVal(item, "PolishId", "polishId")}</td>
                     <td style={cell}>{getVal(item, "SymId", "symId")}</td>
                     <td style={cell}>{getVal(item, "FLId", "flId")}</td>
-                    <td style={cell}>{fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}</td>
+                    <td style={cell}>{fmtSolitaireCarat(getVal(item, "Weight", "weight", "Carats", "carats"))}</td>
                     <td style={cell}>
                       {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
                     </td>
@@ -285,7 +287,7 @@ const SaleUsaFormat = ({ data, items, company, logoUrl }) => {
                         }}
                       >
                         <span style={{ float: "left", paddingLeft: 16 }}>Total Carats :</span>
-                        <span style={{ float: "right", fontSize: 13 }}>{fmtNum(totalWt, 2)}</span>
+                        <span style={{ float: "right", fontSize: 13 }}>{fmtSolitaireCaratNum(totalWt)}</span>
                       </td>
                       <td colSpan={3} style={{ ...cell, borderTop: "2px solid #999", fontWeight: "bold" }}>
                         <span style={{ float: "left", paddingLeft: 12, fontSize: 9 }}>US $ :</span>

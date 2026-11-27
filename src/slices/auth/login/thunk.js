@@ -8,6 +8,8 @@ import {
 } from "../../../helpers/fakebackend_helper";
 
 import { loginSuccess, logoutUserSuccess, apiError, reset_login_flag } from './reducer';
+import { clearCachedReportCompany } from "../../../helpers/reportCompanyDefaults";
+import { clearCachedCaratFormat, setCachedCaratFormats } from "../../../helpers/caratFormatDefaults";
 
 export const loginUser = (user, history, rememberMe) => async (dispatch) => {
   try {
@@ -20,6 +22,22 @@ export const loginUser = (user, history, rememberMe) => async (dispatch) => {
     var data = await response;
 
     if (data) {
+      clearCachedReportCompany({ dispatchEvent: false });
+      const loginUserObj = data.user || data.User || {};
+      const loginDefaultFormat = loginUserObj.caratFormatNew || loginUserObj.CaratFormatNew;
+      const loginSolitaireFormat = loginUserObj.solitaireCaratFormat || loginUserObj.SolitaireCaratFormat || loginDefaultFormat;
+      const loginParcelFormat = loginUserObj.parcelCaratFormat || loginUserObj.ParcelCaratFormat || loginDefaultFormat;
+      clearCachedCaratFormat({ dispatchEvent: false });
+      if (loginDefaultFormat || loginSolitaireFormat || loginParcelFormat) {
+        setCachedCaratFormats(
+          {
+            defaultFormat: loginDefaultFormat || loginParcelFormat || loginSolitaireFormat,
+            solitaire: loginSolitaireFormat,
+            parcel: loginParcelFormat,
+          },
+          { dispatchEvent: false }
+        );
+      }
       data = {
           ...data,
           token: data.token || data.Token,
@@ -50,6 +68,8 @@ export const logoutUser = () => async (dispatch) => {
     localStorage.removeItem("authUser");
     sessionStorage.removeItem("sidebar_menu_data");
     localStorage.removeItem("sidebar_menu_data");
+    clearCachedReportCompany({ dispatchEvent: false });
+    clearCachedCaratFormat({ dispatchEvent: false });
     let fireBaseBackend = getFirebaseBackend();
     if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
       const response = fireBaseBackend.logout;

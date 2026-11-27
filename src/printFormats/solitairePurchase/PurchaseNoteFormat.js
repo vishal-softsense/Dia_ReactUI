@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  fmtSolitaireCaratNum,
   fmtDateSlash,
   fmtNum,
   getPrintAmountHeader,
@@ -272,7 +273,7 @@ const PurchaseNoteFormat = ({ data, items, totals, company, logoUrl }) => {
                       {getVal(it, "Qty", "qty", "Pcs", "pcs")}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[4], textAlign: "right" }}>
-                      {fmtNum(getVal(it, "Weight", "weight", "Carats", "carats"), 2)}
+                      {fmtSolitaireCaratNum(getVal(it, "Weight", "weight", "Carats", "carats"))}
                     </td>
                     <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[5], textAlign: "right" }}>
                       {fmtNum(getVal(it, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
@@ -324,7 +325,7 @@ const PurchaseNoteFormat = ({ data, items, totals, company, logoUrl }) => {
                         padding: "2px 6px"
                       }}
                     >
-                      {fmtNum(totals.wt, 2)}
+                      {fmtSolitaireCaratNum(totals.wt)}
                     </td>
                     <td
                       style={{

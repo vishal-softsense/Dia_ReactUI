@@ -16,6 +16,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireKapanSummaryReport } from "../../../helpers/fakebackend_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const getRowVal = (row, ...keys) => {
   if (!row || typeof row !== "object") return "";
@@ -64,6 +66,7 @@ const calcTotals = (kapan) => {
 
 const SolitaireKapanSummaryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
@@ -135,10 +138,10 @@ const SolitaireKapanSummaryReport = () => {
       ]);
       rows.push([
         "Carats",
-        fmt(num(kapan, "OP_Carats"), 3),
-        fmt(num(kapan, "Sale_Carats"), 3),
-        fmt(num(kapan, "Stock_Carats"), 3),
-        fmt(num(kapan, "MemoOut_Carats"), 3)
+        formatCarat(num(kapan, "OP_Carats"), caratFormat),
+        formatCarat(num(kapan, "Sale_Carats"), caratFormat),
+        formatCarat(num(kapan, "Stock_Carats"), caratFormat),
+        formatCarat(num(kapan, "MemoOut_Carats"), caratFormat)
       ]);
       rows.push([
         "Amount",
@@ -177,7 +180,7 @@ const SolitaireKapanSummaryReport = () => {
 
     const res = await exportToExcel(headers, rows, "Kapan_Summary", "Kapan-Summary");
     if (!res?.success) toast.error(t("Excel export failed."));
-  }, [reportRows, t]);
+  }, [reportRows, t, caratFormat]);
 
   const handlePrint = () => {
     const node = printRef.current;
@@ -264,6 +267,7 @@ const SolitaireKapanSummaryReport = () => {
 
   const formatCell = (kapan, metric, colKey) => {
     const value = num(kapan, ...(metric.keys[colKey] || []));
+    if (metric.label === "Carats") return formatCarat(value, caratFormat);
     return metric.decimals === 0 ? Math.round(value) : fmt(value, metric.decimals);
   };
 

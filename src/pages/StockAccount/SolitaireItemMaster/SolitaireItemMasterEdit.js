@@ -7,6 +7,8 @@ import Select from "react-select";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getSolitaireItemMasterDropdowns, checkSolitaireLotNoExists, getSolitaireItemMasterDetail, updateSolitaireItemMaster, previewSolitaireItem } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from 'react-toastify';
+import { sanitizeCaratInput } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const formatDateForInput = (dateVal) => {
     if (!dateVal) {
@@ -36,6 +38,7 @@ const formatDateForInput = (dateVal) => {
 
 const SolitaireItemMasterEdit = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat("solitaire");
     const navigate = useNavigate();
 
     const query = new URLSearchParams(window.location.search);
@@ -541,8 +544,9 @@ const SolitaireItemMasterEdit = () => {
     };
 
     const handleValueChange = (field, value) => {
+        const nextVal = field === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
         setForm(prev => {
-            const updated = { ...prev, [field]: value };
+            const updated = { ...prev, [field]: nextVal };
             const getNum = (val) => parseFloat(val) || 0;
 
             const weightVal = getNum(updated.weight);
@@ -1066,8 +1070,8 @@ const SolitaireItemMasterEdit = () => {
                                                 <FormGroup>
                                                     <Label>{t("Opening Weight")}</Label>
                                                     <Input
-                                                        type="number"
-                                                        step="any"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         value={form.weight}
                                                         onChange={(e) => handleValueChange("weight", e.target.value)}
                                                     />

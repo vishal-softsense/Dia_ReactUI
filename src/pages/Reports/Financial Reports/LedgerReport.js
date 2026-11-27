@@ -17,12 +17,12 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 import {
     getAccGrpMasters,
     getLedgerReportList1,
     getLedgerReportLists,
-    getLedgerReportPrintJS,
-    getSettingData
+    getLedgerReportPrintJS
 } from "../../../helpers/fakebackend_helper";
 import {
     getCachedReportCompany,
@@ -467,7 +467,7 @@ const fmtCarats = (value) => {
     if (value === null || value === undefined || value === "") return "";
     const num = Number(value);
     if (Number.isNaN(num)) return String(value);
-    return String(num);
+    return formatCarat(num, getCachedCaratFormat());
 };
 
 const fmtAmt = (value) => {
@@ -622,48 +622,19 @@ const LedgerReport = () => {
     const [dualRows, setDualRows] = useState([]);
     const [runningRows, setRunningRows] = useState([]);
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
-    const [stockSymbol, setStockSymbol] = useState("");
-    const [masterSymbol, setMasterSymbol] = useState("");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
 
     const loadSymbols = useCallback(async () => {
-        try {
-            const cached = getCachedReportCompany();
-            let sSym = cached.stockSymbol || "";
-            let mSym = "";
-
-            const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-            sSym = sSym || auth?.SSymbol || auth?.sSymbol || auth?.data?.SSymbol || "";
-            mSym = auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "";
-
-            try {
-                const settings = await getSettingData();
-                const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-                const pick = (name) => {
-                    const target = String(name).toLowerCase();
-                    const row = rows.find(
-                        (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                    );
-                    return row?.Value ?? row?.value ?? "";
-                };
-                sSym = pick("SSymbol") || sSym;
-                mSym = pick("MSymbol") || mSym;
-            } catch {
-                /* ignore */
-            }
-
-            setStockSymbol(sSym || "USD");
-            setMasterSymbol(mSym || "INR");
-        } catch {
-            setStockSymbol("USD");
-            setMasterSymbol("INR");
-        }
+        const company = await getReportCompanySettings({ forceRefresh: true });
+        if (company) setCompanyInfo(company);
+        const cached = getCachedReportCompany();
+        setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+        setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
     }, []);
 
     useEffect(() => {
         loadSymbols();
-        getReportCompanySettings({ forceRefresh: true })
-            .then((c) => setCompanyInfo(c || getCachedReportCompany()))
-            .catch(() => setCompanyInfo(getCachedReportCompany()));
     }, [loadSymbols]);
 
     useEffect(() => {
@@ -1069,16 +1040,16 @@ ${printArea.innerHTML}
                         <th>{t("VType")}</th>
                         <th>{t("Debit Account")}</th>
                         <th>{t("Carats")}</th>
-                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("USD Amt")}</th>
-                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("INR Amt")}</th>
+                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt")}</th>
+                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("Master Amt")}</th>
                         <th>{t("Description")}</th>
                         <th>{t("Date")}</th>
                         <th>{t("Due Date")}</th>
                         <th>{t("VType")}</th>
                         <th>{t("Credit Account")}</th>
                         <th>{t("Carats")}</th>
-                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("USD Amt")}</th>
-                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("INR Amt")}</th>
+                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt")}</th>
+                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("Master Amt")}</th>
                         <th>{t("Description")}</th>
                     </tr>
                 </thead>
@@ -1198,11 +1169,11 @@ ${printArea.innerHTML}
                         <th>{t("jvdate")}</th>
                         <th>{t("type")}</th>
                         <th>{t("description")}</th>
-                        <th>{`debit ${stockSymbol} `}</th>
-                        <th>{`credit ${stockSymbol} `}</th>
+                        <th>{`debit ${stockSymbol || "Stock"} `}</th>
+                        <th>{`credit ${stockSymbol || "Stock"} `}</th>
                         <th>{t("cL balance")}</th>
-                        <th>{`debit ${masterSymbol} `}</th>
-                        <th>{`credit ${masterSymbol} `}</th>
+                        <th>{`debit ${masterSymbol || "Master"} `}</th>
+                        <th>{`credit ${masterSymbol || "Master"} `}</th>
                         <th>{t("c balance")}</th>
                     </tr>
                 </thead>

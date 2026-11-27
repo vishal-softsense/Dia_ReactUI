@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from "react";
+import { formatCarat, getCachedCaratFormat } from "../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../Components/Hooks/useCaratFormat";
 
 const MonthAnalysisPivotView = ({
   data = [],
@@ -7,6 +9,7 @@ const MonthAnalysisPivotView = ({
   chkPayable = false,
   chkReceivable = false
 }) => {
+  const { caratFormat } = useCaratFormat("solitaire");
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
   const heatmapEnabledRef = useRef(false);
@@ -502,7 +505,7 @@ const MonthAnalysisPivotView = ({
         args.formattedText = `
           <div style="text-align:center; font-weight:${bold}">
             <div>pcs: ${totalPcs}</div>
-            <div>cts: ${fmt(totalCts)}</div>
+            <div>cts: ${formatCarat(totalCts, caratFormat)}</div>
             <div>disc: ${avgDisc}%</div>
             <div>amt: ${fmt(totalAmt)}</div>
             <div>rate: ${fmt(totalRate)}</div>
@@ -544,7 +547,7 @@ const MonthAnalysisPivotView = ({
             const parts = args.value.split("_").map((p) => parseFloat(p) || 0);
             const lines = [];
             if (parts[0] !== 0) lines.push(`P: ${parts[0].toFixed(2)}`);
-            if (parts[1] !== 0) lines.push(`C: ${parts[1].toFixed(2)}`);
+            if (parts[1] !== 0) lines.push(`C: ${formatCarat(parts[1], caratFormat)}`);
             if (parts[2] !== 0) lines.push(`${parts[2].toFixed(2)}%`);
             if (parts[3] !== 0) lines.push(`$${parts[3].toFixed(2)} `);
             if (parts[4] !== 0) lines.push(`${parts[4].toFixed(2)}`);
@@ -561,7 +564,7 @@ const MonthAnalysisPivotView = ({
             const parts = args.value.split("_").map((p) => parseFloat(p) || 0);
             const lines = [];
             if (parts[0] !== 0) lines.push(`${parts[0].toFixed(2)}`);
-            if (parts[1] !== 0) lines.push(`${parts[1].toFixed(2)}`);
+            if (parts[1] !== 0) lines.push(`${formatCarat(parts[1], caratFormat)}`);
             if (parts[2] !== 0) lines.push(`${parts[2].toFixed(2)}%`);
             if (parts[3] !== 0) lines.push(`$${parts[3].toFixed(2)}`);
             if (parts[4] !== 0) lines.push(`${parts[4].toFixed(2)}`);
@@ -738,7 +741,7 @@ const MonthAnalysisPivotView = ({
     return () => {
       destroyPivot();
     };
-  }, [data, reportType, groupBy, chkPayable, chkReceivable, isPurSaleMode]);
+  }, [data, reportType, groupBy, chkPayable, chkReceivable, isPurSaleMode, caratFormat]);
 
   return (
     <div className="month-analysis-pivot-wrap" style={{ width: "100%" }}>

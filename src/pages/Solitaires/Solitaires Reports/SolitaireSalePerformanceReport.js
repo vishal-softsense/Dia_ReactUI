@@ -26,6 +26,9 @@ import {
   getSolitaireSalePerformanceReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const CYAN_BG = "rgb(204, 255, 255)";
 const BLUE_BG = "rgb(153, 204, 255)";
@@ -140,6 +143,10 @@ const stockPricesOptions = [
 
 const SolitaireSalePerformanceReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const mSym = masterSymbol || t("Master");
+  const sSym = stockSymbol || t("Stock");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -416,10 +423,10 @@ const SolitaireSalePerformanceReport = () => {
         accessorKey: "pCarats",
         className: "text-end",
         cell: ({ row }) =>
-          cellWithBg(fmtFixed(getRowVal(row.original, "pCarats", "PCarats"), 2), CYAN_BG),
+          cellWithBg(formatCarat(getRowVal(row.original, "pCarats", "PCarats"), caratFormat), CYAN_BG),
         footer: ({ table }) => {
           const { totalPCarats } = getSalePerformanceTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalPCarats, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalPCarats, caratFormat)}</span>;
         }
       },
       {
@@ -450,7 +457,7 @@ const SolitaireSalePerformanceReport = () => {
           cellWithBg(fmtFixed(getRowVal(row.original, "purPrice", "PurPrice"), 2), BLUE_BG)
       },
       {
-        header: t("Pur.USD"),
+        header: `Pur.${sSym}`,
         accessorKey: "purDollar",
         className: "text-end",
         cell: ({ row }) =>
@@ -468,32 +475,32 @@ const SolitaireSalePerformanceReport = () => {
           cellWithBg(fmtFixed(getRowVal(row.original, "purBaseRate", "PurBaseRate"), 2), BLUE_BG)
       },
       {
-        header: t("Pur.INR"),
+        header: `Pur.${mSym}`,
         accessorKey: "purRs",
         className: "text-end",
         cell: ({ row }) =>
           cellWithBg(fmtFixed(getRowVal(row.original, "purRs", "PurRs"), 2), BLUE_BG)
       },
       {
-        header: t("Cert Exp USD"),
+        header: `Cert Exp ${sSym}`,
         accessorKey: "certExpdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "certExpdollar", "CertExpdollar"), 2), PINK_BG)
       },
       {
-        header: t("Cert Exp INR"),
+        header: `Cert Exp ${mSym}`,
         accessorKey: "certExpRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "certExpRs", "CertExpRs"), 2), PINK_BG)
       },
       {
-        header: t("Pur Cost USD"),
+        header: `Pur Cost ${sSym}`,
         accessorKey: "purCostdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "purCostdollar", "PurCostdollar"), 2), PINK_BG)
       },
       {
-        header: t("Pur Cost INR"),
+        header: `Pur Cost ${mSym}`,
         accessorKey: "purCostRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "purCostRs", "PurCostRs"), 2), PINK_BG)
@@ -517,7 +524,7 @@ const SolitaireSalePerformanceReport = () => {
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "salePrice", "SalePrice"), 2), ORANGE_BG)
       },
       {
-        header: t("Sale USD"),
+        header: `Sale ${sSym}`,
         accessorKey: "saledollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "saledollar", "Saledollar"), 2), ORANGE_BG),
@@ -533,13 +540,13 @@ const SolitaireSalePerformanceReport = () => {
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "baseRate", "BaseRate"), 2), ORANGE_BG)
       },
       {
-        header: t("Sale INR"),
+        header: `Sale ${mSym}`,
         accessorKey: "saleRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "saleRs", "SaleRs"), 2), ORANGE_BG)
       },
       {
-        header: t("PL USD"),
+        header: `PL ${sSym}`,
         accessorKey: "pLdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "pLdollar", "PLdollar"), 2), GREEN_BG),
@@ -549,85 +556,85 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("PL USD Per"),
+        header: `PL ${sSym} Per`,
         accessorKey: "pLdollarper",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "pLdollarper", "PLdollarper"), 2), GREEN_BG)
       },
       {
-        header: t("PL INR"),
+        header: `PL ${mSym}`,
         accessorKey: "pLRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "pLRs", "PLRs"), 2), GREEN_BG)
       },
       {
-        header: t("PL INR Per"),
+        header: `PL ${mSym} Per`,
         accessorKey: "pLRsper",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "pLRsper", "PLRsper"), 2), GREEN_BG)
       },
       {
-        header: t("Adat USD"),
+        header: `Adat ${sSym}`,
         accessorKey: "adatdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "adatdollar", "Adatdollar"), 2), LIGHT_BLUE_BG)
       },
       {
-        header: t("Adat INR"),
+        header: `Adat ${mSym}`,
         accessorKey: "adatRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "adatRs", "AdatRs"), 2), LIGHT_BLUE_BG)
       },
       {
-        header: t("Brokerage USD"),
+        header: `Brokerage ${sSym}`,
         accessorKey: "brokeragedollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "brokeragedollar", "Brokeragedollar"), 2), LIGHT_BLUE_BG)
       },
       {
-        header: t("Brokerage INR"),
+        header: `Brokerage ${mSym}`,
         accessorKey: "brokerageRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "brokerageRs", "BrokerageRs"), 2), LIGHT_BLUE_BG)
       },
       {
-        header: t("Tot Pur Cost USD"),
+        header: `Tot Pur Cost ${sSym}`,
         accessorKey: "totPurCostdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "totPurCostdollar", "TotPurCostdollar"), 2), YELLOW_BG)
       },
       {
-        header: t("Final PL USD"),
+        header: `Final PL ${sSym}`,
         accessorKey: "finalPLdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLdollar", "FinalPLdollar"), 2), YELLOW_BG)
       },
       {
-        header: t("Final PL USD Per"),
+        header: `Final PL ${sSym} Per`,
         accessorKey: "finalPLdollarper",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLdollarper", "FinalPLdollarper"), 2), YELLOW_BG)
       },
       {
-        header: t("Tot Pur Cost INR"),
+        header: `Tot Pur Cost ${mSym}`,
         accessorKey: "totPurCostRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "totPurCostRs", "TotPurCostRs"), 2), CYAN_BG)
       },
       {
-        header: t("Final PL INR"),
+        header: `Final PL ${mSym}`,
         accessorKey: "finalPLRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLRs", "FinalPLRs"), 2), CYAN_BG)
       },
       {
-        header: t("Final PL INR Per"),
+        header: `Final PL ${mSym} Per`,
         accessorKey: "finalPLRsper",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLRsper", "FinalPLRsper"), 2), CYAN_BG)
       },
       {
-        header: t("Interest USD"),
+        header: `Interest ${sSym}`,
         accessorKey: "interestdollar",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "interestdollar", "Interestdollar"), 2), BRIGHT_YELLOW_BG),
@@ -639,13 +646,13 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("Tot Pur Cost USD With Int"),
+        header: `Tot Pur Cost ${sSym} With Int`,
         accessorKey: "totPurCostdollarWithInt",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "totPurCostdollarWithInt", "TotPurCostdollarWithInt"), 2), BRIGHT_YELLOW_BG)
       },
       {
-        header: t("Final PL USD After Int"),
+        header: `Final PL ${sSym} After Int`,
         accessorKey: "finalPLdollarAfterInt",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLdollarAfterInt", "FinalPLdollarAfterInt"), 2), BRIGHT_YELLOW_BG),
@@ -659,7 +666,7 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("Interest INR"),
+        header: `Interest ${mSym}`,
         accessorKey: "interestRs",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "interestRs", "InterestRs"), 2), BRIGHT_CYAN_BG),
@@ -669,13 +676,13 @@ const SolitaireSalePerformanceReport = () => {
         }
       },
       {
-        header: t("Tot Pur Cost INR With Int"),
+        header: `Tot Pur Cost ${mSym} With Int`,
         accessorKey: "totPurCostRsWithInt",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "totPurCostRsWithInt", "TotPurCostRsWithInt"), 2), BRIGHT_CYAN_BG)
       },
       {
-        header: t("Final PL INR After Int"),
+        header: `Final PL ${mSym} After Int`,
         accessorKey: "finalPLRsAfterInt",
         className: "text-end",
         cell: ({ row }) => cellWithBg(fmtFixed(getRowVal(row.original, "finalPLRsAfterInt", "FinalPLRsAfterInt"), 2), BRIGHT_CYAN_BG),
@@ -702,7 +709,7 @@ const SolitaireSalePerformanceReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "sizeId", "SizeId"))
       }
     ],
-    [t]
+    [t, mSym, sSym, caratFormat]
   );
 
   const excelHeaders = [
@@ -720,39 +727,39 @@ const SolitaireSalePerformanceReport = () => {
     "ProcessDays",
     "Pur.Date",
     "Pur.Price",
-    "Pur.USD",
+    `Pur.${sSym}`,
     "BaseRate",
-    "Pur.INR",
-    "Cert Exp USD",
-    "Cert Exp INR",
-    "Pur Cost USD",
-    "Pur Cost INR",
+    `Pur.${mSym}`,
+    `Cert Exp ${sSym}`,
+    `Cert Exp ${mSym}`,
+    `Pur Cost ${sSym}`,
+    `Pur Cost ${mSym}`,
     "Sale Due Date",
     "Sale Days",
     "Sale Price",
-    "Sale USD",
+    `Sale ${sSym}`,
     "BaseRate",
-    "Sale INR",
-    "PL USD",
-    "PL USD Per",
-    "PL INR",
-    "PL INR Per",
-    "Adat USD",
-    "Adat INR",
-    "Brokerage USD",
-    "Brokerage INR",
-    "Tot Pur Cost USD",
-    "Final PL USD",
-    "Final PL USD Per",
-    "Tot Pur Cost INR",
-    "Final PL INR",
-    "Final PL INR Per",
-    "Interest USD",
-    "Tot Pur Cost USD With Int",
-    "Final PL USD After Int",
-    "Interest INR",
-    "Tot Pur Cost INR With Int",
-    "Final PL INR After Int",
+    `Sale ${mSym}`,
+    `PL ${sSym}`,
+    `PL ${sSym} Per`,
+    `PL ${mSym}`,
+    `PL ${mSym} Per`,
+    `Adat ${sSym}`,
+    `Adat ${mSym}`,
+    `Brokerage ${sSym}`,
+    `Brokerage ${mSym}`,
+    `Tot Pur Cost ${sSym}`,
+    `Final PL ${sSym}`,
+    `Final PL ${sSym} Per`,
+    `Tot Pur Cost ${mSym}`,
+    `Final PL ${mSym}`,
+    `Final PL ${mSym} Per`,
+    `Interest ${sSym}`,
+    `Tot Pur Cost ${sSym} With Int`,
+    `Final PL ${sSym} After Int`,
+    `Interest ${mSym}`,
+    `Tot Pur Cost ${mSym} With Int`,
+    `Final PL ${mSym} After Int`,
     "Itemcode",
     "Kapan No",
     "Size Id"
@@ -774,7 +781,7 @@ const SolitaireSalePerformanceReport = () => {
       dashText(getRowVal(r, "PropId", "propId")),
       dashText(getRowVal(r, "PolishId", "polishId")),
       dashText(getRowVal(r, "SymId", "symId")),
-      fmtFixed(getRowVal(r, "PCarats", "pCarats"), 2),
+      formatCarat(getRowVal(r, "PCarats", "pCarats"), caratFormat),
       dashText(getRowVal(r, "ConsDate", "consDate")),
       dashText(getRowVal(r, "ProcessDays", "processDays")),
       dashText(getRowVal(r, "PDate", "pDate")),

@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, FALLBACK_USA_MEMO_INFORMATION, fmtDateSlash, fmtNum, getVal, paginateVariable } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, FALLBACK_USA_MEMO_INFORMATION, fmtCaratNum, fmtDateSlash, fmtNum, getVal, paginateVariable } from "../shared/printUtils";
 
 // MVC Views/GeneralMemo/MixMemoOutPrint_USA.cshtml — 20 records per Letter page
 const PAGE_SIZE = 20;
@@ -333,14 +333,14 @@ const MixMemoUsaFormat = ({
                         {getVal(item, "Qty", "qty", "Pcs", "pcs")}
                       </td>
                       <td style={{ ...cellRight, width: colW[3], paddingRight: 8, fontSize: FS_ITEM }}>
-                        {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
+                        {fmtCaratNum(getVal(item, "Weight", "weight", "Carats", "carats"))}
                       </td>
                       <td style={{ ...cellBase, width: colW[4], textAlign: "left", fontSize: FS_ITEM }}>
                         {getVal(item, "Description", "description", "ItemName", "itemName")}
                       </td>
                       <td style={{ ...cellRight, width: colW[5], paddingRight: 5, fontSize: FS_ITEM }} />
                       <td style={{ ...cellRight, width: colW[6], paddingRight: 8, fontSize: FS_ITEM }}>
-                        {fmtNum(getVal(item, "Balance", "balance"), 2)}
+                        {fmtCaratNum(getVal(item, "Balance", "balance"))}
                       </td>
                       <td style={{ ...cellRight, width: colW[7], fontSize: FS_ITEM }}>
                         {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
@@ -359,7 +359,7 @@ const MixMemoUsaFormat = ({
                         {getVal(item, "Qty", "qty", "Pcs", "pcs")}
                       </td>
                       <td style={{ ...cellRight, width: colW[3], paddingRight: 8, fontSize: FS_ITEM }}>
-                        {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
+                        {fmtCaratNum(getVal(item, "Weight", "weight", "Carats", "carats"))}
                       </td>
                       <td style={{ ...cellBase, width: colW[4], textAlign: "left", fontSize: FS_ITEM }}>
                         {getVal(item, "Description", "description", "ItemName", "itemName")}
@@ -409,12 +409,12 @@ const MixMemoUsaFormat = ({
                         {totals.qty}
                       </td>
                       <td style={{ ...cellFull, width: colW[3], textAlign: "right", paddingRight: 8, verticalAlign: "top", fontSize: FS }}>
-                        {fmtNum(totals.wt, 2)}
+                        {fmtCaratNum(totals.wt)}
                       </td>
                       <td style={{ ...cellFull, width: colW[4] }} />
                       <td style={{ ...cellFull, width: colW[5] }} />
                       <td style={{ ...cellFull, width: colW[6], textAlign: "right", paddingRight: 8, verticalAlign: "top", fontSize: FS }}>
-                        {fmtNum(totals.balanceWt, 2)}
+                        {fmtCaratNum(totals.balanceWt)}
                       </td>
                       <td
                         style={{
@@ -466,7 +466,7 @@ const MixMemoUsaFormat = ({
                         {totals.qty}
                       </td>
                       <td style={{ ...cellFull, width: colW[3], textAlign: "right", paddingRight: 8, verticalAlign: "top", fontSize: FS }}>
-                        {fmtNum(totals.wt, 2)}
+                        {fmtCaratNum(totals.wt)}
                       </td>
                       <td style={{ ...cellFull, width: colW[4], fontWeight: "bold", verticalAlign: "top" }} />
                       <td

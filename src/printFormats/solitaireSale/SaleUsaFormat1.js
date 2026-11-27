@@ -1,6 +1,7 @@
 import React from "react";
 import {
   FALLBACK_MEMO_CONDITIONS,
+  fmtSolitaireCaratNum,
   fmtDate,
   fmtNum,
   getVal
@@ -269,7 +270,7 @@ const SaleUsaFormat1 = ({ data, items, totals, company, logoUrl }) => {
                     <td style={cell}>{srNo++}</td>
                     <td style={cell}>{getVal(item, "Lotno", "lotNo")}</td>
                     <td style={cell}>{getVal(item, "ShapeId", "shapeId")}</td>
-                    <td style={cell}>{fmtNum(getVal(item, "Carats", "carats"), 2)}</td>
+                    <td style={cell}>{fmtSolitaireCaratNum(getVal(item, "Carats", "carats"))}</td>
                     <td style={cell}>{getVal(item, "ColorId", "colorId")}</td>
                     <td style={cell}>{getVal(item, "ClarityId", "clarityId")}</td>
                     <td style={cell}>{getVal(item, "PropId", "propId")}</td>
@@ -303,7 +304,7 @@ const SaleUsaFormat1 = ({ data, items, totals, company, logoUrl }) => {
                     <td colSpan={3} style={{ ...cell, textAlign: "center", fontSize: 11 }}>
                       <b>Total :</b>
                     </td>
-                    <td style={{ ...cell, fontSize: 11 }}>{fmtNum(totals.wt, 2)}</td>
+                    <td style={{ ...cell, fontSize: 11 }}>{fmtSolitaireCaratNum(totals.wt)}</td>
                     <td colSpan={9} style={{ ...cell, textAlign: "center" }} />
                     <td style={{ ...cell, fontSize: 11 }}>{fmtNum(totals.amount, 2)}</td>
                     <td colSpan={2} style={{ ...cell, textAlign: "center" }} />

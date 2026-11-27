@@ -1,5 +1,5 @@
 import React from "react";
-import { FALLBACK_MEMO_CONDITIONS, fmt, fmtDate, fmtNum, getVal } from "../shared/printUtils";
+import { FALLBACK_MEMO_CONDITIONS, fmt, fmtSolitaireCarat, fmtDate, fmtNum, getVal } from "../shared/printUtils";
 
 // MVC Views/Memo/SoMemoOutPrintInv_IndiaDual.cshtml
 // One landscape sheet = left copy + right copy of the SAME page; next sheet = next 30 rows
@@ -118,7 +118,7 @@ const IndiaDualFormat = ({ data, items, totals, company, logoUrl }) => {
                     </td>
                     <td style={cell}>{getVal(item, "ShapeId", "shapeId", "shape")}</td>
                     <td style={{ ...cell, textAlign: "right" }}>
-                      {fmt(getVal(item, "Carats", "carats", "weight"), 2)}
+                      {fmtSolitaireCarat(getVal(item, "Carats", "carats", "weight"))}
                     </td>
                     <td style={cell}>{getVal(item, "ColorId", "colorId", "color")}</td>
                     <td style={cell}>{getVal(item, "ClarityId", "clarityId", "clarity")}</td>
@@ -147,7 +147,7 @@ const IndiaDualFormat = ({ data, items, totals, company, logoUrl }) => {
                     Total:
                   </td>
                   <td colSpan={2} style={{ ...cell, textAlign: "right", fontWeight: "bold", fontSize: 9.5 }}>
-                    {fmt(totals.wt, 2)}
+                    {fmtSolitaireCarat(totals.wt)}
                   </td>
                   <td colSpan={8} style={cell} />
                   <td colSpan={3} style={{ ...cell, textAlign: "right", fontWeight: "bold", fontSize: 9.5 }}>

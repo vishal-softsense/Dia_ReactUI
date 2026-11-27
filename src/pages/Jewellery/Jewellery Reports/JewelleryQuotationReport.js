@@ -21,6 +21,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
 import { getAddMountingStockData, getAllLotNoList, getJewelleryQuotationDropdowns, getJewelleryQuotationReport, getJewelleryQuotationStockIds, getJewelleryStockIds, getJewelleryStockSearchDropdowns, getJewelleryStockSearchReport, getJewPurity, getSettingData } from "../../../helpers/fakebackend_helper";
 import {
   checkGoogleDriveFileExists,
@@ -528,6 +530,7 @@ const ReportCompanyHeader = ({ companyInfo }) => (
 );
 
 const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange }) => {
+  const { caratFormat } = useCaratFormat();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryPaths, setGalleryPaths] = useState([]);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -717,7 +720,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
               <td className="col-dia-shape">{dia?.diamondShape ?? dia?.DiamondShape ?? ""}</td>
               <td className="col-dia-color">{dia?.diamondColor ?? dia?.DiamondColor ?? ""}</td>
               <td className="col-dia-pcs text-end">{fmtNum(dia?.diamondPcs ?? dia?.DiamondPcs, 0)}</td>
-              <td className="col-dia-carat text-end">{fmtNum(dia?.diamondCarat ?? dia?.DiamondCarat, 3)}</td>
+              <td className="col-dia-carat text-end">{formatCarat(dia?.diamondCarat ?? dia?.DiamondCarat, caratFormat)}</td>
               <td className="col-dia-price text-end">{fmtNum(dia?.diamondPrice ?? dia?.DiamondPrice)}</td>
               <td className="col-dia-amount text-end">{fmtNum(dia?.diamondAmount ?? dia?.DiamondAmount)}</td>
               {i === 0 && (
@@ -739,7 +742,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
             <td className="col-netweight text-end fw-bold">{fmtNum(jewellery?.netWeight ?? jewellery?.NetWeight, 3)}</td>
             <td className="col-dia-lotno" /><td className="col-dia-shape" /><td className="col-dia-color" />
             <td className="col-dia-pcs text-end fw-bold">{fmtNum(totalDiamondPcs, 0)}</td>
-            <td className="col-dia-carat text-end fw-bold">{fmtNum(totalDiamondCarat, 3)}</td>
+            <td className="col-dia-carat text-end fw-bold">{formatCarat(totalDiamondCarat, caratFormat)}</td>
             <td className="col-dia-price" />
             <td className="col-dia-amount text-end fw-bold">{fmtNum(totalDiamondAmt)}</td>
             <td className="col-finalamount" />
@@ -760,7 +763,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
         <td className="col-netweight text-end fw-bold">{fmtNum(totals.grandNetWeight, 3)}</td>
         <td className="col-dia-lotno" /><td className="col-dia-shape" /><td className="col-dia-color" />
         <td className="col-dia-pcs text-end fw-bold">{fmtNum(totals.grandDiaPcs, 0)}</td>
-        <td className="col-dia-carat text-end fw-bold">{fmtNum(totals.grandDiaCarat, 3)}</td>
+        <td className="col-dia-carat text-end fw-bold">{formatCarat(totals.grandDiaCarat, caratFormat)}</td>
         <td className="col-dia-price" />
         <td className="col-dia-amount text-end fw-bold">{fmtNum(totals.grandDiaAmt)}</td>
         <td className="col-finalamount text-end fw-bold">{fmtNum(totals.grandFinalAmt)}</td>
@@ -894,6 +897,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const JewelleryQuotationReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { toDate, getDates } = useSettingReportDates();
   const reportRef = useRef(null);
   const printLock = useRef(false);
@@ -1554,14 +1558,14 @@ ${hideCss} { display: none; }
         Number(j?.grossWeight ?? j?.GrossWeight ?? 0),
         Number(j?.netWeight ?? j?.NetWeight ?? 0),
         j?.jewPurity ?? j?.JewPurity ?? j?.purity ?? j?.Purity ?? "",
-        Number(rowDiaCrt.toFixed(3)),
+        truncateCaratNumber(rowDiaCrt, caratFormat),
         rowDiaPcs,
         j?.lotNo ?? j?.LotNo ?? ""
       ]);
 
       r.getCell(1).numFmt = "0.000";
       r.getCell(2).numFmt = "0.000";
-      r.getCell(4).numFmt = "0.000";
+      r.getCell(4).numFmt = caratFormat;
       
       r.eachCell((cell) => {
         cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -1720,7 +1724,7 @@ ${hideCss} { display: none; }
           rowData[13] = dia?.diamondShape ?? dia?.DiamondShape ?? "";
           rowData[14] = dia?.diamondColor ?? dia?.DiamondColor ?? "";
           rowData[15] = dia ? Number(dia?.diamondPcs ?? dia?.DiamondPcs ?? 0) : "";
-          rowData[16] = dia ? Number(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0) : "";
+          rowData[16] = dia ? truncateCaratNumber(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0, caratFormat) : "";
           rowData[17] = dia ? Number(dia?.diamondPrice ?? dia?.DiamondPrice ?? 0) : "";
           rowData[18] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
@@ -1749,7 +1753,7 @@ ${hideCss} { display: none; }
             excelRow.getCell(19).numFmt = "#,##0.00";
           }
           if (dia) {
-            excelRow.getCell(16).numFmt = "#,##0.000";
+            excelRow.getCell(16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
             excelRow.getCell(17).numFmt = "#,##0.00";
             excelRow.getCell(18).numFmt = "#,##0.00";
           }
@@ -1787,8 +1791,8 @@ ${hideCss} { display: none; }
       ws.getCell(rowIdx, 11).numFmt = "#,##0.000";
 
       ws.getCell(rowIdx, 15).value = totalDiaPcs;
-      ws.getCell(rowIdx, 16).value = totalDiaCrt;
-      ws.getCell(rowIdx, 16).numFmt = "#,##0.000";
+      ws.getCell(rowIdx, 16).value = truncateCaratNumber(totalDiaCrt, caratFormat);
+      ws.getCell(rowIdx, 16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
       ws.getCell(rowIdx, 18).value = totalDiaAmt;
       ws.getCell(rowIdx, 18).numFmt = "#,##0.00";
       ws.getCell(rowIdx, 19).value = totalFinalAmt;
@@ -1828,8 +1832,8 @@ ${hideCss} { display: none; }
 
     ws.getCell(rowIdx, 15).value = grandDiaPcs;
     ws.getCell(rowIdx, 15).font = { bold: true };
-    ws.getCell(rowIdx, 16).value = grandDiaCrt;
-    ws.getCell(rowIdx, 16).numFmt = "#,##0.000";
+    ws.getCell(rowIdx, 16).value = truncateCaratNumber(grandDiaCrt, caratFormat);
+    ws.getCell(rowIdx, 16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
     ws.getCell(rowIdx, 16).font = { bold: true };
     ws.getCell(rowIdx, 18).value = grandDiaAmt;
     ws.getCell(rowIdx, 18).numFmt = "#,##0.00";
@@ -2013,7 +2017,7 @@ ${hideCss} { display: none; }
           rowData[15] = dia?.diamondShape ?? dia?.DiamondShape ?? "";
           rowData[16] = dia?.diamondColor ?? dia?.DiamondColor ?? "";
           rowData[17] = dia ? Number(dia?.diamondPcs ?? dia?.DiamondPcs ?? 0) : "";
-          rowData[18] = dia ? Number(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0) : "";
+          rowData[18] = dia ? truncateCaratNumber(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0, caratFormat) : "";
           rowData[19] = dia ? Number(dia?.diamondPrice ?? dia?.DiamondPrice ?? 0) : "";
           rowData[20] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
@@ -2050,7 +2054,7 @@ ${hideCss} { display: none; }
             }
           }
           if (dia) {
-            excelRow.getCell(18).numFmt = "#,##0.000";
+            excelRow.getCell(18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
             excelRow.getCell(19).numFmt = "#,##0.00";
             excelRow.getCell(20).numFmt = "#,##0.00";
           }
@@ -2087,8 +2091,8 @@ ${hideCss} { display: none; }
       ws.getCell(rowIdx, 13).value = totalNetWt;
       ws.getCell(rowIdx, 13).numFmt = "#,##0.000";
       ws.getCell(rowIdx, 17).value = totalDiaPcs;
-      ws.getCell(rowIdx, 18).value = totalDiaCrt;
-      ws.getCell(rowIdx, 18).numFmt = "#,##0.000";
+      ws.getCell(rowIdx, 18).value = truncateCaratNumber(totalDiaCrt, caratFormat);
+      ws.getCell(rowIdx, 18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
       ws.getCell(rowIdx, 20).value = totalDiaAmt;
       ws.getCell(rowIdx, 20).numFmt = "#,##0.00";
       ws.getCell(rowIdx, 21).value = totalFinalAmt;
@@ -2129,8 +2133,8 @@ ${hideCss} { display: none; }
     ws.getCell(rowIdx, 13).font = { bold: true };
     ws.getCell(rowIdx, 17).value = grandDiaPcs;
     ws.getCell(rowIdx, 17).font = { bold: true };
-    ws.getCell(rowIdx, 18).value = grandDiaCrt;
-    ws.getCell(rowIdx, 18).numFmt = "#,##0.000";
+    ws.getCell(rowIdx, 18).value = truncateCaratNumber(grandDiaCrt, caratFormat);
+    ws.getCell(rowIdx, 18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
     ws.getCell(rowIdx, 18).font = { bold: true };
     ws.getCell(rowIdx, 20).value = grandDiaAmt;
     ws.getCell(rowIdx, 20).numFmt = "#,##0.00";

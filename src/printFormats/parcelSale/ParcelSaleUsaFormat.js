@@ -1,5 +1,5 @@
 import React from "react";
-import { fmt, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
+import { fmt, fmtCarat, fmtDateMMM, getVal, paginateVariable } from "../shared/printUtils";
 
 const th = { background: "#BFBFBF", border: "2px solid #A2A1A1", padding: "6px 0", textAlign: "center" };
 const td = { border: "2px solid #A2A1A1", padding: "0 6px", textAlign: "center", height: 24 };
@@ -111,7 +111,7 @@ const ParcelSaleUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                       <td style={itemTd}>{getVal(item, "MemoNo", "memoNo")}</td>
                       <td style={itemTd}>{getVal(item, "ItemName", "itemName")}</td>
                       <td style={itemTd}>{pcs === 0 ? "-" : pcs}</td>
-                      <td style={{ ...itemTd, textAlign: "right" }}>{fmt(getVal(item, "Carats"), 2)}</td>
+                      <td style={{ ...itemTd, textAlign: "right" }}>{fmtCarat(getVal(item, "Carats"))}</td>
                       <td style={{ ...itemTd, textAlign: "right" }}>{fmt(getVal(item, "Rate"), 2)}</td>
                       <td style={{ ...itemTd, textAlign: "right" }}>{fmt(getVal(item, "MasterCurrencyAmount", "Amount"), 2)}</td>
                     </tr>
@@ -121,7 +121,7 @@ const ParcelSaleUsaFormat = ({ data, items, totals, company, logoUrl }) => {
                   <>
                     <tr>
                       <td colSpan={4} style={{ ...itemTd, fontWeight: "bold", textAlign: "left", paddingLeft: 10 }}>Total Carats :</td>
-                      <td style={{ ...itemTd, fontWeight: "bold", textAlign: "right", fontSize: 14 }}>{fmt(totals.wt, 2)}</td>
+                      <td style={{ ...itemTd, fontWeight: "bold", textAlign: "right", fontSize: 14 }}>{fmtCarat(totals.wt)}</td>
                       <td style={{ ...itemTd, fontWeight: "bold", fontSize: 10 }}>US $ :</td>
                       <td style={{ ...itemTd, fontWeight: "bold", textAlign: "right", fontSize: 14 }}>{fmt(totals.amount, 2)}</td>
                     </tr>

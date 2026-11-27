@@ -1,4 +1,6 @@
 // Helper to dynamically load SheetJS (xlsx) from CDN for Excel reading/parsing
+import { getCachedCaratFormat, getCaratDecimals, truncateCaratNumber } from "./caratFormatDefaults";
+
 export const loadXlsx = () => {
     return new Promise((resolve, reject) => {
         if (window.XLSX) {
@@ -171,7 +173,9 @@ export const exportCvdExcel = async (items = [], fileName = "SolitaireStock_CVD"
             const imgUrl = stripComma(getItemVal(item, "ImagePath", "Image"));
             const videoUrl = stripComma(getItemVal(item, "VideoPath", "Video"));
 
-            const cts = toNumOrNull(getItemVal(item, "Carats", "Cts", "Weight"));
+            const caratFormat = getCachedCaratFormat("solitaire");
+            const rawCts = toNumOrNull(getItemVal(item, "Carats", "Cts", "Weight"));
+            const cts = rawCts !== null ? truncateCaratNumber(rawCts, caratFormat) : null;
             const rap = toNumOrNull(getItemVal(item, "Rapa", "Rap"));
             const disc = toNumOrNull(getItemVal(item, "AskingBack", "Back", "Disc"));
             const rate = toNumOrNull(getItemVal(item, "AskingRate", "Rate"));
@@ -232,7 +236,7 @@ export const exportCvdExcel = async (items = [], fileName = "SolitaireStock_CVD"
             setHyperlinkCell(row.getCell(3), "Image", imgUrl);
             setHyperlinkCell(row.getCell(4), "Video", videoUrl);
 
-            row.getCell(9).numFmt = "0.000";
+            row.getCell(9).numFmt = getCachedCaratFormat("solitaire");
             row.getCell(17).numFmt = "0.00";
             row.getCell(18).numFmt = "0.00";
             row.getCell(19).numFmt = "0.00";
@@ -265,7 +269,7 @@ export const exportCvdExcel = async (items = [], fileName = "SolitaireStock_CVD"
 
         // Carats SUM (I), Amount SUM (T), Rate avg = Amount/Carats (S)
         total.getCell(9).value = { formula: `SUM(I2:I${lastRow})` };
-        total.getCell(9).numFmt = "0.000";
+        total.getCell(9).numFmt = getCachedCaratFormat("solitaire");
         total.getCell(19).value = { formula: `IFERROR(ROUND(T${totRow}/I${totRow}, 2), 0)` };
         total.getCell(19).numFmt = "0.00";
         total.getCell(20).value = { formula: `SUM(T2:T${lastRow})` };
@@ -547,6 +551,7 @@ export const exportSolitairePurchaseExportReportExcel = async (items = [], fileN
                 getCol(row, "LABComments", "LabComments", "labComments", "RoughId")
             );
 
+            const caratFormat = getCachedCaratFormat("solitaire");
             const caratNum = getItemNum(row, "Carats", "Cts", "Weight");
             const rateNum = getItemNum(row, "Rate", "rate");
             const totalNum = getItemNum(row, "Amount", "amount");
@@ -558,7 +563,7 @@ export const exportSolitairePurchaseExportReportExcel = async (items = [], fileN
                 growth,
                 getCol(row, "Item", "item"),
                 "1 PC",
-                caratNum !== null ? Number(caratNum.toFixed(2)) : "",
+                caratNum !== null ? truncateCaratNumber(caratNum, caratFormat) : "",
                 rateNum !== null ? Number(rateNum.toFixed(2)) : "",
                 totalNum !== null ? Number(totalNum.toFixed(2)) : ""
             ]);
@@ -569,7 +574,7 @@ export const exportSolitairePurchaseExportReportExcel = async (items = [], fileN
                 cell.alignment = { horizontal: "center", vertical: "middle" };
             });
 
-            if (caratNum !== null) excelRow.getCell(7).numFmt = "0.00";
+            if (caratNum !== null) excelRow.getCell(7).numFmt = caratFormat;
             if (rateNum !== null) excelRow.getCell(8).numFmt = "0.00";
             if (totalNum !== null) excelRow.getCell(9).numFmt = "0.00";
         });
@@ -622,7 +627,9 @@ export const exportPurchaseReportPrintExcel = async (items = [], fileName = "Pur
         headerRow.alignment = { horizontal: "center" };
 
         items.forEach((row) => {
-            const carats = toNumOrNull(getItemVal(row, "Carats", "carats"));
+            const caratFormat = getCachedCaratFormat("solitaire");
+            const rawCarats = toNumOrNull(getItemVal(row, "Carats", "carats"));
+            const carats = rawCarats !== null ? truncateCaratNumber(rawCarats, caratFormat) : null;
             const discount = toNumOrNull(getItemVal(row, "Discount", "discount"));
             const rate = toNumOrNull(getItemVal(row, "Rate", "rate"));
             const amount = toNumOrNull(getItemVal(row, "Amount", "amount"));
@@ -658,7 +665,7 @@ export const exportPurchaseReportPrintExcel = async (items = [], fileName = "Pur
             ]);
             excelRow.alignment = { horizontal: "center" };
             excelRow.font = { name: "Arial", size: 10 };
-            if (carats !== null) excelRow.getCell(8).numFmt = "0.000";
+            if (carats !== null) excelRow.getCell(8).numFmt = getCachedCaratFormat("solitaire");
             if (discount !== null) excelRow.getCell(10).numFmt = "0.00";
             if (rate !== null) excelRow.getCell(11).numFmt = "0.00";
             if (amount !== null) excelRow.getCell(12).numFmt = "0.00";
@@ -670,7 +677,7 @@ export const exportPurchaseReportPrintExcel = async (items = [], fileName = "Pur
         total.font = { bold: true, name: "Arial", size: 10 };
         total.getCell(1).value = { formula: `"Total: " & COUNTA(B2:B${lastDataRow})` };
         total.getCell(8).value = { formula: `SUM(H2:H${lastDataRow})` };
-        total.getCell(8).numFmt = "0.000";
+        total.getCell(8).numFmt = getCachedCaratFormat("solitaire");
         total.getCell(8).alignment = { horizontal: "right" };
         total.getCell(11).value = { formula: `IFERROR(L${totalRowNum}/H${totalRowNum},0)` };
         total.getCell(11).numFmt = "0.00";

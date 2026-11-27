@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import { useCaratFormat } from "../../Components/Hooks/useCaratFormat";
 
 const StockAnalysisPivotFixedView = ({ data = [] }) => {
+  const { caratFormat } = useCaratFormat("solitaire");
   const containerRef = useRef(null);
   const pivotRef = useRef(null);
   const heatmapEnabledRef = useRef(false);
@@ -144,7 +146,7 @@ const StockAnalysisPivotFixedView = ({ data = [] }) => {
         ],
         formatSettings: [
           { name: "Pcs", format: "N0" },
-          { name: "Carats", format: "N2" },
+          { name: "Carats", format: caratFormat === "0.000" ? "N3" : "N2" },
           { name: "Dis.%", format: "N2" },
           { name: "Amount", format: "N2" },
           { name: "PDis.%", format: "N2" }
