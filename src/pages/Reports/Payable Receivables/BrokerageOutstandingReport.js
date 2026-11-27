@@ -15,10 +15,12 @@ import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getBrokerageOutstandingReport
@@ -195,6 +197,8 @@ const BrokerageOutstandingReport = () => {
   const { t } = useTranslation();
   const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loading, setLoading] = useState(false);
@@ -208,6 +212,12 @@ const BrokerageOutstandingReport = () => {
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched && reportMode === "all",
+    deps: [hasSearched, reportMode, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
@@ -1140,7 +1150,7 @@ const BrokerageOutstandingReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>{ALL_COLUMNS.map(renderHeader)}</tr>
@@ -1217,7 +1227,8 @@ const BrokerageOutstandingReport = () => {
                 </div>
 
                 <div
-                  className="mt-3"
+                  ref={paginationRef}
+                  className="mt-2"
                   style={{
                     backgroundColor: "var(--vz-card-bg, #fff)",
                     paddingTop: "8px",
@@ -1328,7 +1339,7 @@ const BrokerageOutstandingReport = () => {
                     </div>
                   </div>
 
-                  <div className="table-responsive bor-print-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive bor-print-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>{PARTYWISE_COLUMNS.map(renderHeader)}</tr>
@@ -1426,7 +1437,7 @@ const BrokerageOutstandingReport = () => {
                         </tfoot>
                       ) : null}
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>

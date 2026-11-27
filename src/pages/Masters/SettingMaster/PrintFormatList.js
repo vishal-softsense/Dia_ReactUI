@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Input, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getPrintFormatData, updatePrintFormat, getInvoiceFormatSetting } from "../../../helpers/fakebackend_helper";
 import { refreshReportCompanySettings } from "../../../helpers/reportCompanyDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import { toast, ToastContainer } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
@@ -35,6 +36,10 @@ const PrintFormatList = () => {
     const [selectedPrintSetting, setSelectedPrintSetting] = useState(null);
     const [printConditions, setPrintConditions] = useState("");
     const [selectedPrintFormat, setSelectedPrintFormat] = useState("");
+    const tableScrollRef = useRef(null);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        deps: [loading, printFormatsList.length, searchQuery],
+    });
 
     useEffect(() => {
         loadData();
@@ -166,9 +171,13 @@ const PrintFormatList = () => {
                                             <span className="ms-2">{t("Loading print formats...")}</span>
                                         </div>
                                     ) : (
-                                        <div className="table-responsive table-card">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive table-card viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table className="table table-hover table-striped align-middle table-nowrap mb-0">
-                                                <thead className="table-light">
+                                                <thead className="table-light sticky-top" style={{ zIndex: 2 }}>
                                                     <tr>
                                                         <th>{t("Format Setting Name")}</th>
                                                         <th>{t("Active Format / Condition")}</th>

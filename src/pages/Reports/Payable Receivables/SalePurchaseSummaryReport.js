@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -20,6 +20,7 @@ import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurre
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getSalePurchaseSummaryReport,
@@ -171,6 +172,13 @@ const SalePurchaseSummaryReport = () => {
   const [sortConfig, setSortConfig] = useState({ key: "Rate", direction: "asc" });
   const [trnType, setTrnType] = useState("Sale");
   const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [typeOptions, setTypeOptions] = useState([]);
@@ -906,7 +914,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>{columns.map(renderHeader)}</tr>
@@ -974,7 +982,8 @@ const SalePurchaseSummaryReport = () => {
                   </table>
                 </div>
 
-                <Row className="align-items-center mt-3 g-2">
+                <div ref={paginationRef} className="mt-2 pt-1">
+                  <Row className="align-items-center g-2">
                   <Col sm={12} md={6}>
                     <div className="text-muted small">
                       {t("Showing")}{" "}
@@ -1023,6 +1032,7 @@ const SalePurchaseSummaryReport = () => {
                     </div>
                   </Col>
                 </Row>
+                </div>
               </CardBody>
             </Card>
           )}

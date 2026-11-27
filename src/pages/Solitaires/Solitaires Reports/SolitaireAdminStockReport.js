@@ -1641,7 +1641,7 @@ const SolitaireAdminStockReport = () => {
 
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody>
+              <CardBody className="p-2 px-sm-3 py-sm-2">
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
@@ -1651,8 +1651,8 @@ const SolitaireAdminStockReport = () => {
                 ) : (
                   <React.Fragment>
                     {searchResults.length > 0 && (
-                      <Card className="border shadow-sm mb-3">
-                        <CardBody className="p-3 bg-light-subtle">
+                      <Card className="border shadow-sm mb-2">
+                        <CardBody className="p-2 px-3 bg-light-subtle">
                           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
 
                             <div className="d-flex flex-wrap align-items-center gap-3">
@@ -1771,7 +1771,7 @@ const SolitaireAdminStockReport = () => {
                         isGlobalFilter={true}
                         customPageSize={500}
                         customPageSizes={[500, 1000, 1500]}
-                        divClass="table-responsive table-card mb-3"
+                        divClass="table-responsive table-card mb-0"
                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                         theadClass="table-light"
                         SearchPlaceholder={t("Filter results...")}

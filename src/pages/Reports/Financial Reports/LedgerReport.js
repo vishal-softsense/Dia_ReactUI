@@ -18,6 +18,7 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getAccGrpMasters,
     getLedgerReportList1,
@@ -606,6 +607,7 @@ const customSelectStyles = {
 const LedgerReport = () => {
     const { t } = useTranslation();
     const printRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
     const [filters, setFilters] = useState(() =>
@@ -624,6 +626,10 @@ const LedgerReport = () => {
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
     const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: hasSearched && !!reportMode,
+        deps: [hasSearched, reportMode, dualRows.length, runningRows.length],
+    });
 
     const loadSymbols = useCallback(async () => {
         const company = await getReportCompanySettings({ forceRefresh: true });
@@ -1026,7 +1032,11 @@ ${printArea.innerHTML}
     );
 
     const renderDualTable = () => (
-        <div className="table-responsive">
+        <div
+            ref={tableScrollRef}
+            className="table-responsive viewport-table-scroll"
+            style={{ maxHeight: tableMaxHeight }}
+        >
             <Table
                 id="ledgerTable"
                 bordered
@@ -1157,7 +1167,11 @@ ${printArea.innerHTML}
     );
 
     const renderRunningTable = () => (
-        <div className="table-responsive">
+        <div
+            ref={tableScrollRef}
+            className="table-responsive viewport-table-scroll"
+            style={{ maxHeight: tableMaxHeight }}
+        >
             <Table
                 id="dynamic-LedgerReport"
                 bordered

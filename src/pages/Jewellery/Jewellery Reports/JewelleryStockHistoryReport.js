@@ -19,6 +19,7 @@ import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getJewelleryStockHistoryReport,
   getJewelleryStockHistoryStockIds
@@ -205,7 +206,12 @@ const JewelleryStockHistoryReport = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
 
   // Transaction types checkboxes selection
   const [selectedTypesTrn, setSelectedTypesTrn] = useState(["MEMOIN","PUR","MEMOOUT", "SALE", "STKTRN"]);
@@ -678,7 +684,11 @@ const JewelleryStockHistoryReport = () => {
     const opStkDate = formatDateYMDToDMY(filters.fromDate);
 
     return (
-      <div className="premium-table-container">
+      <div
+        ref={tableScrollRef}
+        className="premium-table-container viewport-table-scroll"
+        style={{ maxHeight: tableMaxHeight }}
+      >
         <table className="premium-table">
           <thead>
             <tr>
@@ -837,11 +847,10 @@ const JewelleryStockHistoryReport = () => {
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
           border: 1px solid var(--vz-border-color, #e9ebec);
           border-radius: 8px;
-          max-height: 650px;
           overflow-y: auto;
           overflow-x: auto;
           background-color: var(--vz-secondary-bg, #fff) !important;
-          margin-bottom: 20px;
+          margin-bottom: 0;
         }
         .premium-table {
           width: 100%;

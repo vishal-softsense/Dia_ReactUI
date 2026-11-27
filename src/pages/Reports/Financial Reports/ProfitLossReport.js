@@ -16,6 +16,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getProfitLossReport,
     getProfitLossReportPermission
@@ -276,6 +277,7 @@ const buildProfitLossPrintHtml = ({
 const ProfitLossReport = () => {
     const { t } = useTranslation();
     const tableRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { toDate: settingToDate, getDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -283,6 +285,10 @@ const ProfitLossReport = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [showReport, setShowReport] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: showReport,
+        deps: [showReport, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
     const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
@@ -787,8 +793,12 @@ const ProfitLossReport = () => {
                                         </Col>
                                     </Row>
 
-                                    <div id="dynamic-profit-loss-account" className="card mt-3 mb-3">
-                                        <div className="table-responsive">
+                                    <div id="dynamic-profit-loss-account" className="card mt-3 mb-0">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table
                                                 ref={tableRef}
                                                 className="table table-bordered nowrap mb-0 profit-loss-report-table"

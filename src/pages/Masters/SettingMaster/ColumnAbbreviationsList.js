@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Input, Spinner } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getColumnAbbreviations, updateColumnAbbreviations } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, parseExcelFile } from "../../../helpers/excel_helper";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import { toast, ToastContainer } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +16,10 @@ const ColumnAbbreviationsList = () => {
     // Import Modal
     const [importModal, setImportModal] = useState(false);
     const [importFile, setImportFile] = useState(null);
+    const tableScrollRef = useRef(null);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        deps: [loading, columnAbbrList.length, searchQuery],
+    });
 
     useEffect(() => {
         loadData();
@@ -191,7 +196,11 @@ const ColumnAbbreviationsList = () => {
                                             <span className="ms-2">{t("Loading abbreviations...")}</span>
                                         </div>
                                     ) : (
-                                        <div className="table-responsive table-card" style={{ maxHeight: "600px", overflowY: "auto" }}>
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive table-card viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table className="table table-bordered table-striped align-middle table-nowrap mb-0">
                                                 <thead className="table-light sticky-top">
                                                     <tr>

@@ -7,6 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import {
     getAccGrpMasters,
@@ -1255,7 +1256,7 @@ const MixMemoOutReport = () => {
                             {hasSearched ? t("Mix Memo Report Results") : t("Mix Memo Report Filters")}
                         </h5>
 
-                        <div className="d-flex gap-2">
+                        <div className="d-flex flex-wrap gap-2">
                             {!hasSearched ? (
                                 <>
                                     <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading}>
@@ -1313,9 +1314,9 @@ const MixMemoOutReport = () => {
                         <Card className="shadow-lg border-0 rounded-3 mb-4">
                             <CardBody className="bg-light-subtle">
                                 <Row className="g-3">
-                                    <Col md={10}>
+                                    <Col xs={12} lg={10}>
                                         <Row className="g-2 mb-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Date")}</Label>
                                                     <input
@@ -1327,7 +1328,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("To Date")}</Label>
                                                     <input
@@ -1339,7 +1340,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Currency")}</Label>
                                                     <Select
@@ -1353,7 +1354,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
                                                     <Input
@@ -1366,7 +1367,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Type")}</Label>
                                                     <Select
@@ -1379,7 +1380,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Group By")}</Label>
                                                     <Select
@@ -1395,7 +1396,7 @@ const MixMemoOutReport = () => {
                                         </Row>
 
                                         <Row className="g-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <div className="d-flex align-items-center gap-1 mb-1">
                                                         <input
@@ -1418,7 +1419,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("To Date")}</Label>
                                                     <input
@@ -1431,7 +1432,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Party")}</Label>
                                                     <Select
@@ -1453,7 +1454,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Broker")}</Label>
                                                     <Select
@@ -1475,7 +1476,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Tracking No")}</Label>
                                                     <Input
@@ -1488,7 +1489,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <div className="d-flex align-items-center gap-1" style={{ height: "35px" }}>
                                                         <input
@@ -1506,12 +1507,12 @@ const MixMemoOutReport = () => {
                                         </Row>
                                     </Col>
 
-                                    <Col md={2}>
+                                    <Col xs={12} lg={2}>
                                         <FormGroup className="mb-0">
                                             <Label className="fw-medium mb-1 small">{t("Enter Lot No")}</Label>
                                             <Input
                                                 type="textarea"
-                                                rows={7}
+                                                rows={5}
                                                 value={filters.lotNo}
                                                 placeholder={t("Search by lot no")}
                                                 onChange={(e) => setFilters((p) => ({ ...p, lotNo: e.target.value }))}
@@ -1524,7 +1525,7 @@ const MixMemoOutReport = () => {
 
                                 <Row className="g-2">
                                     {attributeFields.map(({ label, key }) => (
-                                        <Col sm={2} key={key}>
+                                        <Col xs={12} sm={6} md={4} lg={2} key={key}>
                                             <FormGroup className="mb-0">
                                                 <Label className="fw-medium mb-1 small">{t(label)}</Label>
                                                 <Select
@@ -1584,9 +1585,9 @@ const MixMemoOutReport = () => {
                     )}
 
                     {hasSearched && viewType === "table" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
-                                <div className="d-flex justify-content-end gap-4 mb-3 small fw-semibold">
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
+                                <div className="d-flex justify-content-end gap-4 mb-2 small fw-semibold">
                                     <span>
                                         {t("Showing")}: {groupedVisibleRows.length} {t("rows")}
                                     </span>
@@ -1601,7 +1602,7 @@ const MixMemoOutReport = () => {
                                         isGlobalFilter={true}
                                         customPageSize={500}
                                         customPageSizes={[500, 1000, 1500]}
-                                        divClass="table-responsive table-card mb-3"
+                                        divClass="table-responsive table-card mb-0"
                                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                                         theadClass="table-light"
                                         SearchPlaceholder={t("SEARCH:")}
@@ -1614,8 +1615,8 @@ const MixMemoOutReport = () => {
                     )}
 
                     {hasSearched && viewType === "grouped" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
                                 <style>{`
                                     #dynamic-memoOut-report-table th {
                                         white-space: nowrap;
@@ -1643,15 +1644,15 @@ const MixMemoOutReport = () => {
                                         color: var(--vz-body-color, #e9ecef) !important;
                                     }
                                 `}</style>
-                                <div className="mb-3">
-                                    <div className="row align-items-start">
-                                        <div className="col-sm-10 d-flex">
+                                <div className="mb-2 pb-2 border-bottom">
+                                    <div className="row align-items-start g-2">
+                                        <div className="col-12 col-sm-9 d-flex align-items-start">
                                             {companyLogoUrl ? (
-                                                <div className="pe-3 pt-2">
-                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                                                <div className="pe-3">
+                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "64px", width: "76px", objectFit: "contain" }} />
                                                 </div>
                                             ) : null}
-                                            <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
+                                            <div style={{ fontSize: "13px", lineHeight: 1.4 }}>
                                                 <div className="fw-bold">{companyInfo?.companyName}</div>
                                                 <div>{companyInfo?.companyAddress}</div>
                                                 {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
@@ -1668,7 +1669,7 @@ const MixMemoOutReport = () => {
                                                 ) : null}
                                             </div>
                                         </div>
-                                        <div className="col-sm-2 text-end pt-2">
+                                        <div className="col-12 col-sm-3 text-sm-end">
                                             <div className="fs-5 fw-bold">{t("Mix Memo Out Report")}</div>
                                             <div className="small text-muted">
                                                 <div>
@@ -1685,7 +1686,10 @@ const MixMemoOutReport = () => {
                                 {groupedReportData.sections.length === 0 ? (
                                     <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                                 ) : (
-                                    <div className="table-responsive mix-memo-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                                    <ViewportScrollBox
+                                        className="table-responsive mix-memo-grouped-table-wrap"
+                                        deps={[groupedReportData.sections.length, companyInfo?.companyFooter, companyLogoUrl]}
+                                    >
                                         <table className="table table-bordered align-middle mb-0" id="dynamic-memoOut-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
                                             <colgroup>
                                                 <col style={{ width: "48px" }} />
@@ -1810,11 +1814,11 @@ const MixMemoOutReport = () => {
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </ViewportScrollBox>
                                 )}
 
                                 {companyInfo?.companyFooter ? (
-                                    <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
+                                    <div className="mt-2 mb-0 small text-muted">{companyInfo.companyFooter}</div>
                                 ) : null}
                             </CardBody>
                         </Card>

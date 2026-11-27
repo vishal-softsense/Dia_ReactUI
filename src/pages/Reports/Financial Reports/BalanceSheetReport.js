@@ -19,6 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getBalanceSheetReport,
     getBalanceSheetReportPermission,
@@ -322,6 +323,7 @@ const buildBalanceSheetPrintHtml = ({
 const BalanceSheetReport = () => {
     const { t } = useTranslation();
     const tableRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { toDate: settingToDate, getDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -329,6 +331,10 @@ const BalanceSheetReport = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [showReport, setShowReport] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: showReport,
+        deps: [showReport, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
     const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
@@ -1023,8 +1029,12 @@ const BalanceSheetReport = () => {
                                         </Col>
                                     </Row>
 
-                                    <div id="dynamic-balncessheet" className="card mt-3 mb-3">
-                                        <div className="table-responsive">
+                                    <div id="dynamic-balncessheet" className="card mt-3 mb-0">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table
                                                 ref={tableRef}
                                                 className="table table-bordered nowrap mb-0 balance-sheet-report-table"

@@ -18,6 +18,7 @@ import { exportToExcel } from "../../../helpers/excel_helper";
 import { getSolitaireKapanSummaryReport } from "../../../helpers/fakebackend_helper";
 import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
 import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 
 const getRowVal = (row, ...keys) => {
   if (!row || typeof row !== "object") return "";
@@ -68,10 +69,15 @@ const SolitaireKapanSummaryReport = () => {
   const { t } = useTranslation();
   const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
+  const listScrollRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [reportRows, setReportRows] = useState([]);
+  const listMaxHeight = useViewportTableHeight(listScrollRef, {
+    enabled: hasSearched && reportRows.length > 0,
+    deps: [hasSearched, reportRows.length],
+  });
 
   const [filters, setFilters] = useState({
     lotNo: "",
@@ -417,7 +423,8 @@ const SolitaireKapanSummaryReport = () => {
                 {reportRows.length === 0 ? (
                   <div className="text-center py-5 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div ref={printRef} id="kapan-summary-print" className="d-flex flex-column gap-2">
+                  <div ref={listScrollRef} className="viewport-table-scroll" style={{ maxHeight: listMaxHeight }}>
+                    <div ref={printRef} id="kapan-summary-print" className="d-flex flex-column gap-2">
                     {reportRows.map((kapan, idx) => {
                       const kapanNo = getRowVal(kapan, "KapanNo", "kapanNo") || "-";
                       const totals = calcTotals(kapan);
@@ -620,6 +627,7 @@ const SolitaireKapanSummaryReport = () => {
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 )}
               </CardBody>

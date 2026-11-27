@@ -1,24 +1,30 @@
-import React from 'react';
-import { Col, Container, Row } from 'reactstrap';
+import React from "react";
+import { Container } from "reactstrap";
+import { useTranslation } from "react-i18next";
+
 
 const Footer = () => {
-    return (
-        <React.Fragment>
-            <footer className="footer">
-                <Container fluid>
-                    <Row>
-                        <Col sm={6}>
-                        </Col>
-                        <Col sm={6}>
-                            <div className="text-sm-end d-none d-sm-block">
-                                Powered by SoftOnCloud
-                            </div>
-                        </Col>
-                    </Row>
-                </Container>
-            </footer>
-        </React.Fragment>
-    );
+  const { t } = useTranslation();
+
+  return (
+    <footer className="footer">
+      <Container fluid>
+        <div className="d-flex align-items-center justify-content-center text-center">
+          <span className="footer-text">
+            {t("Powered by")}{" "}
+            <a
+              href="https://softsense.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-brand-link"
+            >
+              SoftOnCloud
+            </a>
+          </span>
+        </div>
+      </Container>
+    </footer>
+  );
 };
 
 export default Footer;
