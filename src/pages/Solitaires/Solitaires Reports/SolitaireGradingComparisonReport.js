@@ -616,7 +616,7 @@ const SolitaireGradingComparisonReport = () => {
   const columns = useMemo(
     () => [
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "lotNo",
         cell: ({ row }) => dash(getRowVal(row.original, "lotNo", "LotNo")),
         footer: () => <span className="fw-bold text-start d-block">{t("Total")}:</span>
@@ -627,12 +627,12 @@ const SolitaireGradingComparisonReport = () => {
         cell: ({ row }) => dash(getRowVal(row.original, "kapan", "Kapan"))
       },
       {
-        header: t("PacketNo"),
+        header: t("Packet Number"),
         accessorKey: "packetNo",
         cell: ({ row }) => dash(getRowVal(row.original, "packetNo", "PacketNo"))
       },
       {
-        header: t("ReportDate"),
+        header: t("Report Date"),
         accessorKey: "gDate",
         cell: ({ row }) => dash(formatGDate(getRowVal(row.original, "gDate", "GDate", "reportDate", "ReportDate")))
       },
@@ -820,7 +820,7 @@ const SolitaireGradingComparisonReport = () => {
           />
         )
       },
-      { header: t("GirdleMin"), accessorKey: "gerdleMin", cell: ({ row }) => dash(getRowVal(row.original, "gerdleMin", "GerdleMin")) },
+      { header: t("Girdle Min"), accessorKey: "gerdleMin", cell: ({ row }) => dash(getRowVal(row.original, "gerdleMin", "GerdleMin")) },
       {
         header: t("Girdle"),
         accessorKey: "girdle",
@@ -851,23 +851,23 @@ const SolitaireGradingComparisonReport = () => {
         )
       },
       { header: t("Culet"), accessorKey: "culet", cell: ({ row }) => dash(getRowVal(row.original, "culet", "Culet")) },
-      { header: t("MilkyCode"), accessorKey: "milkyCode", cell: ({ row }) => dash(getRowVal(row.original, "milkyCode", "MilkyCode")) },
+      { header: t("Milky Code"), accessorKey: "milkyCode", cell: ({ row }) => dash(getRowVal(row.original, "milkyCode", "MilkyCode")) },
       { header: t("Brown"), accessorKey: "brown", cell: ({ row }) => dash(getRowVal(row.original, "brown", "Brown")) },
-      { header: t("LusterCode"), accessorKey: "lusterCode", cell: ({ row }) => dash(getRowVal(row.original, "lusterCode", "LusterCode")) },
+      { header: t("Luster Code"), accessorKey: "lusterCode", cell: ({ row }) => dash(getRowVal(row.original, "lusterCode", "LusterCode")) },
       { header: t("Natts"), accessorKey: "natts", cell: ({ row }) => dash(getRowVal(row.original, "natts", "Natts")) },
-      { header: t("TableInclusion"), accessorKey: "tableInclusion", cell: ({ row }) => dash(getRowVal(row.original, "tableInclusion", "TableInclusion")) },
-      { header: t("CrownInclusion"), accessorKey: "crownInclusion", cell: ({ row }) => dash(getRowVal(row.original, "crownInclusion", "CrownInclusion")) },
+      { header: t("Table Inclusion"), accessorKey: "tableInclusion", cell: ({ row }) => dash(getRowVal(row.original, "tableInclusion", "TableInclusion")) },
+      { header: t("Crown Inclusion"), accessorKey: "crownInclusion", cell: ({ row }) => dash(getRowVal(row.original, "crownInclusion", "CrownInclusion")) },
       { header: t("IP"), accessorKey: "ip", cell: ({ row }) => dash(getRowVal(row.original, "ip", "IP")) },
-      { header: t("CertificateNo"), accessorKey: "certificateNo", cell: ({ row }) => dash(getRowVal(row.original, "certificateNo", "CertificateNo")) },
-      { header: t("KeyToSymbols"), accessorKey: "keyToSymbols", cell: ({ row }) => dash(getRowVal(row.original, "keyToSymbols", "KeyToSymbols")) },
-      { header: t("ReportComments"), accessorKey: "reportComments", cell: ({ row }) => dash(getRowVal(row.original, "reportComments", "ReportComments")) },
-      { header: t("LaserInscriptionText"), accessorKey: "laserInscriptionText", cell: ({ row }) => dash(getRowVal(row.original, "laserInscriptionText", "LaserInscriptionText")) },
-      { header: t("ControlNo"), accessorKey: "controlNo", cell: ({ row }) => dash(getRowVal(row.original, "controlNo", "ControlNo")) },
-      { header: t("SuratRemarks"), accessorKey: "suratRemarks", cell: ({ row }) => dash(getRowVal(row.original, "suratRemarks", "SuratRemarks")) },
-      { header: t("IGICut"), accessorKey: "igiCut", cell: ({ row }) => dash(getRowVal(row.original, "igiCut", "IGICut")) },
+      { header: t("Certificate No"), accessorKey: "certificateNo", cell: ({ row }) => dash(getRowVal(row.original, "certificateNo", "CertificateNo")) },
+      { header: t("Key To Symbols"), accessorKey: "keyToSymbols", cell: ({ row }) => dash(getRowVal(row.original, "keyToSymbols", "KeyToSymbols")) },
+      { header: t("Report Comments"), accessorKey: "reportComments", cell: ({ row }) => dash(getRowVal(row.original, "reportComments", "ReportComments")) },
+      { header: t("Laser Inscription Text"), accessorKey: "laserInscriptionText", cell: ({ row }) => dash(getRowVal(row.original, "laserInscriptionText", "LaserInscriptionText")) },
+      { header: t("Control No"), accessorKey: "controlNo", cell: ({ row }) => dash(getRowVal(row.original, "controlNo", "ControlNo")) },
+      { header: t("Surat Remarks"), accessorKey: "suratRemarks", cell: ({ row }) => dash(getRowVal(row.original, "suratRemarks", "SuratRemarks")) },
+      { header: t("IGI Cut"), accessorKey: "igiCut", cell: ({ row }) => dash(getRowVal(row.original, "igiCut", "IGICut")) },
       { header: t("Buth"), accessorKey: "buth", cell: ({ row }) => dash(getRowVal(row.original, "buth", "Buth")) },
-      { header: t("ClarityStatus"), accessorKey: "clarityStatus", cell: ({ row }) => dash(getRowVal(row.original, "clarityStatus", "ClarityStatus")) },
-      { header: t("HRDcut"), accessorKey: "hRDcut", cell: ({ row }) => dash(getRowVal(row.original, "hRDcut", "HRDcut")) },
+      { header: t("Clarity Status"), accessorKey: "clarityStatus", cell: ({ row }) => dash(getRowVal(row.original, "clarityStatus", "ClarityStatus")) },
+      { header: t("HRD Cut"), accessorKey: "hRDcut", cell: ({ row }) => dash(getRowVal(row.original, "hRDcut", "HRDcut")) },
       {
         header: t("Fees"),
         accessorKey: "fees",

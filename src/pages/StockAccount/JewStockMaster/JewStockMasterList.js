@@ -90,7 +90,7 @@ const MountingStockList = () => {
 
         const headers = [
             "Stock ID",
-            "JewelleryPcs",
+            "Jewellery Pcs",
             "Jewellery Category",
             "Metal Type",
             "Purity",
@@ -159,25 +159,25 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("StockID"),
+                header: t("Stock ID"),
                 accessorKey: "stock_ID",
                 accessorFn: (row) => row.stock_ID || row.Stock_ID,
                 enableColumnFilter: true,
             },
             {
-                header: t("JewelleryPcs"),
+                header: t("Jewellery Pcs"),
                 accessorKey: "pcs",
                 accessorFn: (row) => row.pcs ?? row.Pcs ?? 0,
                 enableColumnFilter: true,
             },
             {
-                header: t("JewelleryCategory"),
+                header: t("Jewellery Category"),
                 accessorKey: "mountCategory",
                 accessorFn: (row) => row.mountCategory || row.MountCategory || row.designName || "",
                 enableColumnFilter: true,
             },
             {
-                header: t("MetalType"),
+                header: t("Metal Type"),
                 accessorKey: "metalType",
                 accessorFn: (row) => row.metalType || row.MetalType,
                 enableColumnFilter: true,
@@ -189,14 +189,14 @@ const MountingStockList = () => {
                 enableColumnFilter: true,
             },
             {
-                header: t("DiamondWeight"),
+                header: t("Diamond Weight"),
                 accessorKey: "totalDiamondCarat",
                 accessorFn: (row) => row.totalDiamondCarat || row.TotalDiamondCarat,
                 enableColumnFilter: true,
                 cell: (cellProps) => formatCarat(cellProps.getValue(), caratFormat),
             },
             {
-                header: t("GrossWeight"),
+                header: t("Gross Weight"),
                 accessorKey: "grossWeight",
                 accessorFn: (row) => row.grossWeight || row.GrossWeight,
                 enableColumnFilter: true,
@@ -206,7 +206,7 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("NetWeight"),
+                header: t("Net Weight"),
                 accessorKey: "netWeight",
                 accessorFn: (row) => row.netWeight || row.NetWeight,
                 enableColumnFilter: true,
@@ -216,7 +216,7 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("MetalAmount"),
+                header: t("Metal Amount"),
                 accessorKey: "totalMetalAmount",
                 accessorFn: (row) => row.totalMetalAmount || row.TotalMetalAmount,
                 enableColumnFilter: true,

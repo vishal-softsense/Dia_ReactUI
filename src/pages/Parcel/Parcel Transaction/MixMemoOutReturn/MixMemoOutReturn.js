@@ -578,23 +578,23 @@ const MixMemoOutReturn = () => {
                                                             />
                                                         </th>
                                                         <th style={{ minWidth: 100, ...stickyHead }}>{t("Date")}</th>
-                                                        <th style={{ minWidth: 80, ...stickyHead }}>{t("MemoNo")}</th>
+                                                        <th style={{ minWidth: 80, ...stickyHead }}>{t("Memo Number")}</th>
                                                         <th style={{ minWidth: 140, ...stickyHead }}>{t("Party")}</th>
                                                         <th style={{ minWidth: 100, ...stickyHead }}>{t("Broker")}</th>
                                                         <th style={{ minWidth: 100, ...stickyHead }}>{t("Item")}</th>
-                                                        <th className="text-end" style={{ minWidth: 90, ...stickyHead }}>{t("carats")}</th>
+                                                        <th className="text-end" style={{ minWidth: 90, ...stickyHead }}>{t("Carats")}</th>
                                                         <th className="text-end" style={{ minWidth: 90, ...stickyHead }}>{t("Price")}</th>
                                                         <th className="text-end" style={{ minWidth: 80, ...stickyHead }}>{t("Sale")}</th>
                                                         <th className="text-end" style={{ minWidth: 90, ...stickyHead }}>{t("Return")}</th>
                                                         <th className="text-end" style={{ minWidth: 100, ...stickyHead }}>{t("New Return")}</th>
                                                         <th className="text-end" style={{ minWidth: 90, ...stickyHead }}>{t("Balance")}</th>
-                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("SPCode")}</th>
-                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("SPTCode")}</th>
-                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("ItemCode")}</th>
-                                                        <th style={{ minWidth: 160, ...stickyHead }}>{t("ItemName")}</th>
-                                                        <th style={{ minWidth: 110, ...stickyHead }}>{t("MNo_BillNo")}</th>
-                                                        <th style={{ minWidth: 80, ...stickyHead }}>{t("CurCode")}</th>
-                                                        <th style={{ minWidth: 100, ...stickyHead }}>{t("StockType")}</th>
+                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("SP Code")}</th>
+                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("SPT Code")}</th>
+                                                        <th style={{ minWidth: 90, ...stickyHead }}>{t("Item Code")}</th>
+                                                        <th style={{ minWidth: 160, ...stickyHead }}>{t("Item Name")}</th>
+                                                        <th style={{ minWidth: 110, ...stickyHead }}>{t("Memo / Bill No")}</th>
+                                                        <th style={{ minWidth: 80, ...stickyHead }}>{t("Cur Code")}</th>
+                                                        <th style={{ minWidth: 100, ...stickyHead }}>{t("Stock Type")}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>

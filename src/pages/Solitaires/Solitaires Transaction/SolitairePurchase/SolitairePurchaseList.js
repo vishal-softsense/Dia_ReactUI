@@ -155,14 +155,14 @@ const SolitairePurchaseList = () => {
       "Date",
       "Party",
       "Type",
-      "SubType",
+      "Sub Type",
       "Category",
       "Carats",
       "Amount",
       "Symbol",
       masterAmtHeader,
       stockAmtHeader,
-      "DueDate",
+      "Due Date",
       "Payment Status"
     ];
     const excelRows = rows.map((r) => [
@@ -298,7 +298,7 @@ const SolitairePurchaseList = () => {
         filterFn: customStringFilterFn
       },
       {
-        header: t("SubType"),
+        header: t("Sub Type"),
         accessorKey: "Subtype",
         accessorFn: (row) => getVal(row, "Subtype"),
         enableColumnFilter: true,
@@ -351,7 +351,7 @@ const SolitairePurchaseList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: t("DueDate"),
+        header: t("Due Date"),
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,

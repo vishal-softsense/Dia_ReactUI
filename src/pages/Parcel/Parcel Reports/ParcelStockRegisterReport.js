@@ -323,7 +323,7 @@ const ParcelStockRegisterReport = () => {
     const groupOrder = [];
     const grouped = new Map();
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -666,7 +666,7 @@ const ParcelStockRegisterReport = () => {
     const grouped = new Map();
 
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -675,20 +675,20 @@ const ParcelStockRegisterReport = () => {
     });
 
     const columns = [
-      "TrnDate",
-      "TrnType",
-      "InvNo",
+      "Trn Date",
+      "Trn Type",
+      "Inv No",
       "Particulars",
-      "StockIn",
-      "StockInPrice",
-      "StockInAmount",
-      "StockOut",
-      "StockOutPrice",
-      "StockOutAmount",
+      "Stock In",
+      "Stock In Price",
+      "Stock In Amount",
+      "Stock Out",
+      "Stock Out Price",
+      "Stock Out Amount",
       "COGS",
-      "BalanceStock",
-      "BalancePrice",
-      "BalanceAmount"
+      "Balance Stock",
+      "Balance Price",
+      "Balance Amount"
     ];
 
     const amtDecimals = 2;
@@ -710,7 +710,7 @@ const ParcelStockRegisterReport = () => {
       const items = grouped.get(stockId) || [];
       const subtotal = { InCts: 0, InRate: 0, InAmount: 0, OutCts: 0, OutRate: 0, OutAmount: 0 };
 
-      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([`Stock ID: ${stockId}`, "", "", "", "", "", "", "", "", "", "", "", ""]);
 
       items.forEach((item) => {
         const trnDate = item.trntype === "OpStk" ? opStkDate : item.trnDate;
@@ -805,20 +805,20 @@ const ParcelStockRegisterReport = () => {
 
     // MVC renderStockRegisterReportByStockID columns (+ COGS when radio is COGS)
     const columns = [
-      { header: "TrnDate", key: "trnDate", numeric: false },
-      { header: "TrnType", key: "trntype", numeric: false },
-      { header: "InvNo", key: "invno", numeric: false },
+      { header: "Trn Date", key: "trnDate", numeric: false },
+      { header: "Trn Type", key: "trntype", numeric: false },
+      { header: "Inv No", key: "invno", numeric: false },
       { header: "Particulars", key: "perticulors", numeric: false },
-      { header: "StockIn", key: "inCts", numeric: true, sum: true },
-      { header: "StockInPrice", key: "inRate", numeric: true, sum: true },
-      { header: "StockInAmount", key: "inAmount", numeric: true, sum: true },
-      { header: "StockOut", key: "outCts", numeric: true, sum: true },
-      { header: "StockOutPrice", key: "outRate", numeric: true, sum: true },
-      { header: "StockOutAmount", key: "outAmount", numeric: true, sum: true },
+      { header: "Stock In", key: "inCts", numeric: true, sum: true },
+      { header: "Stock In Price", key: "inRate", numeric: true, sum: true },
+      { header: "Stock In Amount", key: "inAmount", numeric: true, sum: true },
+      { header: "Stock Out", key: "outCts", numeric: true, sum: true },
+      { header: "Stock Out Price", key: "outRate", numeric: true, sum: true },
+      { header: "Stock Out Amount", key: "outAmount", numeric: true, sum: true },
       ...(showCOGS ? [{ header: "COGS", key: "cogs", numeric: true, sum: true }] : []),
-      { header: "BalanceStock", key: "balCts", numeric: true },
-      { header: "BalancePrice", key: "balRate", numeric: true },
-      { header: "BalanceAmount", key: "balAmount", numeric: true }
+      { header: "Balance Stock", key: "balCts", numeric: true },
+      { header: "Balance Price", key: "balRate", numeric: true },
+      { header: "Balance Amount", key: "balAmount", numeric: true }
     ];
 
     const amtDecimals = 2;
@@ -918,7 +918,7 @@ const ParcelStockRegisterReport = () => {
                           textAlign: "left"
                         }}
                       >
-                        <strong>StockID:</strong> {stockId}
+                        <strong>Stock ID:</strong> {stockId}
                       </td>
                     </tr>
 

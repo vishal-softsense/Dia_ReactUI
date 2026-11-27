@@ -416,8 +416,8 @@ const JewelleryConsignMentInReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "MemoNo", label: t("Group by MemoNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "MemoNo", label: t("Group by Memo No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -806,7 +806,7 @@ const JewelleryConsignMentInReport = () => {
                 <thead>
                     <tr>
                         <th>Sr No</th>
-                        <th>MemoNo</th>
+                        <th>Memo No</th>
                         <th>${escapeHtml(t("Jew Stock ID"))}</th>
                         <th>${escapeHtml(t("Product"))}</th>
                         <th>${escapeHtml(t("Carats"))}</th>
@@ -992,22 +992,22 @@ const JewelleryConsignMentInReport = () => {
         }
       },
       {
-        header: t("DATE"),
+        header: t("Date"),
         accessorKey: "ConDATE",
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE"))
       },
       {
-        header: t("DateDiff"),
+        header: t("Date Diff"),
         accessorKey: "DateDiff",
         cell: ({ row }) => dashText(getRowVal(row.original, "DateDiff", "dateDiff"))
       },
       {
-        header: t("MemoNo"),
+        header: t("Memo Number"),
         accessorKey: "MemoNo",
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo"))
       },
@@ -1022,7 +1022,7 @@ const JewelleryConsignMentInReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Stock_ID", "stock_ID"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
       },
@@ -1063,7 +1063,7 @@ const JewelleryConsignMentInReport = () => {
         }
       },
       {
-        header: t("ReturnDate"),
+        header: t("Return Date"),
         accessorKey: "MemoReturnDate",
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate"))
       },
@@ -1077,7 +1077,7 @@ const JewelleryConsignMentInReport = () => {
         }
       },
       {
-        header: t("BalanceAmt"),
+        header: t("Balance Amt"),
         accessorKey: "BalanceAmt",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2),
         footer: ({ table }) => {
@@ -1091,7 +1091,7 @@ const JewelleryConsignMentInReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("IssUser"),
+        header: t("Issue User"),
         accessorKey: "IssUser",
         cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser"))
       },
@@ -1106,22 +1106,22 @@ const JewelleryConsignMentInReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "CertId", "certId"))
       },
       {
-        header: t("InvType"),
+        header: t("Inv Type"),
         accessorKey: "Invtype",
         cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "InvType", "invtype"))
       },
       {
-        header: t("MemoTime"),
+        header: t("Memo Time"),
         accessorKey: "MemoTime",
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoTime", "memoTime"))
       },
       {
-        header: t("MemoReturnDate"),
+        header: t("Memo Return Date"),
         accessorKey: "MemoReturnDate2",
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate"))
       },
       {
-        header: t("MemoReturnTime"),
+        header: t("Memo Return Time"),
         accessorKey: "MemoReturnTime",
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime"))
       }
@@ -1179,9 +1179,9 @@ const JewelleryConsignMentInReport = () => {
     }
 
     const headers = [
-      "DATE", "DateDiff", "MemoNo", "BillNo", "Party", "Jew Stock ID", "ItemName",
-      "Carats", "Price", "Amount", "Return", "ReturnDate", "Balance", "BalanceAmt",
-      "Broker", "IssUser", "Symbol", "Cert", "InvType", "MemoTime", "MemoReturnDate", "MemoReturnTime"
+      "Date", "Date Diff", "Memo Number", "Bill No", "Party", "Jew Stock ID", "Item Name",
+      "Carats", "Price", "Amount", "Return", "Return Date", "Balance", "Balance Amt",
+      "Broker", "Issue User", "Symbol", "Cert", "Inv Type", "Memo Time", "Memo Return Date", "Memo Return Time"
     ];
 
     const rows = reportRows.map((row) => [
@@ -1213,7 +1213,7 @@ const JewelleryConsignMentInReport = () => {
     if (!res?.success) toast.error(t("Excel export failed."));
   };
 
-  document.title = `${t("Jewellery ConsignMentIn Report")} | ${t("Reports")}`;
+  document.title = `${t("Jewellery Consignment In Report")} | ${t("Reports")}`;
 
   return (
     <React.Fragment>
@@ -1316,7 +1316,7 @@ const JewelleryConsignMentInReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
-                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("MemoNo")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
+                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("Memo No")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1331,7 +1331,7 @@ const JewelleryConsignMentInReport = () => {
                           <div className="d-flex flex-column gap-1" style={{ minHeight: "35px" }}>
                             <div className="d-flex align-items-center gap-1">
                               <input type="checkbox" id="jewConsSummaryCheckbox" checked={filters.summary} onChange={(e) => setFilters((p) => ({ ...p, summary: e.target.checked }))} />
-                              <Label htmlFor="jewConsSummaryCheckbox" className="mb-0 small text-danger">{t("JewConsignment Summary")}</Label>
+                              <Label htmlFor="jewConsSummaryCheckbox" className="mb-0 small text-danger">{t("Jew Consignment Summary")}</Label>
                             </div>
                             <div className="d-flex align-items-center gap-1">
                               <input type="checkbox" id="jewConsClearCheckbox" checked={filters.clear} onChange={(e) => setFilters((p) => ({ ...p, clear: e.target.checked }))} />
@@ -1387,8 +1387,8 @@ const JewelleryConsignMentInReport = () => {
                     <Row className="g-2">
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("SubCategory")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.jewSubCategory) || null} onChange={(sel) => setFilters((p) => ({ ...p, jewSubCategory: sel?.value || "" }))} placeholder={t("Select SubCategory")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Sub Category")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.jewSubCategory) || null} onChange={(sel) => setFilters((p) => ({ ...p, jewSubCategory: sel?.value || "" }))} placeholder={t("Select Sub Category")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1399,8 +1399,8 @@ const JewelleryConsignMentInReport = () => {
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("MetalType")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.jewMetalType) || null} onChange={(sel) => setFilters((p) => ({ ...p, jewMetalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select MetalType")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Metal Type")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.jewMetalType) || null} onChange={(sel) => setFilters((p) => ({ ...p, jewMetalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select Metal Type")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -1584,7 +1584,7 @@ const JewelleryConsignMentInReport = () => {
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
                           <th>Sr No</th>
-                          <th>MemoNo</th>
+                          <th>Memo No</th>
                           <th>{t("Jew Stock ID")}</th>
                           <th>{t("Product")}</th>
                           <th className="text-end">{t("Carats")}</th>

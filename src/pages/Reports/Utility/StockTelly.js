@@ -32,11 +32,11 @@ import {
 
 const TABLE_COLUMNS = [
     { key: "ItemCode", label: "Code", align: "text-start" },
-    { key: "LotNo", label: "LotNo", align: "text-start" },
+    { key: "LotNo", label: "Lot No", align: "text-start" },
     { key: "Pcs", label: "Pcs", align: "text-end" },
     { key: "carats", label: "Carats", align: "text-end", isCarat: true },
     { key: "OnHand", label: "On Hand", align: "text-end", isCarat: true },
-    { key: "Rate", label: "AskingPrice", align: "text-end", decimals: 2 },
+    { key: "Rate", label: "Asking Price", align: "text-end", decimals: 2 },
     { key: "Amount", label: "Amount", align: "text-end", decimals: 3 }
 ];
 
@@ -289,7 +289,7 @@ const StockTelly = () => {
         } catch (err) {
             const status = err?.response?.status || err?.status;
             setAuthorized(status !== 403);
-            toast.error(status === 403 ? t("You are not authorized to perform this task.") : (err?.message || t("Error loading Stock Telly.")));
+            toast.error(status === 403 ? t("You are not authorized to perform this task.") : (err?.message || t("Error loading Stock Tally.")));
         } finally {
             setLoading(false);
         }
@@ -454,7 +454,7 @@ const StockTelly = () => {
         }
 
         const filteredRows = filterRows(stockRows, stockFilters);
-        const headers = ["LotNo", "Pcs", "Carats", "On Hand", "AskingPrice", "Amount"];
+        const headers = ["Lot No", "Pcs", "Carats", "On Hand", "Asking Price", "Amount"];
         const rows = filteredRows.map(row => [
             getRowValue(row, "LotNo"),
             getRowValue(row, "Pcs"),
@@ -464,7 +464,7 @@ const StockTelly = () => {
             formatNumber(getRowValue(row, "Amount"), 3)
         ]);
 
-        const result = await exportToExcel(headers, rows, "Sheet 1", "StockTellyData");
+        const result = await exportToExcel(headers, rows, "Sheet 1", "StockTallyData");
         if (!result?.success) {
             toast.error(t("Export failed."));
         }
@@ -489,7 +489,7 @@ const StockTelly = () => {
         }
     };
 
-    document.title = `${t("Stock Telly")} | ${t("Utility")}`;
+    document.title = `${t("Stock Tally")} | ${t("Utility")}`;
 
     return (
         <React.Fragment>
@@ -497,7 +497,7 @@ const StockTelly = () => {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Stock Telly")} pageTitle={t("Utility")} />
+                    <BreadCrumb title={t("Stock Tally")} pageTitle={t("Utility")} />
 
                     <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
                         <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -585,7 +585,7 @@ const StockTelly = () => {
                                     </Col>
                                     <Col lg={2} md={3} sm={6}>
                                         <Button color="primary" outline className="w-100" disabled={busy} onClick={() => setImportModalOpen(true)}>
-                                            {t("Import Stock Telly Data")}
+                                            {t("Import Stock Tally Data")}
                                         </Button>
                                     </Col>
                                 </Row>
@@ -602,7 +602,7 @@ const StockTelly = () => {
                                     </Col>
                                     <Col lg={6}>
                                         <StockTellyTable
-                                            title={t("Imported Stock Telly")}
+                                            title={t("Imported Stock Tally")}
                                             rows={importRows}
                                             filters={importFilters}
                                             onFilterChange={(key, value) => setImportFilters(prev => ({ ...prev, [key]: value }))}
@@ -635,7 +635,7 @@ const StockTelly = () => {
                     />
                     {file ? <div className="text-muted fs-12 mt-1">{file.name}</div> : null}
                     <div className="mt-3">
-                        <Label className="form-label d-block">{t("Download Stock Telly File Format")}</Label>
+                        <Label className="form-label d-block">{t("Download Stock Tally File Format")}</Label>
                         <Button color="primary" type="button" onClick={downloadTemplate}>
                             <i className="ri-download-cloud-2-line me-1" />
                             {t("Download")}

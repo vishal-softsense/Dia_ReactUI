@@ -150,66 +150,66 @@ const compareDueDateAsc = (a, b) => {
 const ALL_COLUMNS = [
   { key: "view", header: "View", align: "center", excel: false },
   { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "TrnType", header: "TrnType", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "TrnType", header: "Trn Type", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "DueDays", header: "Due", align: "left" },
   { key: "Party", header: "Party", align: "left" },
-  { key: "Totcts", header: "TotWeight", align: "right", sum: true, altKeys: ["totcts"] },
+  { key: "Totcts", header: "Tot Weight", align: "right", sum: true, altKeys: ["totcts"] },
   { key: "Amount", header: "Tot Amount", align: "right", sum: true, bg: "#fed49c" },
   { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true, bg: "#98ecc2" },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
   { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true, bg: "#FFCCCB" },
-  { key: "PostDateAmount", header: "PostDateAmount", align: "right", sum: true },
-  { key: "ExportAmount", header: "ExportAmount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true },
+  { key: "ExportAmount", header: "Export Amount", align: "right", sum: true },
   { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "InvType", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
   { key: "Symbol", header: "Currency", align: "left" },
   { key: "Disc", header: "Disc", align: "right" },
-  { key: "PartyMobile", header: "PartyMobile", align: "left" },
+  { key: "PartyMobile", header: "Party Mobile", align: "left" },
   { key: "Broker", header: "Broker", align: "left" },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left" },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
   { key: "Rate", header: "Rate", align: "right" },
   { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "UserName", header: "UserName", align: "left" },
-  { key: "ExpPartyName", header: "ExpParty", align: "left" },
+  { key: "UserName", header: "User Name", align: "left" },
+  { key: "ExpPartyName", header: "Exp Party", align: "left" },
   { key: "SalesPerson", header: "Sales Person", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const PARTYWISE_COLUMNS = [
   { key: "Date", header: "Date", align: "center" },
-  { key: "InvoiceNo", header: "InvNo", align: "center" },
-  { key: "TrnType", header: "TrnType", align: "left", requiredExclude: true },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "center" },
+  { key: "InvoiceNo", header: "Inv No", align: "center" },
+  { key: "TrnType", header: "Trn Type", align: "left", requiredExclude: true },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "center" },
   { key: "DueDays", header: "Due", align: "center" },
   { key: "Totcts", header: "Weight", align: "right", sum: true, altKeys: ["totcts"] },
   { key: "Amount", header: "Amount", align: "right", sum: true },
-  { key: "PaidAmount", header: "PaidAmount", align: "right", sum: true },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true, requiredExclude: true },
-  { key: "RemainAmount", header: "RemainAmount", align: "right", sum: true },
-  { key: "PostDateAmount", header: "PostDateAmount", align: "right", sum: true, requiredExclude: true },
-  { key: "ExportAmount", header: "ExportAmount", align: "right", sum: true, requiredExclude: true },
+  { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true, requiredExclude: true },
+  { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true, requiredExclude: true },
+  { key: "ExportAmount", header: "Export Amount", align: "right", sum: true, requiredExclude: true },
   { key: "Seller", header: "Seller", align: "left", requiredExclude: true },
-  { key: "InvType", header: "InvType", align: "left", requiredExclude: true },
+  { key: "InvType", header: "Invoice Type", align: "left", requiredExclude: true },
   { key: "Symbol", header: "Currency", align: "left", requiredExclude: true },
   { key: "Disc", header: "Disc", align: "right", sum: true, requiredExclude: true },
-  { key: "PartyMobile", header: "PartyMobile", align: "left", requiredExclude: true },
+  { key: "PartyMobile", header: "Party Mobile", align: "left", requiredExclude: true },
   { key: "Broker", header: "Broker", align: "left", requiredExclude: true },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left", requiredExclude: true },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left", requiredExclude: true },
   { key: "Rate", header: "Rate", align: "right", requiredExclude: true },
   { key: "Remarks", header: "Remarks", align: "left", requiredExclude: true },
-  { key: "UserName", header: "UserName", align: "left", requiredExclude: true },
-  { key: "ExpPartyName", header: "ExpParty", align: "left", requiredExclude: true },
+  { key: "UserName", header: "User Name", align: "left", requiredExclude: true },
+  { key: "ExpPartyName", header: "Exp Party", align: "left", requiredExclude: true },
   // MVC partywise: after ExpParty; excluded from Required Print only (not Required Excel)
-  { key: "SalesPerson", header: "SalesPerson", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
+  { key: "SalesPerson", header: "Sales Person", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const STATEMENT_COLUMNS = [
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "Date", header: "Inv.Date", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "Date", header: "Inv. Date", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "DueDays", header: "Age", align: "left" },
   { key: "Amount", header: "Amount Due", align: "right", sum: false },
   { key: "PaidAmount", header: "Payments/Credits", align: "right", sum: false },
@@ -1007,7 +1007,9 @@ const OutstandingReport = () => {
           if (
             cell.classList.contains("required-exclude") ||
             text === "BillNo" ||
+            text === "Bill No" ||
             text === t("BillNo") ||
+            text === t("Bill No") ||
             text === "SalesPerson" ||
             text === "Sales Person" ||
             text === t("SalesPerson") ||
@@ -1644,7 +1646,7 @@ const OutstandingReport = () => {
                         options={getOptions("subType")}
                         value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                         onChange={(sel) => setFilters((p) => ({ ...p, subType: sel?.value || "" }))}
-                        placeholder={t("Select SubType")}
+                        placeholder={t("Select Sub Type")}
                       />
                     </FormGroup>
                   </Col>
@@ -1729,7 +1731,7 @@ const OutstandingReport = () => {
                   </Col>
                   <Col sm={2}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("Comm.Agent")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Comm. Agent")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -1823,7 +1825,7 @@ const OutstandingReport = () => {
                         className="form-control form-control-sm"
                         style={{ height: "35px" }}
                         value={filters.invNo}
-                        placeholder={t("InvNo")}
+                        placeholder={t("Inv No")}
                         onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))}
                       />
                     </FormGroup>

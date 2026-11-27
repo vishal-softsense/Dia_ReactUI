@@ -384,8 +384,8 @@ const MixConsignmentReport = () => {
 
     const groupByOptions = useMemo(
         () => [
-            { value: "MemoNo", label: t("Group by MemoNo") },
-            { value: "PartyName", label: t("Group by PartyName") }
+            { value: "MemoNo", label: t("Group by Memo No") },
+            { value: "PartyName", label: t("Group by Party Name") }
         ],
         [t]
     );
@@ -1064,7 +1064,7 @@ const MixConsignmentReport = () => {
                 }
             },
             {
-                header: t("DATE"),
+                header: t("Date"),
                 id: "TrnDate",
                 accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -1082,7 +1082,7 @@ const MixConsignmentReport = () => {
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
             {
-                header: t("DueDate"),
+                header: t("Due Date"),
                 id: "ConDATE",
                 accessorFn: (row) => formatReportDisplayDate(getRowDueDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -1099,16 +1099,16 @@ const MixConsignmentReport = () => {
                 cell: ({ getValue }) => dashText(getValue())
             },
             {
-                header: t("OverDue"),
+                header: t("Over Due"),
                 accessorKey: "DueDays",
                 className: "text-end",
                 cell: ({ row }) => dashText(getRowVal(row.original, "DueDays", "dueDays"))
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-            { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno")) },
-            { header: t("ItemName"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")) },
+            { header: t("Lot No"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno")) },
+            { header: t("Item Name"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")) },
             {
                 header: t("Carats"),
                 accessorKey: "Carats",
@@ -1171,7 +1171,7 @@ const MixConsignmentReport = () => {
                 }
             },
             {
-                header: t("BalanceAmt"),
+                header: t("Balance Amt"),
                 accessorKey: "BalanceAmt",
                 className: "text-end",
                 cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2),
@@ -1182,11 +1182,11 @@ const MixConsignmentReport = () => {
             },
             { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => dashText(getRowVal(row.original, "Seller", "seller")) },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("MemoType"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
-            { header: t("SubType"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
+            { header: t("Memo Type"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
+            { header: t("Sub Type"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
             { header: t("Category"), accessorKey: "Category", cell: ({ row }) => dashText(getRowVal(row.original, "Category", "category")) },
-            { header: t("IssUser"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
+            { header: t("Iss User"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
         ],
         [expandedMemoNos, t, caratFormat]
     );
@@ -1306,27 +1306,27 @@ const MixConsignmentReport = () => {
 
         const headers = [
             "Date",
-            "DueDate",
-            "OverDue",
-            "MemoNo",
-            "BillNo",
+            "Due Date",
+            "Over Due",
+            "Memo Number",
+            "Bill No",
             "Party",
-            "LotNo",
-            "ItemName",
+            "Lot No",
+            "Item Name",
             "Carats",
             "Price",
             "Amount",
             "Sold",
             "Return",
             "Balance",
-            "BalanceAmt",
+            "Balance Amt",
             "Seller",
             "Broker",
-            "MemoType",
-            "SubType",
+            "Memo Type",
+            "Sub Type",
             "Category",
-            "IssUser",
-            "StockType"
+            "Iss User",
+            "Stock Type"
         ];
 
         const rows = reportRows.map((r) => [

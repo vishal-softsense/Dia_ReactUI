@@ -95,7 +95,7 @@ const allColumns = [
 
     { label: "Carats", key: "carats", align: "text-end", type: "carats" },
     { label: "On Hand", key: "onHand", align: "text-end", type: "decimal3" },
-    { label: "MemoOut", key: "memoOut", align: "text-end", type: "decimal3" },
+    { label: "Memo Out", key: "memoOut", align: "text-end", type: "decimal3" },
 
     { label: "Size", key: "size", align: "text-center" },
     { label: "Color", key: "color", align: "text-center" },
@@ -1142,8 +1142,8 @@ const ParcelStockSearchReport = () => {
         DirectPrint: {
             label: "Direct Print",
             headers: [
-                "Status", "LotNo", "Item", "Shape", "Carats", "On Hand", "MemoOut", "Size",
-                "Color", "Clarity", "Rate", "Amount", "BoxName", "Item Group ID", "Country", "MemoPartyName", "HoldPartyName"
+                "Status", "Lot No", "Item", "Shape", "Carats", "On Hand", "Memo Out", "Size",
+                "Color", "Clarity", "Rate", "Amount", "Box Name", "Item Group ID", "Country", "Memo Party", "Hold Party"
             ],
             mapper: (item) => [
                 item.curStatus || item.CurStatus || "",
@@ -2172,7 +2172,7 @@ const ParcelStockSearchReport = () => {
                                                         <div className="d-flex flex-wrap align-items-center gap-2">
                                                             {selectedLotNos.length > 0 && (
                                                                 <div className="d-flex align-items-center gap-1 me-2 bg-light p-1 rounded border border-light-subtle">
-                                                                    <span className="text-muted fs-11 fw-bold ps-1 me-1 text-nowrap">{t("LotNo")}:</span>
+                                                                    <span className="text-muted fs-11 fw-bold ps-1 me-1 text-nowrap">{t("Lot No")}:</span>
                                                                     <textarea
                                                                         className="form-control form-control-sm p-1 bg-white border"
                                                                         style={{
