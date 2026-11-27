@@ -514,7 +514,7 @@ const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
   } = opts;
 
   const carats = getNumVal(lot, "Carats", "Weight");
-  const caratStr = formatCarat(carats, getCachedCaratFormat());
+  const caratStr = formatCaratValue(carats, getCachedCaratFormat());
   // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
   // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
   const pcs = getNumVal(lot, "Pcs");
