@@ -539,20 +539,20 @@ const SolitaireConsignmentInReturn = () => {
                               />
                             </th>
                             <th style={{ minWidth: 100, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Date")}</th>
-                            <th style={{ minWidth: 80, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("MemoNo")}</th>
+                            <th style={{ minWidth: 80, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Memo Number")}</th>
                             <th style={{ minWidth: 140, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Party")}</th>
                             <th style={{ minWidth: 100, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Broker")}</th>
                             <th style={{ minWidth: 100, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Item")}</th>
-                            <th className="text-end" style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("carats")}</th>
+                            <th className="text-end" style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Carats")}</th>
                             <th className="text-end" style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Price")}</th>
                             <th className="text-end" style={{ minWidth: 80, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Pur")}</th>
                             <th className="text-end" style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Return")}</th>
                             <th className="text-end" style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Balance")}</th>
-                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("SPCode")}</th>
-                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("SPTCode")}</th>
-                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("ItemCode")}</th>
-                            <th style={{ minWidth: 160, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("ItemName")}</th>
-                            <th style={{ minWidth: 110, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("MNo_BillNo")}</th>
+                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("SP Code")}</th>
+                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("SPT Code")}</th>
+                            <th style={{ minWidth: 90, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Item Code")}</th>
+                            <th style={{ minWidth: 160, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Item Name")}</th>
+                            <th style={{ minWidth: 110, position: "sticky", top: 0, zIndex: 3, background: "var(--vz-secondary-bg, #f3f6f9)" }}>{t("Memo / Bill No")}</th>
                           </tr>
                         </thead>
                         <tbody>

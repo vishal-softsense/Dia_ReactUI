@@ -32,7 +32,7 @@ import {
 } from "../../../../helpers/fakebackend_helper";
 
 const GIA_COLUMNS = [
-    { key: "SrNo", title: "SrNo" },
+    { key: "SrNo", title: "Sr No" },
     { key: "report_number", title: "Report Number" },
     { key: "report_date", title: "Report Date" },
     { key: "report_type", title: "Report Type" },
@@ -65,36 +65,36 @@ const GIA_COLUMNS = [
     { key: "country_of_origin", title: "Country of Origin" },
     { key: "diamond_type", title: "Diamond Type" },
     { key: "report_comments", title: "Report Comments" },
-    { key: "lotno", title: "LotNo" }
+    { key: "lotno", title: "Lot No" }
 ];
 
 const IGI_COLUMNS = [
-    { key: "SrNo", title: "SrNo" },
-    { key: "ReportNumber", title: "ReportNumber" },
-    { key: "ReportDate", title: "ReportDate" },
+    { key: "SrNo", title: "Sr No" },
+    { key: "ReportNumber", title: "Report Number" },
+    { key: "ReportDate", title: "Report Date" },
     { key: "Description", title: "Description" },
     { key: "Shape", title: "Shape" },
     { key: "Weight", title: "Weight" },
     { key: "Color", title: "Color" },
     { key: "Clarity", title: "Clarity" },
-    { key: "CutProp", title: "CutProp" },
+    { key: "CutProp", title: "Cut Prop" },
     { key: "Sym", title: "Sym" },
     { key: "Pol", title: "Pol" },
-    { key: "TableDiameter", title: "TableDiameter" },
-    { key: "CrownHeight", title: "CrownHeight" },
-    { key: "CrownAngel", title: "CrownAngel" },
-    { key: "PavilionDepth", title: "PavilionDepth" },
-    { key: "PavilionAngel", title: "PavilionAngel" },
-    { key: "GirdleName", title: "GirdleName" },
-    { key: "CuletSize", title: "CuletSize" },
-    { key: "TotalDepth", title: "TotalDepth" },
+    { key: "TableDiameter", title: "Table Diameter" },
+    { key: "CrownHeight", title: "Crown Height" },
+    { key: "CrownAngel", title: "Crown Angle" },
+    { key: "PavilionDepth", title: "Pavilion Depth" },
+    { key: "PavilionAngel", title: "Pavilion Angle" },
+    { key: "GirdleName", title: "Girdle Name" },
+    { key: "CuletSize", title: "Culet Size" },
+    { key: "TotalDepth", title: "Total Depth" },
     { key: "Fluorescence", title: "Fluorescence" },
     { key: "Inscription", title: "Inscription" },
-    { key: "Measurement1", title: "Measurement1" },
-    { key: "Measurement2", title: "Measurement2" },
-    { key: "Measurement3", title: "Measurement3" },
-    { key: "Comments", title: "LabComments" },
-    { key: "LotNo", title: "LotNo" }
+    { key: "Measurement1", title: "Measurement 1" },
+    { key: "Measurement2", title: "Measurement 2" },
+    { key: "Measurement3", title: "Measurement 3" },
+    { key: "Comments", title: "Lab Comments" },
+    { key: "LotNo", title: "Lot No" }
 ];
 
 /** sessionStorage key — mirrors MVC Session["IgiLabToPurchase"] */
@@ -701,7 +701,7 @@ const GetLabData = () => {
                                             <Table bordered size="sm" className="mb-0 align-middle">
                                                 <thead className="table-light">
                                                     <tr>
-                                                        <th className="text-nowrap">{t("LotNo")}</th>
+                                                        <th className="text-nowrap">{t("Lot No")}</th>
                                                         <th className="text-nowrap">{t("Certificate No")}</th>
                                                         <th className="text-nowrap">{t("Carats")}</th>
                                                     </tr>

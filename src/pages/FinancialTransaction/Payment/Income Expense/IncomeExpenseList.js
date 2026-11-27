@@ -145,11 +145,11 @@ const IncomeExpenseList = () => {
             return;
         }
         const headers = [
-            t("GCode"),
-            t("TransDate"),
-            t("Vtype"),
-            t("MainAccount"),
-            t("PartyAccount"),
+            t("G Code"),
+            t("Transaction Date"),
+            t("V Type"),
+            t("Main Account"),
+            t("Party Account"),
             t("Amount"),
             t("Symbol"),
             `${masterSymbol} Amt`,
@@ -204,14 +204,14 @@ const IncomeExpenseList = () => {
                 }
             },
             {
-                header: t("GCode"),
+                header: t("G Code"),
                 accessorKey: "GCODE",
                 accessorFn: (row) => getVal(row, "GCODE", "gcode"),
                 enableColumnFilter: true,
                 filterFn: customStringFilterFn
             },
             {
-                header: t("TransDate"),
+                header: t("Transaction Date"),
                 accessorKey: "Date",
                 accessorFn: (row) => fmtDate(getVal(row, "Date", "date")),
                 enableColumnFilter: true,
@@ -219,21 +219,21 @@ const IncomeExpenseList = () => {
                 cell: dateCell
             },
             {
-                header: t("Vtype"),
+                header: t("V Type"),
                 accessorKey: "Vtype",
                 accessorFn: (row) => getVal(row, "Vtype", "vtype"),
                 enableColumnFilter: true,
                 filterFn: customStringFilterFn
             },
             {
-                header: t("MainAccount"),
+                header: t("Main Account"),
                 accessorKey: "DAccount",
                 accessorFn: (row) => getVal(row, "DAccount", "dAccount"),
                 enableColumnFilter: true,
                 filterFn: customStringFilterFn
             },
             {
-                header: t("PartyAccount"),
+                header: t("Party Account"),
                 accessorKey: "CAccount",
                 accessorFn: (row) => getVal(row, "CAccount", "cAccount"),
                 enableColumnFilter: true,
@@ -360,7 +360,7 @@ const IncomeExpenseList = () => {
                                     {deleteTarget?.gcode && (
                                         <>
                                             <br />
-                                            <strong>{t("GCode")} :</strong> {deleteTarget.gcode}
+                                            <strong>{t("G Code")} :</strong> {deleteTarget.gcode}
                                         </>
                                     )}
                                 </p>

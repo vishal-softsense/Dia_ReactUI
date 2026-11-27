@@ -147,12 +147,12 @@ const PaymentList = () => {
       return;
     }
     const headers = [
-      t("GCode"),
-      t("InvDetails"),
-      t("TransDate"),
-      t("Vtype"),
-      t("MainAccount"),
-      t("PartyAccount"),
+      t("G Code"),
+      t("Inv Details"),
+      t("Transaction Date"),
+      t("V Type"),
+      t("Main Account"),
+      t("Party Account"),
       t("Amount"),
       t("Symbol"),
       `${masterSymbol} Amt`,
@@ -222,14 +222,14 @@ const PaymentList = () => {
         }
       },
       {
-        header: t("GCode"),
+        header: t("G Code"),
         accessorKey: "GCODE",
         accessorFn: (row) => getVal(row, "GCODE", "gcode"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("InvDetails"),
+        header: t("Inv Details"),
         id: "InvDetails",
         enableColumnFilter: false,
         cell: ({ row }) => {
@@ -252,7 +252,7 @@ const PaymentList = () => {
         }
       },
       {
-        header: t("TransDate"),
+        header: t("Transaction Date"),
         accessorKey: "Date",
         accessorFn: (row) => fmtDate(getVal(row, "Date", "date")),
         enableColumnFilter: true,
@@ -260,21 +260,21 @@ const PaymentList = () => {
         cell: dateCell
       },
       {
-        header: t("Vtype"),
+        header: t("V Type"),
         accessorKey: "Vtype",
         accessorFn: (row) => getVal(row, "Vtype", "vtype"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("MainAccount"),
+        header: t("Main Account"),
         accessorKey: "Account",
         accessorFn: (row) => getVal(row, "Account", "account"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("PartyAccount"),
+        header: t("Party Account"),
         accessorKey: "Party",
         accessorFn: (row) => getVal(row, "Party", "party"),
         enableColumnFilter: true,
@@ -408,7 +408,7 @@ const PaymentList = () => {
                   {deleteTarget?.gcode && (
                     <>
                       <br />
-                      <strong>{t("GCode")} :</strong> {deleteTarget.gcode}
+                      <strong>{t("G Code")} :</strong> {deleteTarget.gcode}
                     </>
                   )}
                 </p>

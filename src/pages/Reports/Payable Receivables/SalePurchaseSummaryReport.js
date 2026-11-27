@@ -102,14 +102,14 @@ const TRN_TYPES = [
 
 const buildColumns = (masterSymbol, stockSymbol) => [
   { key: "SPDate", header: "Date", align: "left", sortType: "date" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "Invno", header: "InvNo", align: "left", altKeys: ["invno"] },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "Invno", header: "Inv No", align: "left", altKeys: ["invno"] },
   { key: "PartyName", header: "Party", align: "left", altKeys: ["partyName"] },
   { key: "Totcts", header: "Carats", align: "right", sum: true, decimals: 3, footerDecimals: 2, altKeys: ["totcts"] },
   { key: "Rate", header: "Rate", align: "right", avgRate: true, decimals: 2 },
   { key: "Totamount", header: "Amount", align: "right", sum: true, altKeys: ["totamount"] },
-  { key: "Plusminamount", header: "+/-Amt", align: "right", sum: true, altKeys: ["plusminamount"] },
-  { key: "InvAmt", header: "InvAmt", align: "right", sum: true, altKeys: ["invAmt"] },
+  { key: "Plusminamount", header: "+/- Amt", align: "right", sum: true, altKeys: ["plusminamount"] },
+  { key: "InvAmt", header: "Invoice Amount", align: "right", sum: true, altKeys: ["invAmt"] },
   {
     key: "MasterCurrencyFinalAmount",
     header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount",
@@ -124,23 +124,23 @@ const buildColumns = (masterSymbol, stockSymbol) => [
     decimals: 2,
     altKeys: ["baseRate"]
   },
-  { key: "InvType", header: "InvType", align: "left", altKeys: ["invType"] },
+  { key: "InvType", header: "Invoice Type", align: "left", altKeys: ["invType"] },
   { key: "Sellername", header: "Seller", align: "left", altKeys: ["sellername"] },
   { key: "duedays", header: "Due", align: "left", altKeys: ["dueDays"] },
   { key: "Remarks", header: "Remarks", align: "left", altKeys: ["remarks"] },
-  { key: "ExpParty", header: "ExpParty", align: "left", altKeys: ["expParty"] },
+  { key: "ExpParty", header: "Exp Party", align: "left", altKeys: ["expParty"] },
   { key: "BrokerName", header: "Broker", align: "left", altKeys: ["brokerName"] },
-  { key: "Subtype", header: "SubType", align: "left", altKeys: ["subtype"] },
+  { key: "Subtype", header: "Sub Type", align: "left", altKeys: ["subtype"] },
   { key: "Status", header: "Status", align: "left", altKeys: ["status"] },
-  { key: "VatAmt", header: "VatAmount", align: "right", sum: true, altKeys: ["vatAmt"] },
+  { key: "VatAmt", header: "VAT Amount", align: "right", sum: true, altKeys: ["vatAmt"] },
   {
     key: "VatAmtMasterCur",
-    header: "VatRsAmount",
+    header: "VAT Rupees Amount",
     align: "right",
     sum: true,
     altKeys: ["vatAmtMasterCur"]
   },
-  { key: "VatPer", header: "VatPer", align: "right", decimals: 2, altKeys: ["vatPer"] }
+  { key: "VatPer", header: "VAT Percentage", align: "right", decimals: 2, altKeys: ["vatPer"] }
 ];
 
 const mapBasicOptions = (items, useNameAsValue = false) =>
@@ -707,7 +707,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                   <Col sm={6} md={3}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("SubType")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Sub Type")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -716,7 +716,7 @@ const SalePurchaseSummaryReport = () => {
                         options={subTypeOptions}
                         value={selectedSubType}
                         onChange={setSelectedSubType}
-                        placeholder={t("Select SubType")}
+                        placeholder={t("Select Sub Type")}
                       />
                     </FormGroup>
                   </Col>
@@ -777,7 +777,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                   <Col sm={6} md={3}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("Exp.Party")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Exp. Party")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}

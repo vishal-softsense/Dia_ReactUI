@@ -684,7 +684,7 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
       rows.push(
         <tr key={`header-${jewCode}`} className="group-header">
           <td colSpan={TOTAL_COLS} data-stockid={firstLot}>
-            JewCode: {jewCode}
+            Jew Code: {jewCode}
           </td>
         </tr>
       );
@@ -869,34 +869,34 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
             <th rowSpan={2} className="col-category">Category</th>
             <th rowSpan={2} className="col-subcategory">Sub Category</th>
             <th rowSpan={2} className="col-status">Status</th>
-            <th rowSpan={2} className="col-stockid">StockId</th>
-            <th rowSpan={2} className="col-itemname">ItemName</th>
+            <th rowSpan={2} className="col-stockid">Stock Id</th>
+            <th rowSpan={2} className="col-itemname">Item Name</th>
             <th rowSpan={2} className="col-pcs">Pcs</th>
             <th rowSpan={2} className="col-rate">Rate</th>
             <th rowSpan={2} className="col-amount">Amount</th>
             <th colSpan={7} className="col-metal-group">Metal Details</th>
             <th colSpan={9} className="col-diamond-group">Diamond Details</th>
             <th colSpan={9} className="col-stone-group">Stone Details</th>
-            <th rowSpan={2} className="col-totalmetal">TotalMetalAmount</th>
+            <th rowSpan={2} className="col-totalmetal">Total Metal Amount</th>
             <th rowSpan={2} className="col-totaldiamond">Total Diamond Amount</th>
             <th rowSpan={2} className="col-totalstone">Total Stone Amount</th>
-            <th rowSpan={2} className="col-makingcharges">MakingCharges</th>
+            <th rowSpan={2} className="col-makingcharges">Making Charges</th>
             <th rowSpan={2} className="col-settingcharges">Setting Charges</th>
             <th rowSpan={2} className="col-handlingcharges">Handling Charges</th>
             <th rowSpan={2} className="col-certcharges">Certificate Charges</th>
-            <th rowSpan={2} className="col-othercharges">OtherCharges</th>
-            <th rowSpan={2} className="col-hallmarkcharges">HallmarkCharges</th>
-            <th rowSpan={2} className="col-finalamount">Final JewAmount</th>
+            <th rowSpan={2} className="col-othercharges">Other Charges</th>
+            <th rowSpan={2} className="col-hallmarkcharges">Hallmark Charges</th>
+            <th rowSpan={2} className="col-finalamount">Final Jew Amount</th>
           </tr>
           <tr>
-            <th className="col-metaltype">MetalType</th>
-            <th className="col-metalcolor">MetalColor</th>
-            <th className="col-metalpurity">MetalPurity</th>
+            <th className="col-metaltype">Metal Type</th>
+            <th className="col-metalcolor">Metal Color</th>
+            <th className="col-metalpurity">Metal Purity</th>
             <th className="col-grossweight">Gross Weight</th>
             <th className="col-netweight">Net Weight</th>
             <th className="col-goldrate">Gold Rate/Gram</th>
             <th className="col-goldamount">Gold Amount</th>
-            <th className="col-dia-lotno">LotNo</th>
+            <th className="col-dia-lotno">Lot No</th>
             <th className="col-dia-lab">LAB</th>
             <th className="col-dia-shape">Shape</th>
             <th className="col-dia-color">Color</th>
@@ -905,7 +905,7 @@ const JewelleryStockReportTable = ({ data, onStockClick, onStockCountChange }) =
             <th className="col-dia-carat">Carat</th>
             <th className="col-dia-price">Price</th>
             <th className="col-dia-amount">Amount</th>
-            <th className="col-stone-lotno">LotNo</th>
+            <th className="col-stone-lotno">Lot No</th>
             <th className="col-stone-lab">LAB</th>
             <th className="col-stone-shape">Shape</th>
             <th className="col-stone-color">Color</th>
@@ -1717,18 +1717,18 @@ ${hideCss} { display: none; }
     rowIdx += 2;
 
     const header1 = [
-      "Image", "Category", "Status", "StockId", "ItemName", "Pcs",
+      "Image", "Category", "Status", "Stock Id", "Item Name", "Pcs",
       "Metal Details", "", "", "", "", "", "",
       "Diamond Details", "", "", "", "", "", "", "",
-      "MakingCharges", "FinalJewAmount"
+      "Making Charges", "Final Jew Amount"
     ];
     ws.getRow(rowIdx).values = header1;
     ws.getRow(rowIdx).height = 25;
 
     const header2 = [
       "", "", "", "", "", "",
-      "MetalType", "MetalColor", "MetalPurity", "Gross Weight", "Net Weight", "Gold Rate/Gram", "Gold Amount",
-      "LotNo", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Dia Amt",
+      "Metal Type", "Metal Color", "Metal Purity", "Gross Weight", "Net Weight", "Gold Rate/Gram", "Gold Amount",
+      "Lot No", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Dia Amt",
       "", ""
     ];
     ws.getRow(rowIdx + 1).values = header2;
@@ -2032,22 +2032,22 @@ ${hideCss} { display: none; }
     rowIdx += 2;
 
     const header1 = [
-      "Image", "Video", "Lab", "CertificateNo", "Category", "Sub Category",
-      "Status", "StockId", "ItemName", "Pcs", "Rate", "Amount",
+      "Image", "Video", "Lab", "Certificate No", "Category", "Sub Category",
+      "Status", "Stock Id", "Item Name", "Pcs", "Rate", "Amount",
       "Metal Details", "", "", "", "", "", "",
       "Diamond Details", "", "", "", "", "", "", "", "",
       "Stone Details", "", "", "", "", "", "", "", "",
-      "MakingCharges", "SettingCharges", "HandlingCharges",
-      "CertificateCharges", "OtherCharges", "HallmarkCharges", "FinalJewAmount"
+      "Making Charges", "Setting Charges", "Handling Charges",
+      "Certificate Charges", "Other Charges", "Hallmark Charges", "Final Jew Amount"
     ];
     ws.getRow(rowIdx).values = header1;
     ws.getRow(rowIdx).height = 37;
 
     const header2 = [
       "", "", "", "", "", "", "", "", "", "", "", "",
-      "MetalType", "MetalColor", "MetalPurity", "Gross Weight", "Net Weight", "Gold Rate/Gram", "Gold Amount",
-      "LotNo", "LAB", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Dia. Amt",
-      "LotNo", "LAB", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Stone Amt",
+      "Metal Type", "Metal Color", "Metal Purity", "Gross Weight", "Net Weight", "Gold Rate/Gram", "Gold Amount",
+      "Lot No", "LAB", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Dia. Amt",
+      "Lot No", "LAB", "Shape", "Color", "Clarity", "Pcs", "Carat", "Price/Carat", "Stone Amt",
       "", "", "", "", "", "", ""
     ];
     ws.getRow(rowIdx + 1).values = header2;
@@ -2536,7 +2536,7 @@ ${hideCss} { display: none; }
                   </Button>
                   {reportData.length > 0 && (
                     <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setShowReport(true)}>
-                      {t("Prv.Record")}
+                      {t("Prv. Record")}
                     </Button>
                   )}
                 </>
@@ -2556,9 +2556,9 @@ ${hideCss} { display: none; }
                     value={printType}
                     onChange={(e) => setPrintType(e.target.value)}
                   >
-                    <option value="JewelleryStockList Print">JewelleryStockList Print</option>
+                    <option value="JewelleryStockList Print">Jewellery Stock List Print</option>
                     <option value="BarcodePrint">Barcode Print</option>
-                    <option value="JewelleryRequiredColumnPrint">JewelleryRequiredColumn Print</option>
+                    <option value="JewelleryRequiredColumnPrint">Jewellery Required Column Print</option>
                   </Input>
                   <Button color="success" className="btn-sm rounded-2 px-3 py-1" onClick={handleExcelExport}>
                     <i className="ri-file-excel-2-line align-middle me-1" />
@@ -2606,11 +2606,11 @@ ${hideCss} { display: none; }
                           {fieldLabel("Status")}
                           <Input type="select" bsSize="sm" name="status" value={filters.status} onChange={handleFilterChange} style={{ height: 35 }}>
                             <option value="All">All</option>
-                            <option value="OnHand">OnHand</option>
-                            <option value="OnMemo">OnMemo</option>
-                            <option value="OnHand&Int.Memo">OnHand&Int.Memo</option>
-                            <option value="OnHand + Memo In">OnHand + Memo In</option>
-                            <option value="OnHand + Party Hold">OnHand + Party Hold</option>
+                            <option value="OnHand">On Hand</option>
+                            <option value="OnMemo">On Memo</option>
+                            <option value="OnHand&Int.Memo">On Hand & Int. Memo</option>
+                            <option value="OnHand + Memo In">On Hand + Memo In</option>
+                            <option value="OnHand + Party Hold">On Hand + Party Hold</option>
                             <option value="Memo In">Memo In</option>
                             <option value="Party Hold">Party Hold</option>
                             <option value="All - Party Hold">All - Party Hold</option>
@@ -2628,9 +2628,9 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("SubCategory")}
+                          {fieldLabel("Sub Category")}
                           <Input type="select" bsSize="sm" value={filters.jewSubCategory} onChange={(e) => handleNativeSelect("jewSubCategory", e.target.value)} style={{ height: 35 }}>
-                            <option value="">Select SubCategory</option>
+                            <option value="">Select Sub Category</option>
                             {dropdownOptions.subCategory.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </Input>
                         </FormGroup>
@@ -2659,9 +2659,9 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("MetalType")}
+                          {fieldLabel("Metal Type")}
                           <Input type="select" bsSize="sm" value={filters.jewMetalType} onChange={(e) => handleMetalChange(e.target.value)} style={{ height: 35 }}>
-                            <option value="">Select MetalType</option>
+                            <option value="">Select Metal Type</option>
                             {dropdownOptions.metal.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </Input>
                         </FormGroup>
@@ -2686,7 +2686,7 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("LotNo")}
+                          {fieldLabel("Lot No")}
                           <Select
                             isMulti
                             name="showLotNo"
@@ -2761,13 +2761,13 @@ ${hideCss} { display: none; }
                   <Col lg={2} md={3}>
                     <FormGroup className="mb-2">
                       <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-                        <Label className="fw-medium mb-0">{t("JewelleryStockID")}</Label>
+                        <Label className="fw-medium mb-0">{t("Jewellery Stock ID")}</Label>
                         <Input type="select" bsSize="sm" name="filters" value={filters.filters} onChange={handleFilterChange} style={{ maxWidth: 108, height: 30 }}>
-                          <option value="LotNo">LotNo</option>
-                          <option value="LotNo Not">LotNo Not</option>
-                          <option value="LotNo Like">LotNo Like</option>
-                          <option value="CertNo">CertNo</option>
-                          <option value="CertNo Not">CertNo Not</option>
+                          <option value="LotNo">Lot No</option>
+                          <option value="LotNo Not">Lot No Not</option>
+                          <option value="LotNo Like">Lot No Like</option>
+                          <option value="CertNo">Cert No</option>
+                          <option value="CertNo Not">Cert No Not</option>
                         </Input>
                       </div>
                       <Input
@@ -2782,7 +2782,7 @@ ${hideCss} { display: none; }
                       />
                     </FormGroup>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1">{t("Show StockID")}</Label>
+                      <Label className="fw-medium mb-1">{t("Show Stock ID")}</Label>
                       <Select
                         isMulti
                         name="showStockId"
@@ -2799,7 +2799,7 @@ ${hideCss} { display: none; }
                             debouncedLoadStockIdOptions("");
                           }
                         }}
-                        placeholder={t("Select StockID")}
+                        placeholder={t("Select Stock ID")}
                         isLoading={loadingStockIds}
                         classNamePrefix="react-select"
                         closeMenuOnSelect={false}

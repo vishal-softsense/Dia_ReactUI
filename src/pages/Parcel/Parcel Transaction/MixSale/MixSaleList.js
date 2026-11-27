@@ -150,19 +150,19 @@ const MixSaleList = () => {
     }
     const headers = [
       "Invoice",
-      "BillNo",
+      "Bill No",
       "Date",
       "Print Date",
       "Party",
       "Type",
-      "SubType",
+      "Sub Type",
       "Category",
       "Carats",
       "Amount",
       "Currency",
       masterAmtHeader,
       stockAmtHeader,
-      "DueDate",
+      "Due Date",
       "Payment Status"
     ];
     const excelRows = rows.map((r) => [
@@ -282,7 +282,7 @@ const MixSaleList = () => {
         cell: ({ row }) => invBadge(row.original)
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => getVal(row, "BillNo"),
         enableColumnFilter: true,
@@ -326,7 +326,7 @@ const MixSaleList = () => {
         minWidth: "105px"
       },
       {
-        header: t("SubType"),
+        header: t("Sub Type"),
         accessorKey: "Subtype",
         accessorFn: (row) => getVal(row, "Subtype"),
         enableColumnFilter: true,
@@ -392,7 +392,7 @@ const MixSaleList = () => {
         cell: ({ getValue }) => <div className="text-end fw-medium">{getValue()}</div>
       },
       {
-        header: t("DueDate"),
+        header: t("Due Date"),
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,

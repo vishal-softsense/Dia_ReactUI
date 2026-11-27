@@ -12,6 +12,10 @@ import {
   FormGroup,
   Input,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Row,
   Table
 } from "reactstrap";
@@ -31,7 +35,8 @@ import {
   getMixPurchaseReturnItemFromList,
   getMixPurchaseReturnLotDetail,
   getMixPurchaseReturnLots,
-  getMixPurchaseReturnPageData
+  getMixPurchaseReturnPageData,
+  getMixPurchaseReturnCPurInvoices
 } from "../../../../helpers/fakebackend_helper";
 import {
   getCachedReportCompany,
@@ -529,6 +534,10 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
   const [entry, setEntry] = useState(emptyItem());
   const [clearData, setClearData] = useState(false);
   const [bulkLotNos, setBulkLotNos] = useState("");
+  const [cpurLoading, setCpurLoading] = useState(false);
+  const [cpurFilling, setCpurFilling] = useState(false);
+  const [cpurModalOpen, setCpurModalOpen] = useState(false);
+  const [cpurLines, setCpurLines] = useState([]);
 
   const [masterSymbol, setMasterSymbol] = useState("");
   const [stockSymbol, setStockSymbol] = useState("");
@@ -1328,6 +1337,155 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
     setHeaderField("adatPer", adatPer);
   };
 
+  const handleViewCPurInvoices = async () => {
+    const invNo = String(header.memoNo || "").trim();
+    if (!party?.value && !invNo) {
+      toast.warning(t("Please select Party or enter Inv No."));
+      return;
+    }
+    setCpurLoading(true);
+    try {
+      // An invoice number must be looked up on its own. Keeping the party from the
+      // previous invoice makes the next invoice return no rows until the page reloads.
+      const res = await getMixPurchaseReturnCPurInvoices({
+        PartyCode: invNo ? "" : (party?.value || ""),
+        MemoNo: invNo
+      });
+      if (!(res?.success || res?.Success)) {
+        toast.warning(res?.Data || res?.data || t("No invoice Found"));
+        setCpurLines([]);
+        setCpurModalOpen(false);
+        return;
+      }
+      const payload = res.Data || res.data || {};
+      const rows = Array.isArray(payload) ? payload : (payload.Lines || payload.lines || []);
+      const partyCode = getVal(payload, "PartyCode", "partyCode");
+      const partyName = getVal(payload, "PartyName", "partyName");
+      const linePartyCode = rows.length ? getVal(rows[0], "PartyCode", "partyCode") : "";
+      const linePartyName = rows.length ? getVal(rows[0], "PartyName", "partyName", "Party") : "";
+      const resolvedParty = partyCode || linePartyCode;
+      const resolvedName = partyName || linePartyName;
+      if (resolvedParty) {
+        setParty({ value: String(resolvedParty), label: resolvedName || String(resolvedParty) });
+      }
+      const mapped = rows.map((r, idx) => {
+        const cts = getNumVal(r, "carats", "Carats", "Cts", "BalanceCts", "BalCts");
+        const rtn = getNumVal(r, "RtnCts", "ReturnCarats", "Rtn");
+        const bal = getNumVal(r, "BalanceCts", "BalCts");
+        const available = bal > 0 ? bal : cts;
+        return {
+          key: `${getVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode")}-${idx}`,
+          checked: available > 0,
+          date: getVal(r, "Date", "date"),
+          memoNo: getVal(r, "MemoNo", "InvNo", "memoNo"),
+          lotNo: getVal(r, "Lotno", "LotNo", "lotNo"),
+          carats: available,
+          rtnCts: rtn,
+          rtnEditable: available,
+          balanceCts: 0,
+          rate: getNumVal(r, "rate", "Rate"),
+          symbol: getVal(r, "Symbol", "symbol"),
+          memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
+          itemName: getVal(r, "itemname", "ItemName", "itemName"),
+          stockType: getVal(r, "StockType", "stockType") || "Diamond"
+        };
+      }).filter((r) => toNum(r.carats) > 0 && String(r.lotNo || "").trim());
+      setCpurLines(mapped);
+      if (!mapped.length) {
+        toast.warning(t("No invoice Found"));
+        setCpurModalOpen(false);
+        return;
+      }
+      setCpurModalOpen(true);
+      toast.success(t("Invoices loaded."));
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to load invoices."));
+      setCpurModalOpen(false);
+    } finally {
+      setCpurLoading(false);
+    }
+  };
+
+  const updateCpurLine = (idx, patch) => {
+    setCpurLines((prev) =>
+      prev.map((row, i) => {
+        if (i !== idx) return row;
+        const next = { ...row, ...patch };
+        if (patch.checked !== undefined && patch.rtnEditable === undefined) {
+          const cts = toNum(row.carats);
+          next.rtnEditable = patch.checked ? cts : 0;
+          next.balanceCts = patch.checked ? 0 : cts;
+        } else if (patch.rtnEditable !== undefined) {
+          const original = toNum(row.carats);
+          const rtn = toNum(patch.rtnEditable);
+          next.balanceCts = Math.max(0, truncateCaratNumber(original - rtn, caratFormat));
+        }
+        return next;
+      })
+    );
+  };
+
+  const toggleAllCpur = (checked) => {
+    setCpurLines((prev) =>
+      prev.map((row) => ({
+        ...row,
+        checked,
+        rtnEditable: checked ? toNum(row.carats) : 0,
+        balanceCts: checked ? 0 : toNum(row.carats)
+      }))
+    );
+  };
+
+  const handleFillFromCPur = () => {
+    const selected = cpurLines.filter((r) => r.checked && toNum(r.rtnEditable) > 0);
+    if (!selected.length) {
+      toast.warning(t("Please select at least one invoice line."));
+      return;
+    }
+    setCpurFilling(true);
+    try {
+      const sBase = toNum(header.sBaseRate, 1) || 1;
+      setItems((prev) => {
+        const next = [...prev];
+        selected.forEach((r) => {
+          const weight = toNum(r.rtnEditable);
+          if (weight <= 0) return;
+          const rate = toNum(r.rate);
+          const stockType = r.stockType || "Diamond";
+          const amount = calcItemAmount(weight, rate, 0, 0, 0, 0, stockType);
+          const memoCode = toNum(r.memoTransCode);
+          const row = {
+            ...emptyItem(),
+            lotNo: r.lotNo,
+            itemName: r.itemName || r.lotNo,
+            issueCarats: weight,
+            rejection: toNum(r.rtnCts),
+            selectionCarats: weight,
+            rejP: 0,
+            rate,
+            sRate: sBase ? Math.round((rate / sBase) * 100) / 100 : "",
+            amount,
+            exportNo: r.memoNo || "",
+            memoTransCode: memoCode !== 0 ? String(memoCode) : "",
+            stockType
+          };
+          const idx = next.findIndex(
+            (x) =>
+              String(x.lotNo).toLowerCase() === String(r.lotNo).toLowerCase() &&
+              String(x.memoTransCode || "") === String(row.memoTransCode || "")
+          );
+          if (idx >= 0) next[idx] = { ...next[idx], ...row, rowId: next[idx].rowId };
+          else next.push(row);
+        });
+        return next.map((x, i) => ({ ...x, srNo: i + 1 }));
+      });
+      setCpurModalOpen(false);
+      toast.success(t("Purchase lines added."));
+    } finally {
+      setCpurFilling(false);
+    }
+  };
 
   const buildPayload = () => ({
     SalePur: {
@@ -1765,6 +1923,30 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
                             isDisabled={readOnly}
                             menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                           />
+                        </FormGroup>
+                      </Col>
+                      <Col xs={12} sm={6} md={5}>
+                        <FormGroup className="mb-2">
+                          <Label className="form-label mb-1 text-uppercase small">{t("INVOICE NUMBER")}</Label>
+                          <div className="d-flex flex-nowrap align-items-center gap-1">
+                            <Input
+                              className="form-control-sm flex-grow-1"
+                              style={{ ...fieldH, minWidth: 0 }}
+                              value={header.memoNo}
+                              onChange={(e) => setHeaderField("memoNo", e.target.value)}
+                              disabled={readOnly}
+                            />
+                            <Button
+                              color="primary"
+                              size="sm"
+                              type="button"
+                              className="sale-view-memo-btn flex-shrink-0"
+                              disabled={readOnly || cpurLoading}
+                              onClick={handleViewCPurInvoices}
+                            >
+                              {cpurLoading ? t("Loading...") : t("View Invoices")}
+                            </Button>
+                          </div>
                         </FormGroup>
                       </Col>
                     </Row>
@@ -2348,6 +2530,108 @@ const MixPurchaseReturnForm = ({ mode = "add" }) => {
           </Row>
         </Container>
         <ToastContainer autoClose={2000} />
+        <style>{`
+          .sale-view-memo-btn {
+            min-height: 31px;
+            height: auto;
+            white-space: nowrap;
+            line-height: 1.2;
+            padding: 4px 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+          @media (max-width: 575.98px) {
+            .sale-view-memo-btn {
+              width: 100%;
+            }
+          }
+        `}</style>
+        <Modal isOpen={cpurModalOpen} toggle={() => setCpurModalOpen(false)} size="xl" centered fullscreen="sm">
+          <ModalHeader toggle={() => setCpurModalOpen(false)}>
+            {t("CPur To CPurRtn")}
+          </ModalHeader>
+          <ModalBody className="p-2 p-md-3">
+            <div className="table-responsive" style={{ maxHeight: "calc(100vh - 220px)", overflow: "auto" }}>
+              <Table className="table table-bordered table-sm align-middle mb-0 text-nowrap" style={{ fontSize: "11px" }}>
+                <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
+                  <tr>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5", width: 36 }}>
+                      <Input
+                        type="checkbox"
+                        checked={cpurLines.length > 0 && cpurLines.every((r) => r.checked)}
+                        onChange={(e) => toggleAllCpur(e.target.checked)}
+                      />
+                    </th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Date")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Invoice No")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("LotNo")}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Cts")}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Rtn")}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("BalCts")}</th>
+                    <th className="text-end" style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Rate")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("Cur")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("MemoTrnCode")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("ItemName")}</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 2, backgroundColor: "#f3f3f5" }}>{t("StockType")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cpurLines.map((row, idx) => (
+                    <tr key={row.key}>
+                      <td>
+                        <Input type="checkbox" checked={!!row.checked} onChange={(e) => updateCpurLine(idx, { checked: e.target.checked })} />
+                      </td>
+                      <td>{row.date || "-"}</td>
+                      <td>{row.memoNo || "-"}</td>
+                      <td>{row.lotNo || "-"}</td>
+                      <td className="text-end">{fmt(row.carats, 3)}</td>
+                      <td>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="form-control-sm"
+                          style={{ height: 28, width: "70px", padding: "1px 5px", fontSize: "11px" }}
+                          value={row.rtnEditable}
+                          onChange={(e) => {
+                            const rtn = toNum(e.target.value);
+                            if (rtn > toNum(row.carats)) {
+                              toast.warning(t("Return cts should not be greater than TotalCts"));
+                              updateCpurLine(idx, { rtnEditable: 0 });
+                              return;
+                            }
+                            updateCpurLine(idx, { rtnEditable: e.target.value });
+                          }}
+                        />
+                      </td>
+                      <td className="text-end">{fmt(row.balanceCts, 3)}</td>
+                      <td>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="form-control-sm"
+                          style={{ height: 28, width: "70px", padding: "1px 5px", fontSize: "11px" }}
+                          value={row.rate}
+                          onChange={(e) => updateCpurLine(idx, { rate: e.target.value })}
+                        />
+                      </td>
+                      <td>{row.symbol || "-"}</td>
+                      <td>{row.memoTransCode || "-"}</td>
+                      <td>{row.itemName || "-"}</td>
+                      <td>{row.stockType || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="light" onClick={() => setCpurModalOpen(false)}>{t("Close")}</Button>
+            <Button color="primary" disabled={cpurFilling} onClick={handleFillFromCPur}>
+              {cpurFilling ? t("Loading...") : t("CPur To CPurRtn")}
+            </Button>
+          </ModalFooter>
+        </Modal>
       </div>
     </React.Fragment>
   );

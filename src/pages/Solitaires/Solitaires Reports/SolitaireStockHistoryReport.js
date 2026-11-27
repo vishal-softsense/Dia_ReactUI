@@ -488,7 +488,7 @@ const SolitaireStockHistoryReport = () => {
     const grouped = new Map();
 
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -497,18 +497,18 @@ const SolitaireStockHistoryReport = () => {
     });
 
     const columns = [
-      "TrnDate",
-      "TrnType",
+      "Trn Date",
+      "Trn Type",
       "Particulars",
-      "StockIn",
-      "StockInPrice",
-      "StockInAmount",
-      "StockOut",
-      "StockOutPrice",
-      "StockOutAmount",
-      "BalanceStock",
-      "BalancePrice",
-      "BalanceAmount"
+      "Stock In",
+      "Stock In Price",
+      "Stock In Amount",
+      "Stock Out",
+      "Stock Out Price",
+      "Stock Out Amount",
+      "Balance Stock",
+      "Balance Price",
+      "Balance Amount"
     ];
 
     const amtDecimals = 2;
@@ -532,7 +532,7 @@ const SolitaireStockHistoryReport = () => {
 
       const subtotal = { InCts: 0, InRate: 0, InAmount: 0, OutCts: 0, OutRate: 0, OutAmount: 0 };
 
-      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([`Stock ID: ${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]);
 
       items.forEach((item) => {
         const trnDate = item.trntype === "OpStk" ? opStkDate : item.trnDate;
@@ -611,7 +611,7 @@ const SolitaireStockHistoryReport = () => {
     const groupOrder = [];
     const grouped = new Map();
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -625,21 +625,21 @@ const SolitaireStockHistoryReport = () => {
     if (!reportRows || reportRows.length === 0) return null;
 
     const columns = [
-      { header: "TrnDate", key: "trnDate", numeric: false },
-      { header: "TrnType", key: "trntype", numeric: false },
+      { header: "Trn Date", key: "trnDate", numeric: false },
+      { header: "Trn Type", key: "trntype", numeric: false },
       { header: "Particulars", key: "perticulors", numeric: false },
 
-      { header: "StockIn", key: "inCts", numeric: true },
-      { header: "StockInPrice", key: "inRate", numeric: true },
-      { header: "StockInAmount", key: "inAmount", numeric: true },
+      { header: "Stock In", key: "inCts", numeric: true },
+      { header: "Stock In Price", key: "inRate", numeric: true },
+      { header: "Stock In Amount", key: "inAmount", numeric: true },
 
-      { header: "StockOut", key: "outCts", numeric: true },
-      { header: "StockOutPrice", key: "outRate", numeric: true },
-      { header: "StockOutAmount", key: "outAmount", numeric: true },
+      { header: "Stock Out", key: "outCts", numeric: true },
+      { header: "Stock Out Price", key: "outRate", numeric: true },
+      { header: "Stock Out Amount", key: "outAmount", numeric: true },
 
-      { header: "BalanceStock", key: "balCts", numeric: true },
-      { header: "BalancePrice", key: "balRate", numeric: true },
-      { header: "BalanceAmount", key: "balAmount", numeric: true }
+      { header: "Balance Stock", key: "balCts", numeric: true },
+      { header: "Balance Price", key: "balRate", numeric: true },
+      { header: "Balance Amount", key: "balAmount", numeric: true }
     ];
 
     const amtDecimals = 2;
@@ -702,7 +702,7 @@ const SolitaireStockHistoryReport = () => {
                 <React.Fragment key={stockId}>
                   <tr className="group-header">
                     <td colSpan={columns.length} style={{ fontWeight: 700, fontSize: 15, padding: 10, borderTop: "2px solid #b3b3b3", borderBottom: "2px solid #b3b3b3", color: "var(--vz-body-color, #000)", textAlign: "left" }}>
-                      <strong>StockID:</strong> {stockId}
+                      <strong>Stock ID:</strong> {stockId}
                     </td>
                   </tr>
 

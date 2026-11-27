@@ -145,11 +145,11 @@ const PayWithExDiffList = () => {
       return;
     }
     const headers = [
-      t("GCode"),
-      t("TransDate"),
-      t("Vtype"),
-      t("MainAccount"),
-      t("PartyAccount"),
+      t("G Code"),
+      t("Transaction Date"),
+      t("V Type"),
+      t("Main Account"),
+      t("Party Account"),
       t("Amount"),
       t("Symbol"),
       `${masterSymbol} Amt`,
@@ -208,14 +208,14 @@ const PayWithExDiffList = () => {
         }
       },
       {
-        header: t("GCode"),
+        header: t("G Code"),
         accessorKey: "GCODE",
         accessorFn: (row) => getVal(row, "GCODE", "gcode"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("TransDate"),
+        header: t("Transaction Date"),
         accessorKey: "Date",
         accessorFn: (row) => fmtDate(getVal(row, "Date", "date")),
         enableColumnFilter: true,
@@ -223,21 +223,21 @@ const PayWithExDiffList = () => {
         cell: dateCell
       },
       {
-        header: t("Vtype"),
+        header: t("V Type"),
         accessorKey: "Vtype",
         accessorFn: (row) => getVal(row, "Vtype", "vtype"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("MainAccount"),
+        header: t("Main Account"),
         accessorKey: "Account",
         accessorFn: (row) => getVal(row, "Account", "account"),
         enableColumnFilter: true,
         filterFn: customStringFilterFn
       },
       {
-        header: t("PartyAccount"),
+        header: t("Party Account"),
         accessorKey: "Party",
         accessorFn: (row) => getVal(row, "Party", "party"),
         enableColumnFilter: true,
@@ -288,19 +288,19 @@ const PayWithExDiffList = () => {
     [t, navigate, masterSymbol, stockSymbol]
   );
 
-  document.title = `${t("Payment & Receipt With ExDiff")} | ${t("Admin")}`;
+  document.title = `${t("Payment & Receipt With Ex Diff")} | ${t("Admin")}`;
 
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Payment & Receipt With ExDiff")} pageTitle={t("Payment")} />
+          <BreadCrumb title={t("Payment & Receipt With Ex Diff")} pageTitle={t("Payment")} />
 
           <Card className="shadow-sm border-0 rounded-3 mb-3">
             <CardBody className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3">
               <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
                 <i className="ri-bank-card-line fs-20" />
-                {t("Payment & Receipt With ExDiff")}
+                {t("Payment & Receipt With Ex Diff")}
               </h5>
               <div className="d-flex gap-2 flex-wrap">
                 <Button color="soft-success" className="btn-sm" onClick={handleExport}>
@@ -309,7 +309,7 @@ const PayWithExDiffList = () => {
                 </Button>
                 <Link to="/payment/add-pay-with-exdiff" className="btn btn-primary btn-sm">
                   <i className="ri-add-line me-1" />
-                  {t("Add Payment & Receipt With ExDiff")}
+                  {t("Add Payment & Receipt With Ex Diff")}
                 </Link>
               </div>
             </CardBody>
@@ -364,7 +364,7 @@ const PayWithExDiffList = () => {
                   {deleteTarget?.gcode && (
                     <>
                       <br />
-                      <strong>{t("GCode")} :</strong> {deleteTarget.gcode}
+                      <strong>{t("G Code")} :</strong> {deleteTarget.gcode}
                     </>
                   )}
                 </p>

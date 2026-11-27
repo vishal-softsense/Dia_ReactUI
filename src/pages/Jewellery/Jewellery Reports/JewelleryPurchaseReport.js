@@ -416,8 +416,8 @@ const JewelleryPurchaseReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "InvNo", label: t("Group by InvNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "InvNo", label: t("Group by Inv No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -662,7 +662,7 @@ const JewelleryPurchaseReport = () => {
           </div>
         </div>
         <div>
-          <div class="report-title">JewPurchase Report</div>
+          <div class="report-title">Jew Purchase Report</div>
           <div id="report-date-range">
             <div><strong>${escapeHtml(t("From"))}:</strong> ${escapeHtml(filters.fromDate)}</div>
             <div><strong>${escapeHtml(t("To"))}:</strong> ${escapeHtml(filters.toDate)}</div>
@@ -726,7 +726,7 @@ const JewelleryPurchaseReport = () => {
         <thead>
           <tr>
             <th>Sr No</th>
-            <th>Invno</th>
+            <th>Inv No</th>
             <th>Product</th>
             <th>Carats</th>
             <th>Return</th>
@@ -945,13 +945,13 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "conDate", "Date", "date"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "Invno",
         accessorFn: (row) => dashText(getRowVal(row, "Invno", "invno", "InvNo", "invNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo", "billno")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno"))
@@ -963,13 +963,13 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "Item",
         accessorFn: (row) => dashText(getRowVal(row, "Item", "item")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Item", "item"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -1014,25 +1014,25 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("Less1"),
+        header: t("Less 1"),
         accessorKey: "Less1",
         accessorFn: (row) => dashText(getRowVal(row, "Less1", "less1")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less1", "less1"))
       },
       {
-        header: t("Less2"),
+        header: t("Less 2"),
         accessorKey: "Less2",
         accessorFn: (row) => dashText(getRowVal(row, "Less2", "less2")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less2", "less2"))
       },
       {
-        header: t("Less3"),
+        header: t("Less 3"),
         accessorKey: "Less3",
         accessorFn: (row) => dashText(getRowVal(row, "Less3", "less3")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less3", "less3"))
       },
       {
-        header: t("InvType"),
+        header: t("Invoice Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
@@ -1103,19 +1103,19 @@ const JewelleryPurchaseReport = () => {
 
     const headers = [
       "Date",
-      "InvNo",
-      "BillNo",
+      "Inv No",
+      "Bill No",
       "Party",
-      "LotNo",
-      "ItemName",
+      "Lot No",
+      "Item Name",
       "Pcs",
       "Rate",
       "Amount",
       "Broker",
-      "Less1",
-      "Less2",
-      "Less3",
-      "InvType",
+      "Less 1",
+      "Less 2",
+      "Less 3",
+      "Invoice Type",
       "Symbol",
       masterRateHeader,
       masterAmtHeader,
@@ -1157,7 +1157,7 @@ const JewelleryPurchaseReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Purchase Report")} pageTitle={t("JewPurchase Reports")} />
+          <BreadCrumb title={t("Jewellery Purchase Report")} pageTitle={t("Jew Purchase Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -1299,7 +1299,7 @@ const JewelleryPurchaseReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
-                            placeholder={t("InvNo")}
+                            placeholder={t("Inv No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -1345,7 +1345,7 @@ const JewelleryPurchaseReport = () => {
                             options={getOptions("subType")}
                             value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))}
-                            placeholder={t("Select SubType")}
+                            placeholder={t("Select Sub Type")}
                             isLoading={loadingDropdowns}
                           />
                         </FormGroup>
@@ -1481,7 +1481,7 @@ const JewelleryPurchaseReport = () => {
                       </div>
                     </div>
                     <div className="col-sm-2 text-end pt-2">
-                      <div className="fs-5 fw-bold">JewPurchase Report</div>
+                      <div className="fs-5 fw-bold">Jew Purchase Report</div>
                       <div className="small text-muted">
                         <div>
                           <strong>{t("From")}:</strong> {filters.fromDate}
@@ -1513,7 +1513,7 @@ const JewelleryPurchaseReport = () => {
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
                           <th>Sr No</th>
-                          <th>Invno</th>
+                          <th>Inv No</th>
                           <th>Product</th>
                           <th className="text-end">Carats</th>
                           <th className="text-end">Return</th>

@@ -575,6 +575,7 @@ export const MIX_PURCHASE_RETURN_ADD_SINGLE_LOT = "/api/MixPurchaseReturn/add-si
 export const MIX_PURCHASE_RETURN_GET_ITEM_FROM_LIST = "/api/MixPurchaseReturn/get-item-from-list";
 export const MIX_PURCHASE_RETURN_PRINT_VIEW = "/api/MixPurchaseReturn/print-view"; // append /{id or invNo}
 export const MIX_PURCHASE_RETURN_LOTS = "/api/MixPurchaseReturn/lots";
+export const MIX_PURCHASE_RETURN_CPUR_LOOKUP = "/api/MixPurchaseReturn/cpur-to-cpurrtn";
 
 // Mix Sale Return (Parcel Transaction entry) — MVC: /MixSaleReturn/mixsalereturnlist
 export const MIX_SALE_RETURN_LIST = "/api/MixSaleReturn/list";

@@ -505,7 +505,7 @@ const MixMemoOutRtnReport = () => {
                 }
             },
             {
-                header: t("DATE"),
+                header: t("Date"),
                 id: "TrnDate",
                 accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -522,20 +522,20 @@ const MixMemoOutRtnReport = () => {
                 cell: ({ getValue }) => safeText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
             {
                 header: t("Party"),
                 accessorKey: "AccGrpName",
                 cell: ({ row }) => safeText(getRowVal(row.original, "AccGrpName", "accGrpName", "Party", "party"))
             },
             {
-                header: t("LotNo"),
+                header: t("Lot No"),
                 accessorKey: "Lotno",
                 cell: ({ row }) => (row.original?.isParent ? "" : safeText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
             },
             {
-                header: t("ItemName"),
+                header: t("Item Name"),
                 accessorKey: "ItemName",
                 cell: ({ row }) => {
                     const r = row.original;
@@ -579,12 +579,12 @@ const MixMemoOutRtnReport = () => {
             },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => safeText(getRowVal(row.original, "Broker", "broker")) },
             {
-                header: t("invtype"),
+                header: t("Inv Type"),
                 accessorKey: "invtype",
                 cell: ({ row }) => safeText(getRowVal(row.original, "invtype", "Invtype", "InvType", "invType"))
             },
             {
-                header: t("StockType"),
+                header: t("Stock Type"),
                 accessorKey: "StockType",
                 cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType"))
             }
@@ -600,17 +600,17 @@ const MixMemoOutRtnReport = () => {
 
         const headers = [
             "Date",
-            "MemoNo",
-            "BillNo",
+            "Memo Number",
+            "Bill No",
             "Party",
-            "LotNo",
-            "ItemName",
+            "Lot No",
+            "Item Name",
             "Return",
             "Price",
             "Amount",
             "Broker",
-            "invtype",
-            "StockType"
+            "Inv Type",
+            "Stock Type"
         ];
 
         const rows = filteredReportRows.map((r) => [

@@ -291,30 +291,30 @@ export default function AddMountingMaster() {
         </div>
       ),
     },
-    { header: t("StockID"), accessorKey: "stock_ID", enableColumnFilter: true },
-    { header: t("JewelleryCategory"), accessorKey: "mountCategory", enableColumnFilter: true },
-    { header: t("MetalType"), accessorKey: "metalType", enableColumnFilter: true },
+    { header: t("Stock ID"), accessorKey: "stock_ID", enableColumnFilter: true },
+    { header: t("Jewellery Category"), accessorKey: "mountCategory", enableColumnFilter: true },
+    { header: t("Metal Type"), accessorKey: "metalType", enableColumnFilter: true },
     { header: t("Purity"), accessorKey: "purity", enableColumnFilter: true },
     {
-      header: t("DiamondWeight"),
+      header: t("Diamond Weight"),
       accessorKey: "totalDiamondCarat",
       enableColumnFilter: true,
       cell: ({ getValue }) => formatCarat(getValue() || 0, caratFormat),
     },
     {
-      header: t("GrossWeight"),
+      header: t("Gross Weight"),
       accessorKey: "grossWeight",
       enableColumnFilter: true,
       cell: ({ getValue }) => Number(getValue() || 0).toFixed(3),
     },
     {
-      header: t("NetWeight"),
+      header: t("Net Weight"),
       accessorKey: "netWeight",
       enableColumnFilter: true,
       cell: ({ getValue }) => Number(getValue() || 0).toFixed(3),
     },
     {
-      header: t("MetalAmount"),
+      header: t("Metal Amount"),
       accessorKey: "totalMetalAmount",
       enableColumnFilter: true,
       cell: ({ getValue }) => Number(getValue() || 0).toFixed(2),
@@ -1432,7 +1432,7 @@ export default function AddMountingMaster() {
                     <FieldRow label="Jewellery Category">
                       <select className={selectCls} value={jewCategory}
                         onChange={(e) => setJewCategory(e.target.value)}>
-                        <option value="">Select JewelleryCategory</option>
+                        <option value="">Select Jewellery Category</option>
                         <option value="Finished Jewellery">Finished Jewellery</option>
                         <option value="Semi Jewellery">Semi Jewellery</option>
                         <option value="Mounting">Mounting</option>

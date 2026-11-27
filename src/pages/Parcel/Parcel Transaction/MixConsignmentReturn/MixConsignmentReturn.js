@@ -595,22 +595,22 @@ const MixConsignmentReturn = () => {
                               />
                             </th>
                             <th style={{ minWidth: 100, ...stickyTh }}>{t("Date")}</th>
-                            <th style={{ minWidth: 80, ...stickyTh }}>{t("MemoNo")}</th>
+                            <th style={{ minWidth: 80, ...stickyTh }}>{t("Memo Number")}</th>
                             <th style={{ minWidth: 140, ...stickyTh }}>{t("Party")}</th>
                             <th style={{ minWidth: 100, ...stickyTh }}>{t("Broker")}</th>
                             <th style={{ minWidth: 100, ...stickyTh }}>{t("Item")}</th>
-                            <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("carats")}</th>
+                            <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("Carats")}</th>
                             <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("Price")}</th>
                             <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("Purchase")}</th>
                             <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("Return")}</th>
                             <th className="text-end" style={{ minWidth: 110, ...stickyTh }}>{t("New Return")}</th>
                             <th className="text-end" style={{ minWidth: 90, ...stickyTh }}>{t("Balance")}</th>
-                            <th style={{ minWidth: 90, ...stickyTh }}>{t("SPCode")}</th>
-                            <th style={{ minWidth: 90, ...stickyTh }}>{t("SPTCode")}</th>
-                            <th style={{ minWidth: 90, ...stickyTh }}>{t("ItemCode")}</th>
-                            <th style={{ minWidth: 160, ...stickyTh }}>{t("ItemName")}</th>
-                            <th style={{ minWidth: 110, ...stickyTh }}>{t("MNo_BillNo")}</th>
-                            <th style={{ minWidth: 100, ...stickyTh }}>{t("StockType")}</th>
+                            <th style={{ minWidth: 90, ...stickyTh }}>{t("SP Code")}</th>
+                            <th style={{ minWidth: 90, ...stickyTh }}>{t("SPT Code")}</th>
+                            <th style={{ minWidth: 90, ...stickyTh }}>{t("Item Code")}</th>
+                            <th style={{ minWidth: 160, ...stickyTh }}>{t("Item Name")}</th>
+                            <th style={{ minWidth: 110, ...stickyTh }}>{t("Memo / Bill No")}</th>
+                            <th style={{ minWidth: 100, ...stickyTh }}>{t("Stock Type")}</th>
                           </tr>
                         </thead>
                         <tbody>

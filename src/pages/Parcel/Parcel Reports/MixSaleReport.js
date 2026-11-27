@@ -400,8 +400,8 @@ const MixSaleReport = () => {
 
     const groupByOptions = useMemo(
         () => [
-            { value: "InvNo", label: t("Group by InvNo") },
-            { value: "PartyName", label: t("Group by PartyName") }
+            { value: "InvNo", label: t("Group by Inv No") },
+            { value: "PartyName", label: t("Group by Party Name") }
         ],
         [t]
     );
@@ -991,8 +991,8 @@ const MixSaleReport = () => {
                 },
                 cell: ({ getValue }) => safeText(getValue())
             },
-            { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => safeText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+            { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => safeText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => safeText(getRowVal(row.original, "Party", "party")) },
             {
                 header: t("Item"),
@@ -1015,7 +1015,7 @@ const MixSaleReport = () => {
                 cell: ({ row }) => formatCarat(getRowVal(row.original, "IssueCarats", "issueCarats"), caratFormat)
             },
             {
-                header: t("Rejep"),
+                header: t("Reje P"),
                 accessorKey: "Discount",
                 className: "text-end",
                 cell: ({ row }) => safeFixed(getRowVal(row.original, "Discount", "discount"), 2)
@@ -1060,9 +1060,9 @@ const MixSaleReport = () => {
                 }
             },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => safeText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("Less1"), accessorKey: "Less1", cell: ({ row }) => safeText(getRowVal(row.original, "Less1", "less1")) },
-            { header: t("Less2"), accessorKey: "Less2", cell: ({ row }) => safeText(getRowVal(row.original, "Less2", "less2")) },
-            { header: t("Less3"), accessorKey: "Less3", cell: ({ row }) => safeText(getRowVal(row.original, "Less3", "less3")) },
+            { header: t("Less 1"), accessorKey: "Less1", cell: ({ row }) => safeText(getRowVal(row.original, "Less1", "less1")) },
+            { header: t("Less 2"), accessorKey: "Less2", cell: ({ row }) => safeText(getRowVal(row.original, "Less2", "less2")) },
+            { header: t("Less 3"), accessorKey: "Less3", cell: ({ row }) => safeText(getRowVal(row.original, "Less3", "less3")) },
             {
                 header: masterAmtHeader,
                 accessorKey: "MasterCurrencyAmount",
@@ -1083,8 +1083,8 @@ const MixSaleReport = () => {
                     return <span className="fw-bold text-end d-block">{fmtFixed(parentUSD, 2)}</span>;
                 }
             },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType")) },
-            { header: t("SalesPerson"), accessorKey: "SalesPerson", cell: ({ row }) => safeText(getRowVal(row.original, "SalesPerson", "salesPerson")) }
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType")) },
+            { header: t("Sales Person"), accessorKey: "SalesPerson", cell: ({ row }) => safeText(getRowVal(row.original, "SalesPerson", "salesPerson")) }
         ],
         [expandedInvnos, t, masterAmtHeader, stockAmtHeader, caratFormat]
     );
@@ -1097,8 +1097,8 @@ const MixSaleReport = () => {
 
         const headers = [
             "Date",
-            "InvNo",
-            "BillNo",
+            "Inv No",
+            "Bill No",
             "Party",
             "Item",
             "Shape",
@@ -1107,19 +1107,19 @@ const MixSaleReport = () => {
             "Size",
             "Sieve",
             "Issue Carats",
-            "Rejep",
+            "Reje P",
             "Rejection",
             "Selection Carats",
             "Rate",
             "Amount",
             "Broker",
-            "Less1",
-            "Less2",
-            "Less3",
+            "Less 1",
+            "Less 2",
+            "Less 3",
             masterAmtHeader,
             stockAmtHeader,
-            "StockType",
-            "SalesPerson"
+            "Stock Type",
+            "Sales Person"
         ];
 
         const rows = reportRows.map((row) => [

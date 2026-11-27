@@ -93,11 +93,11 @@ const STONE_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: "All", label: "All" },
-  { value: "OnHand", label: "OnHand" },
-  { value: "OnMemo", label: "OnMemo" },
-  { value: "OnHand&Int.Memo", label: "OnHand&Int.Memo" },
-  { value: "OnHand + Memo In", label: "OnHand + Memo In" },
-  { value: "OnHand + Party Hold", label: "OnHand + Party Hold" },
+  { value: "OnHand", label: "On Hand" },
+  { value: "OnMemo", label: "On Memo" },
+  { value: "OnHand&Int.Memo", label: "On Hand & Int. Memo" },
+  { value: "OnHand + Memo In", label: "On Hand + Memo In" },
+  { value: "OnHand + Party Hold", label: "On Hand + Party Hold" },
   { value: "Memo In", label: "Memo In" },
   { value: "Party Hold", label: "Party Hold" },
   { value: "All - Party Hold", label: "All - Party Hold" }
@@ -321,7 +321,7 @@ const SolitaireHoldUnholdReport = () => {
         cell: ({ getValue }) => String(getValue() || "")
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "LotNo",
         accessorFn: (row) => getRowVal(row, "LotNo", "lotNo"),
         enableColumnFilter: true,
@@ -472,7 +472,7 @@ const SolitaireHoldUnholdReport = () => {
         filterFn: "includesString"
       },
       {
-        header: t("CNo"),
+        header: t("C No"),
         accessorKey: "CNo",
         accessorFn: (row) => getRowVal(row, "CNo", "cNo"),
         enableColumnFilter: true,
@@ -493,7 +493,7 @@ const SolitaireHoldUnholdReport = () => {
         filterFn: "includesString"
       },
       {
-        header: t("Partyhold Cts"),
+        header: t("Party Hold Cts"),
         accessorKey: "Partyholdcts",
         accessorFn: (row) => getRowVal(row, "Partyholdcts", "partyholdcts"),
         enableColumnFilter: true,

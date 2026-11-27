@@ -407,8 +407,8 @@ const SolitaireSaleReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "InvNo", label: t("Group by InvNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "InvNo", label: t("Group by Inv No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -1087,12 +1087,12 @@ const SolitaireSaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "condate", "Date", "date"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "Invno",
         cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo"))
       },
@@ -1107,7 +1107,7 @@ const SolitaireSaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party"))
       },
       {
-        header: t("Comm.Agent"),
+        header: t("Comm. Agent"),
         accessorKey: "Commission",
         cell: ({ row }) => dashText(getRowVal(row.original, "Commission", "commission", "commAgent", "CommAgent"))
       },
@@ -1117,7 +1117,7 @@ const SolitaireSaleReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("ExpParty"),
+        header: t("Exp Party"),
         accessorKey: "Exportparty",
         cell: ({ row }) => dashText(getRowVal(row.original, "Exportparty", "exportparty", "ExpParty", "expParty"))
       },
@@ -1186,9 +1186,9 @@ const SolitaireSaleReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat > 0 ? parentAmt / parentCarat : 0, 2)}</span>;
         }
       },
-      { header: t("Less1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less1", "less1") },
-      { header: t("Less2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less2", "less2") },
-      { header: t("Less3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less3", "less3") },
+      { header: t("Less 1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less1", "less1") },
+      { header: t("Less 2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less2", "less2") },
+      { header: t("Less 3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less3", "less3") },
       {
         header: t("Amount"),
         accessorKey: "Amount",
@@ -1200,7 +1200,7 @@ const SolitaireSaleReport = () => {
         }
       },
       {
-        header: t("PurAmount"),
+        header: t("Pur Amount"),
         accessorKey: "PurchaseAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "PurchaseAmount", "purchaseAmount"), 2),
@@ -1210,25 +1210,25 @@ const SolitaireSaleReport = () => {
         }
       },
       { header: t("Symbol"), accessorKey: "Symbol", cell: ({ row }) => agDetailCell(row, "Symbol", "symbol") },
-      { header: t("$Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "DRate", "dRate", "drate") },
+      { header: t("$ Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "DRate", "dRate", "drate") },
       { header: t("Cert"), accessorKey: "Cert", cell: ({ row }) => agDetailCell(row, "Cert", "cert") },
       { header: t("Cert No"), accessorKey: "CertificateNo", cell: ({ row }) => agDetailCell(row, "CertificateNo", "certificateNo") },
-      { header: t("InvType"), accessorKey: "Invtype", cell: ({ row }) => agDetailCell(row, "Invtype", "invtype", "InvType", "invType") },
+      { header: t("Inv Type"), accessorKey: "Invtype", cell: ({ row }) => agDetailCell(row, "Invtype", "invtype", "InvType", "invType") },
       { header: t("Category"), accessorKey: "Category", cell: ({ row }) => agDetailCell(row, "Category", "category") },
-      { header: t("MilkyId"), accessorKey: "MilkyId", cell: ({ row }) => agDetailCell(row, "MilkyId", "milkyId") },
-      { header: t("NattsId"), accessorKey: "NattsId", cell: ({ row }) => agDetailCell(row, "NattsId", "nattsId") },
-      { header: t("LusterId"), accessorKey: "LusterId", cell: ({ row }) => agDetailCell(row, "LusterId", "lusterId") },
-      { header: t("RoughId"), accessorKey: "RoughId", cell: ({ row }) => agDetailCell(row, "RoughId", "roughId") },
-      { header: t("KapanNo"), accessorKey: "MfgSeriesID", cell: ({ row }) => agDetailCell(row, "MfgSeriesID", "mfgSeriesID", "kapanNo") },
+      { header: t("Milky ID"), accessorKey: "MilkyId", cell: ({ row }) => agDetailCell(row, "MilkyId", "milkyId") },
+      { header: t("Natts ID"), accessorKey: "NattsId", cell: ({ row }) => agDetailCell(row, "NattsId", "nattsId") },
+      { header: t("Luster ID"), accessorKey: "LusterId", cell: ({ row }) => agDetailCell(row, "LusterId", "lusterId") },
+      { header: t("Rough ID"), accessorKey: "RoughId", cell: ({ row }) => agDetailCell(row, "RoughId", "roughId") },
+      { header: t("Kapan No"), accessorKey: "MfgSeriesID", cell: ({ row }) => agDetailCell(row, "MfgSeriesID", "mfgSeriesID", "kapanNo") },
       { header: t("Kapan Packet No"), accessorKey: "MfgPacketID", cell: ({ row }) => agDetailCell(row, "MfgPacketID", "mfgPacketID", "kapanPacketNo") },
       { header: t("User"), accessorKey: "User", cell: ({ row }) => agDetailCell(row, "User", "user") },
       { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => agDetailCell(row, "Seller", "seller") },
       { header: t("Term"), accessorKey: "Term", cell: ({ row }) => agDetailCell(row, "Term", "term") },
       { header: t("Col/Cla"), accessorKey: "ColCla", cell: ({ row }) => agDetailCell(row, "ColCla", "colCla", "colcla") },
-      { header: t("PurchaseRate"), accessorKey: "PurchaseRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "PurchaseRate", "purchaseRate") },
-      { header: t("PDate"), accessorKey: "PDate", cell: ({ row }) => agDetailCell(row, "PDate", "pDate", "pdate") },
+      { header: t("Purchase Rate"), accessorKey: "PurchaseRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "PurchaseRate", "purchaseRate") },
+      { header: t("P Date"), accessorKey: "PDate", cell: ({ row }) => agDetailCell(row, "PDate", "pDate", "pdate") },
       { header: t("City"), accessorKey: "City", cell: ({ row }) => agDetailCell(row, "City", "city") },
-      { header: t("EyeClean"), accessorKey: "EyeClean", cell: ({ row }) => agDetailCell(row, "EyeClean", "eyeClean") },
+      { header: t("Eye Clean"), accessorKey: "EyeClean", cell: ({ row }) => agDetailCell(row, "EyeClean", "eyeClean") },
       {
         header: t("MRP Amt"),
         accessorKey: "MRPAmt",
@@ -1311,17 +1311,17 @@ const SolitaireSaleReport = () => {
         }
       },
       { header: t("Date"), accessorKey: "ConDATE", cell: ({ row }) => agDetailCell(row, "ConDATE", "conDATE", "condate", "Date", "date") },
-      { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => agDetailCell(row, "BillNo", "billNo", "billno") },
-      { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => agDetailCell(row, "Invno", "invno", "InvNo", "invNo") },
+      { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => agDetailCell(row, "BillNo", "billNo", "billno") },
+      { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => agDetailCell(row, "Invno", "invno", "InvNo", "invNo") },
       { header: t("Due"), accessorKey: "Due", cell: ({ row }) => (row.original?.isParent ? "" : fmtFixed(getRowVal(row.original, "Due", "due"), 0)) },
       {
         header: t("Party"),
         accessorKey: "Party",
         cell: ({ row }) => agDetailCell(row, "Party", "party")
       },
-      { header: t("Comm.Agent"), accessorKey: "Commission", cell: ({ row }) => agDetailCell(row, "Commission", "commission", "commAgent", "CommAgent") },
+      { header: t("Comm. Agent"), accessorKey: "Commission", cell: ({ row }) => agDetailCell(row, "Commission", "commission", "commAgent", "CommAgent") },
       { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => agDetailCell(row, "Broker", "broker") },
-      { header: t("ExpParty"), accessorKey: "Exportparty", cell: ({ row }) => agDetailCell(row, "Exportparty", "exportparty", "ExpParty", "expParty") },
+      { header: t("Exp Party"), accessorKey: "Exportparty", cell: ({ row }) => agDetailCell(row, "Exportparty", "exportparty", "ExpParty", "expParty") },
       { header: t("Item"), accessorKey: "Item", cell: ({ row }) => agDetailCell(row, "Item", "item") },
       {
         header: t("sum(Carats)"),
@@ -1370,9 +1370,9 @@ const SolitaireSaleReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat > 0 ? parentAmt / parentCarat : 0, 2)}</span>;
         }
       },
-      { header: t("Less1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less1", "less1") },
-      { header: t("Less2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less2", "less2") },
-      { header: t("Less3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less3", "less3") },
+      { header: t("Less 1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less1", "less1") },
+      { header: t("Less 2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less2", "less2") },
+      { header: t("Less 3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "Less3", "less3") },
       {
         header: t("Amount"),
         accessorKey: "Amount",
@@ -1384,7 +1384,7 @@ const SolitaireSaleReport = () => {
         }
       },
       {
-        header: t("PurAmount"),
+        header: t("Pur Amount"),
         accessorKey: "PurchaseAmount",
         className: "text-end",
         cell: ({ row }) => (row.original?.isParent ? fmtFixed(getRowVal(row.original, "PurchaseAmount", "purchaseAmount"), 2) : agNumericCell(row, 2, "PurchaseAmount", "purchaseAmount")),
@@ -1394,25 +1394,25 @@ const SolitaireSaleReport = () => {
         }
       },
       { header: t("Symbol"), accessorKey: "Symbol", cell: ({ row }) => agDetailCell(row, "Symbol", "symbol") },
-      { header: t("$Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "DRate", "dRate", "drate") },
+      { header: t("$ Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "DRate", "dRate", "drate") },
       { header: t("Cert"), accessorKey: "Cert", cell: ({ row }) => agDetailCell(row, "Cert", "cert") },
       { header: t("Cert No"), accessorKey: "CertificateNo", cell: ({ row }) => agDetailCell(row, "CertificateNo", "certificateNo") },
-      { header: t("InvType"), accessorKey: "Invtype", cell: ({ row }) => agDetailCell(row, "Invtype", "invtype", "InvType", "invType") },
+      { header: t("Inv Type"), accessorKey: "Invtype", cell: ({ row }) => agDetailCell(row, "Invtype", "invtype", "InvType", "invType") },
       { header: t("Category"), accessorKey: "Category", cell: ({ row }) => agDetailCell(row, "Category", "category") },
-      { header: t("MilkyId"), accessorKey: "MilkyId", cell: ({ row }) => agDetailCell(row, "MilkyId", "milkyId") },
-      { header: t("NattsId"), accessorKey: "NattsId", cell: ({ row }) => agDetailCell(row, "NattsId", "nattsId") },
-      { header: t("LusterId"), accessorKey: "LusterId", cell: ({ row }) => agDetailCell(row, "LusterId", "lusterId") },
-      { header: t("RoughId"), accessorKey: "RoughId", cell: ({ row }) => agDetailCell(row, "RoughId", "roughId") },
-      { header: t("KapanNo"), accessorKey: "MfgSeriesID", cell: ({ row }) => agDetailCell(row, "MfgSeriesID", "mfgSeriesID", "kapanNo") },
+      { header: t("Milky ID"), accessorKey: "MilkyId", cell: ({ row }) => agDetailCell(row, "MilkyId", "milkyId") },
+      { header: t("Natts ID"), accessorKey: "NattsId", cell: ({ row }) => agDetailCell(row, "NattsId", "nattsId") },
+      { header: t("Luster ID"), accessorKey: "LusterId", cell: ({ row }) => agDetailCell(row, "LusterId", "lusterId") },
+      { header: t("Rough ID"), accessorKey: "RoughId", cell: ({ row }) => agDetailCell(row, "RoughId", "roughId") },
+      { header: t("Kapan No"), accessorKey: "MfgSeriesID", cell: ({ row }) => agDetailCell(row, "MfgSeriesID", "mfgSeriesID", "kapanNo") },
       { header: t("Kapan Packet No"), accessorKey: "MfgPacketID", cell: ({ row }) => agDetailCell(row, "MfgPacketID", "mfgPacketID", "kapanPacketNo") },
       { header: t("User"), accessorKey: "User", cell: ({ row }) => agDetailCell(row, "User", "user") },
       { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => agDetailCell(row, "Seller", "seller") },
       { header: t("Term"), accessorKey: "Term", cell: ({ row }) => agDetailCell(row, "Term", "term") },
       { header: t("Col/Cla"), accessorKey: "ColCla", cell: ({ row }) => agDetailCell(row, "ColCla", "colCla", "colcla") },
-      { header: t("PurchaseRate"), accessorKey: "PurchaseRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "PurchaseRate", "purchaseRate") },
-      { header: t("PDate"), accessorKey: "PDate", cell: ({ row }) => agDetailCell(row, "PDate", "pDate", "pdate") },
+      { header: t("Purchase Rate"), accessorKey: "PurchaseRate", className: "text-end", cell: ({ row }) => agNumericCell(row, 2, "PurchaseRate", "purchaseRate") },
+      { header: t("P Date"), accessorKey: "PDate", cell: ({ row }) => agDetailCell(row, "PDate", "pDate", "pdate") },
       { header: t("City"), accessorKey: "City", cell: ({ row }) => agDetailCell(row, "City", "city") },
-      { header: t("EyeClean"), accessorKey: "EyeClean", cell: ({ row }) => agDetailCell(row, "EyeClean", "eyeClean") },
+      { header: t("Eye Clean"), accessorKey: "EyeClean", cell: ({ row }) => agDetailCell(row, "EyeClean", "eyeClean") },
       {
         header: t("MRP Amt"),
         accessorKey: "MRPAmt",
@@ -1459,13 +1459,13 @@ const SolitaireSaleReport = () => {
 
     const headers = [
       "Date",
-      "BillNo",
-      "InvNo",
+      "Bill No",
+      "Inv No",
       "Due",
       "Party",
-      "Comm.Agent",
+      "Comm. Agent",
       "Broker",
-      "ExpParty",
+      "Exp Party",
       "Item",
       "Carats",
       "Shape",
@@ -1478,31 +1478,31 @@ const SolitaireSaleReport = () => {
       "MRP",
       "Disc",
       "Rate",
-      "Less1",
-      "Less2",
-      "Less3",
+      "Less 1",
+      "Less 2",
+      "Less 3",
       "Amount",
-      "PurAmount",
+      "Pur Amount",
       "Symbol",
-      "$Rate",
+      "$ Rate",
       "Cert",
       "Cert No",
-      "InvType",
+      "Inv Type",
       "Category",
-      "MilkyId",
-      "NattsId",
-      "LusterId",
-      "RoughId",
-      "KapanNo",
+      "Milky ID",
+      "Natts ID",
+      "Luster ID",
+      "Rough ID",
+      "Kapan No",
       "Kapan Packet No",
       "User",
       "Seller",
       "Term",
       "Col/Cla",
-      "PurchaseRate",
-      "PDate",
+      "Purchase Rate",
+      "P Date",
       "City",
-      "EyeClean",
+      "Eye Clean",
       "MRP Amt",
       masterRateHeader,
       masterAmtHeader,
