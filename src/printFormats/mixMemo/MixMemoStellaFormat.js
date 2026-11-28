@@ -12,7 +12,7 @@ const FS_COMPANY_ADDR = 12; // company address — smaller than name
 const FS_PARTY_ADDR = 11; // AddressLine 1,2,3 — small
 const FS_META = 11;
 const FS_ITEM_HDR = 12;
-const FS_ITEM = 11;
+const FS_ITEM = 10;
 const ROW_H = 24;
 const COL_W = ["6%", "12%", "7%", "9%", "28%", "16%", "22%"];
 
@@ -46,48 +46,73 @@ const MixMemoStellaFormat = ({ data, items, totals, company, logoUrl, isCurrentS
   const conditions = company.memoConditions || company.saleConditions || FALLBACK_MEMO_CONDITIONS;
   const information = company.information || getVal(data, "Information") || "";
 
-  const renderAddressBox = (legend) => (
-    <fieldset
-      className="mix-memo-address-box"
-      style={{
-        border: "1px solid #000",
-        borderRadius: 12,
-        padding: "8px 15px 12px 10px",
-        height: 150,
-        margin: 0,
-        fontFamily: FONT_BODY,
-        boxSizing: "border-box"
-      }}
-    >
-      <legend
+  const renderAddressBox = (legend) => {
+    const partyName = getVal(data, "PartyName", "partyName");
+    const addr1 = getVal(data, "AddressLine1", "addressLine1");
+    const addr2 = getVal(data, "AddressLine2", "addressLine2");
+    const addr3 = getVal(data, "AddressLine3", "addressLine3");
+    const city = getVal(data, "CityCode", "cityCode", "City", "city");
+    const state = getVal(data, "StateCode", "stateCode", "State", "state");
+    const zip = getVal(data, "ZipCode", "zipCode", "Zipcode", "zipcode", "Zip", "zip");
+
+    const hasCityStateZip = Boolean(city || state || zip);
+
+    return (
+      <fieldset
+        className="mix-memo-address-box"
         style={{
-          fontWeight: "bold",
-          fontSize: FS,
-          padding: "0 10px",
-          width: "auto",
-          marginLeft: 10,
-          marginBottom: 2,
-          background: "#fff",
-          border: "none",
-          fontFamily: FONT_BODY
+          border: "1px solid #000",
+          borderRadius: 12,
+          padding: "8px 15px 12px 10px",
+          height: 150,
+          margin: 0,
+          fontFamily: FONT_BODY,
+          boxSizing: "border-box"
         }}
       >
-        {legend}
-      </legend>
-      <div style={{ fontSize: FS, lineHeight: 1.6, marginBottom: 5, fontFamily: FONT_BODY }}>
-        {getVal(data, "PartyName", "partyName")}
-      </div>
-      <div className="mix-memo-addr-line" style={{ lineHeight: 1.6, fontSize: FS_PARTY_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
-        {getVal(data, "AddressLine1", "addressLine1")}
-      </div>
-      <div className="mix-memo-addr-line" style={{ lineHeight: 1.6, fontSize: FS_PARTY_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
-        {getVal(data, "AddressLine2", "addressLine2")}
-      </div>
-      <div className="mix-memo-addr-line" style={{ lineHeight: 1.6, fontSize: FS_PARTY_ADDR, marginBottom: 5, fontFamily: FONT_BODY }}>
-        {getVal(data, "AddressLine3", "addressLine3")}
-      </div>
-    </fieldset>
-  );
+        <legend
+          style={{
+            fontWeight: "bold",
+            fontSize: FS,
+            padding: "0 10px",
+            width: "auto",
+            marginLeft: 10,
+            marginBottom: 2,
+            background: "#fff",
+            border: "none",
+            fontFamily: FONT_BODY
+          }}
+        >
+          {legend}
+        </legend>
+        <div style={{ fontSize: FS, lineHeight: 1.5, marginBottom: 4, fontFamily: FONT_BODY }}>
+          {partyName}
+        </div>
+        {addr1 ? (
+          <div className="mix-memo-addr-line" style={{ lineHeight: 1.5, fontSize: FS_PARTY_ADDR, marginBottom: 4, fontFamily: FONT_BODY }}>
+            {addr1}
+          </div>
+        ) : null}
+        {addr2 ? (
+          <div className="mix-memo-addr-line" style={{ lineHeight: 1.5, fontSize: FS_PARTY_ADDR, marginBottom: 4, fontFamily: FONT_BODY }}>
+            {addr2}
+          </div>
+        ) : null}
+        {addr3 ? (
+          <div className="mix-memo-addr-line" style={{ lineHeight: 1.5, fontSize: FS_PARTY_ADDR, marginBottom: 4, fontFamily: FONT_BODY }}>
+            {addr3}
+          </div>
+        ) : null}
+        {hasCityStateZip ? (
+          <div className="mix-memo-addr-line" style={{ lineHeight: 1.5, fontSize: FS_PARTY_ADDR, marginBottom: 4, fontFamily: FONT_BODY }}>
+            {city ? <span><strong>City:</strong> {city}&nbsp;&nbsp;&nbsp;&nbsp;</span> : null}
+            {state ? <span><strong>State:</strong> {state}&nbsp;&nbsp;&nbsp;&nbsp;</span> : null}
+            {zip ? <span><strong>Zipcode:</strong> {zip}</span> : null}
+          </div>
+        ) : null}
+      </fieldset>
+    );
+  };
 
   return (
     <div className="mix-memo-stella-root" style={{ fontFamily: FONT_BODY, fontSize: FS, color: "#000" }}>
@@ -101,9 +126,8 @@ const MixMemoStellaFormat = ({ data, items, totals, company, logoUrl, isCurrentS
         return (
           <div
             key={pageIdx}
-            className={`mix-memo-stella-page mix-memo-print-page-block${isLastPage ? "" : " page-break"}${
-              pageIdx > 0 ? " mix-memo-print-page-next" : ""
-            }`}
+            className={`mix-memo-stella-page mix-memo-print-page-block${isLastPage ? "" : " page-break"}${pageIdx > 0 ? " mix-memo-print-page-next" : ""
+              }`}
             style={{
               fontFamily: FONT_BODY,
               fontSize: FS,
@@ -288,24 +312,24 @@ const MixMemoStellaFormat = ({ data, items, totals, company, logoUrl, isCurrentS
                 ))}
                 {/* Fill empty rows to capacity on every page — complete set for any record count */}
                 {Array.from({ length: Math.max(0, fillTo - pageItems.length) }).map((_, i) => (
-                    <tr key={`e-${i}`} className="mix-memo-empty-row" style={{ height: ROW_H }}>
-                      {Array.from({ length: 7 }).map((__, c) => (
-                        <td
-                          key={c}
-                          style={{
-                            borderLeft: "1px solid #000",
-                            borderRight: "1px solid #000",
-                            borderTop: "none",
-                            borderBottom: "none",
-                            height: ROW_H,
-                            width: COL_W[c]
-                          }}
-                        >
-                          &nbsp;
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  <tr key={`e-${i}`} className="mix-memo-empty-row" style={{ height: ROW_H }}>
+                    {Array.from({ length: 7 }).map((__, c) => (
+                      <td
+                        key={c}
+                        style={{
+                          borderLeft: "1px solid #000",
+                          borderRight: "1px solid #000",
+                          borderTop: "none",
+                          borderBottom: "none",
+                          height: ROW_H,
+                          width: COL_W[c]
+                        }}
+                      >
+                        &nbsp;
+                      </td>
+                    ))}
+                  </tr>
+                ))}
                 {!isLastPage && (
                   <tr>
                     {Array.from({ length: 7 }).map((_, c) => (
