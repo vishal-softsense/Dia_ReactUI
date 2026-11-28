@@ -36,6 +36,7 @@ import {
   getMixSaleReturnLots,
   getMixSaleReturnPageData
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -872,6 +873,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const validateTrnDate = (dateVal) => {
     if (isEdit) return dateVal;
@@ -1872,7 +1874,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOptionsWithSelected}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                               else if (meta.action === "input-blur" || meta.action === "menu-close") {

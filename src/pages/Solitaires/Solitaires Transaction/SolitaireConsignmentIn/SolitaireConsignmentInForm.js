@@ -34,6 +34,7 @@ import {
   getSolitaireLots,
   getSolitairePurchaseRapRate
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
@@ -790,6 +791,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
   }, [isEdit, editId]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   useEffect(() => {
     const days = toNum(header.dueDays, 0);
@@ -1848,7 +1850,7 @@ const SolitaireConsignmentInForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOpts}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                               else if (meta.action === "input-blur" || meta.action === "menu-close") {
