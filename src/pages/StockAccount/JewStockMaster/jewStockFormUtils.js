@@ -26,12 +26,39 @@ export function floorPurityRatio(ratio) {
   return (Math.floor(n * 1000) / 1000).toFixed(3);
 }
 
+/** Stored values vary (Lumsum, Lumpsum, Lump Sum). The dropdown value is Lumsum. */
+export function normalizeMakingType(makingType) {
+  const raw = String(makingType || "").trim();
+  if (!raw) return "";
+  const compact = raw.replace(/[\s._-]/g, "").toLowerCase();
+  if (compact === "lumsum" || compact === "lumpsum") return "Lumsum";
+  const match = MAKING_TYPE_OPTIONS.find((o) => o.value.toLowerCase() === raw.toLowerCase());
+  return match ? match.value : raw;
+}
+
+export function isLumpsumMaking(makingType) {
+  return normalizeMakingType(makingType) === "Lumsum";
+}
+
+/** Mounting and Metal do not take Other Charges or Asking Rate. */
+export function skipsOtherAndAsking(jewCategory) {
+  const category = String(jewCategory || "").trim().toLowerCase();
+  return category === "mounting" || category === "metal";
+}
+
+/** Charges to show for a loaded row. Lumpsum always equals the making rate. */
+export function makingChargesForLoaded(makingType, makingRate, grossWeight) {
+  const type = normalizeMakingType(makingType);
+  const charges = computeMakingCharges(type, makingRate, grossWeight);
+  return { type, charges: charges.toFixed(2) };
+}
+
 /** MVC JewDesign.js #making-rate input: Lumsum = rate, else rate × grossWeight. */
 export function computeMakingCharges(makingType, makingRate, grossWeight) {
   const r = parseFloat(makingRate) || 0;
   const gw = parseFloat(grossWeight) || 0;
   if (!r) return 0;
-  if (makingType === "Lumsum") return r;
+  if (isLumpsumMaking(makingType)) return r;
   return r * gw;
 }
 
@@ -61,6 +88,7 @@ export function computeChargeTotals({
   isManualAskingRate,
   currentAskingRate,
   otherChargesExtra = 0,
+  skipOtherAndAsking = false,
 }) {
   const metal = parseFloat(metalAmount) || 0;
   const making = parseFloat(originalMakingCharges) || 0;
@@ -77,13 +105,24 @@ export function computeChargeTotals({
   const baseFinalAmount =
     metal + making + handling + certificate + hallmark + diamond + stone + setting;
 
-  const autoOther = roundMoney(baseFinalAmount * otherPct);
-  const other = roundMoney(autoOther + extra);
-
   let totalMaking = 0;
   if (making > 0) {
     totalMaking = making + handling + certificate + hallmark + setting;
   }
+
+  if (skipOtherAndAsking) {
+    return {
+      costAmount: baseFinalAmount.toFixed(2),
+      autoOtherCharges: "0.00",
+      otherCharges: "0.00",
+      totalMakingCharges: totalMaking.toFixed(2),
+      finalAmount: roundMoney(baseFinalAmount).toFixed(2),
+      askingRate: "0.00",
+    };
+  }
+
+  const autoOther = roundMoney(baseFinalAmount * otherPct);
+  const other = roundMoney(autoOther + extra);
 
   const finalCostAmount = roundMoney(baseFinalAmount + other);
   const autoAsking =

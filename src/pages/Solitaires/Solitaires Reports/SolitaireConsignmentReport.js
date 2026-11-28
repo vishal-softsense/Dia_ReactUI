@@ -122,6 +122,15 @@ const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat("solita
     ? formatCarat(value, caratFmt)
     : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
+const formatGroupedTotalMetric = (colKey, totals, caratFmt) => {
+  if (colKey === "Price") {
+    const carats = Number(totals?.Carats) || 0;
+    const amount = Number(totals?.Amount) || 0;
+    return fmtFixed(carats > 0 ? amount / carats : 0, GROUPED_DECIMALS.Price);
+  }
+  return formatGroupedMetric(totals[colKey], colKey, caratFmt);
+};
+
 const getGroupedNumeric = (row, key) => {
   const aliases = {
     Carats: ["Carats", "carats"],
@@ -733,7 +742,7 @@ const SolitaireConsignmentReport = () => {
                     <td></td>
                     ${GROUPED_SUM_COLUMNS.map(
                       (colKey) =>
-                        `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat))}</strong></td>`
+                        `<td class="col-num"><strong>${escapeHtml(formatGroupedTotalMetric(colKey, section.subtotal, caratFormat))}</strong></td>`
                     ).join("")}
                 </tr>
             `;
@@ -746,7 +755,7 @@ const SolitaireConsignmentReport = () => {
                 <td></td>
                 ${GROUPED_SUM_COLUMNS.map(
                   (colKey) =>
-                    `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal[colKey], colKey, caratFormat))}</strong></td>`
+                    `<td class="col-num"><strong>${escapeHtml(formatGroupedTotalMetric(colKey, grandTotal, caratFormat))}</strong></td>`
                 ).join("")}
             </tr>
         `;
@@ -1791,7 +1800,7 @@ const SolitaireConsignmentReport = () => {
                               <td />
                               {GROUPED_SUM_COLUMNS.map((colKey) => (
                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                  <strong>{formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat)}</strong>
+                                  <strong>{formatGroupedTotalMetric(colKey, section.subtotal, caratFormat)}</strong>
                                 </td>
                               ))}
                             </tr>
@@ -1806,7 +1815,7 @@ const SolitaireConsignmentReport = () => {
                           <td />
                           {GROUPED_SUM_COLUMNS.map((colKey) => (
                             <td key={`grand-${colKey}`} className="text-end">
-                              <strong>{formatGroupedMetric(groupedReportData.grandTotal[colKey], colKey, caratFormat)}</strong>
+                              <strong>{formatGroupedTotalMetric(colKey, groupedReportData.grandTotal, caratFormat)}</strong>
                             </td>
                           ))}
                         </tr>
