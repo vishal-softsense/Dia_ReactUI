@@ -38,6 +38,7 @@ import {
   getMixSaleLotDetail,
   getMixSalePageData
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
@@ -1143,6 +1144,7 @@ const MixSaleForm = ({ mode = "add" }) => {
   }, [isEdit, editId]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   useEffect(() => {
     const days = toNum(header.dueDays, 0);
@@ -2366,7 +2368,7 @@ const MixSaleForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOpts}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                             }}
