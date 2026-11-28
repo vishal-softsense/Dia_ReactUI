@@ -32,12 +32,19 @@ import {
   getSolitairePurchaseReturnPageData,
   getSolitairePurchaseReturnItemFromList
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -163,7 +170,7 @@ const mapItemFromApi = (r, idx) => ({
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "Back", align: "end", decimals: 2, footer: "avgBack" },
@@ -175,10 +182,10 @@ const ITEM_COLUMNS = [
   { key: "exportNo", label: "ExportNo" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -194,8 +201,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -273,10 +284,11 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isEdit = mode === "edit";
-  const editId = searchParams.get("Id") || searchParams.get("id") || "";
-  const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
+  const editId = searchParams.get("Id") || searchParams.get("id") || searchParams.get("ID") || "";
+  const isView = String(searchParams.get("Mode") || searchParams.get("mode") || searchParams.get("MODE") || "").toLowerCase() === "view";
+  const isEdit = mode === "edit" || !!editId;
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -599,7 +611,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
     (async () => {
       setLoading(true);
       const page = await loadPageData();
-      if (isEdit) {
+      if (isEdit || isView) {
         await loadDetail(page);
       } else if (page?.curs?.length) {
         const defaultCur = page.defaultCurrencyCode
@@ -629,12 +641,14 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const recalcEntryAmount = (next) => ({ ...next, amount: fmt(calcItemAmount(next.weight, next.rate, next.less1, next.less2, next.less3)) });
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -708,7 +722,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -826,13 +840,13 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1012,9 +1026,21 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                     {title}
                   </h5>
                   <div className="d-flex gap-2 flex-wrap">
-                    <Link to="/purchasereturn/purchasereturn-list" className="btn btn-soft-secondary btn-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.opener && window.history.length <= 1) {
+                          window.close();
+                        } else if (window.history.length > 1) {
+                          navigate(-1);
+                        } else {
+                          navigate("/purchasereturn/purchasereturn-list");
+                        }
+                      }}
+                      className="btn btn-soft-secondary btn-sm"
+                    >
                       {t("Back")}
-                    </Link>
+                    </button>
                     {!readOnly && (
                       <Button color="primary" size="sm" disabled={saving} onClick={handleSubmit}>
                         {saving ? t("Saving...") : t("Submit")}
@@ -1046,19 +1072,19 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Type")}</Label>
-                          <Select styles={customStyles} options={typeOpts} value={typeOpts.find((o) => String(o.value) === String(header.invType)) || null} onChange={(o) => setHeaderField("invType", o?.value || "")} placeholder={t("Type")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={typeOpts} value={typeOpts.find((o) => String(o.value) === String(header.invType)) || (header.invType ? { value: header.invType, label: header.invType } : null)} onChange={(o) => setHeaderField("invType", o?.value || "")} placeholder={t("Type")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("SubType")}</Label>
-                          <Select styles={customStyles} options={subTypeOpts} value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || null} onChange={(o) => setHeaderField("subType", o?.value || "")} placeholder={t("SubType")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={subTypeOpts} value={subTypeOpts.find((o) => String(o.value) === String(header.subType)) || (header.subType ? { value: header.subType, label: header.subType } : null)} onChange={(o) => setHeaderField("subType", o?.value || "")} placeholder={t("SubType")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Category")}</Label>
-                          <Select styles={customStyles} options={categoryOpts} value={categoryOpts.find((o) => String(o.value) === String(header.category)) || null} onChange={(o) => setHeaderField("category", o?.value || "")} placeholder={t("Category")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={categoryOpts} value={categoryOpts.find((o) => String(o.value) === String(header.category)) || (header.category ? { value: header.category, label: header.category } : null)} onChange={(o) => setHeaderField("category", o?.value || "")} placeholder={t("Category")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
 
@@ -1067,12 +1093,12 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1090,7 +1116,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       <Col md={2} sm={4}>
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">{t("Currency")}</Label>
-                          <Select styles={customStyles} options={currencyOpts} value={currencyOpts.find((o) => o.value === String(header.curCode)) || null} onChange={async (o) => { const code = o?.value || ""; setHeaderField("curCode", code); await applyCurrencyRates(code); }} placeholder={t("Currency")} isDisabled={readOnly} />
+                          <Select styles={customStyles} options={currencyOpts} value={currencyOpts.find((o) => o.value === String(header.curCode)) || (header.curCode ? { value: String(header.curCode), label: String(header.curCode) } : null)} onChange={async (o) => { const code = o?.value || ""; setHeaderField("curCode", code); await applyCurrencyRates(code); }} placeholder={t("Currency")} isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={2} sm={4}>
@@ -1186,7 +1212,12 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                   {!readOnly && (
                     <Row className="g-2 align-items-end">
                       <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Lot Number")}</Label>
+                        <Label className="form-label mb-1">
+                          {t("Lot Number")}
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                            {t("ADD ITEM")}
+                          </Link>
+                        </Label>
                         <CreatableSelect
                           styles={customStyles}
                           options={lotOpts}
@@ -1212,7 +1243,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                        <Input type="text" inputMode="decimal" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Pcs")}</Label>
@@ -1286,7 +1317,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col)}
+                                  {renderItemCell(r, col, caratFormat)}
                                 </td>
                               ))}
                             </tr>
@@ -1297,7 +1328,7 @@ const SolitairePurchaseReturnForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end" : ""}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>

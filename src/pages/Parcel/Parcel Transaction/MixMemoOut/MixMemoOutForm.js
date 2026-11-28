@@ -34,11 +34,20 @@ import {
   getMixMemoOutPageData,
   getMixMemoOutShipVia
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
+import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -121,11 +130,52 @@ const calcItemAmount = (weight, rate, less1, less2, less3, pcs = 1, stockType = 
 let mixMemoRowSeq = 0;
 const nextRowId = () => `memo-row-${Date.now()}-${++mixMemoRowSeq}`;
 
+const roundCts = (v, fmtStr) => truncateCaratNumber(v, fmtStr || getCachedCaratFormat());
+
+/** Read first present finite number (including 0 or negative) without skipping 0. */
+const getPresentNumVal = (row, ...keys) => {
+  if (!row) return null;
+  for (const key of keys) {
+    const variants = [
+      key,
+      key.charAt(0).toLowerCase() + key.slice(1),
+      key.charAt(0).toUpperCase() + key.slice(1),
+      key.toLowerCase(),
+      key.toUpperCase()
+    ];
+    for (const k of variants) {
+      if (row[k] === undefined || row[k] === null || row[k] === "") continue;
+      const n = parseFloat(row[k]);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+};
+
+/** MVC MixMemo returns OnHandCarats3Dec as Weight; never fall back to BalanceCarats3Dec. */
+const getLotAvailableCarats = (lot) => {
+  const raw = getPresentNumVal(lot, "Weight", "OnHandCarats3Dec", "Carats");
+  const onHand = roundCts(raw ?? 0);
+  return onHand > 0 ? onHand : 0;
+};
+
+const memoExceedsStockMessage = (memoCts, available, lotNo) => {
+  const lot = lotNo ? ` for lot ${lotNo}` : "";
+  return `Memo carats (${roundCts(memoCts)}) cannot exceed available stock (${roundCts(available)})${lot}.`;
+};
+
+const isMemoCaratsInvalid = (memoCts, available) => {
+  const memo = roundCts(memoCts);
+  const avail = roundCts(available);
+  return memo > 0 && memo > avail;
+};
+
 const emptyItem = () => ({
   rowId: nextRowId(),
   lotNo: "",
   itemName: "",
   weight: "",
+  availableCarats: "",
   pcs: "",
   mrp: "",
   back: "",
@@ -172,6 +222,7 @@ const mapItemFromApi = (r, idx) => ({
   lotNo: getStrVal(r, "LotNo"),
   itemName: getStrVal(r, "ItemName"),
   weight: getNumVal(r, "Weight", "Carats"),
+  availableCarats: getLotAvailableCarats(r) || getNumVal(r, "Weight", "Carats"),
   pcs: getNumVal(r, "Pcs") || 0,
   mrp: getNumVal(r, "MRP"),
   back: getNumVal(r, "Back", "PMRPDown"),
@@ -219,7 +270,7 @@ const getRowStatusStyle = (status) => {
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "rate", label: "Rate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "less1", label: "Less1", align: "end", decimals: 2 },
@@ -227,16 +278,16 @@ const ITEM_COLUMNS = [
   { key: "less3", label: "Less3", align: "end", decimals: 2 },
   { key: "amount", label: "Amount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "status", label: "Status" },
-  { key: "spCarats", label: "SpCarats", align: "end", decimals: 3 },
-  { key: "returnCarats", label: "ReturnCarats", align: "end", decimals: 3 },
+  { key: "spCarats", label: "SpCarats", align: "end", isCarat: true },
+  { key: "returnCarats", label: "ReturnCarats", align: "end", isCarat: true },
   { key: "stockType", label: "StockType" },
   { key: "invDescription", label: "ItemDescription" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgRate":
@@ -248,8 +299,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -418,10 +473,20 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     return () => window.clearTimeout(timer);
   }, [lotFocusToken, focusLotNoField]);
 
+  const { caratFormat } = useCaratFormat();
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   /** MVC #cleardata — when checked, Clearall() after Add Item */
   const [clearData, setClearData] = useState(false);
@@ -777,6 +842,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const recalcEntryAmount = (next) => ({
     ...next,
@@ -784,7 +850,56 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   });
 
   const onEntryChange = (key, value) => {
-    setEntry((prev) => recalcEntryAmount({ ...prev, [key]: value }));
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
+    setEntry((prev) => recalcEntryAmount({ ...prev, [key]: cleanVal }));
+  };
+
+  const fetchLotOnHand = async (lotNo) => {
+    if (!lotNo) return null;
+    try {
+      const res = await getMixMemoOutLotDetail({
+        lotNo,
+        curCode: toNum(header.curCode),
+        sBaseRate: toNum(header.sBaseRate, 1)
+      });
+      if (!(res?.success || res?.Success)) return null;
+      const rows = res.Data || res.data || [];
+      const lot = Array.isArray(rows) ? rows[0] : rows;
+      return lot ? getLotAvailableCarats(lot) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const resolveAvailableCarats = async (lotNo, fallback, rowCts = 0) => {
+    let onHand = toNum(fallback);
+    try {
+      const live = await fetchLotOnHand(lotNo);
+      if (live !== null) onHand = live;
+    } catch (err) {
+      console.error(err);
+    }
+    if (isEdit && editIndex >= 0) return roundCts(onHand + toNum(rowCts));
+    return roundCts(onHand);
+  };
+
+  const handleCaratsBlur = async () => {
+    if (readOnly) return;
+    const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
+    const memoCts = roundCts(toNum(entry.weight));
+    if (!lotNo || memoCts <= 0) return;
+    if (String(entry.stockType).toLowerCase() === "jewellery") return;
+    const available = await resolveAvailableCarats(
+      lotNo,
+      entry.availableCarats,
+      editIndex >= 0 ? toNum(items[editIndex]?.weight) : 0
+    );
+    setEntry((prev) => ({ ...prev, availableCarats: available }));
+    if (available <= 0) {
+      showWarning(t("Not enough stock in hand to make sale or memo."));
+    } else if (isMemoCaratsInvalid(memoCts, available)) {
+      showWarning(memoExceedsStockMessage(memoCts, available, lotNo));
+    }
   };
 
   const fillFromLot = async (lotNo) => {
@@ -802,12 +917,14 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
       if (!lot) return;
 
-      const weight = getNumVal(lot, "Weight", "Carats");
+      const rawWeight = getPresentNumVal(lot, "Weight", "OnHandCarats3Dec", "Carats");
+      const weight = roundCts(rawWeight ?? 0);
+      const availableCarats = weight > 0 ? weight : 0;
       // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
       const pcs = getNumVal(lot, "Pcs");
       const rate = getNumVal(lot, "Rate");
 
-      if (weight <= 0) {
+      if (!weight || weight <= 0) {
         showWarning(t("Not enough stock in hand to make sale or memo."));
       }
 
@@ -817,6 +934,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           lotNo: getStrVal(lot, "LotNo") || lotNo,
           itemName: getStrVal(lot, "ItemName"),
           weight,
+          availableCarats,
           pcs,
           mrp: 0,
           back: 0,
@@ -824,7 +942,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           less1: prev.less1 === "" || prev.less1 == null ? "0" : prev.less1,
           less2: prev.less2 === "" || prev.less2 == null ? "0" : prev.less2,
           less3: prev.less3 === "" || prev.less3 == null ? "0" : prev.less3,
-          stockType: getStrVal(lot, "StockType") || prev.stockType || "Diamond",
+          stockType: getStrVal(lot, "StockType") || "Diamond",
           invDescription: getStrVal(lot, "InvDescription")
         })
       );
@@ -849,7 +967,8 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
+      availableCarats: toNum(entry.availableCarats),
       pcs: toNum(entry.pcs, 0),
       mrp: 0,
       back: 0,
@@ -892,12 +1011,23 @@ const MixMemoOutForm = ({ mode = "add" }) => {
     setLotFocusToken((n) => n + 1);
   };
 
-  const handleEditRow = (idx) => {
+  const handleEditRow = async (idx) => {
     const r = items[idx];
     if (!r) return;
     setEditIndex(idx);
     setLotSel({ value: r.lotNo, label: r.lotNo });
-    setEntry({ ...emptyItem(), ...r });
+    let availableCarats = toNum(r.availableCarats);
+    if (r.lotNo && String(r.stockType).toLowerCase() !== "jewellery") {
+      try {
+        const onHand = await fetchLotOnHand(r.lotNo);
+        if (onHand !== null) {
+          availableCarats = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setEntry({ ...emptyItem(), ...r, availableCarats: availableCarats || r.availableCarats || "" });
   };
 
   const handleDeleteRow = (idx) => {
@@ -944,7 +1074,10 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       setItems((prevItems) => {
         const result = [
           ...prevItems,
-          ...newItems.map((r) => ({ ...r, rowId: r.rowId || nextRowId() }))
+          ...newItems.map((r) => {
+            const availableCarats = getLotAvailableCarats(r) || r.weight;
+            return { ...r, rowId: r.rowId || nextRowId(), availableCarats };
+          })
         ];
         return result.map((r, idx) => ({ ...r, srNo: idx + 1 }));
       });
@@ -970,13 +1103,13 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1175,12 +1308,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1300,7 +1433,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="ms-1 border border-primary text-primary px-1 rounded"
-                                style={{ fontSize: "10px", textDecoration: "none", lineHeight: 1.4 }}
+                                style={{ fontSize: "10px", textDecoration: "none" }}
                               >
                                 {t("ADD ITEM")}
                               </Link>
@@ -1421,11 +1554,13 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("WEIGHT")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.weight}
                               onChange={(e) => onEntryChange("weight", e.target.value)}
+                              onBlur={handleCaratsBlur}
                             />
                           </FormGroup>
                         </Col>
@@ -1543,7 +1678,19 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col)}
+                                  {col.key === "lotNo" ? (
+                                    <span
+                                      role="button"
+                                      className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpenStockHistory(r.lotNo)}
+                                      title={t("View Stock History")}
+                                    >
+                                      {r.lotNo}
+                                    </span>
+                                  ) : (
+                                    renderItemCell(r, col, caratFormat)
+                                  )}
                                 </td>
                               ))}
                             </tr>
@@ -1554,7 +1701,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end" : ""}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>
@@ -1627,6 +1774,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
             </Col>
           </Row>
         </Container>
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={true}
+        />
         <WarningModal
           open={warningModal.open}
           title={t("Warning!")}

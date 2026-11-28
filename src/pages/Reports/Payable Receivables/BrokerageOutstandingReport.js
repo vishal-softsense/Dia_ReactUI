@@ -15,8 +15,12 @@ import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getBrokerageOutstandingReport
@@ -79,48 +83,48 @@ const numVal = (row, ...keys) => {
 const ALL_COLUMNS = [
   { key: "view", header: "View", align: "center" },
   { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "Party", header: "Party", align: "left" },
   { key: "Broker", header: "Broker", align: "left" },
-  { key: "Totcts", header: "TotCts", align: "right", sum: true, altKeys: ["totcts"] },
+  { key: "Totcts", header: "Total Carats", align: "right", sum: true, altKeys: ["totcts"] },
   {
     key: "BrokerAmount",
-    header: "TotAmount",
+    header: "Total Amount",
     align: "right",
     sum: true,
     altKeys: ["Amount", "amount"]
   },
   {
     key: "BrokerPaid",
-    header: "PaidAmount",
+    header: "Paid Amount",
     align: "right",
     sum: true,
     altKeys: ["PaidAmount", "paidAmount"]
   },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
   {
     key: "BrokerRemain",
-    header: "RemainAmount",
+    header: "Remain Amount",
     align: "right",
     sum: true,
     altKeys: ["RemainAmount", "remainAmount"]
   },
   { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "InvType", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
   { key: "Symbol", header: "Symbol", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDays", header: "DueDays", align: "left" },
-  { key: "PartyMobile", header: "PartyMobile", align: "left" },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDays", header: "Due Days", align: "left" },
+  { key: "PartyMobile", header: "Party Mobile", align: "left" },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
   { key: "Rate", header: "Rate", align: "right" },
-  { key: "stockrate", header: "StockRate", align: "right", altKeys: ["Stockrate", "StockRate"] },
+  { key: "stockrate", header: "Stock Rate", align: "right", altKeys: ["Stockrate", "StockRate"] },
   { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "Trntype", header: "TrnType", align: "left", altKeys: ["trntype"] },
-  { key: "Issuser", header: "UserName", align: "left", altKeys: ["issuser", "UserName"] },
+  { key: "Trntype", header: "Trn Type", align: "left", altKeys: ["trntype"] },
+  { key: "Issuser", header: "User Name", align: "left", altKeys: ["issuser", "UserName"] },
   {
     key: "Invoiceamount",
-    header: "InvoiceAmount",
+    header: "Invoice Amount",
     align: "right",
     sum: true,
     altKeys: ["invoiceamount"]
@@ -130,8 +134,8 @@ const ALL_COLUMNS = [
 const PARTYWISE_COLUMNS = [
   { key: "view", header: "View", align: "center" },
   { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "Party", header: "Party", align: "left" },
   { key: "Broker", header: "Broker", align: "left" },
   { key: "Totcts", header: "Weight", align: "right", sum: true, altKeys: ["totcts"] },
@@ -144,34 +148,34 @@ const PARTYWISE_COLUMNS = [
   },
   {
     key: "BrokerPaid",
-    header: "PaidAmount",
+    header: "Paid Amount",
     align: "right",
     sum: true,
     altKeys: ["PaidAmount", "paidAmount"]
   },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
   {
     key: "BrokerRemain",
-    header: "RemainAmount",
+    header: "Remain Amount",
     align: "right",
     sum: true,
     altKeys: ["RemainAmount", "remainAmount"]
   },
   { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "InvType", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
   { key: "Symbol", header: "Symbol", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDays", header: "DueDays", align: "left" },
-  { key: "PartyMobile", header: "PartyMobile", align: "left" },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDays", header: "Due Days", align: "left" },
+  { key: "PartyMobile", header: "Party Mobile", align: "left" },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
   { key: "Rate", header: "Rate", align: "right" },
-  { key: "stockrate", header: "Stockrate", align: "right", altKeys: ["Stockrate", "StockRate"] },
+  { key: "stockrate", header: "Stock Rate", align: "right", altKeys: ["Stockrate", "StockRate"] },
   { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "Trntype", header: "Trntype", align: "left", altKeys: ["trntype"] },
-  { key: "Issuser", header: "UserName", align: "left", altKeys: ["issuser", "UserName"] },
+  { key: "Trntype", header: "Trn Type", align: "left", altKeys: ["trntype"] },
+  { key: "Issuser", header: "User Name", align: "left", altKeys: ["issuser", "UserName"] },
   {
     key: "Invoiceamount",
-    header: "Invoiceamount",
+    header: "Invoice Amount",
     align: "right",
     sum: true,
     altKeys: ["invoiceamount"]
@@ -191,7 +195,10 @@ const NUMERIC_SORT_KEYS = [
 
 const BrokerageOutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loading, setLoading] = useState(false);
@@ -205,6 +212,12 @@ const BrokerageOutstandingReport = () => {
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched && reportMode === "all",
+    deps: [hasSearched, reportMode, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
@@ -465,8 +478,11 @@ const BrokerageOutstandingReport = () => {
         </button>
       );
     }
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat);
+    }
     if (col.sum || col.key === "Rate" || col.key === "stockrate") {
-      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), col.key === "Totcts" ? 3 : 2);
+      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2);
     }
     return dashText(getRowVal(row, col.key, ...(col.altKeys || [])));
   };
@@ -620,8 +636,10 @@ const BrokerageOutstandingReport = () => {
         rows.push([
           t("Total"),
           ...cols.slice(1).map((c) => {
-            if (c.sum) {
-              return fmtFixed(subtotal[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+            if (c.key === "Totcts") {
+              return formatCarat(subtotal.Totcts || 0, caratFormat);
+            } else if (c.sum) {
+              return fmtFixed(subtotal[c.key] || 0, 2);
             } else if (c.key === "Rate") {
               const rateSub = subtotal.Totcts > 0 ? subtotal.BrokerAmount / subtotal.Totcts : 0;
               return fmtFixed(rateSub, 2);
@@ -633,8 +651,10 @@ const BrokerageOutstandingReport = () => {
       rows.push([
         t("Grand Total"),
         ...cols.slice(1).map((c) => {
-          if (c.sum) {
-            return fmtFixed(invoicePartyGrandTotal[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") {
+            return formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat);
+          } else if (c.sum) {
+            return fmtFixed(invoicePartyGrandTotal[c.key] || 0, 2);
           } else if (c.key === "Rate") {
             const rateGrand = invoicePartyGrandTotal.Totcts > 0 ? invoicePartyGrandTotal.BrokerAmount / invoicePartyGrandTotal.Totcts : 0;
             return fmtFixed(rateGrand, 2);
@@ -649,7 +669,8 @@ const BrokerageOutstandingReport = () => {
       rows.push(
         cols.map((c, idx) => {
           if (idx === 0) return t("Total");
-          if (c.sum) return fmtFixed(allTotals[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") return formatCarat(allTotals.Totcts || 0, caratFormat);
+          if (c.sum) return fmtFixed(allTotals[c.key] || 0, 2);
           return "";
         })
       );
@@ -1102,7 +1123,7 @@ const BrokerageOutstandingReport = () => {
                           setPage(1);
                         }}
                       >
-                        {[10, 25, 50, 100, 500].map((n) => (
+                        {[500, 1000, 1500].map((n) => (
                           <option key={n} value={n}>
                             {n}
                           </option>
@@ -1129,7 +1150,7 @@ const BrokerageOutstandingReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>{ALL_COLUMNS.map(renderHeader)}</tr>
@@ -1187,7 +1208,8 @@ const BrokerageOutstandingReport = () => {
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
                           if (idx === 0) content = t("Total");
-                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                          else if (col.key === "Totcts") content = formatCarat(allTotals.Totcts || 0, caratFormat);
+                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, 2);
                           return (
                             <td
                               key={`t-${col.key}`}
@@ -1205,7 +1227,8 @@ const BrokerageOutstandingReport = () => {
                 </div>
 
                 <div
-                  className="mt-3"
+                  ref={paginationRef}
+                  className="mt-2"
                   style={{
                     backgroundColor: "var(--vz-card-bg, #fff)",
                     paddingTop: "8px",
@@ -1316,7 +1339,7 @@ const BrokerageOutstandingReport = () => {
                     </div>
                   </div>
 
-                  <div className="table-responsive bor-print-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive bor-print-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>{PARTYWISE_COLUMNS.map(renderHeader)}</tr>
@@ -1354,8 +1377,10 @@ const BrokerageOutstandingReport = () => {
                                 </td>
                                 {PARTYWISE_COLUMNS.slice(6).map((col) => {
                                   let content = "";
-                                  if (col.sum) {
-                                    content = fmtFixed(subtotal[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                                  if (col.key === "Totcts") {
+                                    content = formatCarat(subtotal.Totcts || 0, caratFormat);
+                                  } else if (col.sum) {
+                                    content = fmtFixed(subtotal[col.key] || 0, 2);
                                   } else if (col.key === "Rate") {
                                     const rateSub = subtotal.Totcts > 0 ? subtotal.BrokerAmount / subtotal.Totcts : 0;
                                     content = fmtFixed(rateSub, 2);
@@ -1391,8 +1416,10 @@ const BrokerageOutstandingReport = () => {
                             </td>
                             {PARTYWISE_COLUMNS.slice(6).map((col) => {
                               let content = "";
-                              if (col.sum) {
-                                content = fmtFixed(invoicePartyGrandTotal[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                              if (col.key === "Totcts") {
+                                content = formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat);
+                              } else if (col.sum) {
+                                content = fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2);
                               } else if (col.key === "Rate") {
                                 const rateGrand = invoicePartyGrandTotal.Totcts > 0 ? invoicePartyGrandTotal.BrokerAmount / invoicePartyGrandTotal.Totcts : 0;
                                 content = fmtFixed(rateGrand, 2);
@@ -1410,7 +1437,7 @@ const BrokerageOutstandingReport = () => {
                         </tfoot>
                       ) : null}
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>

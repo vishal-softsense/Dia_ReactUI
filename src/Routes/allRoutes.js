@@ -749,6 +749,7 @@ const authProtectedRoutes = [
   { path: "/purchasereturn/purchasereturn-list", component: <SolitairePurchaseReturnList /> },
   { path: "/purchasereturn/add-purchasereturn", component: <SolitairePurchaseReturnAdd /> },
   { path: "/purchasereturn/edit-purchasereturn", component: <SolitairePurchaseReturnEdit /> },
+  { path: "/purchase-return/edit-purchase-return", component: <SolitairePurchaseReturnEdit /> },
 
   // Solitaire Consignment In entry (MVC: /consignment/*)
   { path: "/consignment/consignment-list", component: <SolitaireConsignmentInList /> },
@@ -807,6 +808,8 @@ const authProtectedRoutes = [
   { path: "/Payment/Paymentlist", component: <PaymentList /> },
   { path: "/payment/add-payment", component: <PaymentAdd /> },
   { path: "/payment/edit-payment", component: <PaymentEdit /> },
+  { path: "/Payment/GetPayment", component: <PaymentEdit /> },
+  { path: "/Payment/GetJVEdit", component: <PaymentEdit /> },
 
   // Payment & Receipt With ExDiff (MVC: /Payment/PayWithExDiffList)
   { path: "/payment/pay-with-exdiff-list", component: <PayWithExDiffList /> },

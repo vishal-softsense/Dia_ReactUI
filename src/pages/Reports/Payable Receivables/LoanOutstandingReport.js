@@ -15,8 +15,12 @@ import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getLoanOutstandingReport,
@@ -78,61 +82,64 @@ const numVal = (row, ...keys) => {
 
 const ALL_COLUMNS = [
   { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
-  { key: "DueDays", header: "Due", align: "left" },
-  { key: "Party", header: "Party", align: "left" },
-  { key: "Broker", header: "Broker", align: "left" },
-  { key: "Totcts", header: "TotWeight", align: "right", sum: true, altKeys: ["totcts"] },
-  { key: "Amount", header: "Tot Amount", align: "right", sum: true },
-  { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
-  { key: "RemainAmount", header: "RemainAmount", align: "right", sum: true },
-  { key: "PostDateAmount", header: "PostDateAmount", align: "right", sum: true },
-  { key: "ExportAmount", header: "ExportAmount", align: "right", sum: true },
-  { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "InvType", align: "left" },
-  { key: "Symbol", header: "Currency", align: "left" },
-  { key: "Disc", header: "Disc", align: "right", sum: true },
-  { key: "PartyMobile", header: "PartyMobile", align: "left" },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left" },
-  { key: "Rate", header: "Rate", align: "right" },
-  { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "UserName", header: "UserName", align: "left" },
-  { key: "ExpPartyName", header: "ExpParty", align: "left" }
-];
-
-const PARTYWISE_COLUMNS = [
-  { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "DueDays", header: "Due", align: "left" },
   { key: "Party", header: "Party", align: "left" },
   { key: "Broker", header: "Broker", align: "left" },
   { key: "Totcts", header: "Tot Weight", align: "right", sum: true, altKeys: ["totcts"] },
-  { key: "Amount", header: "Tot Amount", align: "right", sum: true },
+  { key: "Amount", header: "Total Amount", align: "right", sum: true },
   { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
   { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true },
-  { key: "PostDateAmount", header: "PostDate Amount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true },
   { key: "ExportAmount", header: "Export Amount", align: "right", sum: true },
   { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "Inv Type", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
   { key: "Symbol", header: "Currency", align: "left" },
   { key: "Disc", header: "Disc", align: "right", sum: true },
   { key: "PartyMobile", header: "Party Mobile", align: "left" },
   { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
   { key: "Rate", header: "Rate", align: "right" },
   { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "UserName", header: "UserName", align: "left" },
-  { key: "ExpPartyName", header: "ExpParty", align: "left" }
+  { key: "UserName", header: "User Name", align: "left" },
+  { key: "ExpPartyName", header: "Exp Party", align: "left" }
+];
+
+const PARTYWISE_COLUMNS = [
+  { key: "Date", header: "Date", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
+  { key: "DueDays", header: "Due", align: "left" },
+  { key: "Party", header: "Party", align: "left" },
+  { key: "Broker", header: "Broker", align: "left" },
+  { key: "Totcts", header: "Tot Weight", align: "right", sum: true, altKeys: ["totcts"] },
+  { key: "Amount", header: "Total Amount", align: "right", sum: true },
+  { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
+  { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true },
+  { key: "ExportAmount", header: "Export Amount", align: "right", sum: true },
+  { key: "Seller", header: "Seller", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
+  { key: "Symbol", header: "Currency", align: "left" },
+  { key: "Disc", header: "Disc", align: "right", sum: true },
+  { key: "PartyMobile", header: "Party Mobile", align: "left" },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
+  { key: "Rate", header: "Rate", align: "right" },
+  { key: "Remarks", header: "Remarks", align: "left" },
+  { key: "UserName", header: "User Name", align: "left" },
+  { key: "ExpPartyName", header: "Exp Party", align: "left" }
 ];
 
 const LoanOutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -148,6 +155,12 @@ const LoanOutstandingReport = () => {
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched && reportMode === "all",
+    deps: [hasSearched, reportMode, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
@@ -583,41 +596,48 @@ const LoanOutstandingReport = () => {
         groupRows.forEach((r) => {
           rows.push(
             cols.map((c) =>
-              c.sum || c.key === "Rate"
-                ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), c.key === "Totcts" ? 3 : 2)
-                : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
+              c.key === "Totcts"
+                ? formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat)
+                : c.sum || c.key === "Rate"
+                  ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), 2)
+                  : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
             )
           );
         });
         rows.push([
           t("Total"),
           ...cols.slice(1).map((c) =>
-            c.sum ? fmtFixed(subtotal[c.key === "Totcts" ? "Totcts" : c.key] || 0, c.key === "Totcts" ? 3 : 2) : ""
+            c.key === "Totcts"
+              ? formatCarat(subtotal.Totcts || 0, caratFormat)
+              : c.sum ? fmtFixed(subtotal[c.key] || 0, 2) : ""
           )
         ]);
       });
       rows.push([
         t("Grand Total"),
         ...cols.slice(1).map((c) =>
-          c.sum
-            ? fmtFixed(invoicePartyGrandTotal[c.key === "Totcts" ? "Totcts" : c.key] || 0, c.key === "Totcts" ? 3 : 2)
-            : ""
+          c.key === "Totcts"
+            ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+            : c.sum ? fmtFixed(invoicePartyGrandTotal[c.key] || 0, 2) : ""
         )
       ]);
     } else {
       filteredAllRows.forEach((r) => {
         rows.push(
           cols.map((c) =>
-            c.sum || c.key === "Rate"
-              ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), c.key === "Totcts" ? 3 : 2)
-              : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
+            c.key === "Totcts"
+              ? formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat)
+              : c.sum || c.key === "Rate"
+                ? fmtFixed(numVal(r, c.key, ...(c.altKeys || [])), 2)
+                : dashText(getRowVal(r, c.key, ...(c.altKeys || [])))
           )
         );
       });
       rows.push(
         cols.map((c, idx) => {
           if (idx === 0) return t("Total");
-          if (c.sum) return fmtFixed(allTotals[c.key] || 0, c.key === "Totcts" ? 3 : 2);
+          if (c.key === "Totcts") return formatCarat(allTotals.Totcts || 0, caratFormat);
+          if (c.sum) return fmtFixed(allTotals[c.key] || 0, 2);
           return "";
         })
       );
@@ -1089,7 +1109,7 @@ const LoanOutstandingReport = () => {
                           setPage(1);
                         }}
                       >
-                        {[10, 25, 50, 100, 500].map((n) => (
+                        {[500, 1000, 1500].map((n) => (
                           <option key={n} value={n}>
                             {n}
                           </option>
@@ -1116,7 +1136,7 @@ const LoanOutstandingReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>{ALL_COLUMNS.map(renderHeader)}</tr>
@@ -1153,12 +1173,11 @@ const LoanOutstandingReport = () => {
                                   col.align === "right" ? "text-end" : "text-start"
                                 }`}
                               >
-                                {col.sum || col.key === "Rate"
-                                  ? fmtFixed(
-                                      numVal(row, col.key, ...(col.altKeys || [])),
-                                      col.key === "Totcts" ? 3 : 2
-                                    )
-                                  : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
+                                {col.key === "Totcts"
+                                  ? formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat)
+                                  : col.sum || col.key === "Rate"
+                                    ? fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2)
+                                    : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
                               </td>
                             ))}
                           </tr>
@@ -1179,7 +1198,8 @@ const LoanOutstandingReport = () => {
                         {ALL_COLUMNS.map((col, idx) => {
                           let content = "";
                           if (idx === 0) content = t("Total");
-                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                          else if (col.key === "Totcts") content = formatCarat(allTotals.Totcts || 0, caratFormat);
+                          else if (col.sum) content = fmtFixed(allTotals[col.key] || 0, 2);
                           return (
                             <td
                               key={`t-${col.key}`}
@@ -1197,7 +1217,8 @@ const LoanOutstandingReport = () => {
                 </div>
 
                 <div
-                  className="mt-3"
+                  ref={paginationRef}
+                  className="mt-2"
                   style={{
                     backgroundColor: "var(--vz-card-bg, #fff)",
                     paddingTop: "8px",
@@ -1308,7 +1329,7 @@ const LoanOutstandingReport = () => {
                     </div>
                   </div>
 
-                  <div className="table-responsive lor-print-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive lor-print-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>{PARTYWISE_COLUMNS.map(renderHeader)}</tr>
@@ -1335,12 +1356,11 @@ const LoanOutstandingReport = () => {
                                         col.align === "right" ? "text-end" : "text-start"
                                       }`}
                                     >
-                                      {col.sum || col.key === "Rate"
-                                        ? fmtFixed(
-                                            numVal(row, col.key, ...(col.altKeys || [])),
-                                            col.key === "Totcts" ? 3 : 2
-                                          )
-                                        : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
+                                      {col.key === "Totcts"
+                                        ? formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat)
+                                        : col.sum || col.key === "Rate"
+                                          ? fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2)
+                                          : dashText(getRowVal(row, col.key, ...(col.altKeys || [])))}
                                     </td>
                                   ))}
                                 </tr>
@@ -1352,12 +1372,11 @@ const LoanOutstandingReport = () => {
                                 <td />
                                 {PARTYWISE_COLUMNS.slice(7).map((col) => (
                                   <td key={`sub-${col.key}`} className="text-end fw-bold">
-                                    {col.sum
-                                      ? fmtFixed(
-                                          subtotal[col.key === "Totcts" ? "Totcts" : col.key] || 0,
-                                          col.key === "Totcts" ? 3 : 2
-                                        )
-                                      : ""}
+                                    {col.key === "Totcts"
+                                      ? formatCarat(subtotal.Totcts || 0, caratFormat)
+                                      : col.sum
+                                        ? fmtFixed(subtotal[col.key] || 0, 2)
+                                        : ""}
                                   </td>
                                 ))}
                               </tr>
@@ -1383,19 +1402,18 @@ const LoanOutstandingReport = () => {
                             <td />
                             {PARTYWISE_COLUMNS.slice(7).map((col) => (
                               <td key={`grand-${col.key}`} className="text-end fw-bold">
-                                {col.sum
-                                  ? fmtFixed(
-                                      invoicePartyGrandTotal[col.key === "Totcts" ? "Totcts" : col.key] || 0,
-                                      col.key === "Totcts" ? 3 : 2
-                                    )
-                                  : ""}
+                                {col.key === "Totcts"
+                                  ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+                                  : col.sum
+                                    ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2)
+                                    : ""}
                               </td>
                             ))}
                           </tr>
                         </tfoot>
                       ) : null}
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>

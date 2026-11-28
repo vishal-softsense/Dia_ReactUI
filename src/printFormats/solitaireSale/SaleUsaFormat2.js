@@ -2,6 +2,7 @@ import React from "react";
 import {
   FALLBACK_MEMO_CONDITIONS,
   fmt,
+  fmtSolitaireCarat,
   fmtDateSlash,
   fmtNum,
   getVal,
@@ -242,7 +243,7 @@ const SaleUsaFormat2 = ({ data, items, company, logoUrl }) => {
                       </td>
                       <td style={td}>{getVal(item, "Qty", "qty", "Pcs", "pcs")}</td>
                       <td style={{ ...td, textAlign: "right", paddingRight: 10 }}>
-                        {fmt(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
+                        {fmtSolitaireCarat(getVal(item, "Weight", "weight", "Carats", "carats"))}
                       </td>
                       <td style={{ ...td, textAlign: "left" }}>
                         {getVal(item, "Description", "description", "ItemName", "itemName")}
@@ -292,7 +293,7 @@ const SaleUsaFormat2 = ({ data, items, company, logoUrl }) => {
                         {qtyTotal}
                       </td>
                       <td style={{ ...td, textAlign: "right", verticalAlign: "top", fontSize: 12, borderBottom: "1px solid #000" }}>
-                        {fmt(wtTotal, 2)}
+                        {fmtSolitaireCarat(wtTotal)}
                       </td>
                       <td style={{ ...td, fontWeight: "bold", verticalAlign: "top", fontSize: 12, borderBottom: "1px solid #000" }}>
                         Terms: Due upon receipt

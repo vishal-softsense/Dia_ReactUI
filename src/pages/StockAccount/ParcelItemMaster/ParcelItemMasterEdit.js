@@ -6,9 +6,12 @@ import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getParcelItemMasterDropdowns, getParcelItemMasterDetail, updateParcelItemMaster } from "../../../helpers/fakebackend_helper";
 import { toast, ToastContainer } from 'react-toastify';
 import Select from "react-select";
+import { sanitizeCaratInput } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const ParcelItemMasterEdit = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const navigate = useNavigate();
     
     // Retrieve ID from Query Parameter
@@ -169,22 +172,23 @@ const ParcelItemMasterEdit = () => {
 
     // Perform calculations when weights, rates, or baseRates change
     const handleValueChange = (field, value) => {
-        const val = parseFloat(value) || 0;
+        const cleanVal = field === "weight" ? sanitizeCaratInput(value, caratFormat) : (parseFloat(value) || 0);
         setForm(prev => {
-            const updated = { ...prev, [field]: val };
+            const updated = { ...prev, [field]: cleanVal };
+            const wNum = parseFloat(updated.weight) || 0;
             
             // Purchase calculations
             if (field === "weight" || field === "purchaseRate" || field === "pDollorRate") {
-                updated.purchaseAmount = updated.weight * updated.purchaseRate;
+                updated.purchaseAmount = wNum * updated.purchaseRate;
                 updated.masterCurrencyRate = updated.purchaseRate * updated.pDollorRate;
-                updated.masterCurrencyAmount = updated.masterCurrencyRate * updated.weight;
+                updated.masterCurrencyAmount = updated.masterCurrencyRate * wNum;
             }
             
             // Asking calculations
             if (field === "weight" || field === "askingRate" || field === "pDollorRate") {
-                updated.askingAmount = updated.weight * updated.askingRate;
+                updated.askingAmount = wNum * updated.askingRate;
                 updated.askingINR = updated.askingRate * updated.pDollorRate;
-                updated.askingINRAmt = updated.askingINR * updated.weight;
+                updated.askingINRAmt = updated.askingINR * wNum;
             }
 
             return updated;
@@ -212,7 +216,8 @@ const ParcelItemMasterEdit = () => {
 
         setSubmitting(true);
         try {
-            const response = await updateParcelItemMaster(form.itemCode, form);
+            const payload = { ...form, weight: parseFloat(form.weight) || 0 };
+            const response = await updateParcelItemMaster(form.itemCode, payload);
             if (response.success || response.Success) {
                 navigate("/parcel/list-ParcelItemMaster", { state: { successMessage: response.message || response.Message || "Parcel Item updated successfully." } });
             } else {
@@ -467,8 +472,8 @@ const ParcelItemMasterEdit = () => {
                                             <FormGroup>
                                                 <Label>{t("Opening Weight / Carats")}</Label>
                                                 <Input
-                                                    type="number"
-                                                    step="any"
+                                                    type="text"
+                                                    inputMode="decimal"
                                                     className="text-end"
                                                     value={form.weight}
                                                     onChange={(e) => handleValueChange("weight", e.target.value)}

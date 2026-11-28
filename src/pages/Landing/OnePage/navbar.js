@@ -122,7 +122,7 @@ const Navbar = () => {
                             </li>
                         </Scrollspy>
 
-                        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 ms-lg-auto navbar-landing-actions">
+                        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2  navbar-landing-actions">
                             <Link to="/login" className="btn btn-link fw-medium text-decoration-none" onClick={closeMenu}>
                                 Sign in
                             </Link>

@@ -118,6 +118,12 @@ const Navdata = () => {
     if (rawData && rawData.length > 0) {
         // 1. Find root level items (MenuLevel === "1")
         const rootItems = rawData.filter(item => item.menuLevel === "1" || item.MenuLevel === "1");
+        if (rootItems.length > 0) {
+            menuItems.push({
+                label: "Menu",
+                isHeader: true,
+            });
+        }
 
         const menuKey = (value) =>
             String(value || "")

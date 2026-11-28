@@ -195,7 +195,7 @@ const StockTransfer = () => {
             toast.error(t("No table found!"));
             return;
         }
-        const headers = ["Date", "FLot", "F_LotNo", "FItemRate", "carats", "TLot", "T_LotNo", "TItemRate"];
+        const headers = ["Date", "From Lot", "From Lot No", "From Item Rate", "Carats", "To Lot", "To Lot No", "To Item Rate"];
         const exportRows = rows.map(r => [
             getField(r, "SPdate") ? formatLocalDate(getField(r, "SPdate")) : "",
             getField(r, "FLot") || "",
@@ -239,45 +239,45 @@ const StockTransfer = () => {
                 cell: ({ row }) => formatLocalDate(getField(row.original, "SPdate"))
             },
             {
-                header: t("FLot"),
+                header: t("From Lot"),
                 accessorKey: "FLot",
                 enableColumnFilter: true,
                 cell: ({ row }) => getField(row.original, "FLot") || ""
             },
             {
-                header: t("F_LotNo"),
+                header: t("From Lot No"),
                 accessorKey: "Fname",
                 enableColumnFilter: true,
                 cell: ({ row }) => getField(row.original, "Fname") || ""
             },
             {
-                header: t("FItemRate"),
+                header: t("From Item Rate"),
                 accessorKey: "FItemRate",
                 enableColumnFilter: true,
                 enableSorting: false,
                 cell: ({ row }) => getField(row.original, "FItemRate") ?? ""
             },
             {
-                header: t("carats"),
+                header: t("Carats"),
                 accessorKey: "carats",
                 enableColumnFilter: true,
                 enableSorting: false,
                 cell: ({ row }) => getField(row.original, "carats") ?? ""
             },
             {
-                header: t("TLot"),
+                header: t("To Lot"),
                 accessorKey: "TLot",
                 enableColumnFilter: true,
                 cell: ({ row }) => getField(row.original, "TLot") || ""
             },
             {
-                header: t("T_LotNo"),
+                header: t("To Lot No"),
                 accessorKey: "Tname",
                 enableColumnFilter: true,
                 cell: ({ row }) => getField(row.original, "Tname") || ""
             },
             {
-                header: t("TItemRate"),
+                header: t("To Item Rate"),
                 accessorKey: "TItemRate",
                 enableColumnFilter: true,
                 cell: ({ row }) => getField(row.original, "TItemRate") ?? ""

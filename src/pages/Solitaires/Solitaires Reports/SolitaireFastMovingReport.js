@@ -19,6 +19,9 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getSolitaireFastMovingReport,
   getSolitaireFastMovingDisplay,
@@ -41,13 +44,19 @@ const fmtFixed = (value, decimals = 2) => {
 
 const SolitaireFastMovingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
   const [dropdownData, setDropdownData] = useState({});
   const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
 
@@ -69,7 +78,6 @@ const SolitaireFastMovingReport = () => {
   const [detailRows, setDetailRows] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  const caratDecimal = 3;
   const amtDecimal = 2;
 
   const customStyles = useMemo(
@@ -499,7 +507,7 @@ const SolitaireFastMovingReport = () => {
                   <td>{r.clarityName || r.ClarityName}</td>
                   <td className="text-end">{r.pcs || r.Pcs}</td>
                   <td className="text-end">{r.age || r.Age}</td>
-                  <td className="text-end">{fmtFixed(r.carats || r.Carats, caratDecimal)}</td>
+                  <td className="text-end">{formatCarat(r.carats ?? r.Carats, caratFormat)}</td>
                   <td className="text-end">{fmtFixed(r.mrp || r.MRP, amtDecimal)}</td>
                   <td className="text-end">{fmtFixed(r.disc || r.Disc, 2)}</td>
                   <td className="text-end">{fmtFixed(r.amount || r.Amount, amtDecimal)}</td>
@@ -509,7 +517,7 @@ const SolitaireFastMovingReport = () => {
                 <td colSpan="3">Total</td>
                 <td className="text-end">{totalPcs}</td>
                 <td></td>
-                <td className="text-end">{fmtFixed(totalCarats, caratDecimal)}</td>
+                <td className="text-end">{formatCarat(totalCarats, caratFormat)}</td>
                 <td></td>
                 <td></td>
                 <td className="text-end">{fmtFixed(totalAmount, amtDecimal)}</td>
@@ -760,8 +768,9 @@ const SolitaireFastMovingReport = () => {
 
           {hasSearched && reportRows.length > 0 && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody className="p-4">
-                <div ref={printRef} className="table-responsive" style={{ maxHeight: "65vh" }}>
+              <div ref={printRef} className="d-contents">
+              <CardBody className="p-2 p-sm-3">
+                <div ref={tableScrollRef} className="table-responsive viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <Table
                     id="FastMovingReportT"
                     className="table-bordered align-middle text-center mb-0"
@@ -935,6 +944,7 @@ const SolitaireFastMovingReport = () => {
                   </Table>
                 </div>
               </CardBody>
+              </div>
             </Card>
           )}
 

@@ -7,6 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import {
     getAccGrpMasters,
@@ -21,6 +22,8 @@ import {
     resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const dashText = (value) => {
     if (value === null || value === undefined || value === "") return "-";
@@ -324,6 +327,7 @@ const GROUPED_PRINT_STYLES = `
 
 const MixConsignmentReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({ includeReturnDates: true });
 
     const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -381,8 +385,8 @@ const MixConsignmentReport = () => {
 
     const groupByOptions = useMemo(
         () => [
-            { value: "MemoNo", label: t("Group by MemoNo") },
-            { value: "PartyName", label: t("Group by PartyName") }
+            { value: "MemoNo", label: t("Group by Memo No") },
+            { value: "PartyName", label: t("Group by Party Name") }
         ],
         [t]
     );
@@ -792,10 +796,10 @@ const MixConsignmentReport = () => {
                         <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
                         <td class="col-text">${escapeHtml(getRowVal(row, "Lotno", "lotno"))}</td>
                         <td class="col-product">${escapeHtml(getRowVal(row, "ItemName", "itemName"))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Carats"), caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Estimate"), GROUPED_DECIMALS.Estimate))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Return"), GROUPED_DECIMALS.Return))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Balance"), GROUPED_DECIMALS.Balance))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Return"), caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Balance"), caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Price"), GROUPED_DECIMALS.Price))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "BalanceAmt"), GROUPED_DECIMALS.BalanceAmt))}</td>
                     </tr>
@@ -810,7 +814,11 @@ const MixConsignmentReport = () => {
                     <td></td>
                     ${GROUPED_SUM_COLUMNS.map(
                         (colKey) =>
-                            `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                            `<td class="col-num"><strong>${escapeHtml(
+                                ["Carats", "Return", "Balance"].includes(colKey)
+                                    ? formatCarat(section.subtotal[colKey], caratFormat)
+                                    : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])
+                            )}</strong></td>`
                     ).join("")}
                 </tr>
             `;
@@ -823,7 +831,11 @@ const MixConsignmentReport = () => {
                 <td></td>
                 ${GROUPED_SUM_COLUMNS.map(
                     (colKey) =>
-                        `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                        `<td class="col-num"><strong>${escapeHtml(
+                            ["Carats", "Return", "Balance"].includes(colKey)
+                                ? formatCarat(grandTotal[colKey], caratFormat)
+                                : fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey])
+                        )}</strong></td>`
                 ).join("")}
             </tr>
         `;
@@ -872,6 +884,9 @@ const MixConsignmentReport = () => {
     };
 
     const renderGroupedValue = (row, key) => {
+        if (["Carats", "Return", "Balance"].includes(key)) {
+            return formatCarat(getGroupedNumeric(row, key), caratFormat);
+        }
         if (GROUPED_DECIMALS[key] !== undefined) {
             return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
         }
@@ -1050,7 +1065,7 @@ const MixConsignmentReport = () => {
                 }
             },
             {
-                header: t("DATE"),
+                header: t("Date"),
                 id: "TrnDate",
                 accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -1068,7 +1083,7 @@ const MixConsignmentReport = () => {
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
             {
-                header: t("DueDate"),
+                header: t("Due Date"),
                 id: "ConDATE",
                 accessorFn: (row) => formatReportDisplayDate(getRowDueDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -1085,24 +1100,24 @@ const MixConsignmentReport = () => {
                 cell: ({ getValue }) => dashText(getValue())
             },
             {
-                header: t("OverDue"),
+                header: t("Over Due"),
                 accessorKey: "DueDays",
                 className: "text-end",
                 cell: ({ row }) => dashText(getRowVal(row.original, "DueDays", "dueDays"))
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-            { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno")) },
-            { header: t("ItemName"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")) },
+            { header: t("Lot No"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno")) },
+            { header: t("Item Name"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")) },
             {
                 header: t("Carats"),
                 accessorKey: "Carats",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
                 footer: ({ table }) => {
                     const { totalCarats } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
                 }
             },
             {
@@ -1140,24 +1155,24 @@ const MixConsignmentReport = () => {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
                 header: t("Balance"),
                 accessorKey: "Balance",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Balance", "balance"), 2),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Balance", "balance"), caratFormat),
                 footer: ({ table }) => {
                     const { totalBalance } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalBalance, 2)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalBalance, caratFormat)}</span>;
                 }
             },
             {
-                header: t("BalanceAmt"),
+                header: t("Balance Amt"),
                 accessorKey: "BalanceAmt",
                 className: "text-end",
                 cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2),
@@ -1168,13 +1183,13 @@ const MixConsignmentReport = () => {
             },
             { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => dashText(getRowVal(row.original, "Seller", "seller")) },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("MemoType"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
-            { header: t("SubType"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
+            { header: t("Memo Type"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
+            { header: t("Sub Type"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
             { header: t("Category"), accessorKey: "Category", cell: ({ row }) => dashText(getRowVal(row.original, "Category", "category")) },
-            { header: t("IssUser"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
+            { header: t("Iss User"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) }
         ],
-        [expandedMemoNos, t]
+        [expandedMemoNos, t, caratFormat]
     );
 
     const summaryColumns = useMemo(
@@ -1191,12 +1206,12 @@ const MixConsignmentReport = () => {
                 className: "text-end",
                 cell: ({ row }) => (
                     <span style={{ backgroundColor: "rgb(204, 204, 255)", display: "block", padding: "2px 4px" }}>
-                        {fmtFixed(getRowVal(row.original, "TotalCarats", "totalCarats"), 3)}
+                        {formatCarat(getRowVal(row.original, "TotalCarats", "totalCarats"), caratFormat)}
                     </span>
                 ),
                 footer: ({ table }) => {
                     const { totalCarats } = getSummaryTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
                 }
             },
             {
@@ -1205,12 +1220,12 @@ const MixConsignmentReport = () => {
                 className: "text-end",
                 cell: ({ row }) => (
                     <span style={{ backgroundColor: "rgb(204, 255, 201)", display: "block", padding: "2px 4px" }}>
-                        {fmtFixed(getRowVal(row.original, "PurchasedCarats", "purchasedCarats"), 3)}
+                        {formatCarat(getRowVal(row.original, "PurchasedCarats", "purchasedCarats"), caratFormat)}
                     </span>
                 ),
                 footer: ({ table }) => {
                     const { totalPurchased } = getSummaryTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalPurchased, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalPurchased, caratFormat)}</span>;
                 }
             },
             {
@@ -1219,12 +1234,12 @@ const MixConsignmentReport = () => {
                 className: "text-end",
                 cell: ({ row }) => (
                     <span style={{ backgroundColor: "rgb(153, 204, 255)", display: "block", padding: "2px 4px" }}>
-                        {fmtFixed(getRowVal(row.original, "ReturnCarats", "returnCarats"), 3)}
+                        {formatCarat(getRowVal(row.original, "ReturnCarats", "returnCarats"), caratFormat)}
                     </span>
                 ),
                 footer: ({ table }) => {
                     const { totalReturn } = getSummaryTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
@@ -1233,16 +1248,16 @@ const MixConsignmentReport = () => {
                 className: "text-end",
                 cell: ({ row }) => (
                     <span style={{ backgroundColor: "rgb(255, 204, 153)", display: "block", padding: "2px 4px" }}>
-                        {fmtFixed(getRowVal(row.original, "BalanceCarats", "balanceCarats"), 3)}
+                        {formatCarat(getRowVal(row.original, "BalanceCarats", "balanceCarats"), caratFormat)}
                     </span>
                 ),
                 footer: ({ table }) => {
                     const { totalBalance } = getSummaryTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalBalance, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalBalance, caratFormat)}</span>;
                 }
             }
         ],
-        [t]
+        [t, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -1255,10 +1270,10 @@ const MixConsignmentReport = () => {
             const headers = ["Category", "Carats", "Purchased", "Return", "Balance"];
             const rows = summaryRows.map((r) => [
                 dashText(getRowVal(r, "ItemCategory", "itemCategory")),
-                fmtFixed(getRowVal(r, "TotalCarats", "totalCarats"), 3),
-                fmtFixed(getRowVal(r, "PurchasedCarats", "purchasedCarats"), 3),
-                fmtFixed(getRowVal(r, "ReturnCarats", "returnCarats"), 3),
-                fmtFixed(getRowVal(r, "BalanceCarats", "balanceCarats"), 3)
+                formatCarat(getRowVal(r, "TotalCarats", "totalCarats"), caratFormat),
+                formatCarat(getRowVal(r, "PurchasedCarats", "purchasedCarats"), caratFormat),
+                formatCarat(getRowVal(r, "ReturnCarats", "returnCarats"), caratFormat),
+                formatCarat(getRowVal(r, "BalanceCarats", "balanceCarats"), caratFormat)
             ]);
 
             const totalCarats = summaryRows.reduce((s, r) => s + Number(getRowVal(r, "TotalCarats", "totalCarats") || 0), 0);
@@ -1274,10 +1289,10 @@ const MixConsignmentReport = () => {
 
             rows.push([
                 "Total",
-                fmtFixed(totalCarats, 3),
-                fmtFixed(totalPurchased, 3),
-                fmtFixed(totalReturn, 3),
-                fmtFixed(totalBalance, 3)
+                formatCarat(totalCarats, caratFormat),
+                formatCarat(totalPurchased, caratFormat),
+                formatCarat(totalReturn, caratFormat),
+                formatCarat(totalBalance, caratFormat)
             ]);
 
             const res = await exportToExcel(headers, rows, "MixConsignmentSummaryReport", "MixConsignmentSummaryReport");
@@ -1292,27 +1307,27 @@ const MixConsignmentReport = () => {
 
         const headers = [
             "Date",
-            "DueDate",
-            "OverDue",
-            "MemoNo",
-            "BillNo",
+            "Due Date",
+            "Over Due",
+            "Memo Number",
+            "Bill No",
             "Party",
-            "LotNo",
-            "ItemName",
+            "Lot No",
+            "Item Name",
             "Carats",
             "Price",
             "Amount",
             "Sold",
             "Return",
             "Balance",
-            "BalanceAmt",
+            "Balance Amt",
             "Seller",
             "Broker",
-            "MemoType",
-            "SubType",
+            "Memo Type",
+            "Sub Type",
             "Category",
-            "IssUser",
-            "StockType"
+            "Iss User",
+            "Stock Type"
         ];
 
         const rows = reportRows.map((r) => [
@@ -1324,12 +1339,12 @@ const MixConsignmentReport = () => {
             dashText(getRowVal(r, "Party", "party")),
             dashText(getRowVal(r, "Lotno", "lotno")),
             dashText(getRowVal(r, "ItemName", "itemName")),
-            fmtFixed(getRowVal(r, "Carats", "carats"), 3),
+            formatCarat(getRowVal(r, "Carats", "carats"), caratFormat),
             fmtFixed(getRowVal(r, "Price", "price"), 2),
             fmtFixed(getRowVal(r, "Amount", "amount"), 2),
             fmtFixed(getRowVal(r, "Estimate", "estimate"), 2),
-            fmtFixed(getRowVal(r, "Return", "return"), 3),
-            fmtFixed(getRowVal(r, "Balance", "balance"), 2),
+            formatCarat(getRowVal(r, "Return", "return"), caratFormat),
+            formatCarat(getRowVal(r, "Balance", "balance"), caratFormat),
             fmtFixed(getRowVal(r, "BalanceAmt", "balanceAmt"), 2),
             dashText(getRowVal(r, "Seller", "seller")),
             dashText(getRowVal(r, "Broker", "broker")),
@@ -1357,12 +1372,12 @@ const MixConsignmentReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalCarats, 3),
+            formatCarat(totalCarats, caratFormat),
             fmtFixed(totalPrice, 2),
             fmtFixed(totalAmount, 2),
             fmtFixed(totalEstimate, 2),
-            fmtFixed(totalReturn, 3),
-            fmtFixed(totalBalance, 2),
+            formatCarat(totalReturn, caratFormat),
+            formatCarat(totalBalance, caratFormat),
             fmtFixed(totalBalanceAmt, 2),
             "",
             "",
@@ -1802,7 +1817,7 @@ const MixConsignmentReport = () => {
                                 {groupedReportData.sections.length === 0 ? (
                                     <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                                 ) : (
-                                    <div className="table-responsive mix-consignment-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                                    <ViewportScrollBox className="table-responsive mix-consignment-grouped-table-wrap">
                                         <table className="table table-bordered align-middle mb-0" id="dynamic-mixconsignment-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
                                             <colgroup>
                                                 <col style={{ width: "48px" }} />
@@ -1896,7 +1911,11 @@ const MixConsignmentReport = () => {
                                                             <td />
                                                             {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                                                    <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                                    <strong>
+                                                                        {["Carats", "Return", "Balance"].includes(colKey)
+                                                                            ? formatCarat(section.subtotal[colKey], caratFormat)
+                                                                            : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                                    </strong>
                                                                 </td>
                                                             ))}
                                                         </tr>
@@ -1911,13 +1930,17 @@ const MixConsignmentReport = () => {
                                                     <td />
                                                     {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                         <td key={`grand-${colKey}`} className="text-end">
-                                                            <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                            <strong>
+                                                                {["Carats", "Return", "Balance"].includes(colKey)
+                                                                    ? formatCarat(groupedReportData.grandTotal[colKey], caratFormat)
+                                                                    : fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                            </strong>
                                                         </td>
                                                     ))}
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </ViewportScrollBox>
                                 )}
 
                                 {companyInfo?.companyFooter ? (

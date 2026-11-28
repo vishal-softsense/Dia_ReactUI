@@ -38,6 +38,8 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import StockHistoryPopupModal from "./StockHistoryPopupModal";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const debounce = (func, delay) => {
   let timer;
@@ -66,7 +68,7 @@ const SelectionCell = React.memo(({ index, isSelected, onChange }) => {
   return (
     <input
       type="checkbox"
-      className="form-check-input"
+      className="form-check-input m-0"
       checked={isSelected}
       onChange={handleChange}
     />
@@ -152,8 +154,8 @@ const allColumns = [
   { label: "Video Path", key: "videoPath" },
   { label: "Mfg Series ID", key: "kapan" },
   { label: "Mfg Packet ID", key: "packet" },
-  { label: "Tab.Inc.", key: "tinc" },
-  { label: "Cr.Inc.", key: "cinc" },
+  { label: "Tab. Inc.", key: "tinc" },
+  { label: "Cr. Inc.", key: "cinc" },
   { label: "IP", key: "ip" },
   { label: "OIT", key: "oit" },
   { label: "OIG", key: "oig" },
@@ -161,39 +163,39 @@ const allColumns = [
   { label: "OIP", key: "oip" },
   { label: "Black", key: "black" },
   { label: "Size", key: "size" },
-  { label: "FLColor", key: "flColor" },
-  { label: "TypeID", key: "typeID" },
-  { label: "GirdlePer", key: "girdlePer", align: "text-end", type: "number" },
+  { label: "FL Color", key: "flColor" },
+  { label: "Type ID", key: "typeID" },
+  { label: "Girdle Per", key: "girdlePer", align: "text-end", type: "number" },
   { label: "Girdle MM", key: "girdlemm" },
   { label: "Girdle", key: "girdle" },
-  { label: "GirdleCondition", key: "girdleCondition" },
-  { label: "GrMin", key: "grMin" },
-  { label: "GrMax", key: "grMax" },
+  { label: "Girdle Condition", key: "girdleCondition" },
+  { label: "Gr Min", key: "grMin" },
+  { label: "Gr Max", key: "grMax" },
   { label: "Culet", key: "culet" },
-  { label: "PDate", key: "pDate" },
-  { label: "RDate", key: "rDate" },
+  { label: "P Date", key: "pDate" },
+  { label: "R Date", key: "rDate" },
   { label: "New Arrival Date", key: "newArrDate" },
   { label: "Web Revised Date", key: "webRDate" },
-  { label: "BoxName", key: "boxName" },
-  { label: "NotShow", key: "notShow" },
+  { label: "Box Name", key: "boxName" },
+  { label: "Not Show", key: "notShow" },
   { label: "Item Group ID", key: "itemGroupId" },
   { label: "MRP Amount", key: "mrpAmount", align: "text-end", type: "number" },
   { label: "Member Comment", key: "memberComments" },
   { label: "Laser Inscription", key: "laserInscription" },
-  { label: "EyeClean", key: "eyeClean" },
-  { label: "FancyColor", key: "fancyColor" },
+  { label: "Eye Clean", key: "eyeClean" },
+  { label: "Fancy Color", key: "fancyColor" },
   { label: "Country", key: "country" },
   { label: "Item Name", key: "itemName" },
   { label: "COGS %", key: "actualBack", align: "text-end", type: "discount" },
   { label: "COGS Rate", key: "actualRate", align: "text-end", type: "number" },
   { label: "COGS Amount", key: "actualAmount", align: "text-end", type: "number" },
-  { label: "CPAVG", key: "cpavg", align: "text-end", type: "number" },
-  { label: "CPAVGAmt", key: "cpavgAmt", align: "text-end", type: "number" },
-  { label: "SPAVG", key: "spavg", align: "text-end", type: "number" },
-  { label: "SPAVGAmt", key: "spavgAmt", align: "text-end", type: "number" },
-  { label: "Partyholdcts", key: "partyholdcts", align: "text-end", type: "carats" },
-  { label: "MemoPartyName", key: "memoPartyName" },
-  { label: "HoldPartyName", key: "holdPartyName" }
+  { label: "CP AVG", key: "cpavg", align: "text-end", type: "number" },
+  { label: "CP AVG Amt", key: "cpavgAmt", align: "text-end", type: "number" },
+  { label: "SP AVG", key: "spavg", align: "text-end", type: "number" },
+  { label: "SP AVG Amt", key: "spavgAmt", align: "text-end", type: "number" },
+  { label: "Party Hold Cts", key: "partyholdcts", align: "text-end", type: "carats" },
+  { label: "Memo Party Name", key: "memoPartyName" },
+  { label: "Hold Party Name", key: "holdPartyName" }
 ];
 
 const CustomOption = (props) => {
@@ -276,6 +278,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitaireAdminStockReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -663,10 +666,15 @@ const SolitaireAdminStockReport = () => {
     const cols = [
       {
         id: "selection",
+        sticky: "left",
+        className: "table-sticky-left text-center",
+        headerStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
+        cellStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
+        footerStyle: { width: "55px", minWidth: "55px", textAlign: "center" },
         header: () => (
           <input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             onChange={handleSelectAll}
             checked={
               searchResults.length > 0 &&
@@ -685,6 +693,7 @@ const SolitaireAdminStockReport = () => {
           );
         },
         enableColumnFilter: false,
+        enableSorting: false,
         footer: () => <span className="fw-bold text-center d-block">{t("Total")}</span>
       },
       {
@@ -756,7 +765,7 @@ const SolitaireAdminStockReport = () => {
         if (col.key === "carats") {
           footerCallback = ({ table }) => {
             const { totalCarats } = getAdminStockTableTotals(table);
-            return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+            return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
           };
         } else if (col.key === "rapa") {
           footerCallback = ({ table }) => {
@@ -829,7 +838,7 @@ const SolitaireAdminStockReport = () => {
 
             let displayVal = val;
             if (col.type === "carats") {
-              displayVal = parseFloat(val || 0).toFixed(3);
+              displayVal = formatCarat(val, caratFormat);
             } else if (col.type === "discount") {
               displayVal = parseFloat(val || 0).toFixed(2);
             } else if (col.type === "number") {
@@ -899,7 +908,7 @@ const SolitaireAdminStockReport = () => {
       })
     ];
     return cols;
-  }, [searchResults, selectedRows, t]);
+  }, [searchResults, selectedRows, t, caratFormat]);
 
   const selectedLotNos = useMemo(() => {
     return searchResults
@@ -938,7 +947,7 @@ const SolitaireAdminStockReport = () => {
 
     return {
       pcs,
-      carats: carats.toFixed(3),
+      carats: formatCarat(carats, caratFormat),
       amount: amount.toFixed(2),
       avgRate,
       avgDis,
@@ -950,7 +959,7 @@ const SolitaireAdminStockReport = () => {
       actualAmt: actualAmt.toFixed(2),
       plPer
     };
-  }, [searchResults, selectedRows]);
+  }, [searchResults, selectedRows, caratFormat]);
 
   const handleUpdateLocation = async () => {
     if (selectedLotNos.length === 0) {
@@ -1041,7 +1050,7 @@ const SolitaireAdminStockReport = () => {
     const rows = exportData.map(row => {
       return exportCols.map(col => {
         const val = row[col.key] !== undefined ? row[col.key] : row[col.key.charAt(0).toUpperCase() + col.key.slice(1)];
-        if (col.type === "carats") return parseFloat(val || 0).toFixed(3);
+        if (col.type === "carats") return formatCarat(val, caratFormat);
         if (col.type === "discount") return parseFloat(val || 0).toFixed(2);
         if (col.type === "number") return parseFloat(val || 0).toFixed(2);
         return val !== null && val !== undefined ? String(val) : "";
@@ -1632,7 +1641,7 @@ const SolitaireAdminStockReport = () => {
 
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody>
+              <CardBody className="p-2 px-sm-3 py-sm-2">
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
@@ -1642,8 +1651,8 @@ const SolitaireAdminStockReport = () => {
                 ) : (
                   <React.Fragment>
                     {searchResults.length > 0 && (
-                      <Card className="border shadow-sm mb-3">
-                        <CardBody className="p-3 bg-light-subtle">
+                      <Card className="border shadow-sm mb-2">
+                        <CardBody className="p-2 px-3 bg-light-subtle">
                           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
 
                             <div className="d-flex flex-wrap align-items-center gap-3">
@@ -1762,7 +1771,7 @@ const SolitaireAdminStockReport = () => {
                         isGlobalFilter={true}
                         customPageSize={500}
                         customPageSizes={[500, 1000, 1500]}
-                        divClass="table-responsive table-card mb-3"
+                        divClass="table-responsive table-card mb-0"
                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                         theadClass="table-light"
                         SearchPlaceholder={t("Filter results...")}
@@ -1837,7 +1846,7 @@ const SolitaireAdminStockReport = () => {
                       <td className="fw-bold bg-light">{t("Clarity")}</td>
                       <td>{get("clarity", "Clarity")}</td>
                       <td className="fw-bold bg-light">{t("Carats")}</td>
-                      <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                      <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                     </tr>
                     <tr>
                       <td className="fw-bold bg-light">{t("LAB")}</td>

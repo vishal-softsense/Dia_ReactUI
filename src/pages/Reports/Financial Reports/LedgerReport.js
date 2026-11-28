@@ -17,12 +17,13 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getAccGrpMasters,
     getLedgerReportList1,
     getLedgerReportLists,
-    getLedgerReportPrintJS,
-    getSettingData
+    getLedgerReportPrintJS
 } from "../../../helpers/fakebackend_helper";
 import {
     getCachedReportCompany,
@@ -364,13 +365,13 @@ const VTYPE_URL_MAP = {
     CSaleRtn: "/MixSaleReturn/edit-mixsalereturnParcel",
     SJEWRtn: "/jewsalertn/edit-jew-salereturn",
     MJEW: "/jewMemo/edit-jew-Memo",
-    JV: "/JournalEntry/GetJournalEntries",
-    JVPAY: "/Payment/GetJVEdit",
-    JVREC: "/Payment/GetJVEdit",
-    PAY: "/Payment/GetIncomeExpense",
-    REC: "/Payment/GetIncomeExpense",
-    IPAY: "/Payment/GetPayment",
-    IREC: "/Payment/GetPayment"
+    JV: "/payment/edit-journal-entry",
+    JVPAY: "/payment/edit-payment?mode=jv",
+    JVREC: "/payment/edit-payment?mode=jv",
+    PAY: "/payment/edit-income-expense",
+    REC: "/payment/edit-income-expense",
+    IPAY: "/payment/edit-payment",
+    IREC: "/payment/edit-payment"
 };
 
 const getRowVal = (row, ...keys) => {
@@ -457,17 +458,17 @@ const mapDualLedgerRow = (row) => ({
     sCredit: getRowVal(row, "SCreditAmount", "sCreditAmount", "SCredit", "sCredit"),
     mCredit: getRowVal(row, "MCreditAmount", "mCreditAmount", "MCredit", "mCredit"),
     invDesc1: safeText(getRowVal(row, "InvDescription1", "invDescription1", "Description1")),
-    gCode: getRowVal(row, "GCode", "gCode"),
-    vCode: getRowVal(row, "VCode", "vCode", "Vcode", "vcode"),
-    gCode1: getRowVal(row, "GCode1", "gCode1"),
-    vCode1: getRowVal(row, "VCode1", "vCode1")
+    gCode: getRowVal(row, "GCode", "gCode", "GCODE", "gcode", "JvCode", "jvCode"),
+    vCode: getRowVal(row, "VCode", "vCode", "Vcode", "vcode", "VCODE", "InvCode", "invCode"),
+    gCode1: getRowVal(row, "GCode1", "gCode1", "GCODE1", "gcode1", "JvCode1", "jvCode1"),
+    vCode1: getRowVal(row, "VCode1", "vCode1", "Vcode1", "vcode1", "VCODE1", "InvCode1", "invCode1")
 });
 
 const fmtCarats = (value) => {
     if (value === null || value === undefined || value === "") return "";
     const num = Number(value);
     if (Number.isNaN(num)) return String(value);
-    return String(num);
+    return formatCarat(num, getCachedCaratFormat());
 };
 
 const fmtAmt = (value) => {
@@ -477,15 +478,27 @@ const fmtAmt = (value) => {
 
 const openVTypeLink = (id, vtype) => {
     if (!vtype || !id) return;
-    const path = VTYPE_URL_MAP[vtype];
+    const typeUpper = String(vtype).trim().toUpperCase();
+    const entry = Object.entries(VTYPE_URL_MAP).find(
+        ([k]) => k.toUpperCase() === typeUpper
+    );
+    const path = entry ? entry[1] : VTYPE_URL_MAP[vtype];
     if (!path) return;
-    window.open(`${path}?Id=${encodeURIComponent(id)}&Mode=view`, "_blank");
+    const sep = path.includes("?") ? "&" : "?";
+    window.open(`${path}${sep}Id=${encodeURIComponent(id)}&Mode=view`, "_blank");
 };
+
+const isValidId = (val) => val !== null && val !== undefined && val !== "" && val !== 0 && val !== "0";
 
 const VTypeLink = ({ vtype, gCode, vCode }) => {
     if (!vtype) return null;
-    const linkId = JV_LINK_TYPES.has(vtype) ? gCode : vCode;
-    if (linkId === null || linkId === undefined || linkId === "") {
+    const typeUpper = String(vtype).trim().toUpperCase();
+    const isJv = JV_LINK_TYPES.has(typeUpper);
+    const primaryId = isJv ? gCode : vCode;
+    const secondaryId = isJv ? vCode : gCode;
+    const linkId = isValidId(primaryId) ? primaryId : (isValidId(secondaryId) ? secondaryId : null);
+
+    if (!linkId) {
         return <span>{vtype}</span>;
     }
     return (
@@ -494,7 +507,7 @@ const VTypeLink = ({ vtype, gCode, vCode }) => {
             className="ledger-vtype-link"
             onClick={(e) => {
                 e.preventDefault();
-                openVTypeLink(linkId, vtype);
+                openVTypeLink(linkId, typeUpper);
             }}
         >
             {vtype}
@@ -594,6 +607,7 @@ const customSelectStyles = {
 const LedgerReport = () => {
     const { t } = useTranslation();
     const printRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
     const [filters, setFilters] = useState(() =>
@@ -610,48 +624,23 @@ const LedgerReport = () => {
     const [dualRows, setDualRows] = useState([]);
     const [runningRows, setRunningRows] = useState([]);
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
-    const [stockSymbol, setStockSymbol] = useState("");
-    const [masterSymbol, setMasterSymbol] = useState("");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: hasSearched && !!reportMode,
+        deps: [hasSearched, reportMode, dualRows.length, runningRows.length],
+    });
 
     const loadSymbols = useCallback(async () => {
-        try {
-            const cached = getCachedReportCompany();
-            let sSym = cached.stockSymbol || "";
-            let mSym = "";
-
-            const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-            sSym = sSym || auth?.SSymbol || auth?.sSymbol || auth?.data?.SSymbol || "";
-            mSym = auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "";
-
-            try {
-                const settings = await getSettingData();
-                const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-                const pick = (name) => {
-                    const target = String(name).toLowerCase();
-                    const row = rows.find(
-                        (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                    );
-                    return row?.Value ?? row?.value ?? "";
-                };
-                sSym = pick("SSymbol") || sSym;
-                mSym = pick("MSymbol") || mSym;
-            } catch {
-                /* ignore */
-            }
-
-            setStockSymbol(sSym || "USD");
-            setMasterSymbol(mSym || "INR");
-        } catch {
-            setStockSymbol("USD");
-            setMasterSymbol("INR");
-        }
+        const company = await getReportCompanySettings({ forceRefresh: true });
+        if (company) setCompanyInfo(company);
+        const cached = getCachedReportCompany();
+        setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+        setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
     }, []);
 
     useEffect(() => {
         loadSymbols();
-        getReportCompanySettings({ forceRefresh: true })
-            .then((c) => setCompanyInfo(c || getCachedReportCompany()))
-            .catch(() => setCompanyInfo(getCachedReportCompany()));
     }, [loadSymbols]);
 
     useEffect(() => {
@@ -1043,7 +1032,11 @@ ${printArea.innerHTML}
     );
 
     const renderDualTable = () => (
-        <div className="table-responsive">
+        <div
+            ref={tableScrollRef}
+            className="table-responsive viewport-table-scroll"
+            style={{ maxHeight: tableMaxHeight }}
+        >
             <Table
                 id="ledgerTable"
                 bordered
@@ -1057,16 +1050,16 @@ ${printArea.innerHTML}
                         <th>{t("VType")}</th>
                         <th>{t("Debit Account")}</th>
                         <th>{t("Carats")}</th>
-                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("USD Amt")}</th>
-                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("INR Amt")}</th>
+                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt")}</th>
+                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("Master Amt")}</th>
                         <th>{t("Description")}</th>
                         <th>{t("Date")}</th>
                         <th>{t("Due Date")}</th>
                         <th>{t("VType")}</th>
                         <th>{t("Credit Account")}</th>
                         <th>{t("Carats")}</th>
-                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("USD Amt")}</th>
-                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("INR Amt")}</th>
+                        <th>{stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt")}</th>
+                        <th>{masterSymbol ? `${masterSymbol} Amt` : t("Master Amt")}</th>
                         <th>{t("Description")}</th>
                     </tr>
                 </thead>
@@ -1174,7 +1167,11 @@ ${printArea.innerHTML}
     );
 
     const renderRunningTable = () => (
-        <div className="table-responsive">
+        <div
+            ref={tableScrollRef}
+            className="table-responsive viewport-table-scroll"
+            style={{ maxHeight: tableMaxHeight }}
+        >
             <Table
                 id="dynamic-LedgerReport"
                 bordered
@@ -1186,11 +1183,11 @@ ${printArea.innerHTML}
                         <th>{t("jvdate")}</th>
                         <th>{t("type")}</th>
                         <th>{t("description")}</th>
-                        <th>{`debit ${stockSymbol} `}</th>
-                        <th>{`credit ${stockSymbol} `}</th>
+                        <th>{`debit ${stockSymbol || "Stock"} `}</th>
+                        <th>{`credit ${stockSymbol || "Stock"} `}</th>
                         <th>{t("cL balance")}</th>
-                        <th>{`debit ${masterSymbol} `}</th>
-                        <th>{`credit ${masterSymbol} `}</th>
+                        <th>{`debit ${masterSymbol || "Master"} `}</th>
+                        <th>{`credit ${masterSymbol || "Master"} `}</th>
                         <th>{t("c balance")}</th>
                     </tr>
                 </thead>
@@ -1204,8 +1201,8 @@ ${printArea.innerHTML}
                     ) : (
                         runningRows.map((row, idx) => {
                             const vtype = safeText(getRowVal(row, "VType", "vType"));
-                            const gCode = getRowVal(row, "GCode", "gCode");
-                            const vCode = getRowVal(row, "vcode", "Vcode", "VCode", "vCode");
+                            const gCode = getRowVal(row, "GCode", "gCode", "gcode", "GCODE");
+                            const vCode = getRowVal(row, "vcode", "Vcode", "VCode", "vCode", "VCODE");
                             return (
                                 <tr key={`run-${idx}`}>
                                     <td className="text-nowrap">

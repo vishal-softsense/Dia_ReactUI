@@ -140,19 +140,19 @@ const MissingStock = () => {
     const columns = useMemo(
         () => [
             {
-                header: t("LotNo"),
+                header: t("Lot No"),
                 accessorKey: "LotNo",
                 enableColumnFilter: true,
                 cell: (cell) => cell.getValue() || ""
             },
             {
-                header: t("LotNoMissing"),
+                header: t("Lot No Missing"),
                 accessorKey: "LotNoMissing",
                 enableColumnFilter: true,
                 cell: (cell) => cell.getValue() || ""
             },
             {
-                header: t("LotNoExtra"),
+                header: t("Lot No Extra"),
                 accessorKey: "LotNoExtra",
                 enableColumnFilter: true,
                 cell: (cell) => cell.getValue() || ""
@@ -197,12 +197,29 @@ const MissingStock = () => {
     };
 
     const handleReport = async () => {
+        // If lot number(s) entered but no filter option selected
+        if (lotNo && lotNo.trim() && !filters) {
+            toast.warning(t("Please select Option in Enter Lot No."));
+            return;
+        }
+
+        // If specific lot comparison/filter option selected but no lot numbers entered
+        if (filters === "LotNo" && (!lotNo || !lotNo.trim())) {
+            toast.warning(t("Please enter lot number(s)."));
+            return;
+        }
+
+        if ((filters === "LotNo Not" || filters === "LotNo Like") && (!lotNo || !lotNo.trim())) {
+            toast.warning(t("Please enter lot number(s)."));
+            return;
+        }
+
         setBusy(true);
         try {
             const payload = {
-                StoneTypes: stoneTypes,
-                LotNo: lotNo,
-                Filters: filters
+                StoneTypes: stoneTypes || "All",
+                LotNo: (lotNo || "").trim(),
+                Filters: filters || ""
             };
 
             const response = await getMissingStockReport(payload);
@@ -217,7 +234,8 @@ const MissingStock = () => {
             } else {
                 setGridRows([]);
                 setHasRun(true);
-                toast.error(response?.Data || response?.data || t("Unable to fetch data. Please try again."));
+                const msg = response?.Data || response?.data || response?.message || t("Unable to fetch data. Please try again.");
+                toast.error(msg);
             }
         } catch (err) {
             setGridRows([]);
@@ -227,7 +245,14 @@ const MissingStock = () => {
                 setAuthorized(false);
                 toast.error(t("You are not authorized to perform this task."));
             } else {
-                toast.error(err?.response?.data?.Data || err?.message || t("Unable to fetch data. Please try again."));
+                const serverMsg =
+                    (typeof err === "string" ? err : null) ||
+                    err?.response?.data?.Data ||
+                    err?.response?.data?.data ||
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
+                    err?.message;
+                toast.error(serverMsg || t("Unable to fetch data. Please try again."));
             }
         } finally {
             setBusy(false);
@@ -240,7 +265,7 @@ const MissingStock = () => {
             return;
         }
 
-        const headers = ["LotNo", "LotNoMissing", "LotNoExtra"];
+        const headers = ["Lot No", "Lot No Missing", "Lot No Extra"];
         const rows = gridRows.map(r => [r.LotNo || "", r.LotNoMissing || "", r.LotNoExtra || ""]);
         const result = await exportToExcel(headers, rows, "MissingStock", "MissingStockList");
         if (!result?.success) {
@@ -301,9 +326,9 @@ const MissingStock = () => {
                                         <Label className="form-label fw-semibold">{t("Enter Lot No")}</Label>
                                         <Input type="select" value={filters} onChange={e => setFilters(e.target.value)}>
                                             <option value="">{t("Select Option")}</option>
-                                            <option value="LotNo">{t("LotNo")}</option>
-                                            <option value="LotNo Not">{t("LotNo Not")}</option>
-                                            <option value="LotNo Like">{t("LotNo Like")}</option>
+                                            <option value="LotNo">{t("Lot No")}</option>
+                                            <option value="LotNo Not">{t("Lot No Not")}</option>
+                                            <option value="LotNo Like">{t("Lot No Like")}</option>
                                         </Input>
                                     </Col>
                                     <Col lg={3} md={6} sm={12}>

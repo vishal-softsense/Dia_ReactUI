@@ -39,6 +39,8 @@ import {
 } from "../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../helpers/excel_helper";
 import ParcelPivotReport from "./ParcelPivotReport";
+import useCaratFormat from "../../Components/Hooks/useCaratFormat";
+import { formatCarat, truncateCaratNumber } from "../../helpers/caratFormatDefaults";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import "chart.js/auto";
 
@@ -266,6 +268,7 @@ const arrowLinesPlugin = {
 
 const ParcelStockAnalysis = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
 
 
   const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
@@ -570,7 +573,7 @@ const ParcelStockAnalysis = () => {
       return Number(raw || 0).toFixed(2) + "%";
     }
     if (columnId === "carats") {
-      return Number(raw || 0).toFixed(3);
+      return formatCarat(raw, caratFormat);
     }
     if (columnId === "caratsPer") {
       return Number(raw || 0).toFixed(2) + "%";
@@ -624,7 +627,7 @@ const ParcelStockAnalysis = () => {
       accessorKey: "carats",
       accessorFn: (row) => Number(pick(row, "Carats", "carats") || 0),
       enableColumnFilter: true,
-      cell: (info) => <span className="text-dark">{info.getValue().toFixed(3)}</span>,
+      cell: (info) => <span className="text-dark">{formatCarat(info.getValue(), caratFormat)}</span>,
       filterFn: (row, columnId, filterValue) => {
         const formatted = getFormattedValue(row, columnId);
         return formatted.toLowerCase().includes(String(filterValue).toLowerCase());
@@ -663,7 +666,7 @@ const ParcelStockAnalysis = () => {
         return formatted.toLowerCase().includes(String(filterValue).toLowerCase());
       }
     }
-  ], [activeReportType, t]);
+  ], [activeReportType, t, caratFormat]);
 
   const table = useReactTable({
     columns,
@@ -813,7 +816,7 @@ const ParcelStockAnalysis = () => {
             label: (tooltipItem) => {
               const index = tooltipItem.dataIndex;
               const val = chartData.carats[index];
-              return ` ${val.toFixed(2)} CRT`;
+              return ` ${formatCarat(val, caratFormat)} CRT`;
             }
           }
         }
@@ -850,7 +853,7 @@ const ParcelStockAnalysis = () => {
       carats: { data: caratsData, options: caratsOptions },
       amount: { data: amountData, options: amountOptions }
     };
-  }, [chartData, chartType, t]);
+  }, [chartData, chartType, t, caratFormat]);
 
 
   const handleExcelExport = async () => {
@@ -873,7 +876,7 @@ const ParcelStockAnalysis = () => {
       getGroupName(row),
       Number(pick(row, "Pcs", "pcs") || 0),
       Number(pick(row, "PcsPer", "pcsPer") || 0),
-      Number(pick(row, "Carats", "carats") || 0),
+      truncateCaratNumber(pick(row, "Carats", "carats") || 0, caratFormat),
       Number(pick(row, "Caratsper", "caratsper") || 0),
       Number(pick(row, "Amount", "amount") || 0),
       Number(pick(row, "AmountPer", "amountPer") || 0)
@@ -883,7 +886,7 @@ const ParcelStockAnalysis = () => {
       t("Total"),
       summaryMetrics.pcs,
       "100.00%",
-      summaryMetrics.carats,
+      truncateCaratNumber(summaryMetrics.carats, caratFormat),
       "100.00%",
       summaryMetrics.amount,
       "100.00%"
@@ -1658,7 +1661,7 @@ const ParcelStockAnalysis = () => {
                             <td className="text-dark text-start">{t("Total")}</td>
                             <td className="text-end text-dark">{summaryMetrics.pcs}</td>
                             <td className="text-end text-dark">100.00%</td>
-                            <td className="text-end text-dark">{summaryMetrics.carats.toFixed(3)}</td>
+                            <td className="text-end text-dark">{formatCarat(summaryMetrics.carats, caratFormat)}</td>
                             <td className="text-end text-dark">100.00%</td>
                             <td className="text-end text-dark fw-bold">${summaryMetrics.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td className="text-end text-dark">100.00%</td>

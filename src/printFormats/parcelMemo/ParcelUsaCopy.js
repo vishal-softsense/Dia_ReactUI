@@ -1,5 +1,5 @@
 import React from "react";
-import { fmt, getVal } from "../shared/printUtils";
+import { fmt, fmtCarat, getVal } from "../shared/printUtils";
 
 const border = "1px solid #A2A1A1";
 const thBg = { background: "#ccc", border, padding: 4, textAlign: "center", fontWeight: "bold" };
@@ -124,13 +124,13 @@ const ParcelUsaCopy = ({
               <td style={{ border: "1px solid #999", textAlign: "center" }}>{startRow + idx}</td>
               <td style={{ border: "1px solid #999", textAlign: "center" }}>{getVal(item, "Description", "description", "ItemName", "itemName")}</td>
               <td style={{ border: "1px solid #999", textAlign: "center" }}>{getVal(item, "Pcs", "pcs", "Qty", "qty")}</td>
-              <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmt(getVal(item, "Carats", "carats", "weight"), 2)}</td>
+              <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmtCarat(getVal(item, "Carats", "carats", "weight"))}</td>
               <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
               <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
-                {Number(getVal(item, "ReturnCarats", "returnCarats")) > 0 ? fmt(getVal(item, "ReturnCarats", "returnCarats"), 2) : ""}
+                {Number(getVal(item, "ReturnCarats", "returnCarats")) > 0 ? fmtCarat(getVal(item, "ReturnCarats", "returnCarats")) : ""}
               </td>
               <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
-                {Number(getVal(item, "IssueCarats", "issueCarats")) > 0 ? fmt(getVal(item, "IssueCarats", "issueCarats"), 2) : ""}
+                {Number(getVal(item, "IssueCarats", "issueCarats")) > 0 ? fmtCarat(getVal(item, "IssueCarats", "issueCarats")) : ""}
               </td>
               <td style={{ border: "1px solid #999", textAlign: "right", paddingRight: 5 }}>
                 {fmt(getVal(item, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount"), 2)}
@@ -148,7 +148,7 @@ const ParcelUsaCopy = ({
             <>
               <tr style={{ fontWeight: "bold", fontSize: 11 }}>
                 <td colSpan="3" style={{ border: "1px solid #999", textAlign: "left", paddingLeft: 25 }}>Total Carats :</td>
-                <td style={{ border: "1px solid #999", textAlign: "center" }}>{fmt(totals.wt, 2)}</td>
+                <td style={{ border: "1px solid #999", textAlign: "center" }}>{fmtCarat(totals.wt)}</td>
                 <td colSpan="3" style={{ border: "1px solid #999", textAlign: "right", paddingRight: 15 }}>US $ :</td>
                 <td style={{ border: "1px solid #999", textAlign: "right" }}>{fmt(totals.masterAmount || totals.amount, 2)}</td>
               </tr>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Button,
@@ -19,6 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { loadExcelJS } from "../../../helpers/excel_helper";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getAccGrpMasters,
     getInvoiceLedgerReport,
@@ -112,6 +113,11 @@ const InvoiceLedgerReport = () => {
     const [checkingPermission, setCheckingPermission] = useState(true);
     const [hasSearched, setHasSearched] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableScrollRef = useRef(null);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: hasSearched,
+        deps: [hasSearched, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
     const [partyInfo, setPartyInfo] = useState("");
@@ -763,7 +769,6 @@ const InvoiceLedgerReport = () => {
                     color: var(--vz-body-color, #212529);
                 }
                 #dynamic-invoice-ledger-table-container {
-                    max-height: 750px;
                     overflow: auto;
                     padding: 12px;
                     border: 1px solid var(--vz-border-color, #dcdcdc);
@@ -1338,7 +1343,12 @@ const InvoiceLedgerReport = () => {
                                                 <Spinner color="primary" />
                                             </div>
                                         ) : (
-                                            <div id="dynamic-invoice-ledger-table-container">
+                                            <div
+                                                ref={tableScrollRef}
+                                                id="dynamic-invoice-ledger-table-container"
+                                                className="viewport-table-scroll"
+                                                style={{ maxHeight: tableMaxHeight }}
+                                            >
                                                 <Table
                                                     id="dynamic-invoice-ledger-table"
                                                     bordered

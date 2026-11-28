@@ -28,6 +28,9 @@ import {
   getSolitaireSaleReturnReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -68,6 +71,12 @@ const getTableTotals = (table) => {
 
 const SolitaireSaleReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -503,14 +512,14 @@ const SolitaireSaleReturnReport = () => {
         accessorKey: "Due",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "Due", "due"), 0)
       },
-      { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
-      { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+      { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
+      { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
       { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-      { header: t("Comm.Agent"), accessorKey: "Commission", cell: ({ row }) => dashText(getRowVal(row.original, "Commission", "commission", "commAgent", "CommAgent")) },
+      { header: t("Comm. Agent"), accessorKey: "Commission", cell: ({ row }) => dashText(getRowVal(row.original, "Commission", "commission", "commAgent", "CommAgent")) },
       { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
       { header: t("Item"), accessorKey: "Item", cell: ({ row }) => dashText(getRowVal(row.original, "Item", "item")) },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")),
         footer: () => <span className="fw-bold text-center d-block">AVG</span>
@@ -540,10 +549,10 @@ const SolitaireSaleReturnReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { parentCarat } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentCarat, caratFormat)}</span>;
         }
       },
       {
@@ -556,9 +565,9 @@ const SolitaireSaleReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat > 0 ? parentAmt / parentCarat : 0, 2)}</span>;
         }
       },
-      { header: t("Less1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
-      { header: t("Less2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
-      { header: t("Less3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
+      { header: t("Less 1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
+      { header: t("Less 2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
+      { header: t("Less 3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
       {
         header: t("Amount"),
         accessorKey: "Amount",
@@ -570,7 +579,7 @@ const SolitaireSaleReturnReport = () => {
         }
       },
       {
-        header: t("PurchaseAmount"),
+        header: t("Purchase Amount"),
         accessorKey: "PurchaseAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "PurchaseAmount", "purchaseAmount"), 2),
@@ -580,26 +589,26 @@ const SolitaireSaleReturnReport = () => {
         }
       },
       { header: t("Symbol"), accessorKey: "Symbol", cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol")) },
-      { header: t("DRate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DRate", "dRate"), 2) },
+      { header: t("D Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DRate", "dRate"), 2) },
       { header: t("Cert"), accessorKey: "Cert", cell: ({ row }) => dashText(getRowVal(row.original, "Cert", "cert")) },
-      { header: t("CertificateNo"), accessorKey: "CertificateNo", cell: ({ row }) => dashText(getRowVal(row.original, "CertificateNo", "certificateNo")) },
-      { header: t("Invtype"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
+      { header: t("Certificate No"), accessorKey: "CertificateNo", cell: ({ row }) => dashText(getRowVal(row.original, "CertificateNo", "certificateNo")) },
+      { header: t("Inv Type"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
       { header: t("Category"), accessorKey: "Category", cell: ({ row }) => dashText(getRowVal(row.original, "Category", "category")) },
-      { header: t("MilkyId"), accessorKey: "MilkyId", cell: ({ row }) => dashText(getRowVal(row.original, "MilkyId", "milkyId")) },
-      { header: t("NattsId"), accessorKey: "NattsId", cell: ({ row }) => dashText(getRowVal(row.original, "NattsId", "nattsId")) },
-      { header: t("LusterId"), accessorKey: "LusterId", cell: ({ row }) => dashText(getRowVal(row.original, "LusterId", "lusterId")) },
-      { header: t("RoughId"), accessorKey: "RoughId", cell: ({ row }) => dashText(getRowVal(row.original, "RoughId", "roughId")) },
-      { header: t("MfgSeriesID"), accessorKey: "MfgSeriesID", cell: ({ row }) => dashText(getRowVal(row.original, "MfgSeriesID", "mfgSeriesID")) },
-      { header: t("MfgPacketID"), accessorKey: "MfgPacketID", cell: ({ row }) => dashText(getRowVal(row.original, "MfgPacketID", "mfgPacketID")) },
+      { header: t("Milky Id"), accessorKey: "MilkyId", cell: ({ row }) => dashText(getRowVal(row.original, "MilkyId", "milkyId")) },
+      { header: t("Natts Id"), accessorKey: "NattsId", cell: ({ row }) => dashText(getRowVal(row.original, "NattsId", "nattsId")) },
+      { header: t("Luster Id"), accessorKey: "LusterId", cell: ({ row }) => dashText(getRowVal(row.original, "LusterId", "lusterId")) },
+      { header: t("Rough Id"), accessorKey: "RoughId", cell: ({ row }) => dashText(getRowVal(row.original, "RoughId", "roughId")) },
+      { header: t("Mfg Series ID"), accessorKey: "MfgSeriesID", cell: ({ row }) => dashText(getRowVal(row.original, "MfgSeriesID", "mfgSeriesID")) },
+      { header: t("Mfg Packet ID"), accessorKey: "MfgPacketID", cell: ({ row }) => dashText(getRowVal(row.original, "MfgPacketID", "mfgPacketID")) },
       { header: t("User"), accessorKey: "User", cell: ({ row }) => dashText(getRowVal(row.original, "User", "user")) },
       { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => dashText(getRowVal(row.original, "Seller", "seller")) },
       { header: t("Term"), accessorKey: "Term", cell: ({ row }) => dashText(getRowVal(row.original, "Term", "term")) },
-      { header: t("PurchaseRate"), accessorKey: "PurchaseRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "PurchaseRate", "purchaseRate"), 2) },
-      { header: t("PDate"), accessorKey: "PDate", cell: ({ row }) => dashText(getRowVal(row.original, "PDate", "pDate")) },
+      { header: t("Purchase Rate"), accessorKey: "PurchaseRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "PurchaseRate", "purchaseRate"), 2) },
+      { header: t("P Date"), accessorKey: "PDate", cell: ({ row }) => dashText(getRowVal(row.original, "PDate", "pDate")) },
       { header: t("City"), accessorKey: "City", cell: ({ row }) => dashText(getRowVal(row.original, "City", "city")) },
-      { header: t("EyeClean"), accessorKey: "EyeClean", cell: ({ row }) => dashText(getRowVal(row.original, "EyeClean", "eyeClean")) },
+      { header: t("Eye Clean"), accessorKey: "EyeClean", cell: ({ row }) => dashText(getRowVal(row.original, "EyeClean", "eyeClean")) },
       {
-        header: t("MRPAmt"),
+        header: t("MRP Amt"),
         accessorKey: "MRPAmt",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MRPAmt", "mrpAmt"), 2),
         footer: ({ table }) => {
@@ -607,9 +616,9 @@ const SolitaireSaleReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentMRPAmt, 2)}</span>;
         }
       },
-      { header: t("MasterCurrencyRate"), accessorKey: "MasterCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
+      { header: masterRateHeader, accessorKey: "MasterCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
       {
-        header: t("MasterCurrencyAmount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         footer: ({ table }) => {
@@ -617,9 +626,9 @@ const SolitaireSaleReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentINR, 2)}</span>;
         }
       },
-      { header: t("StockCurrencyRate"), accessorKey: "StockCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
+      { header: stockRateHeader, accessorKey: "StockCurrencyRate", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
       {
-        header: t("StockCurrencyAmount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         footer: ({ table }) => {
@@ -628,7 +637,7 @@ const SolitaireSaleReturnReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -641,11 +650,12 @@ const SolitaireSaleReturnReport = () => {
 
     const rows = [];
     groupedVisibleRows.forEach((p) => {
-      rows.push(p);
+      rows.push({ ...p, Carats: formatCarat(getRowVal(p, "Carats", "carats"), caratFormat) });
       if (expandedInvnos.has(String(p.Invno))) {
         (p.childRecords || []).forEach((c) => {
           rows.push({
             ...c,
+            Carats: formatCarat(getRowVal(c, "Carats", "carats"), caratFormat),
             isParent: false
           });
         });
@@ -703,7 +713,7 @@ const SolitaireSaleReturnReport = () => {
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem onClick={handleExcel}>Direct Print</DropdownItem>
-                      <DropdownItem onClick={handleExcel}>SaleReturnReport Print</DropdownItem>
+                      <DropdownItem onClick={handleExcel}>Sale Return Report Print</DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 </>

@@ -43,6 +43,8 @@ import {
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, exportCvdExcel, getExcelBase64 } from "../../../helpers/excel_helper";
 import StockHistoryPopupModal from "./StockHistoryPopupModal";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const debounce = (func, delay) => {
   let timer;
@@ -79,7 +81,7 @@ const SelectionCell = React.memo(({ index, selectedRows, onChange }) => {
   return (
     <input
       type="checkbox"
-      className="form-check-input"
+      className="form-check-input m-0"
       checked={isChecked}
       onChange={handleChange}
     />
@@ -142,9 +144,9 @@ const allColumns = [
   { label: "Back", key: "back", align: "text-end", type: "discount" },
   { label: "Rate", key: "rate", align: "text-end", type: "number" },
   { label: "Amount", key: "amount", align: "text-end", type: "number", fw: "semibold", color: "text-primary" },
-  { label: "CostBack", key: "purchaseBack", align: "text-end", type: "discount" },
-  { label: "CostRate", key: "purchaseRate", align: "text-end", type: "number" },
-  { label: "CostAmount", key: "purChaseAmount", align: "text-end", type: "number" },
+  { label: "Cost Back", key: "purchaseBack", align: "text-end", type: "discount" },
+  { label: "Cost Rate", key: "purchaseRate", align: "text-end", type: "number" },
+  { label: "Cost Amount", key: "purChaseAmount", align: "text-end", type: "number" },
   { label: "Measurement", key: "diam" },
   { label: "L:W", key: "lw", align: "text-end", type: "number" },
   { label: "Depth %", key: "tDep", align: "text-end", type: "number" },
@@ -166,8 +168,8 @@ const allColumns = [
   { label: "Video Path", key: "videoPath" },
   { label: "Mfg Series ID", key: "kapan" },
   { label: "Mfg Packet ID", key: "packet" },
-  { label: "Tab.Inc.", key: "tinc" },
-  { label: "Cr.Inc.", key: "cinc" },
+  { label: "Tab. Inc.", key: "tinc" },
+  { label: "Cr. Inc.", key: "cinc" },
   { label: "IP", key: "ip" },
   { label: "OIT", key: "oit" },
   { label: "OIG", key: "oig" },
@@ -175,32 +177,32 @@ const allColumns = [
   { label: "OIP", key: "oip" },
   { label: "Black", key: "black" },
   { label: "Size", key: "size" },
-  { label: "FLColor", key: "flColor" },
-  { label: "TypeID", key: "typeID" },
-  { label: "GirdlePer", key: "girdlePer", align: "text-end", type: "number" },
+  { label: "FL Color", key: "flColor" },
+  { label: "Type ID", key: "typeID" },
+  { label: "Girdle Per", key: "girdlePer", align: "text-end", type: "number" },
   { label: "Girdle MM", key: "girdlemm" },
   { label: "Girdle", key: "girdle" },
-  { label: "GirdleCondition", key: "girdleCondition" },
-  { label: "GrMin", key: "grMin" },
-  { label: "GrMax", key: "grMax" },
+  { label: "Girdle Condition", key: "girdleCondition" },
+  { label: "Gr Min", key: "grMin" },
+  { label: "Gr Max", key: "grMax" },
   { label: "Culet", key: "culet" },
-  { label: "PDate", key: "pDate" },
-  { label: "RDate", key: "rDate" },
+  { label: "P Date", key: "pDate" },
+  { label: "R Date", key: "rDate" },
   { label: "New Arrival Date", key: "newArrDate" },
   { label: "Web Revised Date", key: "webRDate" },
-  { label: "BoxName", key: "boxName" },
-  { label: "NotShow", key: "notShow" },
+  { label: "Box Name", key: "boxName" },
+  { label: "Not Show", key: "notShow" },
   { label: "Item Group ID", key: "itemGroupId" },
   { label: "MRP Amount", key: "mrpAmount", align: "text-end", type: "number" },
   { label: "Member Comment", key: "memberComments" },
   { label: "Laser Inscription", key: "laserInscription" },
-  { label: "EyeClean", key: "eyeClean" },
-  { label: "FancyColor", key: "fancyColor" },
+  { label: "Eye Clean", key: "eyeClean" },
+  { label: "Fancy Color", key: "fancyColor" },
   { label: "Country", key: "country" },
-  { label: "CountryOfOrigin", key: "countryOfOrigin" },
-  { label: "CountryOfMfg", key: "countryOfMfg" },
-  { label: "MemoPartyName", key: "memoPartyName" },
-  { label: "HoldPartyName", key: "holdPartyName" }
+  { label: "Country Of Origin", key: "countryOfOrigin" },
+  { label: "Country Of Mfg", key: "countryOfMfg" },
+  { label: "Memo Party Name", key: "memoPartyName" },
+  { label: "Hold Party Name", key: "holdPartyName" }
 ];
 
 const CustomOption = (props) => {
@@ -284,6 +286,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitairesStockSearchReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const [activeTab, setActiveTab] = useState("1");
   const [masterDropdowns, setMasterDropdowns] = useState({});
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -794,10 +797,14 @@ const SolitairesStockSearchReport = () => {
     const cols = [
       {
         id: "selection",
+        sticky: "left",
+        className: "table-sticky-left text-center",
+        headerStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
+        cellStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
         header: () => (
           <input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             onChange={handleSelectAll}
             checked={
               searchResults.length > 0 &&
@@ -816,6 +823,7 @@ const SolitairesStockSearchReport = () => {
           );
         },
         enableColumnFilter: false,
+        enableSorting: false,
       },
       {
         id: "actions",
@@ -882,7 +890,7 @@ const SolitairesStockSearchReport = () => {
         if (col.key === "carats") {
           footerCallback = ({ table }) => {
             const { totalCarats } = getStockTableTotals(table);
-            return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+            return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
           };
         } else if (col.key === "rapa") {
           footerCallback = ({ table }) => {
@@ -945,7 +953,7 @@ const SolitairesStockSearchReport = () => {
 
             let displayVal = val;
             if (col.type === "carats") {
-              displayVal = parseFloat(val || 0).toFixed(3);
+              displayVal = formatCarat(val, caratFormat);
             } else if (col.type === "discount") {
               displayVal = parseFloat(val || 0).toFixed(2);
             } else if (col.type === "number") {
@@ -1015,7 +1023,7 @@ const SolitairesStockSearchReport = () => {
       })
     ];
     return cols;
-  }, [searchResults, selectedRows, t]);
+  }, [searchResults, selectedRows, t, caratFormat]);
 
   useEffect(() => {
     const selectedLots = Object.keys(selectedRows)
@@ -1120,13 +1128,13 @@ const SolitairesStockSearchReport = () => {
 
     return {
       pcs,
-      carats: carats.toFixed(3),
+      carats: formatCarat(carats, caratFormat),
       amount: amount.toFixed(2),
       avgMRP,
       avgRate,
       avgDis
     };
-  }, [selectedRows, searchResults]);
+  }, [selectedRows, searchResults, caratFormat]);
 
   const selectedLotNos = useMemo(() => {
     return Object.keys(selectedRows)
@@ -1160,7 +1168,7 @@ const SolitairesStockSearchReport = () => {
         item.pol || item.Pol || "",
         item.sym || item.Sym || "",
         item.fl || item.FL || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.rapa || item.Rapa || 0,
         item.back || item.Back || 0,
         item.askingRate || item.AskingRate || item.rate || item.Rate || 0,
@@ -1178,7 +1186,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1204,7 +1212,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1238,7 +1246,7 @@ const SolitairesStockSearchReport = () => {
         item.lotNo || item.LotNo || "",
         item.curStatus || item.CurStatus || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1276,7 +1284,7 @@ const SolitairesStockSearchReport = () => {
         item.lotNo || item.LotNo || "",
         item.curStatus || item.CurStatus || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.clarity || item.Clarity || "",
         item.color || item.Color || "",
         item.fancyColor || item.FancyColor || "",
@@ -1321,7 +1329,7 @@ const SolitairesStockSearchReport = () => {
       mapper: (item) => [
         item.lotNo || item.LotNo || "",
         item.shape || item.Shape || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.color || item.Color || "",
         item.clarity || item.Clarity || "",
         item.prop || item.Prop || "",
@@ -1476,7 +1484,7 @@ const SolitairesStockSearchReport = () => {
         item.pol || item.Pol || "",
         item.sym || item.Sym || "",
         item.fl || item.FL || "",
-        item.carats || item.Carats || 0,
+        formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
         item.rapa || item.Rapa || 0,
         item.back || item.Back || 0,
         item.rate || item.Rate || 0,
@@ -1532,63 +1540,28 @@ const SolitairesStockSearchReport = () => {
         <Container fluid>
           <BreadCrumb title={t("Solitaire Stock Search")} pageTitle={t("Reports")} />
 
-          <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
-            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
-              <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
-              {hasSearched ? t("Stock Search Results") : t("Stock Search Filters")}
-            </h5>
-            <div className="d-flex gap-2">
-              {!hasSearched ? (
-                <>
-                  <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
-                    {t("Email Stock List")}
-                  </Button>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleSearch()} disabled={loading}>
-                    {loading ? t("Searching...") : t("Report")}
-                  </Button>
-                  <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
-                    {t("Clear")}
-                  </Button>
-                  <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
-                    {t("Previous Record")}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
-                    {t("Email Stock List")}
-                  </Button>
-                  <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
-                    {t("New Search")}
-                  </Button>
-                  {searchResults.length > 0 && (
-                    <div className="d-flex align-items-center gap-1">
-                      <UncontrolledDropdown>
-                        <DropdownToggle
-                          color="success"
-                          className="btn-sm rounded-2 px-3 py-1"
-                          caret
-                        >
-                          <i className="ri-file-excel-2-line align-middle me-1"></i>
-                          {t("Excel")} / {t("Print")}
-                        </DropdownToggle>
-                        <DropdownMenu style={{ minWidth: "160px", zIndex: 1050 }}>
-                          {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
-                            <DropdownItem
-                              key={key}
-                              onClick={() => handleExport(key)}
-                            >
-                              {fmt.label}
-                            </DropdownItem>
-                          ))}
-                        </DropdownMenu>
-                      </UncontrolledDropdown>
-                    </div>
-                  )}
-                </>
-              )}
+          {!hasSearched && (
+            <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+              <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                <i className="ri-search-eye-line fs-20 text-primary"></i>
+                {t("Stock Search Filters")}
+              </h5>
+              <div className="d-flex flex-wrap gap-2">
+                <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
+                  {t("Email Stock List")}
+                </Button>
+                <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => handleSearch()} disabled={loading}>
+                  {loading ? t("Searching...") : t("Report")}
+                </Button>
+                <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
+                  {t("Clear")}
+                </Button>
+                <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
+                  {t("Previous Record")}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {!hasSearched && (
             <Card className="shadow-lg border-0 rounded-3 mb-4">
@@ -2015,7 +1988,7 @@ const SolitairesStockSearchReport = () => {
                           <Input
                             type="checkbox"
                             className="form-check-input"
-                            id="revCheck"
+                            id="revCheck"                
                             name="revCheck"
                             checked={filters.revCheck}
                             onChange={handleInputChange}
@@ -2134,7 +2107,7 @@ const SolitairesStockSearchReport = () => {
 
           {hasSearched && (
             <Card className="shadow-lg border-0 rounded-3">
-              <CardBody>
+              <CardBody className="p-2 px-sm-3 py-sm-2">
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
@@ -2143,33 +2116,68 @@ const SolitairesStockSearchReport = () => {
                   </div>
                 ) : (
                   <React.Fragment>
-                    {searchResults.length > 0 && (
-                      <div className="d-flex flex-wrap gap-4 align-items-center mb-3 py-2 px-3 bg-light rounded border border-light-subtle">
-                        <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
-                          <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
-                          {t("Status Guide")}:
-                        </span>
-                        {[
-                          { color: "#FFB347", label: t("Hold") },
-                          { color: "#FF4444", label: t("Memo") },
-                          { color: "#8A2BE2", label: t("Sold") },
-                          { color: "#22c55e", label: t("Memo In") }
-                        ].map(({ color, label }) => (
-                          <div key={label} className="d-flex align-items-center gap-2">
-                            <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
-                            <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
-                          </div>
-                        ))}
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 py-2 px-3 bg-light rounded border border-light-subtle">
+                      {searchResults.length > 0 ? (
+                        <div className="d-flex flex-wrap gap-2 gap-sm-3 gap-lg-4 align-items-center">
+                          <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
+                            <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
+                            {t("Status Guide")}:
+                          </span>
+                          {[
+                            { color: "#FFB347", label: t("Hold") },
+                            { color: "#FF4444", label: t("Memo") },
+                            { color: "#8A2BE2", label: t("Sold") },
+                            { color: "#22c55e", label: t("Memo In") }
+                          ].map(({ color, label }) => (
+                            <div key={label} className="d-flex align-items-center gap-2">
+                              <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
+                              <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      <div className="d-flex flex-wrap align-items-center gap-2 ms-auto">
+                        <Button color="soft-primary" className="btn-sm rounded-2 px-3 py-1" onClick={openEmailModal}>
+                          {t("Email Stock List")}
+                        </Button>
+                        <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
+                          {t("New Search")}
+                        </Button>
+                        {searchResults.length > 0 && (
+                          <UncontrolledDropdown>
+                            <DropdownToggle
+                              color="success"
+                              className="btn-sm rounded-2 px-3 py-1"
+                              caret
+                            >
+                              <i className="ri-file-excel-2-line align-middle me-1"></i>
+                              {t("Excel")} / {t("Print")}
+                            </DropdownToggle>
+                            <DropdownMenu end style={{ minWidth: "160px", zIndex: 1050 }}>
+                              {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
+                                <DropdownItem
+                                  key={key}
+                                  onClick={() => handleExport(key)}
+                                >
+                                  {fmt.label}
+                                </DropdownItem>
+                              ))}
+                            </DropdownMenu>
+                          </UncontrolledDropdown>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {searchResults.length > 0 && (
-                      <Card className="border shadow-sm mb-3">
-                        <CardBody className="p-3 bg-light-subtle">
-                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                      <Card className="border shadow-sm mb-2">
+                        <CardBody className="p-2 px-3 bg-light-subtle">
+                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 gap-lg-3">
 
-                            <div className="d-flex flex-wrap align-items-center gap-4">
-                              <div className="pe-3 border-end">
+                            <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3 gap-xl-4">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("SELECTED")}
                                 </span>
@@ -2178,28 +2186,28 @@ const SolitairesStockSearchReport = () => {
                                 </span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL CARATS")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">{totals.carats}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("TOTAL AMOUNT")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.amount).toLocaleString()}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG RATE")}
                                 </span>
                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.avgRate).toLocaleString()}</span>
                               </div>
 
-                              <div className="pe-3 border-end">
+                              <div className="pe-2 pe-xl-3 border-end">
                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                   {t("AVG DISC %")}
                                 </span>
@@ -2316,7 +2324,7 @@ const SolitairesStockSearchReport = () => {
                         isGlobalFilter={true}
                         customPageSize={500}
                         customPageSizes={[500, 1000, 1500]}
-                        divClass="table-responsive table-card mb-3"
+                        divClass="table-responsive table-card mb-0"
                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                         theadClass="table-light"
                         SearchPlaceholder={t("Filter results...")}
@@ -2385,7 +2393,7 @@ const SolitairesStockSearchReport = () => {
                         <td className="fw-bold bg-light">{t("Clarity")}</td>
                         <td>{get("clarity", "Clarity")}</td>
                         <td className="fw-bold bg-light">{t("Carats")}</td>
-                        <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                        <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                       </tr>
                       <tr>
                         <td className="fw-bold bg-light">{t("LAB")}</td>

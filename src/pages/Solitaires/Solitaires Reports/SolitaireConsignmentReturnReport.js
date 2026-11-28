@@ -24,6 +24,8 @@ import {
   getSolitaireConsignmentReturnReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -56,6 +58,7 @@ const getTableTotals = (table) => {
 
 const SolitaireConsignmentReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -354,19 +357,19 @@ const SolitaireConsignmentReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "TrnDate", "trnDate", "trndate", "RoundDate", "roundDate", "rounddate")),
         footer: () => <span className="fw-bold text-center d-block">Total:</span>
       },
-      { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo", "memono")) },
-      { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+      { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo", "memono")) },
+      { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
       { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-      { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotNo", "lotno", "LotNo")) },
-      { header: t("ItemName"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName", "itemname")) },
+      { header: t("Lot No"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotNo", "lotno", "LotNo")) },
+      { header: t("Item Name"), accessorKey: "ItemName", cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName", "itemname")) },
       {
         header: t("Return"),
         accessorKey: "Return",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { parentReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentReturn, caratFormat)}</span>;
         }
       },
       {
@@ -390,10 +393,10 @@ const SolitaireConsignmentReturnReport = () => {
         }
       },
       { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
-      { header: t("invtype"), accessorKey: "invtype", cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "invType")) }
+      { header: t("Inv Type"), accessorKey: "invtype", cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "invType")) }
 
     ],
-    [expandedMemos, t]
+    [expandedMemos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -406,11 +409,12 @@ const SolitaireConsignmentReturnReport = () => {
 
     const rows = [];
     groupedVisibleRows.forEach((p) => {
-      rows.push(p);
+      rows.push({ ...p, Return: formatCarat(getRowVal(p, "Return", "return"), caratFormat) });
       if (expandedMemos.has(String(p.MemoNo))) {
         (p.childRecords || []).forEach((c) => {
           rows.push({
             ...c,
+            Return: formatCarat(getRowVal(c, "Return", "return"), caratFormat),
             isParent: false
           });
         });
@@ -534,7 +538,7 @@ const SolitaireConsignmentReturnReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
-                            placeholder={t("MemoNo")}
+                            placeholder={t("Memo No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>

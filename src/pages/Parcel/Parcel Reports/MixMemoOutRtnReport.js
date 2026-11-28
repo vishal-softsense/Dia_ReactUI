@@ -14,6 +14,8 @@ import {
     getMixMemoOutRtnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 /** MVC safe(): empty → blank; numbers → fixed decimals */
 const safeText = (value) => {
@@ -128,6 +130,7 @@ const getRowDateRaw = (row) => getRowVal(row, "TrnDate", "trnDate");
 
 const MixMemoOutRtnReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -502,7 +505,7 @@ const MixMemoOutRtnReport = () => {
                 }
             },
             {
-                header: t("DATE"),
+                header: t("Date"),
                 id: "TrnDate",
                 accessorFn: (row) => formatReportDisplayDate(getRowDateRaw(row)),
                 sortingFn: (rowA, rowB) => {
@@ -519,20 +522,20 @@ const MixMemoOutRtnReport = () => {
                 cell: ({ getValue }) => safeText(getValue()),
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => safeText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo")) },
             {
                 header: t("Party"),
                 accessorKey: "AccGrpName",
                 cell: ({ row }) => safeText(getRowVal(row.original, "AccGrpName", "accGrpName", "Party", "party"))
             },
             {
-                header: t("LotNo"),
+                header: t("Lot No"),
                 accessorKey: "Lotno",
                 cell: ({ row }) => (row.original?.isParent ? "" : safeText(getRowVal(row.original, "Lotno", "lotno", "LotNo")))
             },
             {
-                header: t("ItemName"),
+                header: t("Item Name"),
                 accessorKey: "ItemName",
                 cell: ({ row }) => {
                     const r = row.original;
@@ -544,10 +547,13 @@ const MixMemoOutRtnReport = () => {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => {
+                    const v = getRowVal(row.original, "Return", "return");
+                    return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+                },
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
@@ -573,17 +579,17 @@ const MixMemoOutRtnReport = () => {
             },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => safeText(getRowVal(row.original, "Broker", "broker")) },
             {
-                header: t("invtype"),
+                header: t("Inv Type"),
                 accessorKey: "invtype",
                 cell: ({ row }) => safeText(getRowVal(row.original, "invtype", "Invtype", "InvType", "invType"))
             },
             {
-                header: t("StockType"),
+                header: t("Stock Type"),
                 accessorKey: "StockType",
                 cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType"))
             }
         ],
-        [expandedMemoNos, t]
+        [expandedMemoNos, t, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -594,17 +600,17 @@ const MixMemoOutRtnReport = () => {
 
         const headers = [
             "Date",
-            "MemoNo",
-            "BillNo",
+            "Memo Number",
+            "Bill No",
             "Party",
-            "LotNo",
-            "ItemName",
+            "Lot No",
+            "Item Name",
             "Return",
             "Price",
             "Amount",
             "Broker",
-            "invtype",
-            "StockType"
+            "Inv Type",
+            "Stock Type"
         ];
 
         const rows = filteredReportRows.map((r) => [
@@ -614,7 +620,10 @@ const MixMemoOutRtnReport = () => {
             safeText(getRowVal(r, "AccGrpName", "accGrpName", "Party", "party")),
             safeText(getRowVal(r, "Lotno", "lotno")),
             safeText(getRowVal(r, "ItemName", "itemName")),
-            safeFixed(getRowVal(r, "Return", "return"), 3),
+            (() => {
+                const v = getRowVal(r, "Return", "return");
+                return v === "" || v == null ? "" : formatCarat(v, caratFormat);
+            })(),
             safeFixed(getRowVal(r, "Price", "price"), 2),
             safeFixed(getRowVal(r, "Amount", "amount"), 2),
             safeText(getRowVal(r, "Broker", "broker")),
@@ -633,7 +642,7 @@ const MixMemoOutRtnReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalReturn, 3),
+            formatCarat(totalReturn, caratFormat),
             fmtFixed(totalPrice, 2),
             fmtFixed(totalAmount, 2),
             "",

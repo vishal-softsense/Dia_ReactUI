@@ -41,6 +41,8 @@ import {
     getParcelLots
 } from "../../../helpers/fakebackend_helper";
 import { exportToExcel, getExcelBase64 } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 
 const debounce = (func, delay) => {
@@ -78,7 +80,7 @@ const SelectionCell = React.memo(({ index, selectedRows, onChange }) => {
     return (
         <input
             type="checkbox"
-            className="form-check-input"
+            className="form-check-input m-0"
             checked={isChecked}
             onChange={handleChange}
         />
@@ -93,7 +95,7 @@ const allColumns = [
 
     { label: "Carats", key: "carats", align: "text-end", type: "carats" },
     { label: "On Hand", key: "onHand", align: "text-end", type: "decimal3" },
-    { label: "MemoOut", key: "memoOut", align: "text-end", type: "decimal3" },
+    { label: "Memo Out", key: "memoOut", align: "text-end", type: "decimal3" },
 
     { label: "Size", key: "size", align: "text-center" },
     { label: "Color", key: "color", align: "text-center" },
@@ -258,6 +260,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const ParcelStockSearchReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const [activeTab, setActiveTab] = useState("1"); // Filter Tabs
     // Filter lists fetched from API
     const [masterDropdowns, setMasterDropdowns] = useState({});
@@ -688,10 +691,14 @@ const ParcelStockSearchReport = () => {
         const cols = [
             {
                 id: "selection",
+                sticky: "left",
+                className: "table-sticky-left text-center",
+                headerStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
+                cellStyle: { width: "48px", minWidth: "48px", maxWidth: "50px", textAlign: "center" },
                 header: () => (
                     <input
                         type="checkbox"
-                        className="form-check-input"
+                        className="form-check-input m-0"
                         onChange={handleSelectAll}
                         checked={
                             searchResults.length > 0 &&
@@ -710,6 +717,7 @@ const ParcelStockSearchReport = () => {
                     );
                 },
                 enableColumnFilter: false,
+                enableSorting: false,
             },
             // {
             //     id: "actions",
@@ -776,19 +784,19 @@ const ParcelStockSearchReport = () => {
                 if (col.key === "carats") {
                     footerCallback = ({ table }) => {
                         const { totalCarats } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "onHand") {
                     footerCallback = ({ table }) => {
                         const { totalOnHand } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalOnHand, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalOnHand, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "memoOut") {
                     footerCallback = ({ table }) => {
                         const { totalMemoOut } = getStockTableTotals(table);
-                        return <span className="fw-bold text-end d-block">{fmtFixed(totalMemoOut, 3)}</span>;
+                        return <span className="fw-bold text-end d-block">{formatCarat(totalMemoOut, caratFormat)}</span>;
                     };
                 }
                 else if (col.key === "rapa") {
@@ -852,7 +860,7 @@ const ParcelStockSearchReport = () => {
 
                         let displayVal = val;
                         if (col.type === "carats") {
-                            displayVal = parseFloat(val || 0).toFixed(3);
+                            displayVal = formatCarat(val, caratFormat);
                         } else if (col.type === "discount") {
                             displayVal = parseFloat(val || 0).toFixed(2);
                         } else if (col.type === "number") {
@@ -1003,7 +1011,7 @@ const ParcelStockSearchReport = () => {
             // }))
         ];
         return cols;
-    }, [searchResults, selectedRows, t]);
+    }, [searchResults, selectedRows, t, caratFormat]);
 
     // Sync selected lot numbers with sessionStorage
     useEffect(() => {
@@ -1112,13 +1120,13 @@ const ParcelStockSearchReport = () => {
 
         return {
             pcs,
-            carats: carats.toFixed(3),
+            carats: formatCarat(carats, caratFormat),
             amount: amount.toFixed(2),
             avgMRP,
             avgRate,
             avgDis
         };
-    }, [selectedRows, searchResults]);
+    }, [selectedRows, searchResults, caratFormat]);
 
     const selectedLotNos = useMemo(() => {
         return Object.keys(selectedRows)
@@ -1134,17 +1142,17 @@ const ParcelStockSearchReport = () => {
         DirectPrint: {
             label: "Direct Print",
             headers: [
-                "Status", "LotNo", "Item", "Shape", "Carats", "On Hand", "MemoOut", "Size",
-                "Color", "Clarity", "Rate", "Amount", "BoxName", "Item Group ID", "Country", "MemoPartyName", "HoldPartyName"
+                "Status", "Lot No", "Item", "Shape", "Carats", "On Hand", "Memo Out", "Size",
+                "Color", "Clarity", "Rate", "Amount", "Box Name", "Item Group ID", "Country", "Memo Party", "Hold Party"
             ],
             mapper: (item) => [
                 item.curStatus || item.CurStatus || "",
                 item.lotNo || item.LotNo || "",
                 item.itemName || item.itemName || "",
                 item.shape || item.Shape || "",
-                item.carats || item.Carats || 0,
-                item.onHand || item.onHand || 0,
-                item.memoOut || item.memoOut || 0,
+                formatCarat(item.carats ?? item.Carats ?? 0, caratFormat),
+                formatCarat(item.onHand ?? item.OnHand ?? 0, caratFormat),
+                formatCarat(item.memoOut ?? item.MemoOut ?? 0, caratFormat),
                 item.size || item.Size || "",
                 item.color || item.Color || "",
                 item.clarity || item.Clarity || "",
@@ -1399,9 +1407,9 @@ const ParcelStockSearchReport = () => {
             "",               // Stock ID
             "",               // Item
             "",               // Shape
-            totalCarats.toFixed(3),
-            totalOnHand.toFixed(3),
-            totalMemoOut.toFixed(3),
+            formatCarat(totalCarats, caratFormat),
+            formatCarat(totalOnHand, caratFormat),
+            formatCarat(totalMemoOut, caratFormat),
             "",               // Size
             "",               // Color
             "",               // Clarity
@@ -1441,89 +1449,25 @@ const ParcelStockSearchReport = () => {
                     <BreadCrumb title={t("Parcel Stock Search")} pageTitle={t("Reports")} />
 
                     {/* Top Control Bar */}
-                    <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
-                        <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
-                            <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
-                            {hasSearched ? t("Parcel Stock Search Results") : t("Parcel Stock Search Filters")}
-                        </h5>
-                        <div className="d-flex gap-2">
-                            {!hasSearched ? (
-                                <>
-                                    <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleSearch} disabled={loading}>
-                                        {loading ? t("Searching...") : t("Report")}
-                                    </Button>
-                                    <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
-                                        {t("Clear")}
-                                    </Button>
-                                    <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
-                                        {t("Previous Record")}
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-
-                                    <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
-                                        {t("New Search")}
-                                    </Button>
-                                    {searchResults.length > 0 && (
-                                        <div className="d-flex align-items-center gap-1">
-                                            <UncontrolledDropdown>
-                                                <DropdownToggle
-                                                    color="success"
-                                                    className="btn-sm rounded-2 px-3 py-1"
-                                                    caret
-                                                >
-                                                    <i className="ri-file-excel-2-line align-middle me-1"></i>
-                                                    {t("Excel")} / {t("Print")}
-                                                </DropdownToggle>
-                                                <DropdownMenu style={{ minWidth: "160px", zIndex: 1050 }}>
-                                                    {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
-                                                        <DropdownItem
-                                                            key={key}
-                                                            onClick={() => handleExport(key)}
-                                                        >
-                                                            {fmt.label}
-                                                        </DropdownItem>
-                                                    ))}
-                                                </DropdownMenu>
-                                            </UncontrolledDropdown>
-                                        </div>
-                                        // <div className="d-flex align-items-center gap-1">
-                                        //     <div className="dropdown" style={{ position: "relative" }}>
-                                        //         <button
-                                        //             type="button"
-                                        //             className="btn btn-soft-info btn-sm rounded-2 px-3 py-1 dropdown-toggle"
-                                        //             onClick={() => setPrintDropdownOpen((o) => !o)}
-                                        //         >
-                                        //             {PRINT_FORMATS[printFormat]?.label || "Direct Print"}
-                                        //         </button>
-                                        //         {printDropdownOpen && (
-                                        //             <div
-                                        //                 className="dropdown-menu show"
-                                        //                 style={{ minWidth: "160px", zIndex: 1050 }}
-                                        //             >
-                                        //                 {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
-                                        //                     <button
-                                        //                         key={key}
-                                        //                         className={`dropdown-item${printFormat === key ? " active" : ""}`}
-                                        //                         onClick={() => { setPrintFormat(key); setPrintDropdownOpen(false); }}
-                                        //                     >
-                                        //                         {fmt.label}
-                                        //                     </button>
-                                        //                 ))}
-                                        //             </div>
-                                        //         )}
-                                        //     </div>
-                                        //     {/* <Button color="success" className="btn-sm rounded-2 px-3 py-1" onClick={handleExport}>
-                                        //         <i className="ri-file-excel-2-line align-middle me-1"></i>
-                                        //         {t("Excel")}
-                                        //     </Button> */}
-                                        // </div>
-                                    )}
-                                </>
-                            )}
+                    {!hasSearched && (
+                        <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
+                            <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
+                                <i className="ri-search-eye-line fs-20 text-primary"></i>
+                                {t("Parcel Stock Search Filters")}
+                            </h5>
+                            <div className="d-flex flex-wrap gap-2">
+                                <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleSearch} disabled={loading}>
+                                    {loading ? t("Searching...") : t("Report")}
+                                </Button>
+                                <Button color="soft-secondary" className="btn-sm rounded-2 px-3 py-1" onClick={resetFilters}>
+                                    {t("Clear")}
+                                </Button>
+                                <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(true)} disabled={searchResults.length === 0}>
+                                    {t("Previous Record")}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {!hasSearched && (
                         <Card className="shadow-lg border-0 rounded-3 mb-4">
@@ -2090,7 +2034,7 @@ const ParcelStockSearchReport = () => {
                     {/* Results grid / Pivot container */}
                     {hasSearched && (
                         <Card className="shadow-lg border-0 rounded-3">
-                            <CardBody>
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
                                 {loading ? (
                                     <div className="text-center py-5">
                                         <div className="spinner-border text-primary" role="status">
@@ -2100,36 +2044,68 @@ const ParcelStockSearchReport = () => {
                                 ) : (
                                     /* Report Grid View using centralized TableContainer */
                                     <React.Fragment>
-                                        {/* Status Color Guide */}
-                                        {searchResults.length > 0 && (
-                                            <div className="d-flex flex-wrap gap-4 align-items-center mb-3 py-2 px-3 bg-light rounded border border-light-subtle">
-                                                <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
-                                                    <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
-                                                    {t("Status Guide")}:
-                                                </span>
-                                                {[
-                                                    { color: "#FFB347", label: t("Hold") },
-                                                    { color: "#FF4444", label: t("Memo") },
-                                                    { color: "#8A2BE2", label: t("Sold") },
-                                                    { color: "#22c55e", label: t("Memo In") }
-                                                ].map(({ color, label }) => (
-                                                    <div key={label} className="d-flex align-items-center gap-2">
-                                                        <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
-                                                        <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
-                                                    </div>
-                                                ))}
+                                        {/* Status Color Guide + Results Actions */}
+                                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 py-2 px-3 bg-light rounded border border-light-subtle">
+                                            {searchResults.length > 0 ? (
+                                                <div className="d-flex flex-wrap gap-2 gap-sm-3 gap-lg-4 align-items-center">
+                                                    <span className="text-muted fw-semibold" style={{ fontSize: "13px" }}>
+                                                        <i className="ri-information-line me-1 align-middle text-primary" style={{ fontSize: "15px" }} />
+                                                        {t("Status Guide")}:
+                                                    </span>
+                                                    {[
+                                                        { color: "#FFB347", label: t("Hold") },
+                                                        { color: "#FF4444", label: t("Memo") },
+                                                        { color: "#8A2BE2", label: t("Sold") },
+                                                        { color: "#22c55e", label: t("Memo In") }
+                                                    ].map(({ color, label }) => (
+                                                        <div key={label} className="d-flex align-items-center gap-2">
+                                                            <span className="rounded-circle" style={{ width: "8px", height: "8px", backgroundColor: color, display: "inline-block" }}></span>
+                                                            <span className="fw-medium text-secondary" style={{ fontSize: "13px" }}>{label}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div />
+                                            )}
+
+                                            <div className="d-flex flex-wrap align-items-center gap-2 ms-auto">
+                                                <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={() => setHasSearched(false)}>
+                                                    {t("New Search")}
+                                                </Button>
+                                                {searchResults.length > 0 && (
+                                                    <UncontrolledDropdown>
+                                                        <DropdownToggle
+                                                            color="success"
+                                                            className="btn-sm rounded-2 px-3 py-1"
+                                                            caret
+                                                        >
+                                                            <i className="ri-file-excel-2-line align-middle me-1"></i>
+                                                            {t("Excel")} / {t("Print")}
+                                                        </DropdownToggle>
+                                                        <DropdownMenu end style={{ minWidth: "160px", zIndex: 1050 }}>
+                                                            {Object.entries(PRINT_FORMATS).map(([key, fmt]) => (
+                                                                <DropdownItem
+                                                                    key={key}
+                                                                    onClick={() => handleExport(key)}
+                                                                >
+                                                                    {fmt.label}
+                                                                </DropdownItem>
+                                                            ))}
+                                                        </DropdownMenu>
+                                                    </UncontrolledDropdown>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
 
                                         {/* Selected Summary + Action Buttons — clean, professional card design */}
                                         {searchResults.length > 0 && (
-                                            <Card className="border shadow-sm mb-3">
-                                                <CardBody className="p-3 bg-light-subtle">
-                                                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                            <Card className="border shadow-sm mb-2">
+                                                <CardBody className="p-2 px-3 bg-light-subtle">
+                                                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 gap-lg-3">
 
                                                         {/* Left: Stats with vertical dividers */}
-                                                        <div className="d-flex flex-wrap align-items-center gap-4">
-                                                            <div className="pe-3 border-end">
+                                                        <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3 gap-xl-4">
+                                                            <div className="pe-2 pe-xl-3 border-end">
                                                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                                                     {t("SELECTED")}
                                                                 </span>
@@ -2138,21 +2114,21 @@ const ParcelStockSearchReport = () => {
                                                                 </span>
                                                             </div>
 
-                                                            <div className="pe-3 border-end">
+                                                            <div className="pe-2 pe-xl-3 border-end">
                                                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                                                     {t("TOTAL CARATS")}
                                                                 </span>
                                                                 <span className="text-dark fw-bold fs-14">{totals.carats}</span>
                                                             </div>
 
-                                                            <div className="pe-3 border-end">
+                                                            <div className="pe-2 pe-xl-3 border-end">
                                                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                                                     {t("TOTAL AMOUNT")}
                                                                 </span>
                                                                 <span className="text-dark fw-bold fs-14">${parseFloat(totals.amount).toLocaleString()}</span>
                                                             </div>
 
-                                                            <div className="pe-3 border-end">
+                                                            <div className="pe-2 pe-xl-3 border-end">
                                                                 <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                                                     {t("AVG RATE")}
                                                                 </span>
@@ -2164,7 +2140,7 @@ const ParcelStockSearchReport = () => {
                                                         <div className="d-flex flex-wrap align-items-center gap-2">
                                                             {selectedLotNos.length > 0 && (
                                                                 <div className="d-flex align-items-center gap-1 me-2 bg-light p-1 rounded border border-light-subtle">
-                                                                    <span className="text-muted fs-11 fw-bold ps-1 me-1 text-nowrap">{t("LotNo")}:</span>
+                                                                    <span className="text-muted fs-11 fw-bold ps-1 me-1 text-nowrap">{t("Lot No")}:</span>
                                                                     <textarea
                                                                         className="form-control form-control-sm p-1 bg-white border"
                                                                         style={{
@@ -2263,7 +2239,7 @@ const ParcelStockSearchReport = () => {
                                                 isGlobalFilter={true}
                                                 customPageSize={500}
                                                 customPageSizes={[500, 1000, 1500]}
-                                                divClass="table-responsive table-card mb-3"
+                                                divClass="table-responsive table-card mb-0"
                                                 tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                                                 theadClass="table-light"
                                                 SearchPlaceholder={t("Filter results...")}
@@ -2333,7 +2309,7 @@ const ParcelStockSearchReport = () => {
                                                 <td className="fw-bold bg-light">{t("Clarity")}</td>
                                                 <td>{get("clarity", "Clarity")}</td>
                                                 <td className="fw-bold bg-light">{t("Carats")}</td>
-                                                <td className="fw-bold text-success">{num("carats", "Carats").toFixed(3)}</td>
+                                                <td className="fw-bold text-success">{formatCarat(num("carats", "Carats"), caratFormat)}</td>
                                             </tr>
                                             <tr>
                                                 <td className="fw-bold bg-light">{t("LAB")}</td>

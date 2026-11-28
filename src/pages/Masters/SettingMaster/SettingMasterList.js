@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Container, Row, Col, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, Label, Input, FormFeedback, Spinner, Nav, NavItem, NavLink } from "reactstrap";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { getSettingData, filterSettingData, submitSettingData, uploadCompanyLogo } from "../../../helpers/fakebackend_helper";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     SETTING_MAX_DATE_KEY,
     SETTING_MIN_DATE_KEY,
@@ -9,6 +10,13 @@ import {
     refreshSettingReportDates,
     setCachedSettingReportDates
 } from "../../../helpers/reportDateDefaults";
+import {
+    CARAT_FORMAT_OPTIONS,
+    isCaratFormatSettingName,
+    normalizeCaratFormat,
+    refreshCaratFormatSetting,
+    setCachedCaratFormat
+} from "../../../helpers/caratFormatDefaults";
 import { toast, ToastContainer } from "react-toastify";
 import classnames from "classnames";
 import * as Yup from "yup";
@@ -24,6 +32,10 @@ const SettingMasterList = () => {
     const [settingsList, setSettingsList] = useState([]);
     const [settingModal, setSettingModal] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const tableScrollRef = useRef(null);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        deps: [loading, activeTab, settingsList.length, searchQuery],
+    });
 
     const resolveCompanyLogoUrl = (path) => {
         if (!path || typeof path !== "string" || !path.trim()) {
@@ -170,6 +182,15 @@ const SettingMasterList = () => {
                         }
                         // Re-read both from API so all open/next reports get latest Min/Max
                         await refreshSettingReportDates();
+                    } else if (settingName === "solitairecaratformat") {
+                        setCachedCaratFormat(values.value, { scope: "solitaire" });
+                        await refreshCaratFormatSetting("solitaire");
+                    } else if (settingName === "parcelcaratformat") {
+                        setCachedCaratFormat(values.value, { scope: "parcel" });
+                        await refreshCaratFormatSetting("parcel");
+                    } else if (settingName === "caratformatnew" || settingName === "caratformat") {
+                        setCachedCaratFormat(values.value, { scope: "default" });
+                        await refreshCaratFormatSetting();
                     }
                     setSettingModal(false);
                     loadTabData(activeTab);
@@ -293,8 +314,8 @@ const SettingMasterList = () => {
                                         </Col>
                                         
                                         <Col md={9}>
-                                            <div className="p-4">
-                                                <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom">
+                                            <div className="p-3 p-lg-4">
+                                                <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 border-bottom">
                                                     <div>
                                                         <h4 className="fw-bold mb-1" style={{ color: getTabColor(activeTab) }}>
                                                             {t(activeTabObj.label || activeTab)} {t("Settings")}
@@ -311,9 +332,13 @@ const SettingMasterList = () => {
                                                         <span className="ms-2 fw-medium text-muted">{t("Loading settings...")}</span>
                                                     </div>
                                                 ) : (
-                                                    <div className="table-responsive table-card">
+                                                    <div
+                                                        ref={tableScrollRef}
+                                                        className="table-responsive table-card viewport-table-scroll"
+                                                        style={{ maxHeight: tableMaxHeight }}
+                                                    >
                                                         <table className="table table-hover align-middle table-nowrap mb-0">
-                                                            <thead className="table-light">
+                                                            <thead className="table-light sticky-top" style={{ zIndex: 2 }}>
                                                                 <tr>
                                                                     <th className="py-3 fs-12 text-uppercase text-muted fw-semibold">{t("Setting Name")}</th>
                                                                     <th className="py-3 fs-12 text-uppercase text-muted fw-semibold">{t("Setting Value")}</th>
@@ -386,15 +411,32 @@ const SettingMasterList = () => {
                                 </div>
                                 <div className="mb-3">
                                     <Label className="form-label">{t("Setting Value")}</Label>
-                                    <Input
-                                        type={isPasswordSetting(settingValidation.values.name) ? "password" : "text"}
-                                        name="value"
-                                        placeholder={t("Enter setting value")}
-                                        value={settingValidation.values.value}
-                                        onChange={settingValidation.handleChange}
-                                        onBlur={settingValidation.handleBlur}
-                                        invalid={settingValidation.touched.value && !!settingValidation.errors.value}
-                                    />
+                                    {isCaratFormatSettingName(settingValidation.values.name) ? (
+                                        <Input
+                                            type="select"
+                                            name="value"
+                                            value={normalizeCaratFormat(settingValidation.values.value)}
+                                            onChange={settingValidation.handleChange}
+                                            onBlur={settingValidation.handleBlur}
+                                            invalid={settingValidation.touched.value && !!settingValidation.errors.value}
+                                        >
+                                            {CARAT_FORMAT_OPTIONS.map((opt) => (
+                                                <option key={opt.value} value={opt.value}>
+                                                    {opt.label}
+                                                </option>
+                                            ))}
+                                        </Input>
+                                    ) : (
+                                        <Input
+                                            type={isPasswordSetting(settingValidation.values.name) ? "password" : "text"}
+                                            name="value"
+                                            placeholder={t("Enter setting value")}
+                                            value={settingValidation.values.value}
+                                            onChange={settingValidation.handleChange}
+                                            onBlur={settingValidation.handleBlur}
+                                            invalid={settingValidation.touched.value && !!settingValidation.errors.value}
+                                        />
+                                    )}
                                     {settingValidation.touched.value && settingValidation.errors.value ? (
                                         <FormFeedback type="invalid">{settingValidation.errors.value}</FormFeedback>
                                     ) : null}

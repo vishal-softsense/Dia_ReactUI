@@ -36,12 +36,19 @@ import {
   getMixSaleReturnLots,
   getMixSaleReturnPageData
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -325,10 +332,10 @@ const ITEM_COLUMNS = [
   { key: "size", label: "SIZE", lookup: "size" },
   { key: "clarity", label: "CLARITY", lookup: "clarity" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
-  { key: "issueCarats", label: "Issue Carats", align: "end", decimals: 3, footer: "issueCarats" },
+  { key: "issueCarats", label: "Issue Carats", align: "end", isCarat: true, footer: "issueCarats" },
   { key: "rejP", label: "RejP %", align: "end", decimals: 2 },
-  { key: "rejection", label: "Rejection", align: "end", decimals: 3, footer: "rejection" },
-  { key: "selectionCarats", label: "Selection Carats", align: "end", decimals: 3, footer: "selectionCarats" },
+  { key: "rejection", label: "Rejection", align: "end", isCarat: true, footer: "rejection" },
+  { key: "selectionCarats", label: "Selection Carats", align: "end", isCarat: true, footer: "selectionCarats" },
   { key: "rate", label: "Rate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "sRate", label: "$Rate", align: "end", decimals: 2 },
   { key: "less1", label: "Less1", align: "end", decimals: 2 },
@@ -341,16 +348,16 @@ const ITEM_COLUMNS = [
   { key: "invDescription", label: "ItemDescription" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "issueCarats":
-      return fmt(totals.totIssueCts, 3);
+      return formatCarat(totals.totIssueCts, caratFormat);
     case "rejection":
-      return fmt(totals.totRejection, 3);
+      return formatCarat(totals.totRejection, caratFormat);
     case "selectionCarats":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "avgRate":
       return fmt(totals.avgRate, 2);
     case "totAmount":
@@ -360,12 +367,16 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col, lookupOpts = {}) => {
+const renderItemCell = (row, col, lookupOpts = {}, caratFormat) => {
   if (col.lookup) {
     const opts = lookupOpts[col.lookup] || [];
     return optLabel(opts, row[col.key]);
   }
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -560,6 +571,8 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
     }),
     []
   );
+
+  const { caratFormat } = useCaratFormat();
 
   useEffect(() => {
     const loadSymbols = async () => {
@@ -860,6 +873,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const validateTrnDate = (dateVal) => {
     if (isEdit) return dateVal;
@@ -928,15 +942,18 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       ...next,
       // Keep the field the user is typing as-entered; format only calculated fields.
       rejP: changedKey === "rejP" ? next.rejP : roundN(rejP, 2),
-      rejection: changedKey === "rejection" ? next.rejection : roundN(rejection, 3),
+      rejection: changedKey === "rejection" ? next.rejection : String(truncateCaratNumber(rejection, caratFormat)),
       selectionCarats:
-        changedKey === "selectionCarats" ? next.selectionCarats : roundN(selectionCarats, 3)
+        changedKey === "selectionCarats" ? next.selectionCarats : String(truncateCaratNumber(selectionCarats, caratFormat))
     };
   };
 
   const onEntryChange = (key, value) => {
+    const cleanVal = ["issueCarats", "rejection", "selectionCarats"].includes(key)
+      ? sanitizeCaratInput(value, caratFormat)
+      : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
 
       if (["issueCarats", "rejP", "rejection", "selectionCarats"].includes(key)) {
         next = syncRejectionFields(next, key);
@@ -1037,10 +1054,10 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       clarity: entry.clarity || "",
       size: entry.size || "",
       sieve: entry.sieve || "",
-      issueCarats: Math.round(toNum(entry.issueCarats) * 1000) / 1000,
+      issueCarats: truncateCaratNumber(toNum(entry.issueCarats), caratFormat),
       rejP: Math.round(toNum(entry.rejP) * 100) / 100,
-      rejection: Math.round(toNum(entry.rejection) * 1000) / 1000,
-      selectionCarats: Math.round(selectionCarats * 1000) / 1000,
+      rejection: truncateCaratNumber(toNum(entry.rejection), caratFormat),
+      selectionCarats: truncateCaratNumber(selectionCarats, caratFormat),
       pcs: toNum(entry.pcs, 0),
       cogs: toNum(entry.cogs),
       rate,
@@ -1187,15 +1204,17 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
 
   // MVC: ViewInvoices → /MixSaleReturn/csale-to-csalertn
   const handleViewCSaleInvoices = async () => {
-    if (!party?.value && !String(header.memoNo || "").trim()) {
+    const invNo = String(header.memoNo || "").trim();
+    if (!party?.value && !invNo) {
       toast.warning(t("Please select Party or enter Inv No."));
       return;
     }
     setCsaleLoading(true);
     try {
+      // Invoice number is looked up on its own so a later invoice is not filtered by the previous party.
       const res = await getMixSaleReturnCSaleInvoices({
-        PartyCode: party?.value || "",
-        MemoNo: header.memoNo || ""
+        PartyCode: invNo ? "" : (party?.value || ""),
+        MemoNo: invNo
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("No invoice Found"));
@@ -1204,6 +1223,11 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
         return;
       }
       const rows = Array.isArray(res.Data) ? res.Data : Array.isArray(res.data) ? res.data : [];
+      const partyCode = rows.length ? getVal(rows[0], "PartyCode", "partyCode") : "";
+      const partyName = rows.length ? getVal(rows[0], "PartyName", "partyName", "Party") : "";
+      if (invNo && partyCode) {
+        setParty({ value: String(partyCode), label: partyName || String(partyCode) });
+      }
       const mapped = rows.map((r, idx) => {
         const cts = getNumVal(r, "carats", "Carats", "Cts", "BalanceCts", "BalCts");
         const rtn = getNumVal(r, "RtnCts", "ReturnCarats", "Rtn");
@@ -1268,7 +1292,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
         } else if (patch.rtnEditable !== undefined) {
           const original = toNum(row.carats);
           const rtn = toNum(patch.rtnEditable);
-          next.balanceCts = Math.max(0, Math.round((original - rtn) * 1000) / 1000);
+          next.balanceCts = Math.max(0, truncateCaratNumber(original - rtn, caratFormat));
         }
         return next;
       })
@@ -1554,13 +1578,13 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
-      totIssueCts: Math.round(totIssueCts * 1000) / 1000,
-      totRejection: Math.round(totRejection * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
+      totIssueCts: truncateCaratNumber(totIssueCts, caratFormat),
+      totRejection: truncateCaratNumber(totRejection, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1841,8 +1865,8 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1 text-uppercase small">
                             {t("PARTY")}{" "}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="badge bg-soft-primary text-primary ms-1" target="_blank">
-                                NEW
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
@@ -1850,7 +1874,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOptionsWithSelected}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                               else if (meta.action === "input-blur" || meta.action === "menu-close") {
@@ -2057,15 +2081,15 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-0">
                             <div className="d-flex align-items-center gap-2 mb-1">
                               <Label className="form-label mb-0 text-uppercase small">{t("LOT NUMBER")}</Label>
-                              <a
-                                href="/parcel/add-ParcelItemMaster"
+                              <Link
+                                to="/parcel/add-ParcelItemMaster"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="badge text-primary border border-primary text-decoration-none"
-                                style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", fontWeight: 500, backgroundColor: "transparent" }}
+                                className="border border-primary text-primary px-1 rounded"
+                                style={{ fontSize: "10px", textDecoration: "none" }}
                               >
-                                ADD ITEM
-                              </a>
+                                {t("ADD ITEM")}
+                              </Link>
                               <div className="form-check m-0 p-0 d-flex align-items-center">
                                 <Input
                                   type="checkbox"
@@ -2192,10 +2216,10 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                       <Row className="g-2 align-items-end mb-2 flex-nowrap overflow-auto" style={{ minWidth: 0 }}>
                         {[
                           { key: "pcs", label: "PCS", type: "number" },
-                          { key: "issueCarats", label: "ISSUE CARATS", type: "number", step: "any" },
+                          { key: "issueCarats", label: "ISSUE CARATS", type: "text", inputMode: "decimal" },
                           { key: "rejP", label: "REJP %", type: "number", step: "any" },
-                          { key: "rejection", label: "REJE", type: "number", step: "any" },
-                          { key: "selectionCarats", label: "SELECT.CTS", type: "number", step: "any" },
+                          { key: "rejection", label: "REJE", type: "text", inputMode: "decimal" },
+                          { key: "selectionCarats", label: "SELECT.CTS", type: "text", inputMode: "decimal" },
                           { key: "rate", label: "RATE", type: "number" },
                           { key: "sRate", label: "$ RATE", type: "text" },
                           { key: "less1", label: "LESS1", type: "number" },
@@ -2207,6 +2231,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                               <Label className="form-label mb-1 text-uppercase small text-nowrap">{t(f.label)}</Label>
                               <Input
                                 type={f.type}
+                                inputMode={f.inputMode}
                                 step={f.step}
                                 className="form-control-sm"
                                 style={fieldH}
@@ -2318,7 +2343,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col, lookupOpts)}
+                                  {renderItemCell(r, col, lookupOpts, caratFormat)}
                                 </td>
                               ))}
                             </tr>
@@ -2329,7 +2354,7 @@ const MixSaleReturnForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end text-nowrap" : "text-nowrap"} style={{ whiteSpace: "nowrap" }}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>

@@ -8,9 +8,12 @@ import DeleteModal from "../../../Components/Common/DeleteModal";
 import { getMountingStockList, deleteMountingStock } from "../../../helpers/fakebackend_helper";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import { toast, ToastContainer } from "react-toastify";
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const MountingStockList = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const navigate = useNavigate();
     const location = useLocation();
     const [mountingStock, setMountingStock] = useState([]);
@@ -87,7 +90,7 @@ const MountingStockList = () => {
 
         const headers = [
             "Stock ID",
-            "JewelleryPcs",
+            "Jewellery Pcs",
             "Jewellery Category",
             "Metal Type",
             "Purity",
@@ -104,7 +107,7 @@ const MountingStockList = () => {
             item.mountCategory || item.MountCategory || item.designName || "",
             item.metalType || item.MetalType || "",
             item.purity || item.Purity || "",
-            item.totalDiamondCarat || item.TotalDiamondCarat || 0,
+            truncateCaratNumber(item.totalDiamondCarat || item.TotalDiamondCarat || 0, caratFormat),
             Number(item.grossWeight || item.GrossWeight || 0).toFixed(3),
             Number(item.netWeight || item.NetWeight || 0).toFixed(3),
             Number(item.totalMetalAmount || item.TotalMetalAmount || 0).toFixed(2),
@@ -156,25 +159,25 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("StockID"),
+                header: t("Stock ID"),
                 accessorKey: "stock_ID",
                 accessorFn: (row) => row.stock_ID || row.Stock_ID,
                 enableColumnFilter: true,
             },
             {
-                header: t("JewelleryPcs"),
+                header: t("Jewellery Pcs"),
                 accessorKey: "pcs",
                 accessorFn: (row) => row.pcs ?? row.Pcs ?? 0,
                 enableColumnFilter: true,
             },
             {
-                header: t("JewelleryCategory"),
+                header: t("Jewellery Category"),
                 accessorKey: "mountCategory",
                 accessorFn: (row) => row.mountCategory || row.MountCategory || row.designName || "",
                 enableColumnFilter: true,
             },
             {
-                header: t("MetalType"),
+                header: t("Metal Type"),
                 accessorKey: "metalType",
                 accessorFn: (row) => row.metalType || row.MetalType,
                 enableColumnFilter: true,
@@ -186,13 +189,14 @@ const MountingStockList = () => {
                 enableColumnFilter: true,
             },
             {
-                header: t("DiamondWeight"),
+                header: t("Diamond Weight"),
                 accessorKey: "totalDiamondCarat",
                 accessorFn: (row) => row.totalDiamondCarat || row.TotalDiamondCarat,
                 enableColumnFilter: true,
+                cell: (cellProps) => formatCarat(cellProps.getValue(), caratFormat),
             },
             {
-                header: t("GrossWeight"),
+                header: t("Gross Weight"),
                 accessorKey: "grossWeight",
                 accessorFn: (row) => row.grossWeight || row.GrossWeight,
                 enableColumnFilter: true,
@@ -202,7 +206,7 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("NetWeight"),
+                header: t("Net Weight"),
                 accessorKey: "netWeight",
                 accessorFn: (row) => row.netWeight || row.NetWeight,
                 enableColumnFilter: true,
@@ -212,7 +216,7 @@ const MountingStockList = () => {
                 }
             },
             {
-                header: t("MetalAmount"),
+                header: t("Metal Amount"),
                 accessorKey: "totalMetalAmount",
                 accessorFn: (row) => row.totalMetalAmount || row.TotalMetalAmount,
                 enableColumnFilter: true,
@@ -232,7 +236,7 @@ const MountingStockList = () => {
                 }
             }
         ],
-        [navigate, t]
+        [navigate, t, caratFormat]
     );
 
     document.title = `${t("Mounting Stock Master")} | ${t("Admin")}`;

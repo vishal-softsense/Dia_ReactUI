@@ -5,6 +5,8 @@ import CountUp from 'react-countup';
 import { Link } from 'react-router-dom';
 import { useParcelDashboardData } from './useParcelDashboardData';
 import { exportToExcel } from '../../helpers/excel_helper';
+import useCaratFormat from '../../Components/Hooks/useCaratFormat';
+import { formatCarat } from '../../helpers/caratFormatDefaults';
 import { toast, ToastContainer } from 'react-toastify';
 import { 
     getAllBrokers, getAllCustomers, getAllOpenMemos, 
@@ -66,6 +68,7 @@ const getAvatarColorClass = (name) => {
 
 const ParcelDashboard = () => {
     document.title = "Parcel Dashboard | Premium Jewellery ERP";
+    const { caratFormat } = useCaratFormat();
 
     const {
         filterDate,
@@ -592,7 +595,7 @@ const ParcelDashboard = () => {
                                                                         </div>
                                                                         <span className="text-truncate" style={{ maxWidth: '220px' }}>{c.customer || '—'}</span>
                                                                     </td>
-                                                                    <td className="text-end text-muted">{Number(c.cts || 0).toFixed(3)}</td>
+                                                                    <td className="text-end text-muted">{formatCarat(c.cts, caratFormat)}</td>
                                                                     <td className="text-end text-success fw-bold">${Number(c.recievableUSD || c.recievableUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                                 </tr>
                                                             ))}
@@ -624,7 +627,7 @@ const ParcelDashboard = () => {
                                                                         </div>
                                                                         <span className="text-truncate" style={{ maxWidth: '220px' }}>{b.broker || '—'}</span>
                                                                     </td>
-                                                                    <td className="text-end text-muted">{Number(b.cts || 0).toFixed(3)}</td>
+                                                                    <td className="text-end text-muted">{formatCarat(b.cts, caratFormat)}</td>
                                                                     <td className="text-end text-success fw-bold">${Number(b.recievableUsd || b.recievableUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                                 </tr>
                                                             ))}
@@ -714,7 +717,7 @@ const ParcelDashboard = () => {
                                                                 </div>
                                                                 <span className="text-truncate" style={{ maxWidth: '110px' }}>{om.customer || '—'}</span>
                                                             </td>
-                                                            <td className="text-end text-muted">{Number(om.cts || 0).toFixed(3)}</td>
+                                                            <td className="text-end text-muted">{formatCarat(om.cts, caratFormat)}</td>
                                                             <td className="text-end text-success fw-bold">${Number(om.recievableUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     ))}
@@ -758,7 +761,7 @@ const ParcelDashboard = () => {
                                                                 </div>
                                                                 <span className="text-truncate" style={{ maxWidth: '110px' }}>{out.customer || '—'}</span>
                                                             </td>
-                                                            <td className="text-end text-muted">{Number(out.cts || 0).toFixed(3)}</td>
+                                                            <td className="text-end text-muted">{formatCarat(out.cts, caratFormat)}</td>
                                                             <td className="text-end text-success fw-bold">${Number(out.recievableUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     ))}
@@ -802,7 +805,7 @@ const ParcelDashboard = () => {
                                                                 </div>
                                                                 <span className="text-truncate" style={{ maxWidth: '110px' }}>{pay.customer || '—'}</span>
                                                             </td>
-                                                            <td className="text-end text-muted">{Number(pay.cts || 0).toFixed(3)}</td>
+                                                            <td className="text-end text-muted">{formatCarat(pay.cts, caratFormat)}</td>
                                                             <td className="text-end text-danger fw-bold">${Number(pay.recievableUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     ))}
@@ -999,7 +1002,7 @@ const ParcelDashboard = () => {
 
                                                             <div style={{ width: reportType === 'brokers' ? '15%' : '20%', textAlign: 'right' }}>
                                                                 <span className="badge bg-light text-body border border-light-subtle rounded px-2.5 py-1.5 fw-semibold">
-                                                                    {Number(item.cts || 0).toFixed(3)} Cts
+                                                                    {formatCarat(item.cts, caratFormat)} Cts
                                                                 </span>
                                                             </div>
 
@@ -1046,7 +1049,7 @@ const ParcelDashboard = () => {
                                             ) : (
                                                 <>
                                                     <div className="text-muted" style={{ width: reportType === 'brokers' ? '25%' : '35%' }}>Total</div>
-                                                    <div className="text-body" style={{ width: reportType === 'brokers' ? '15%' : '20%', textAlign: 'right' }}>{currentTotals.cts.toFixed(3)} Cts</div>
+                                                    <div className="text-body" style={{ width: reportType === 'brokers' ? '15%' : '20%', textAlign: 'right' }}>{formatCarat(currentTotals.cts, caratFormat)} Cts</div>
                                                     <div className="text-success" style={{ width: reportType === 'brokers' ? '15%' : '22%', textAlign: 'right' }}>${currentTotals.receivableUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                                                     <div className="text-body" style={{ width: reportType === 'brokers' ? '15%' : '23%', textAlign: 'right' }}>₹{currentTotals.receivableInr.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                                                     {reportType === 'brokers' && (

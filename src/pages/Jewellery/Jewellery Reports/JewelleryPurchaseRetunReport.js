@@ -24,6 +24,9 @@ import {
   getJewelleryPurchaseReturnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import { api } from "../../../config";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
@@ -92,7 +95,13 @@ const mapDropdownItems = (list, useNameAsValue = false) => {
 
 const JewelleryPurchaseRetunReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -468,13 +477,13 @@ const JewelleryPurchaseRetunReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "conDate", "Date", "date"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "Invno",
         accessorFn: (row) => dashText(getRowVal(row, "Invno", "invno", "InvNo", "invNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo", "billno")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno"))
@@ -486,13 +495,13 @@ const JewelleryPurchaseRetunReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "Item",
         accessorFn: (row) => dashText(getRowVal(row, "Item", "item")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Item", "item"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -500,12 +509,12 @@ const JewelleryPurchaseRetunReport = () => {
       {
         header: t("Pcs"),
         accessorKey: "Pcs",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Pcs", "pcs"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Pcs", "pcs"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Pcs", "pcs"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Pcs", "pcs"), caratFormat),
         sortingFn: numericSortFn,
         footer: ({ table }) => {
           const { parentPcs } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentPcs, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentPcs, caratFormat)}</span>;
         }
       },
       {
@@ -537,25 +546,25 @@ const JewelleryPurchaseRetunReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("Less1"),
+        header: t("Less 1"),
         accessorKey: "Less1",
         accessorFn: (row) => dashText(getRowVal(row, "Less1", "less1")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less1", "less1"))
       },
       {
-        header: t("Less2"),
+        header: t("Less 2"),
         accessorKey: "Less2",
         accessorFn: (row) => dashText(getRowVal(row, "Less2", "less2")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less2", "less2"))
       },
       {
-        header: t("Less3"),
+        header: t("Less 3"),
         accessorKey: "Less3",
         accessorFn: (row) => dashText(getRowVal(row, "Less3", "less3")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less3", "less3"))
       },
       {
-        header: t("InvType"),
+        header: t("Invoice Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
@@ -567,7 +576,7 @@ const JewelleryPurchaseRetunReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol"))
       },
       {
-        header: t("INR Rate"),
+        header: masterRateHeader,
         accessorKey: "MasterCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "MasterCurrencyRate", "masterCurrencyRate");
@@ -580,7 +589,7 @@ const JewelleryPurchaseRetunReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -591,7 +600,7 @@ const JewelleryPurchaseRetunReport = () => {
         }
       },
       {
-        header: t("USD Rate"),
+        header: stockRateHeader,
         accessorKey: "StockCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "StockCurrencyRate", "stockCurrencyRate");
@@ -604,7 +613,7 @@ const JewelleryPurchaseRetunReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -615,7 +624,7 @@ const JewelleryPurchaseRetunReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -626,24 +635,24 @@ const JewelleryPurchaseRetunReport = () => {
 
     const headers = [
       "Date",
-      "InvNo",
-      "BillNo",
+      "Inv No",
+      "Bill No",
       "Party",
-      "LotNo",
-      "ItemName",
+      "Lot No",
+      "Item Name",
       "Pcs",
       "Rate",
       "Amount",
       "Broker",
-      "Less1",
-      "Less2",
-      "Less3",
-      "InvType",
+      "Less 1",
+      "Less 2",
+      "Less 3",
+      "Invoice Type",
       "Symbol",
-      "INR Rate",
-      "INR Amount",
-      "USD Rate",
-      "USD Amount"
+      masterRateHeader,
+      masterAmtHeader,
+      stockRateHeader,
+      stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -653,7 +662,7 @@ const JewelleryPurchaseRetunReport = () => {
       dashText(getRowVal(row, "Party", "party")),
       dashText(getRowVal(row, "Item", "item")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "Pcs", "pcs"), 3),
+      formatCarat(getRowVal(row, "Pcs", "pcs"), caratFormat),
       fmtFixed(getRowVal(row, "rate", "Rate"), 2),
       fmtFixed(getRowVal(row, "amount", "Amount"), 2),
       dashText(getRowVal(row, "Broker", "broker")),
@@ -680,7 +689,7 @@ const JewelleryPurchaseRetunReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Purchase Return Report")} pageTitle={t("JewPurchase Return Reports")} />
+          <BreadCrumb title={t("Jewellery Purchase Return Report")} pageTitle={t("Jew Purchase Return Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -805,7 +814,7 @@ const JewelleryPurchaseRetunReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
-                            placeholder={t("InvNo")}
+                            placeholder={t("Inv No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -851,7 +860,7 @@ const JewelleryPurchaseRetunReport = () => {
                             options={getOptions("subType")}
                             value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))}
-                            placeholder={t("Select SubType")}
+                            placeholder={t("Select Sub Type")}
                             isLoading={loadingDropdowns}
                           />
                         </FormGroup>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -16,14 +16,16 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getSalePurchaseSummaryReport,
-  getSalePurchaseSummaryReportDropdowns,
-  getSettingData
+  getSalePurchaseSummaryReportDropdowns
 } from "../../../helpers/fakebackend_helper";
-import { getCachedReportCompany } from "../../../helpers/reportCompanyDefaults";
 
 const dashText = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -100,45 +102,45 @@ const TRN_TYPES = [
 
 const buildColumns = (masterSymbol, stockSymbol) => [
   { key: "SPDate", header: "Date", align: "left", sortType: "date" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "Invno", header: "InvNo", align: "left", altKeys: ["invno"] },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "Invno", header: "Inv No", align: "left", altKeys: ["invno"] },
   { key: "PartyName", header: "Party", align: "left", altKeys: ["partyName"] },
   { key: "Totcts", header: "Carats", align: "right", sum: true, decimals: 3, footerDecimals: 2, altKeys: ["totcts"] },
   { key: "Rate", header: "Rate", align: "right", avgRate: true, decimals: 2 },
   { key: "Totamount", header: "Amount", align: "right", sum: true, altKeys: ["totamount"] },
-  { key: "Plusminamount", header: "+/-Amt", align: "right", sum: true, altKeys: ["plusminamount"] },
-  { key: "InvAmt", header: "InvAmt", align: "right", sum: true, altKeys: ["invAmt"] },
+  { key: "Plusminamount", header: "+/- Amt", align: "right", sum: true, altKeys: ["plusminamount"] },
+  { key: "InvAmt", header: "Invoice Amount", align: "right", sum: true, altKeys: ["invAmt"] },
   {
     key: "MasterCurrencyFinalAmount",
-    header: `${masterSymbol || "INR"} Amount`,
+    header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount",
     align: "right",
     sum: true,
     altKeys: ["masterCurrencyFinalAmount"]
   },
   {
     key: "baserate",
-    header: `${stockSymbol || "USD"} Rate`,
+    header: stockSymbol ? `${stockSymbol} Rate` : "Stock Rate",
     align: "right",
     decimals: 2,
     altKeys: ["baseRate"]
   },
-  { key: "InvType", header: "InvType", align: "left", altKeys: ["invType"] },
+  { key: "InvType", header: "Invoice Type", align: "left", altKeys: ["invType"] },
   { key: "Sellername", header: "Seller", align: "left", altKeys: ["sellername"] },
   { key: "duedays", header: "Due", align: "left", altKeys: ["dueDays"] },
   { key: "Remarks", header: "Remarks", align: "left", altKeys: ["remarks"] },
-  { key: "ExpParty", header: "ExpParty", align: "left", altKeys: ["expParty"] },
+  { key: "ExpParty", header: "Exp Party", align: "left", altKeys: ["expParty"] },
   { key: "BrokerName", header: "Broker", align: "left", altKeys: ["brokerName"] },
-  { key: "Subtype", header: "SubType", align: "left", altKeys: ["subtype"] },
+  { key: "Subtype", header: "Sub Type", align: "left", altKeys: ["subtype"] },
   { key: "Status", header: "Status", align: "left", altKeys: ["status"] },
-  { key: "VatAmt", header: "VatAmount", align: "right", sum: true, altKeys: ["vatAmt"] },
+  { key: "VatAmt", header: "VAT Amount", align: "right", sum: true, altKeys: ["vatAmt"] },
   {
     key: "VatAmtMasterCur",
-    header: "VatRsAmount",
+    header: "VAT Rupees Amount",
     align: "right",
     sum: true,
     altKeys: ["vatAmtMasterCur"]
   },
-  { key: "VatPer", header: "VatPer", align: "right", decimals: 2, altKeys: ["vatPer"] }
+  { key: "VatPer", header: "VAT Percentage", align: "right", decimals: 2, altKeys: ["vatPer"] }
 ];
 
 const mapBasicOptions = (items, useNameAsValue = false) =>
@@ -156,6 +158,7 @@ const mapBasicOptions = (items, useNameAsValue = false) =>
 
 const SalePurchaseSummaryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -168,8 +171,14 @@ const SalePurchaseSummaryReport = () => {
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "Rate", direction: "asc" });
   const [trnType, setTrnType] = useState("Sale");
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [typeOptions, setTypeOptions] = useState([]);
@@ -255,44 +264,6 @@ const SalePurchaseSummaryReport = () => {
     }),
     []
   );
-
-  const loadSymbols = useCallback(async () => {
-    try {
-      const cached = getCachedReportCompany();
-      let sSym = cached.stockSymbol || "";
-      let mSym = "";
-
-      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      sSym = sSym || auth?.SSymbol || auth?.sSymbol || auth?.data?.SSymbol || "";
-      mSym = auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "";
-
-      try {
-        const settings = await getSettingData();
-        const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-        const pick = (name) => {
-          const target = String(name).toLowerCase();
-          const row = rows.find(
-            (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-          );
-          return row?.Value ?? row?.value ?? "";
-        };
-        sSym = pick("SSymbol") || sSym;
-        mSym = pick("MSymbol") || mSym;
-      } catch {
-        /* ignore */
-      }
-
-      setStockSymbol(sSym || "USD");
-      setMasterSymbol(mSym || "INR");
-    } catch {
-      setStockSymbol("USD");
-      setMasterSymbol("INR");
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSymbols();
-  }, [loadSymbols]);
 
   useEffect(() => {
     const loadDropdowns = async () => {
@@ -474,6 +445,9 @@ const SalePurchaseSummaryReport = () => {
 
   const formatCell = (row, col) => {
     const altKeys = col.altKeys || [];
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...altKeys), caratFormat);
+    }
     if (col.sum || col.avgRate || col.decimals !== undefined) {
       const decimals = col.decimals ?? 2;
       return fmtFixed(numVal(row, col.key, ...altKeys), decimals);
@@ -580,6 +554,7 @@ const SalePurchaseSummaryReport = () => {
     rows.push(
       columns.map((col, idx) => {
         if (idx === 0) return t("Total");
+        if (col.key === "Totcts") return formatCarat(totals.Totcts || 0, caratFormat);
         if (col.key === "Rate") return fmtFixed(totals.Rate, 2);
         if (col.sum) return fmtFixed(totals[col.key] || 0, col.footerDecimals ?? col.decimals ?? 2);
         return "";
@@ -618,6 +593,7 @@ const SalePurchaseSummaryReport = () => {
 
   const renderFooterCell = (col, idx) => {
     if (idx === 0) return t("Total");
+    if (col.key === "Totcts") return formatCarat(totals.Totcts || 0, caratFormat);
     if (col.key === "Rate") return fmtFixed(totals.Rate, 2);
     if (col.sum) return fmtFixed(totals[col.key] || 0, col.footerDecimals ?? col.decimals ?? 2);
     return "";
@@ -731,7 +707,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                   <Col sm={6} md={3}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("SubType")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Sub Type")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -740,7 +716,7 @@ const SalePurchaseSummaryReport = () => {
                         options={subTypeOptions}
                         value={selectedSubType}
                         onChange={setSelectedSubType}
-                        placeholder={t("Select SubType")}
+                        placeholder={t("Select Sub Type")}
                       />
                     </FormGroup>
                   </Col>
@@ -801,7 +777,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                   <Col sm={6} md={3}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("Exp.Party")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Exp. Party")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -938,7 +914,7 @@ const SalePurchaseSummaryReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>{columns.map(renderHeader)}</tr>
@@ -1006,7 +982,8 @@ const SalePurchaseSummaryReport = () => {
                   </table>
                 </div>
 
-                <Row className="align-items-center mt-3 g-2">
+                <div ref={paginationRef} className="mt-2 pt-1">
+                  <Row className="align-items-center g-2">
                   <Col sm={12} md={6}>
                     <div className="text-muted small">
                       {t("Showing")}{" "}
@@ -1055,6 +1032,7 @@ const SalePurchaseSummaryReport = () => {
                     </div>
                   </Col>
                 </Row>
+                </div>
               </CardBody>
             </Card>
           )}

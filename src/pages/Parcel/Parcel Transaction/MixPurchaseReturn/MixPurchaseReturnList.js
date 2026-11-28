@@ -18,11 +18,8 @@ import {
   deleteMixPurchaseReturn,
   getMixPurchaseReturnList
 } from "../../../../helpers/fakebackend_helper";
-import {
-  getCachedReportCompany,
-  getReportCompanySettings,
-  REPORT_COMPANY_SETTINGS_EVENT
-} from "../../../../helpers/reportCompanyDefaults";
+import useCompanyCurrencySymbols from "../../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../../Components/Hooks/useCaratFormat";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -84,8 +81,10 @@ const MixPurchaseReturnList = () => {
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [masterSymbol, setMasterSymbol] = useState("INR");
-  const [stockSymbol, setStockSymbol] = useState("USD");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const { formatCarat } = useCaratFormat();
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amt` : t("Master Amt");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amt` : t("Stock Amt");
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -93,19 +92,6 @@ const MixPurchaseReturnList = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
-  useEffect(() => {
-    const loadSymbols = async () => {
-      const company = await getReportCompanySettings({ forceRefresh: false });
-      setStockSymbol(company?.stockSymbol || getCachedReportCompany().stockSymbol || "USD");
-      const auth = JSON.parse(sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}");
-      setMasterSymbol(auth?.MSymbol || auth?.mSymbol || auth?.data?.MSymbol || "INR");
-    };
-    loadSymbols();
-    const refresh = () => setStockSymbol(getCachedReportCompany().stockSymbol || "USD");
-    window.addEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
-    return () => window.removeEventListener(REPORT_COMPANY_SETTINGS_EVENT, refresh);
-  }, []);
 
   const fetchList = async () => {
     setLoading(true);
@@ -154,19 +140,19 @@ const MixPurchaseReturnList = () => {
     }
     const headers = [
       "Invoice",
-      "BillNo",
+      "Bill No",
       "Date",
       "Print Date",
       "Party",
       "Type",
-      "SubType",
+      "Sub Type",
       "Category",
       "Carats",
       "Amount",
       "Symbol",
-      `${masterSymbol} Amt`,
-      `${stockSymbol} Amt`,
-      "DueDate",
+      masterAmtHeader,
+      stockAmtHeader,
+      "Due Date",
       "Payment Status"
     ];
     const excelRows = rows.map((r) => [
@@ -178,7 +164,7 @@ const MixPurchaseReturnList = () => {
       getVal(r, "InvType"),
       getVal(r, "Subtype"),
       getVal(r, "Category"),
-      fmtNum(getVal(r, "Weight", "Carats"), 3),
+      formatCarat(getVal(r, "Weight", "Carats")),
       fmtNum(getVal(r, "Amount")),
       getVal(r, "Symbol"),
       fmtNum(getVal(r, "MasterCurrencyAmount")),
@@ -286,7 +272,7 @@ const MixPurchaseReturnList = () => {
         cell: ({ row }) => invBadge(row.original)
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => getVal(row, "BillNo"),
         enableColumnFilter: true,
@@ -330,7 +316,7 @@ const MixPurchaseReturnList = () => {
         minWidth: "105px"
       },
       {
-        header: t("SubType"),
+        header: t("Sub Type"),
         accessorKey: "Subtype",
         accessorFn: (row) => getVal(row, "Subtype"),
         enableColumnFilter: true,
@@ -348,7 +334,7 @@ const MixPurchaseReturnList = () => {
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        accessorFn: (row) => fmtNum(getVal(row, "Weight", "Carats"), 3),
+        accessorFn: (row) => formatCarat(getVal(row, "Weight", "Carats")),
         enableColumnFilter: true,
         filterFn: customStringFilterFn,
         className: "text-end",
@@ -374,7 +360,7 @@ const MixPurchaseReturnList = () => {
         minWidth: "90px"
       },
       {
-        header: `${masterSymbol} Amt`,
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtNum(getVal(row, "MasterCurrencyAmount")),
         enableColumnFilter: true,
@@ -384,7 +370,7 @@ const MixPurchaseReturnList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: `${stockSymbol} Amt`,
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtNum(getVal(row, "StockCurrencyAmount")),
         enableColumnFilter: true,
@@ -394,7 +380,7 @@ const MixPurchaseReturnList = () => {
         cell: ({ getValue }) => <div className="text-end">{getValue()}</div>
       },
       {
-        header: t("DueDate"),
+        header: t("Due Date"),
         accessorKey: "DueDate",
         accessorFn: (row) => fmtDate(getVal(row, "DueDate")),
         enableColumnFilter: true,
@@ -414,7 +400,7 @@ const MixPurchaseReturnList = () => {
         cell: ({ row }) => statusBadge(getVal(row.original, "Status"), getVal(row.original, "per"))
       }
     ],
-    [t, masterSymbol, stockSymbol, navigate]
+    [t, masterAmtHeader, stockAmtHeader, formatCarat, navigate]
   );
 
   document.title = `${t("Mix Purchase Return List")} | ${t("Admin")}`;

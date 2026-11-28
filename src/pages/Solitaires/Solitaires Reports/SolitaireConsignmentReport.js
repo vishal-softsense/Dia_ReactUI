@@ -21,7 +21,10 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 
 import {
   getSolitaireConsignmentInDropdowns,
@@ -109,14 +112,15 @@ const getGroupedProduct = (row) => {
 };
 
 const GROUPED_SUM_COLUMNS = ["Carats", "Purchase", "Return", "Balance", "Price", "Amount"];
+const CARAT_GROUP_KEYS = new Set(["Carats", "Purchase", "Return", "Balance"]);
 const GROUPED_DECIMALS = {
-  Carats: 3,
-  Purchase: 3,
-  Return: 3,
-  Balance: 3,
   Price: 2,
   Amount: 2
 };
+const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat("solitaire")) =>
+  CARAT_GROUP_KEYS.has(key)
+    ? formatCarat(value, caratFmt)
+    : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
 const getGroupedNumeric = (row, key) => {
   const aliases = {
@@ -352,6 +356,7 @@ const getTableTotals = (table) => {
 
 const SolitaireConsignmentReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({ includeReturnDates: true });
 
@@ -710,10 +715,10 @@ const SolitaireConsignmentReport = () => {
                         <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
                         <td class="col-text">${escapeHtml(getRowVal(row, "Lotno", "lotno", "LotNo"))}</td>
                         <td class="col-product">${escapeHtml(getGroupedProduct(row))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Purchase"), GROUPED_DECIMALS.Purchase))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Return"), GROUPED_DECIMALS.Return))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Balance"), GROUPED_DECIMALS.Balance))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Carats"), "Carats", caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Purchase"), "Purchase", caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Return"), "Return", caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Balance"), "Balance", caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Price"), GROUPED_DECIMALS.Price))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Amount"), GROUPED_DECIMALS.Amount))}</td>
                     </tr>
@@ -728,7 +733,7 @@ const SolitaireConsignmentReport = () => {
                     <td></td>
                     ${GROUPED_SUM_COLUMNS.map(
                       (colKey) =>
-                        `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                        `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat))}</strong></td>`
                     ).join("")}
                 </tr>
             `;
@@ -741,7 +746,7 @@ const SolitaireConsignmentReport = () => {
                 <td></td>
                 ${GROUPED_SUM_COLUMNS.map(
                   (colKey) =>
-                    `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                    `<td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal[colKey], colKey, caratFormat))}</strong></td>`
                 ).join("")}
             </tr>
         `;
@@ -790,8 +795,8 @@ const SolitaireConsignmentReport = () => {
   };
 
   const renderGroupedValue = (row, key) => {
-    if (GROUPED_DECIMALS[key] !== undefined) {
-      return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+    if (CARAT_GROUP_KEYS.has(key) || GROUPED_DECIMALS[key] !== undefined) {
+      return formatGroupedMetric(getGroupedNumeric(row, key), key, caratFormat);
     }
     return dashText(getRowVal(row, key));
   };
@@ -971,10 +976,10 @@ const SolitaireConsignmentReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "carat-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { totalCarats } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block" style={{ background: "rgb(204,204,255)", color: "#000" }}>{fmtFixed(totalCarats, 3)}</span>;
+          return <span className="fw-bold text-end d-block" style={{ background: "rgb(204,204,255)", color: "#000" }}>{formatCarat(totalCarats, caratFormat)}</span>;
         }
       },
       {
@@ -1007,48 +1012,48 @@ const SolitaireConsignmentReport = () => {
         header: t("Return"),
         accessorKey: "Return",
         className: "rtn-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { totalReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block" style={{ background: "rgb(153,204,255)", color: "#000" }}>{fmtFixed(totalReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block" style={{ background: "rgb(153,204,255)", color: "#000" }}>{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
       {
         header: t("Purchase"),
         accessorKey: "Purchase",
         className: "pur-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Purchase", "purchase"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Purchase", "purchase"), caratFormat),
         footer: ({ table }) => {
           const { totalPurchase } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block" style={{ background: "rgb(204,255,201)", color: "#000" }}>{fmtFixed(totalPurchase, 3)}</span>;
+          return <span className="fw-bold text-end d-block" style={{ background: "rgb(204,255,201)", color: "#000" }}>{formatCarat(totalPurchase, caratFormat)}</span>;
         }
       },
       {
         header: t("MemoOut"),
         accessorKey: "MemoOut",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "MemoOut", "memoOut"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "MemoOut", "memoOut"), caratFormat),
         footer: ({ table }) => {
           const { totalMemoOut } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalMemoOut, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalMemoOut, caratFormat)}</span>;
         }
       },
       {
         header: t("Sale"),
         accessorKey: "Sale",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Sale", "sale"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Sale", "sale"), caratFormat),
         footer: ({ table }) => {
           const { totalSale } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalSale, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalSale, caratFormat)}</span>;
         }
       },
       {
         header: t("Balance"),
         accessorKey: "Balance",
         className: "bal-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Balance", "balance"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Balance", "balance"), caratFormat),
         footer: ({ table }) => {
           const { totalBalance } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block" style={{ background: "rgb(255,204,153)", color: "#000" }}>{fmtFixed(totalBalance, 3)}</span>;
+          return <span className="fw-bold text-end d-block" style={{ background: "rgb(255,204,153)", color: "#000" }}>{formatCarat(totalBalance, caratFormat)}</span>;
         }
       },
       {
@@ -1079,7 +1084,7 @@ const SolitaireConsignmentReport = () => {
       { header: t("MemoReturnDate"), accessorKey: "MemoReturnDate", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnDate", "memoReturnDate")) },
       { header: t("MemoReturnTime"), accessorKey: "MemoReturnTime", cell: ({ row }) => row.original.isParent ? "" : dashText(getRowVal(row.original, "MemoReturnTime", "memoReturnTime")) }
     ],
-    [expandedMemoNos, t]
+    [expandedMemoNos, t, caratFormat]
   );
 
   const summaryColumns = useMemo(
@@ -1088,40 +1093,40 @@ const SolitaireConsignmentReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "carat-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat)
       },
       {
         header: t("ReturnCarat"),
         accessorKey: "ReturnCrt",
         className: "rtn-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "ReturnCrt", "returnCrt"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "ReturnCrt", "returnCrt"), caratFormat)
       },
       {
         header: t("PurCarat"),
         accessorKey: "PurCrt",
         className: "pur-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "PurCrt", "purCrt"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "PurCrt", "purCrt"), caratFormat)
       },
       {
         header: t("OnMemoCarat"),
         accessorKey: "OnmemoCrt",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "OnmemoCrt", "onmemoCrt"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "OnmemoCrt", "onmemoCrt"), caratFormat)
       },
       {
         header: t("SoldCarat"),
         accessorKey: "SoldCrt",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "SoldCrt", "soldCrt"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "SoldCrt", "soldCrt"), caratFormat)
       },
       {
         header: t("OnHandCarat"),
         accessorKey: "OnHandCrt",
         className: "bal-col text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "OnHandCrt", "onHandCrt"), 3)
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "OnHandCrt", "onHandCrt"), caratFormat)
       }
     ],
-    [t]
+    [t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -1132,12 +1137,12 @@ const SolitaireConsignmentReport = () => {
       }
       const headers = ["Carats", "ReturnCarat", "PurCarat", "OnMemoCarat", "SoldCarat", "OnHandCarat"];
       const rows = summaryRows.map((r) => [
-        fmtFixed(r.Carats || r.carats, 3),
-        fmtFixed(r.ReturnCrt || r.returnCrt, 3),
-        fmtFixed(r.PurCrt || r.purCrt, 3),
-        fmtFixed(r.OnmemoCrt || r.onmemoCrt, 3),
-        fmtFixed(r.SoldCrt || r.soldCrt, 3),
-        fmtFixed(r.OnHandCrt || r.onHandCrt, 3)
+        formatCarat(r.Carats ?? r.carats, caratFormat),
+        formatCarat(r.ReturnCrt ?? r.returnCrt, caratFormat),
+        formatCarat(r.PurCrt ?? r.purCrt, caratFormat),
+        formatCarat(r.OnmemoCrt ?? r.onmemoCrt, caratFormat),
+        formatCarat(r.SoldCrt ?? r.soldCrt, caratFormat),
+        formatCarat(r.OnHandCrt ?? r.onHandCrt, caratFormat)
       ]);
       const res = await exportToExcel(headers, rows, "ConsignmentSummaryReport", "ConsignmentSummaryReport");
       if (!res?.success) toast.error(t("Excel export failed."));
@@ -1166,15 +1171,15 @@ const SolitaireConsignmentReport = () => {
       dashText(r.ShapeId || r.shapeId),
       dashText(r.ColorId || r.colorId),
       dashText(r.ClarityId || r.clarityId),
-      fmtFixed(r.Carats || r.carats, 3),
+      formatCarat(r.Carats ?? r.carats, caratFormat),
       fmtFixed(r.Price || r.price, 2),
       fmtFixed(r.Amount || r.amount, 2),
       dashText(r.Status || r.status),
-      fmtFixed(r.Return || r.return, 3),
-      fmtFixed(r.Purchase || r.purchase, 3),
-      fmtFixed(r.MemoOut || r.memoOut, 3),
-      fmtFixed(r.Sale || r.sale, 3),
-      fmtFixed(r.Balance || r.balance, 3),
+      formatCarat(r.Return ?? r.return, caratFormat),
+      formatCarat(r.Purchase ?? r.purchase, caratFormat),
+      formatCarat(r.MemoOut ?? r.memoOut, caratFormat),
+      formatCarat(r.Sale ?? r.sale, caratFormat),
+      formatCarat(r.Balance ?? r.balance, caratFormat),
       fmtFixed(r.BalanceAmt || r.balanceAmt, 2),
       dashText(r.Broker || r.broker),
       dashText(r.IssUser || r.issUser),
@@ -1694,7 +1699,7 @@ const SolitaireConsignmentReport = () => {
                 {groupedReportData.sections.length === 0 ? (
                   <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div className="table-responsive consignment-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive consignment-grouped-table-wrap">
                     <table className="table table-bordered align-middle mb-0" id="dynamic-consignment-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
                       <colgroup>
                         <col style={{ width: "48px" }} />
@@ -1786,7 +1791,7 @@ const SolitaireConsignmentReport = () => {
                               <td />
                               {GROUPED_SUM_COLUMNS.map((colKey) => (
                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                  <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                  <strong>{formatGroupedMetric(section.subtotal[colKey], colKey, caratFormat)}</strong>
                                 </td>
                               ))}
                             </tr>
@@ -1801,13 +1806,13 @@ const SolitaireConsignmentReport = () => {
                           <td />
                           {GROUPED_SUM_COLUMNS.map((colKey) => (
                             <td key={`grand-${colKey}`} className="text-end">
-                              <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                              <strong>{formatGroupedMetric(groupedReportData.grandTotal[colKey], colKey, caratFormat)}</strong>
                             </td>
                           ))}
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
                 )}
 
                 {companyInfo?.companyFooter ? (

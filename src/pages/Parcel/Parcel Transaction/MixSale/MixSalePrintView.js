@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, Container } from "reactstrap";
@@ -70,7 +70,7 @@ const MixSalePrintView = () => {
       wt += Number(getVal(it, "Carats", "carats", "Weight", "weight")) || 0;
       tdc += Number(getVal(it, "TotalDiamondCarat", "totalDiamondCarat")) || 0;
       amount +=
-        Number(getVal(it, "MasterCurrencyAmount", "masterCurrencyAmount", "Amount", "amount")) || 0;
+        Number(getVal(it, "Amount", "amount", "MasterCurrencyAmount", "masterCurrencyAmount")) || 0;
     });
     return { qty, wt, tdc, amount };
   }, [items]);

@@ -39,12 +39,21 @@ import {
   getMixPurchaseMixLotNoDI,
   importMixPurchaseExcel
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
+import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCaratDecimals
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -169,10 +178,10 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "clarity", label: "Clarity" },
   { key: "sieve", label: "Sieve" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
-  { key: "issueCarats", label: "IssueCarats", align: "end", decimals: 3 },
+  { key: "issueCarats", label: "IssueCarats", align: "end", isCarat: true },
   { key: "back", label: "Rejection %", align: "end", decimals: 2 },
-  { key: "rtnCarats", label: "Rejection", align: "end", decimals: 3 },
-  { key: "weight", label: "Carats", align: "end", decimals: 3, footer: "weight" },
+  { key: "rtnCarats", label: "Rejection", align: "end", isCarat: true, footer: "rejection" },
+  { key: "weight", label: "Carats", align: "end", isCarat: true, footer: "weight" },
   { key: "rate", label: "PurchaseRate", align: "end", decimals: 2, footer: "avgRate" },
   { key: "amount", label: "PurchaseAmount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "suppLotNo", label: "Supply Lot Number" },
@@ -183,6 +192,8 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "rmk", label: "RMK" },
   { key: "memoTransCode", label: "MemoTransCode", align: "end" },
   { key: "stockType", label: "StockType" },
+  { key: "rtnCts", label: "RtnCts", align: "end", isCarat: true, footer: "rtnCts" },
+  { key: "status", label: "Status" },
   { key: "invDescription", label: "ItemDescription" }
 ];
 
@@ -274,13 +285,21 @@ const mapItemFromApi = (r, idx) => {
     if (first) lotNo = first;
   }
 
+  const issueRaw = getNumVal(r, "IssueCarats");
+  const selection = getNumVal(r, "Weight", "Carats");
+  const derivedRejection =
+    issueRaw > selection ? truncateCaratNumber(issueRaw - selection) : 0;
+  const storedReturn = getNumVal(r, "RtnCts", "ReturnCarats", "RtnCarats");
+  const isRejectionInReturnCol =
+    derivedRejection > 0 && Math.abs(storedReturn - derivedRejection) < 0.0005;
+
   return {
     rowId: getStrVal(r, "rowId", "RowId") || nextRowId(),
     srNo: idx + 1,
     lotNo,
     itemName: getStrVal(r, "ItemName"),
-    weight: getNumVal(r, "Weight", "Carats"),
-    issueCarats: getNumVal(r, "IssueCarats") || getNumVal(r, "Weight", "Carats"),
+    weight: selection,
+    issueCarats: issueRaw || selection,
     // Keep lot Pcs as-is (parcel lots often 0 — do not coerce with || 1)
     pcs: getNumVal(r, "Pcs"),
     mrp: getNumVal(r, "MRP", "PurchaseMRP"),
@@ -304,7 +323,16 @@ const mapItemFromApi = (r, idx) => {
     stoneType: getStrVal(r, "StoneType"),
     rmk: getStrVal(r, "RMK", "MemberRemarks"),
     memoTransCode: getNumVal(r, "MemoTransCode", "memoTransCode", "MemoTranCode", "memoTranCode", "MemoTrnCode"),
-    rtnCarats: getNumVal(r, "RtnCarats", "ReturnCarats"),
+    rtnCarats: derivedRejection > 0
+      ? derivedRejection
+      : (issueRaw > 0 && issueRaw === selection ? 0 : getNumVal(r, "RtnCarats", "ReturnCarats")),
+    rtnCts: (() => {
+      if (isRejectionInReturnCol) return 0;
+      if (derivedRejection > 0 && storedReturn > derivedRejection) {
+        return truncateCaratNumber(storedReturn - derivedRejection);
+      }
+      return storedReturn || 0;
+    })(),
     status: getStrVal(r, "Status", "status")
   };
 };
@@ -455,7 +483,9 @@ const emptyItem = () => ({
   rmk: "",
   memoTransCode: "",
   // MVC Clearall: $('#Reje').val("") — clear REJECTION after Add Item
-  rtnCarats: ""
+  rtnCarats: "",
+  rtnCts: 0,
+  status: ""
 });
 
 const pickNonEmpty = (primary, fallback) => {
@@ -532,22 +562,28 @@ const mergeEntryWithFallback = (apiEntry, fallbackEntry) => {
   };
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
-    if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
-    return fmt(v, col.decimals);
+    return fmt(toNum(v, 0), col.decimals);
   }
   if (typeof v === "number") return v === 0 ? "0" : String(v);
   return v ?? "";
 };
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
+    case "rejection":
+      return formatCarat(itemRows.reduce((s, r) => s + toNum(r.rtnCarats), 0), caratFormat);
+    case "rtnCts":
+      return formatCarat(itemRows.reduce((s, r) => s + toNum(r.rtnCts), 0), caratFormat);
     case "avgMrp":
       return fmt(totals.avgMrp, 2);
     case "avgBack":
@@ -599,7 +635,7 @@ const roundN = (n, d) => {
  * Selection  -> RejeP = 100 - (100 * Selection / Issue) ; Rejection = Issue * RejeP / 100
  * (back = RejeP / PurchaseBack, rtnCarats = Rejection, weight = SelectionCarat)
  */
-const syncRejectionFields = (next, changedKey) => {
+const syncRejectionFields = (next, changedKey, caratFormat) => {
   const issueCarats = toNum(next.issueCarats);
   const rejPRaw = toNum(next.back);
   const rejectionRaw = toNum(next.rtnCarats);
@@ -625,8 +661,8 @@ const syncRejectionFields = (next, changedKey) => {
   return {
     ...next,
     back: changedKey === "back" ? next.back : roundN(rejP, 2),
-    rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : roundN(rejection, 3),
-    weight: changedKey === "weight" ? next.weight : roundN(selectionCarats, 3)
+    rtnCarats: changedKey === "rtnCarats" ? next.rtnCarats : String(truncateCaratNumber(rejection, caratFormat)),
+    weight: changedKey === "weight" ? next.weight : String(truncateCaratNumber(selectionCarats, caratFormat))
   };
 };
 
@@ -784,10 +820,20 @@ const MixPurchaseForm = ({ mode = "add" }) => {
     return () => window.clearTimeout(timer);
   }, [lotFocusToken, focusLotNoField]);
 
+  const { caratFormat } = useCaratFormat();
   const [mOp, setMOp] = useState("*");
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [lotCheck, setLotCheck] = useState(false);
 
@@ -1281,6 +1327,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   }, [isEdit, editId]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   useEffect(() => {
     const days = toNum(header.dueDays, 0);
@@ -1306,14 +1353,17 @@ const MixPurchaseForm = ({ mode = "add" }) => {
   };
 
   const onEntryChange = (key, value) => {
+    const cleanVal = ["issueCarats", "rtnCarats", "weight"].includes(key)
+      ? sanitizeCaratInput(value, caratFormat)
+      : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       // Stock currency rate for $Rate (MVC Calculate uses SBaseRate)
       const sRateBase = toNum(header.sBaseRate, 1) || toNum(header.baseRate, 1) || 1;
 
       // MVC: IssueCarats / RejeP / Rejection / SelectionCarat linked calculations
       if (["issueCarats", "back", "rtnCarats", "weight"].includes(key)) {
-        next = syncRejectionFields(next, key);
+        next = syncRejectionFields(next, key, caratFormat);
       }
 
       // MVC Calculate(): Rate -> $Rate = Rate / SBaseRate; Amount from Selection * Rate
@@ -1413,8 +1463,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       rowId: editIndex >= 0 && entry.rowId ? entry.rowId : nextRowId(),
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
-      issueCarats: Math.round(issueCarats * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
+      issueCarats: truncateCaratNumber(issueCarats, caratFormat),
       pcs: toNum(entry.pcs, 1),
       mrp,
       back: Math.round(back * 100) / 100,
@@ -1426,7 +1476,9 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       sieve: entry.sieve || "",
       stockType: entry.stockType || "Diamond",
       memoTransCode: toNum(entry.memoTransCode),
-      rtnCarats: Math.round(rtnCarats * 1000) / 1000
+      rtnCarats: truncateCaratNumber(rtnCarats, caratFormat),
+      rtnCts: toNum(entry.rtnCts, 0),
+      status: entry.status || ""
     };
 
     // Commit table + clear entry before focusing LotNo (MVC runs focus/open after AddItem work)
@@ -1484,7 +1536,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       totMrp,
       totWithoutLess,
@@ -1492,7 +1544,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const deci = Math.min(4, Math.max(0, toNum(header.decimalPlaces, 2)));
@@ -1607,8 +1659,11 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
+      RtnCarats: toNum(r.rtnCts),
+      ReturnCarats: toNum(r.rtnCts),
+      RtnCts: toNum(r.rtnCts),
+      Status: r.status || "",
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
@@ -1757,7 +1812,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
         }
         let balance = total - purchase;
         if (balance < 0) balance = 0;
-        return { ...x, purchase: purchaseRaw, balCts: Math.round(balance * 1000) / 1000 };
+        return { ...x, purchase: purchaseRaw, balCts: truncateCaratNumber(balance, caratFormat) };
       })
     );
   };
@@ -1782,14 +1837,14 @@ const MixPurchaseForm = ({ mode = "add" }) => {
             ...x,
             selected: true,
             purchase,
-            balCts: Math.round(bal * 1000) / 1000
+            balCts: truncateCaratNumber(bal, caratFormat)
           };
         }
         return {
           ...x,
           selected: false,
           purchase: 0,
-          balCts: Math.round(toNum(x.cts) * 1000) / 1000
+          balCts: truncateCaratNumber(toNum(x.cts), caratFormat)
         };
       })
     );
@@ -1888,7 +1943,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
         sieve,
         stockType: rowStockType,
         memoTransCode: toNum(r.memoTransCode),
-        rtnCarats: toNum(r.rtn),
+        rtnCarats: 0,
+        rtnCts: toNum(r.rtn),
         invDescription,
         status: "Purchase"
       });
@@ -1982,8 +2038,11 @@ const MixPurchaseForm = ({ mode = "add" }) => {
       Less2: toNum(r.less2),
       Less3: toNum(r.less3),
       MemoTransCode: toNum(r.memoTransCode),
-      RtnCarats: toNum(r.rtnCarats),
-      ReturnCarats: toNum(r.rtnCarats),
+      // rtnCarats is rejection (issue − selection). Return carats are only an explicit return.
+      RtnCarats: toNum(r.rtnCts),
+      ReturnCarats: toNum(r.rtnCts),
+      RtnCts: toNum(r.rtnCts),
+      Status: r.status || "",
       StockType: r.stockType || "Diamond",
       InvDescription: r.invDescription || "",
       SuppLotNo: r.suppLotNo || "",
@@ -2267,7 +2326,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOpts}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                             }}
@@ -2815,7 +2874,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("ISSUE CARATS")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.issueCarats}
@@ -2839,7 +2899,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("REJECTION")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.rtnCarats}
@@ -2851,7 +2912,8 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           <FormGroup className="mb-2 mb-sm-0">
                             <Label className="form-label mb-1 text-uppercase fw-semibold" style={{ fontSize: "11px" }}>{t("SELECTED CARAT")}</Label>
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               className="form-control-sm"
                               style={fieldH}
                               value={entry.weight}
@@ -3027,7 +3089,19 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                                     className={col.align === "end" ? "text-end" : ""}
                                     style={{ ...rowStyle, whiteSpace: "nowrap" }}
                                   >
-                                    {renderItemCell(r, col)}
+                                    {col.key === "lotNo" ? (
+                                      <span
+                                        role="button"
+                                        className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => handleOpenStockHistory(r.lotNo)}
+                                        title={t("View Stock History")}
+                                      >
+                                        {r.lotNo}
+                                      </span>
+                                    ) : (
+                                      renderItemCell(r, col, caratFormat)
+                                    )}
                                   </td>
                                 ))}
                               </tr>
@@ -3043,7 +3117,7 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
                                 >
-                                  {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                  {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                                 </td>
                               ))}
                             </tr>
@@ -3152,7 +3226,17 @@ const MixPurchaseForm = ({ mode = "add" }) => {
                           </td>
                           <td>{r.date}</td>
                           <td>{r.memoNo}</td>
-                          <td>{r.lotNo}</td>
+                          <td>
+                            <span
+                              role="button"
+                              className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => handleOpenStockHistory(r.lotNo)}
+                              title={t("View Stock History")}
+                            >
+                              {r.lotNo}
+                            </span>
+                          </td>
                           <td className="text-end">{fmt(r.cts, 2)}</td>
                           <td>
                             <Input
@@ -3530,6 +3614,13 @@ const MixPurchaseForm = ({ mode = "add" }) => {
             </Button>
           </ModalFooter>
         </Modal>
+
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={true}
+        />
 
         <ToastContainer autoClose={2000} />
       </div>

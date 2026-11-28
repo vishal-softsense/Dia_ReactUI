@@ -17,7 +17,10 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getJewelleryPurchaseReport,
@@ -30,6 +33,7 @@ import {
   resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 import { api } from "../../../config";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
@@ -138,11 +142,14 @@ const getTableTotals = (table) => {
 const getRowDueDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "conDate", "Date", "date");
 
 const GROUPED_SUM_COLUMNS = ["Carats", "Return", "Amount"];
+const CARAT_GROUP_KEYS = new Set(["Carats", "Return"]);
 const GROUPED_DECIMALS = {
-  Carats: 3,
-  Return: 2,
   Amount: 2
 };
+const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat()) =>
+  CARAT_GROUP_KEYS.has(key)
+    ? formatCarat(value, caratFmt)
+    : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
 const getGroupedNumeric = (row, key) => {
   const aliases = {
@@ -366,7 +373,13 @@ const mapDropdownItems = (list, useNameAsValue = false) => {
 
 const JewelleryPurchaseReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -403,8 +416,8 @@ const JewelleryPurchaseReport = () => {
 
   const groupByOptions = useMemo(
     () => [
-      { value: "InvNo", label: t("Group by InvNo") },
-      { value: "PartyName", label: t("Group by PartyName") }
+      { value: "InvNo", label: t("Group by Inv No") },
+      { value: "PartyName", label: t("Group by Party Name") }
     ],
     [t]
   );
@@ -649,7 +662,7 @@ const JewelleryPurchaseReport = () => {
           </div>
         </div>
         <div>
-          <div class="report-title">JewPurchase Report</div>
+          <div class="report-title">Jew Purchase Report</div>
           <div id="report-date-range">
             <div><strong>${escapeHtml(t("From"))}:</strong> ${escapeHtml(filters.fromDate)}</div>
             <div><strong>${escapeHtml(t("To"))}:</strong> ${escapeHtml(filters.toDate)}</div>
@@ -673,8 +686,8 @@ const JewelleryPurchaseReport = () => {
             <td class="col-text">${escapeHtml(row._srNo ?? "")}</td>
             <td class="col-text">${escapeHtml(getGroupedInvNo(row))}</td>
             <td class="col-product">${escapeHtml(getGroupedProduct(row))}</td>
-            <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
-            <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Return"), GROUPED_DECIMALS.Return))}</td>
+            <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Carats"), "Carats", caratFormat))}</td>
+            <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Return"), "Return", caratFormat))}</td>
             <td class="col-num">${escapeHtml(fmtFixed(getRowVal(row, "rate", "Rate"), 2))}</td>
             <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Amount"), GROUPED_DECIMALS.Amount))}</td>
           </tr>
@@ -686,8 +699,8 @@ const JewelleryPurchaseReport = () => {
         <tr class="subtotal">
           <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
           <td></td>
-          <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-          <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Return, GROUPED_DECIMALS.Return))}</strong></td>
+          <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat))}</strong></td>
+          <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.Return, "Return", caratFormat))}</strong></td>
           <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(section.subtotal), 2))}</strong></td>
           <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
         </tr>
@@ -698,8 +711,8 @@ const JewelleryPurchaseReport = () => {
       <tr class="grand-total">
         <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
         <td></td>
-        <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-        <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Return, GROUPED_DECIMALS.Return))}</strong></td>
+        <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.Carats, "Carats", caratFormat))}</strong></td>
+        <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.Return, "Return", caratFormat))}</strong></td>
         <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(grandTotal), 2))}</strong></td>
         <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
       </tr>
@@ -713,7 +726,7 @@ const JewelleryPurchaseReport = () => {
         <thead>
           <tr>
             <th>Sr No</th>
-            <th>Invno</th>
+            <th>Inv No</th>
             <th>Product</th>
             <th>Carats</th>
             <th>Return</th>
@@ -745,8 +758,8 @@ const JewelleryPurchaseReport = () => {
   };
 
   const renderGroupedValue = (row, key) => {
-    if (GROUPED_DECIMALS[key] !== undefined) {
-      return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+    if (CARAT_GROUP_KEYS.has(key) || GROUPED_DECIMALS[key] !== undefined) {
+      return formatGroupedMetric(getGroupedNumeric(row, key), key, caratFormat);
     }
     return dashText(getRowVal(row, "rate", "Rate"));
   };
@@ -932,13 +945,13 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "conDate", "Date", "date"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "Invno",
         accessorFn: (row) => dashText(getRowVal(row, "Invno", "invno", "InvNo", "invNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo", "billno")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno"))
@@ -950,13 +963,13 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "Item",
         accessorFn: (row) => dashText(getRowVal(row, "Item", "item")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Item", "item"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -964,12 +977,12 @@ const JewelleryPurchaseReport = () => {
       {
         header: t("Pcs"),
         accessorKey: "Pcs",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Pcs", "pcs"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Pcs", "pcs"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Pcs", "pcs"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Pcs", "pcs"), caratFormat),
         sortingFn: numericSortFn,
         footer: ({ table }) => {
           const { parentPcs } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentPcs, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentPcs, caratFormat)}</span>;
         }
       },
       {
@@ -1001,25 +1014,25 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("Less1"),
+        header: t("Less 1"),
         accessorKey: "Less1",
         accessorFn: (row) => dashText(getRowVal(row, "Less1", "less1")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less1", "less1"))
       },
       {
-        header: t("Less2"),
+        header: t("Less 2"),
         accessorKey: "Less2",
         accessorFn: (row) => dashText(getRowVal(row, "Less2", "less2")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less2", "less2"))
       },
       {
-        header: t("Less3"),
+        header: t("Less 3"),
         accessorKey: "Less3",
         accessorFn: (row) => dashText(getRowVal(row, "Less3", "less3")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less3", "less3"))
       },
       {
-        header: t("InvType"),
+        header: t("Invoice Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
@@ -1031,7 +1044,7 @@ const JewelleryPurchaseReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol"))
       },
       {
-        header: t("INR Rate"),
+        header: masterRateHeader,
         accessorKey: "MasterCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "MasterCurrencyRate", "masterCurrencyRate");
@@ -1044,7 +1057,7 @@ const JewelleryPurchaseReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -1055,7 +1068,7 @@ const JewelleryPurchaseReport = () => {
         }
       },
       {
-        header: t("USD Rate"),
+        header: stockRateHeader,
         accessorKey: "StockCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "StockCurrencyRate", "stockCurrencyRate");
@@ -1068,7 +1081,7 @@ const JewelleryPurchaseReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -1079,7 +1092,7 @@ const JewelleryPurchaseReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -1090,24 +1103,24 @@ const JewelleryPurchaseReport = () => {
 
     const headers = [
       "Date",
-      "InvNo",
-      "BillNo",
+      "Inv No",
+      "Bill No",
       "Party",
-      "LotNo",
-      "ItemName",
+      "Lot No",
+      "Item Name",
       "Pcs",
       "Rate",
       "Amount",
       "Broker",
-      "Less1",
-      "Less2",
-      "Less3",
-      "InvType",
+      "Less 1",
+      "Less 2",
+      "Less 3",
+      "Invoice Type",
       "Symbol",
-      "INR Rate",
-      "INR Amount",
-      "USD Rate",
-      "USD Amount"
+      masterRateHeader,
+      masterAmtHeader,
+      stockRateHeader,
+      stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -1117,7 +1130,7 @@ const JewelleryPurchaseReport = () => {
       dashText(getRowVal(row, "Party", "party")),
       dashText(getRowVal(row, "Item", "item")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "Pcs", "pcs"), 3),
+      formatCarat(getRowVal(row, "Pcs", "pcs"), caratFormat),
       fmtFixed(getRowVal(row, "rate", "Rate"), 2),
       fmtFixed(getRowVal(row, "amount", "Amount"), 2),
       dashText(getRowVal(row, "Broker", "broker")),
@@ -1144,7 +1157,7 @@ const JewelleryPurchaseReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Purchase Report")} pageTitle={t("JewPurchase Reports")} />
+          <BreadCrumb title={t("Jewellery Purchase Report")} pageTitle={t("Jew Purchase Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -1286,7 +1299,7 @@ const JewelleryPurchaseReport = () => {
                             className="form-control form-control-sm"
                             style={{ height: "35px" }}
                             value={filters.invNo}
-                            placeholder={t("InvNo")}
+                            placeholder={t("Inv No")}
                             onChange={(e) => setFilters((prev) => ({ ...prev, invNo: e.target.value }))}
                           />
                         </FormGroup>
@@ -1332,7 +1345,7 @@ const JewelleryPurchaseReport = () => {
                             options={getOptions("subType")}
                             value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                             onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))}
-                            placeholder={t("Select SubType")}
+                            placeholder={t("Select Sub Type")}
                             isLoading={loadingDropdowns}
                           />
                         </FormGroup>
@@ -1468,7 +1481,7 @@ const JewelleryPurchaseReport = () => {
                       </div>
                     </div>
                     <div className="col-sm-2 text-end pt-2">
-                      <div className="fs-5 fw-bold">JewPurchase Report</div>
+                      <div className="fs-5 fw-bold">Jew Purchase Report</div>
                       <div className="small text-muted">
                         <div>
                           <strong>{t("From")}:</strong> {filters.fromDate}
@@ -1484,7 +1497,7 @@ const JewelleryPurchaseReport = () => {
                 {groupedReportData.sections.length === 0 ? (
                   <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                 ) : (
-                  <div className="table-responsive jew-purchase-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive jew-purchase-grouped-table-wrap">
                     <table className="table table-bordered align-middle mb-0" id="dynamic-jew-purchase-report-table" style={{ tableLayout: "fixed", minWidth: "920px" }}>
                       <colgroup>
                         <col style={{ width: "48px" }} />
@@ -1500,7 +1513,7 @@ const JewelleryPurchaseReport = () => {
                         <tr className="table-light text-center">
                           <th>{t("View")}</th>
                           <th>Sr No</th>
-                          <th>Invno</th>
+                          <th>Inv No</th>
                           <th>Product</th>
                           <th className="text-end">Carats</th>
                           <th className="text-end">Return</th>
@@ -1548,10 +1561,10 @@ const JewelleryPurchaseReport = () => {
                               </td>
                               <td />
                               <td className="text-end">
-                                <strong>{fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                                <strong>{formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat)}</strong>
                               </td>
                               <td className="text-end">
-                                <strong>{fmtFixed(section.subtotal.Return, GROUPED_DECIMALS.Return)}</strong>
+                                <strong>{formatGroupedMetric(section.subtotal.Return, "Return", caratFormat)}</strong>
                               </td>
                               <td className="text-end">
                                 <strong>{fmtFixed(calcGroupedAvgRate(section.subtotal), 2)}</strong>
@@ -1569,10 +1582,10 @@ const JewelleryPurchaseReport = () => {
                           </td>
                           <td />
                           <td className="text-end">
-                            <strong>{fmtFixed(groupedReportData.grandTotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                            <strong>{formatGroupedMetric(groupedReportData.grandTotal.Carats, "Carats", caratFormat)}</strong>
                           </td>
                           <td className="text-end">
-                            <strong>{fmtFixed(groupedReportData.grandTotal.Return, GROUPED_DECIMALS.Return)}</strong>
+                            <strong>{formatGroupedMetric(groupedReportData.grandTotal.Return, "Return", caratFormat)}</strong>
                           </td>
                           <td className="text-end">
                             <strong>{fmtFixed(calcGroupedAvgRate(groupedReportData.grandTotal), 2)}</strong>
@@ -1583,7 +1596,7 @@ const JewelleryPurchaseReport = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
                 )}
 
                 {companyInfo?.companyFooter ? (

@@ -31,6 +31,8 @@ import {
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import { formatCarat } from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const getVal = (row, ...keys) => {
   if (!row) return "";
@@ -128,6 +130,7 @@ const mapCurrency = (list = []) =>
 
 const PayWithExDiffForm = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -474,7 +477,7 @@ const PayWithExDiffForm = () => {
     SOp: sOp || "*",
     adjinramount: pendingRows.reduce((s, r) => s + toNum(r.AdINRCurAmt), 0),
     adjusdTotalAmt: pendingRows.reduce((s, r) => s + toNum(r.AdUSDAmount), 0),
-    TotalExDiff: pendingRows.reduce((s, r) => s + toNum(r.ExDiffINR), 0),
+    TotalExDiff: Number(pendingRows.reduce((s, r) => s + toNum(r.ExDiffINR), 0).toFixed(2)),
     PayType: form.payType || "Payment",
     Lines: pendingRows
       .filter((r) => toNum(r.AdUSDAmount) > 0 || toNum(r.AdINRCurAmt) > 0 || toNum(r.ExDiffINR) !== 0)
@@ -832,7 +835,7 @@ const PayWithExDiffForm = () => {
                         <Input
                           className="form-control-sm text-end"
                           style={{ color: "cornflowerblue", ...fieldH, minWidth: 80 }}
-                          value={gridMode ? fmtNum(totals.carats, 3) : ""}
+                          value={gridMode ? formatCarat(totals.carats, caratFormat) : ""}
                           readOnly
                           id="CaratTotal"
                         />
@@ -960,7 +963,7 @@ const PayWithExDiffForm = () => {
                           <td>{getVal(row, "InvNo", "invNo")}</td>
                           <td className="text-nowrap">{fmtDate(getVal(row, "DueDate", "dueDate"))}</td>
                           <td>{getVal(row, "BillNo", "billNo")}</td>
-                          <td className="text-end">{fmtNum(getVal(row, "TotCts", "totCts"), 3)}</td>
+                          <td className="text-end">{formatCarat(getVal(row, "TotCts", "totCts"), caratFormat)}</td>
                           <td>{getVal(row, "Symbol", "symbol")}</td>
                           <td>
                             <Input

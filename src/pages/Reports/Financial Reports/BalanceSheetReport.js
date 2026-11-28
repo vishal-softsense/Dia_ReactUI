@@ -19,11 +19,11 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getBalanceSheetReport,
     getBalanceSheetReportPermission,
-    getLedgerReportList1,
-    getSettingData
+    getLedgerReportList1
 } from "../../../helpers/fakebackend_helper";
 import {
     getCachedReportCompany,
@@ -323,6 +323,7 @@ const buildBalanceSheetPrintHtml = ({
 const BalanceSheetReport = () => {
     const { t } = useTranslation();
     const tableRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { toDate: settingToDate, getDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -330,10 +331,14 @@ const BalanceSheetReport = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [showReport, setShowReport] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: showReport,
+        deps: [showReport, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
-    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "USD");
-    const [masterSymbol, setMasterSymbol] = useState("INR");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
 
     const [toDate, setToDate] = useState(settingToDate);
     const [calType, setCalType] = useState("Purchase Rate");
@@ -353,11 +358,11 @@ const BalanceSheetReport = () => {
     const columns = useMemo(
         () => [
             { header: "Account Name", key: "LAccGrpName" },
-            { header: `${masterSymbol} Amount`, key: "LMBalAmt" },
-            { header: `${stockSymbol} Amount`, key: "LSBalAmt" },
+            { header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount", key: "LMBalAmt" },
+            { header: stockSymbol ? `${stockSymbol} Amount` : "Stock Amount", key: "LSBalAmt" },
             { header: "Account Name", key: "AAccGrpName" },
-            { header: `${masterSymbol} Amount`, key: "AMBalAmt" },
-            { header: `${stockSymbol} Amount`, key: "ASBalAmt" }
+            { header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount", key: "AMBalAmt" },
+            { header: stockSymbol ? `${stockSymbol} Amount` : "Stock Amount", key: "ASBalAmt" }
         ],
         [masterSymbol, stockSymbol]
     );
@@ -367,11 +372,11 @@ const BalanceSheetReport = () => {
             { header: "JV Date", key: "JVDate" },
             { header: "Type", key: "VType" },
             { header: "Description", key: "Account" },
-            { header: `D ${stockSymbol} Amt.`, key: "StockDebit" },
-            { header: `C ${stockSymbol} Amt.`, key: "StockCredit" },
+            { header: `D ${stockSymbol || "Stock"} Amt.`, key: "StockDebit" },
+            { header: `C ${stockSymbol || "Stock"} Amt.`, key: "StockCredit" },
             { header: "CL Balance", key: "StockFinalAmount" },
-            { header: `D ${masterSymbol} Amt.`, key: "MasterDebit" },
-            { header: `C ${masterSymbol} Amt.`, key: "MasterCredit" },
+            { header: `D ${masterSymbol || "Master"} Amt.`, key: "MasterDebit" },
+            { header: `C ${masterSymbol || "Master"} Amt.`, key: "MasterCredit" },
             { header: "C Balance", key: "MasterFinalAmount" }
         ],
         [masterSymbol, stockSymbol]
@@ -394,26 +399,9 @@ const BalanceSheetReport = () => {
     const loadSymbols = useCallback(async () => {
         const company = await getReportCompanySettings({ forceRefresh: true });
         if (company) setCompanyInfo(company);
-
-        let sSym = company?.stockSymbol || "";
-        let mSym = "";
-        try {
-            const settings = await getSettingData();
-            const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-            const pick = (name) => {
-                const target = String(name).toLowerCase();
-                const row = rows.find(
-                    (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                );
-                return row?.Value ?? row?.value ?? "";
-            };
-            sSym = pick("SSymbol") || sSym;
-            mSym = pick("MSymbol") || mSym;
-        } catch {
-            /* ignore */
-        }
-        setStockSymbol(sSym || "USD");
-        setMasterSymbol(mSym || "INR");
+        const cached = getCachedReportCompany();
+        setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+        setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
     }, []);
 
     useEffect(() => {
@@ -1041,8 +1029,12 @@ const BalanceSheetReport = () => {
                                         </Col>
                                     </Row>
 
-                                    <div id="dynamic-balncessheet" className="card mt-3 mb-3">
-                                        <div className="table-responsive">
+                                    <div id="dynamic-balncessheet" className="card mt-3 mb-0">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table
                                                 ref={tableRef}
                                                 className="table table-bordered nowrap mb-0 balance-sheet-report-table"

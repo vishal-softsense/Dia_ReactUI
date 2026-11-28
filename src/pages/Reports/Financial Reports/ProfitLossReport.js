@@ -16,10 +16,10 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getProfitLossReport,
-    getProfitLossReportPermission,
-    getSettingData
+    getProfitLossReportPermission
 } from "../../../helpers/fakebackend_helper";
 import {
     getCachedReportCompany,
@@ -277,6 +277,7 @@ const buildProfitLossPrintHtml = ({
 const ProfitLossReport = () => {
     const { t } = useTranslation();
     const tableRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { toDate: settingToDate, getDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -284,10 +285,14 @@ const ProfitLossReport = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [showReport, setShowReport] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: showReport,
+        deps: [showReport, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
-    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "USD");
-    const [masterSymbol, setMasterSymbol] = useState("INR");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
 
     const [toDate, setToDate] = useState(settingToDate);
     const [calType, setCalType] = useState("Purchase Rate");
@@ -300,11 +305,11 @@ const ProfitLossReport = () => {
     const columns = useMemo(
         () => [
             { header: "Account Name", key: "DAccGrpName" },
-            { header: `${masterSymbol} Amount`, key: "DMBalAmt" },
-            { header: `${stockSymbol} Amount`, key: "DSBalAmt" },
+            { header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount", key: "DMBalAmt" },
+            { header: stockSymbol ? `${stockSymbol} Amount` : "Stock Amount", key: "DSBalAmt" },
             { header: "Account Name", key: "CAccGrpName" },
-            { header: `${masterSymbol} Amount`, key: "CMBalAmt" },
-            { header: `${stockSymbol} Amount`, key: "CSBalAmt" }
+            { header: masterSymbol ? `${masterSymbol} Amount` : "Master Amount", key: "CMBalAmt" },
+            { header: stockSymbol ? `${stockSymbol} Amount` : "Stock Amount", key: "CSBalAmt" }
         ],
         [masterSymbol, stockSymbol]
     );
@@ -312,26 +317,9 @@ const ProfitLossReport = () => {
     const loadSymbols = useCallback(async () => {
         const company = await getReportCompanySettings({ forceRefresh: true });
         if (company) setCompanyInfo(company);
-
-        let sSym = company?.stockSymbol || "";
-        let mSym = "";
-        try {
-            const settings = await getSettingData();
-            const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-            const pick = (name) => {
-                const target = String(name).toLowerCase();
-                const row = rows.find(
-                    (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                );
-                return row?.Value ?? row?.value ?? "";
-            };
-            sSym = pick("SSymbol") || sSym;
-            mSym = pick("MSymbol") || mSym;
-        } catch {
-            /* ignore */
-        }
-        setStockSymbol(sSym || "USD");
-        setMasterSymbol(mSym || "INR");
+        const cached = getCachedReportCompany();
+        setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+        setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
     }, []);
 
     useEffect(() => {
@@ -805,8 +793,12 @@ const ProfitLossReport = () => {
                                         </Col>
                                     </Row>
 
-                                    <div id="dynamic-profit-loss-account" className="card mt-3 mb-3">
-                                        <div className="table-responsive">
+                                    <div id="dynamic-profit-loss-account" className="card mt-3 mb-0">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table
                                                 ref={tableRef}
                                                 className="table table-bordered nowrap mb-0 profit-loss-report-table"

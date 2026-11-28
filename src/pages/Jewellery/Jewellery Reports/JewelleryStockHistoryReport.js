@@ -17,6 +17,9 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getJewelleryStockHistoryReport,
   getJewelleryStockHistoryStockIds
@@ -198,11 +201,17 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const JewelleryStockHistoryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
 
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
 
   // Transaction types checkboxes selection
   const [selectedTypesTrn, setSelectedTypesTrn] = useState(["MEMOIN","PUR","MEMOOUT", "SALE", "STKTRN"]);
@@ -472,7 +481,6 @@ const JewelleryStockHistoryReport = () => {
       "BalanceAmount"
     ];
 
-    const caratDecimals = 3;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -499,10 +507,10 @@ const JewelleryStockHistoryReport = () => {
           trnDate || "",
           getRowVal(item, "TrnType") || "",
           getRowVal(item, "Particulars") || "",
-          fmtFixed(getRowVal(item, "StockIn"), caratDecimals),
+          formatCarat(getRowVal(item, "StockIn"), caratFormat),
           fmtFixed(getRowVal(item, "StockInPrice"), priceDecimals),
           fmtFixed(getRowVal(item, "StockInAmount"), amtDecimals),
-          fmtFixed(getRowVal(item, "StockOut"), caratDecimals),
+          formatCarat(getRowVal(item, "StockOut"), caratFormat),
           fmtFixed(getRowVal(item, "StockOutPrice"), priceDecimals),
           fmtFixed(getRowVal(item, "StockOutAmount"), amtDecimals)
         ];
@@ -512,7 +520,7 @@ const JewelleryStockHistoryReport = () => {
         }
 
         rowData.push(
-          fmtFixed(getRowVal(item, "BalanceStock"), caratDecimals),
+          formatCarat(getRowVal(item, "BalanceStock"), caratFormat),
           fmtFixed(getRowVal(item, "BalancePrice"), priceDecimals),
           fmtFixed(getRowVal(item, "BalanceAmount"), amtDecimals)
         );
@@ -536,10 +544,10 @@ const JewelleryStockHistoryReport = () => {
         "Total:",
         "",
         "",
-        subtotal.StockIn.toFixed(caratDecimals),
+        formatCarat(subtotal.StockIn, caratFormat),
         "",
         subtotal.StockInAmount.toFixed(amtDecimals),
-        subtotal.StockOut.toFixed(caratDecimals),
+        formatCarat(subtotal.StockOut, caratFormat),
         "",
         subtotal.StockOutAmount.toFixed(amtDecimals)
       ];
@@ -556,10 +564,10 @@ const JewelleryStockHistoryReport = () => {
       "Grand Total:",
       "",
       "",
-      grandTotals.StockIn.toFixed(caratDecimals),
+      formatCarat(grandTotals.StockIn, caratFormat),
       "",
       grandTotals.StockInAmount.toFixed(amtDecimals),
-      grandTotals.StockOut.toFixed(caratDecimals),
+      formatCarat(grandTotals.StockOut, caratFormat),
       "",
       grandTotals.StockOutAmount.toFixed(amtDecimals)
     ];
@@ -669,7 +677,6 @@ const JewelleryStockHistoryReport = () => {
       { header: t("BalanceAmount"), key: "BalanceAmount", align: "right" }
     ];
 
-    const caratDecimals = 3;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -677,7 +684,11 @@ const JewelleryStockHistoryReport = () => {
     const opStkDate = formatDateYMDToDMY(filters.fromDate);
 
     return (
-      <div className="premium-table-container">
+      <div
+        ref={tableScrollRef}
+        className="premium-table-container viewport-table-scroll"
+        style={{ maxHeight: tableMaxHeight }}
+      >
         <table className="premium-table">
           <thead>
             <tr>
@@ -734,7 +745,7 @@ const JewelleryStockHistoryReport = () => {
 
                           // Decimals
                           if (col.key === "StockIn" || col.key === "StockOut" || col.key === "BalanceStock") {
-                            val = fmtFixed(val, caratDecimals);
+                            val = formatCarat(val, caratFormat);
                           } else if (col.key === "StockInPrice" || col.key === "StockOutPrice" || col.key === "BalancePrice" || col.key === "COGS") {
                             val = fmtFixed(val, priceDecimals);
                           } else if (col.key === "StockInAmount" || col.key === "StockOutAmount" || col.key === "BalanceAmount") {
@@ -786,10 +797,10 @@ const JewelleryStockHistoryReport = () => {
                     <td colSpan={3} style={{ textAlign: "left" }}>
                       {t("Total:")}
                     </td>
-                    <td style={{ textAlign: "right" }}>{subtotal.StockIn.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right" }}>{formatCarat(subtotal.StockIn, caratFormat)}</td>
                     <td />
                     <td style={{ textAlign: "right" }}>{subtotal.StockInAmount.toFixed(amtDecimals)}</td>
-                    <td style={{ textAlign: "right" }}>{subtotal.StockOut.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right" }}>{formatCarat(subtotal.StockOut, caratFormat)}</td>
                     <td />
                     <td style={{ textAlign: "right" }}>{subtotal.StockOutAmount.toFixed(amtDecimals)}</td>
                     {showCOGS && (
@@ -807,10 +818,10 @@ const JewelleryStockHistoryReport = () => {
               <td colSpan={3} style={{ textAlign: "left" }}>
                 {t("Grand Total:")}
               </td>
-              <td style={{ textAlign: "right" }}>{grandTotals.StockIn.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right" }}>{formatCarat(grandTotals.StockIn, caratFormat)}</td>
               <td />
               <td style={{ textAlign: "right" }}>{grandTotals.StockInAmount.toFixed(amtDecimals)}</td>
-              <td style={{ textAlign: "right" }}>{grandTotals.StockOut.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right" }}>{formatCarat(grandTotals.StockOut, caratFormat)}</td>
               <td />
               <td style={{ textAlign: "right" }}>{grandTotals.StockOutAmount.toFixed(amtDecimals)}</td>
               {showCOGS && (
@@ -836,11 +847,10 @@ const JewelleryStockHistoryReport = () => {
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
           border: 1px solid var(--vz-border-color, #e9ebec);
           border-radius: 8px;
-          max-height: 650px;
           overflow-y: auto;
           overflow-x: auto;
           background-color: var(--vz-secondary-bg, #fff) !important;
-          margin-bottom: 20px;
+          margin-bottom: 0;
         }
         .premium-table {
           width: 100%;

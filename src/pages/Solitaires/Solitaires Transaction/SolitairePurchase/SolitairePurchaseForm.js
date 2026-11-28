@@ -38,6 +38,8 @@ import {
   getSolitairePurchasePageData,
   getSolitairePurchaseRapRate
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
+import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -45,6 +47,13 @@ import {
 } from "../../../../helpers/reportCompanyDefaults";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -113,7 +122,7 @@ const fmt = (v, decimals = 2) => toNum(v).toFixed(decimals);
 const PURCHASE_ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 2, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "PurchaseBack", align: "end", decimals: 2, footer: "avgBack" },
@@ -194,7 +203,7 @@ const PURCHASE_ITEM_COLUMNS = [
   { key: "size", label: "Size" },
   { key: "status", label: "Status" },
   { key: "memoTransCode", label: "Memo Transaction Code", align: "end" },
-  { key: "rtnCarats", label: "Return Carats", align: "end", decimals: 3 }
+  { key: "rtnCarats", label: "Return Carats", align: "end", isCarat: true }
 ];
 
 const mapGradingFromSource = (src) => ({
@@ -294,13 +303,17 @@ const mapItemFromApi = (r, idx) => ({
   ...mapGradingFromSource(r)
 });
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   // Simple PUR: MemoTransCode is 0 — show blank (do not display SalePurTran.Code)
   if (col.key === "memoTransCode") {
     const code = toNum(row.memoTransCode);
     return code ? String(code) : "";
   }
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -309,10 +322,10 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 2);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -562,6 +575,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const isView = urlMode === "view";
   const isConsignmentMode = urlMode === "consignment";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -594,6 +608,15 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [selectedLab, setSelectedLab] = useState("GIA");
   const [certNo, setCertNo] = useState("");
@@ -1007,6 +1030,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   }, [isEdit, editId]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   useEffect(() => {
     const days = toNum(header.dueDays, 0);
@@ -1023,8 +1047,9 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   };
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       // MVC CalcRateFromBack / CalcBackFromRate
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
@@ -1174,7 +1199,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
       pcs: toNum(entry.pcs, 1),
       mrp,
       back: Math.round(back * 100) / 100,
@@ -1242,7 +1267,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       totMrp,
       totWithoutLess,
@@ -1250,7 +1275,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const deci = Math.min(4, Math.max(0, toNum(header.decimalPlaces, 2)));
@@ -1477,7 +1502,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
       const certificateNo = cell(cols, iCertNo);
       const cutVal = cell(cols, iCut);
       const proportionVal = cell(cols, iProportion) || cutVal;
-      const roundedWeight = Math.round(weight * 1000) / 1000;
+      const roundedWeight = truncateCaratNumber(weight, caratFormat);
       const roundedRate = Math.round(rate * 100) / 100;
       const roundedBack = Math.round(back * 100) / 100;
 
@@ -1540,7 +1565,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
   /** MVC GetRapRate when Excel MRP is 0/blank, then Back = (rate*100/mrp)-100 when PurPrice != 0. */
   const enrichImportRowsWithRapRate = async (rows) => {
     const list = Array.isArray(rows) ? rows : [];
-    const caratKey = (c) => String(Math.round(toNum(c) * 1000) / 1000);
+    const caratKey = (c) => String(truncateCaratNumber(toNum(c), caratFormat || getCachedCaratFormat("solitaire")));
     const rowKey = (shape, color, clarity, carat) =>
       `${String(shape || "").trim()}|${String(color || "").trim()}|${String(clarity || "").trim()}|${caratKey(carat)}`;
 
@@ -2242,6 +2267,17 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </Button>
                     )}
                     {!readOnly && (
+                      <Button
+                        color="primary"
+                        outline
+                        size="sm"
+                        className="btn-outline-primary text-nowrap"
+                        onClick={() => navigate("/data/getlabdata")}
+                      >
+                        {t("Get Lab Data")}
+                      </Button>
+                    )}
+                    {!readOnly && (
                       <Button color="soft-success" size="sm" onClick={() => setExcelOpen(true)}>
                         <i className="ri-file-excel-2-line me-1" />
                         {t("Import Excel")}
@@ -2345,8 +2381,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
@@ -2354,7 +2390,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOpts}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                               else if (meta.action === "input-blur" || meta.action === "menu-close") {
@@ -2613,8 +2649,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <Col xs={12} sm={6} md={2}>
                           <Label className="form-label mb-1">
                             {t("Lot Number")}
-                            <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">
-                              {t("Add Item")}
+                            <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                              {t("ADD ITEM")}
                             </Link>
                           </Label>
                           <CreatableSelect
@@ -2693,7 +2729,8 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                         <Col xs={6} sm={4} md={1}>
                           <Label className="form-label mb-1">{t("Weight")}</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             className="form-control-sm"
                             style={fieldH}
                             value={entry.weight}
@@ -2850,8 +2887,18 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                                           }
                                         }}
                                       />
+                                    ) : col.key === "lotNo" ? (
+                                      <span
+                                        role="button"
+                                        className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => handleOpenStockHistory(r.lotNo)}
+                                        title={t("View Stock History")}
+                                      >
+                                        {r.lotNo}
+                                      </span>
                                     ) : (
-                                      renderItemCell(r, col)
+                                      renderItemCell(r, col, caratFormat)
                                     )}
                                   </td>
                                 ))}
@@ -2868,7 +2915,7 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                                   key={col.key}
                                   className={col.align === "end" ? "text-end" : ""}
                                 >
-                                  {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                  {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                                 </td>
                               ))}
                             </tr>
@@ -3052,7 +3099,17 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
                       </td>
                       <td>{r.date}</td>
                       <td>{r.memoNo}</td>
-                      <td>{r.lotNo}</td>
+                      <td>
+                        <span
+                          role="button"
+                          className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleOpenStockHistory(r.lotNo)}
+                          title={t("View Stock History")}
+                        >
+                          {r.lotNo}
+                        </span>
+                      </td>
                       <td className="text-end">{fmt(r.cts, 3)}</td>
                       <td>
                         <Input
@@ -3168,6 +3225,13 @@ const SolitairePurchaseForm = ({ mode = "add" }) => {
             </Button>
           </ModalFooter>
         </Modal>
+
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={false}
+        />
 
         <ToastContainer autoClose={2000} />
       </div>

@@ -35,11 +35,18 @@ import {
   getSolitairePartyHoldPageData,
   refreshSolitairePartyHoldBack
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -196,7 +203,7 @@ const getRowStatusStyle = (status) => {
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "Back", align: "end", decimals: 2, footer: "avgBack" },
@@ -208,10 +215,10 @@ const ITEM_COLUMNS = [
   { key: "status", label: "Status" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -227,8 +234,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -310,6 +321,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
   const editId = searchParams.get("Id") || searchParams.get("id") || "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -592,8 +604,8 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      baseRate: toNum(getVal(h, "BaseRate", "MasterCurrencyRate"), 1) || 1,
+      sBaseRate: toNum(getVal(h, "SBaseRate", "StockCurrencyRate"), 1) || 1,
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundDate: toLocalDateStr(getVal(h, "RoundDate")) || todayIso()
@@ -639,12 +651,14 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const recalcEntryAmount = (next) => ({ ...next, amount: fmt(calcItemAmount(next.weight, next.rate, next.less1, next.less2, next.less3)) });
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -665,7 +679,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
       const res = await getSolitairePartyHoldLotDetail({
         lotNo,
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Lot detail not found."));
@@ -724,7 +738,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -784,7 +798,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       };
       const res = await getSolitairePartyHoldItemFromList(payload);
       if (!(res?.success || res?.Success)) {
@@ -844,13 +858,13 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1024,12 +1038,12 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1119,7 +1133,12 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                   {!readOnly && (
                     <Row className="g-2 align-items-end">
                       <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Lot Number")}</Label>
+                        <Label className="form-label mb-1">
+                          {t("Lot Number")}
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                            {t("ADD ITEM")}
+                          </Link>
+                        </Label>
                         <CreatableSelect
                           styles={customStyles}
                           options={lotOpts}
@@ -1141,7 +1160,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                        <Input type="text" inputMode="decimal" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Pcs")}</Label>
@@ -1215,7 +1234,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col)}
+                                  {renderItemCell(r, col, caratFormat)}
                                 </td>
                               ))}
                             </tr>
@@ -1226,7 +1245,7 @@ const SolitairePartyHoldForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end" : ""}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>

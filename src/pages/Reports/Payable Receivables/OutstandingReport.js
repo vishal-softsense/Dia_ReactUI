@@ -15,8 +15,12 @@ import Select from "react-select";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getOutstandingReport,
@@ -148,66 +152,66 @@ const compareDueDateAsc = (a, b) => {
 const ALL_COLUMNS = [
   { key: "view", header: "View", align: "center", excel: false },
   { key: "Date", header: "Date", align: "left" },
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "TrnType", header: "TrnType", align: "left" },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "TrnType", header: "Trn Type", align: "left" },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "DueDays", header: "Due", align: "left" },
   { key: "Party", header: "Party", align: "left" },
-  { key: "Totcts", header: "TotWeight", align: "right", sum: true, altKeys: ["totcts"] },
+  { key: "Totcts", header: "Tot Weight", align: "right", sum: true, altKeys: ["totcts"] },
   { key: "Amount", header: "Tot Amount", align: "right", sum: true, bg: "#fed49c" },
   { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true, bg: "#98ecc2" },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true },
   { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true, bg: "#FFCCCB" },
-  { key: "PostDateAmount", header: "PostDateAmount", align: "right", sum: true },
-  { key: "ExportAmount", header: "ExportAmount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true },
+  { key: "ExportAmount", header: "Export Amount", align: "right", sum: true },
   { key: "Seller", header: "Seller", align: "left" },
-  { key: "InvType", header: "InvType", align: "left" },
+  { key: "InvType", header: "Invoice Type", align: "left" },
   { key: "Symbol", header: "Currency", align: "left" },
   { key: "Disc", header: "Disc", align: "right" },
-  { key: "PartyMobile", header: "PartyMobile", align: "left" },
+  { key: "PartyMobile", header: "Party Mobile", align: "left" },
   { key: "Broker", header: "Broker", align: "left" },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left" },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left" },
   { key: "Rate", header: "Rate", align: "right" },
   { key: "Remarks", header: "Remarks", align: "left" },
-  { key: "UserName", header: "UserName", align: "left" },
-  { key: "ExpPartyName", header: "ExpParty", align: "left" },
+  { key: "UserName", header: "User Name", align: "left" },
+  { key: "ExpPartyName", header: "Exp Party", align: "left" },
   { key: "SalesPerson", header: "Sales Person", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const PARTYWISE_COLUMNS = [
   { key: "Date", header: "Date", align: "center" },
-  { key: "InvoiceNo", header: "InvNo", align: "center" },
-  { key: "TrnType", header: "TrnType", align: "left", requiredExclude: true },
-  { key: "BillNo", header: "BillNo", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "center" },
+  { key: "InvoiceNo", header: "Inv No", align: "center" },
+  { key: "TrnType", header: "Trn Type", align: "left", requiredExclude: true },
+  { key: "BillNo", header: "Bill No", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "center" },
   { key: "DueDays", header: "Due", align: "center" },
   { key: "Totcts", header: "Weight", align: "right", sum: true, altKeys: ["totcts"] },
   { key: "Amount", header: "Amount", align: "right", sum: true },
-  { key: "PaidAmount", header: "PaidAmount", align: "right", sum: true },
-  { key: "ExDiff", header: "Ex.Diff", align: "right", sum: true, requiredExclude: true },
-  { key: "RemainAmount", header: "RemainAmount", align: "right", sum: true },
-  { key: "PostDateAmount", header: "PostDateAmount", align: "right", sum: true, requiredExclude: true },
-  { key: "ExportAmount", header: "ExportAmount", align: "right", sum: true, requiredExclude: true },
+  { key: "PaidAmount", header: "Paid Amount", align: "right", sum: true },
+  { key: "ExDiff", header: "Ex. Diff", align: "right", sum: true, requiredExclude: true },
+  { key: "RemainAmount", header: "Remain Amount", align: "right", sum: true },
+  { key: "PostDateAmount", header: "Post Date Amount", align: "right", sum: true, requiredExclude: true },
+  { key: "ExportAmount", header: "Export Amount", align: "right", sum: true, requiredExclude: true },
   { key: "Seller", header: "Seller", align: "left", requiredExclude: true },
-  { key: "InvType", header: "InvType", align: "left", requiredExclude: true },
+  { key: "InvType", header: "Invoice Type", align: "left", requiredExclude: true },
   { key: "Symbol", header: "Currency", align: "left", requiredExclude: true },
   { key: "Disc", header: "Disc", align: "right", sum: true, requiredExclude: true },
-  { key: "PartyMobile", header: "PartyMobile", align: "left", requiredExclude: true },
+  { key: "PartyMobile", header: "Party Mobile", align: "left", requiredExclude: true },
   { key: "Broker", header: "Broker", align: "left", requiredExclude: true },
-  { key: "BrokerMobile", header: "BrokerMobile", align: "left", requiredExclude: true },
+  { key: "BrokerMobile", header: "Broker Mobile", align: "left", requiredExclude: true },
   { key: "Rate", header: "Rate", align: "right", requiredExclude: true },
   { key: "Remarks", header: "Remarks", align: "left", requiredExclude: true },
-  { key: "UserName", header: "UserName", align: "left", requiredExclude: true },
-  { key: "ExpPartyName", header: "ExpParty", align: "left", requiredExclude: true },
+  { key: "UserName", header: "User Name", align: "left", requiredExclude: true },
+  { key: "ExpPartyName", header: "Exp Party", align: "left", requiredExclude: true },
   // MVC partywise: after ExpParty; excluded from Required Print only (not Required Excel)
-  { key: "SalesPerson", header: "SalesPerson", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
+  { key: "SalesPerson", header: "Sales Person", align: "left", altKeys: ["SalesPersons", "salesPersons", "KAM", "Kam"] }
 ];
 
 const STATEMENT_COLUMNS = [
-  { key: "InvoiceNo", header: "InvNo", align: "left" },
-  { key: "Date", header: "Inv.Date", align: "left" },
-  { key: "DueDate", header: "DueDate", align: "left" },
+  { key: "InvoiceNo", header: "Inv No", align: "left" },
+  { key: "Date", header: "Inv. Date", align: "left" },
+  { key: "DueDate", header: "Due Date", align: "left" },
   { key: "DueDays", header: "Age", align: "left" },
   { key: "Amount", header: "Amount Due", align: "right", sum: false },
   { key: "PaidAmount", header: "Payments/Credits", align: "right", sum: false },
@@ -216,8 +220,11 @@ const STATEMENT_COLUMNS = [
 
 const OutstandingReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const printRef = useRef(null);
   const isPrintingRef = useRef(false);
+  const tableScrollRef = useRef(null);
+  const paginationRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -235,6 +242,12 @@ const OutstandingReport = () => {
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    footerRef: paginationRef,
+    enabled: hasSearched && reportMode === "all",
+    deps: [hasSearched, reportMode, reportRows.length, pageSize, page, globalSearch],
+  });
 
   const [partyInput, setPartyInput] = useState("");
   const [partyOptions, setPartyOptions] = useState([]);
@@ -741,6 +754,7 @@ const OutstandingReport = () => {
   }, [sortedReportRows, globalSearch, columnFilters]);
 
   const pagedAllRows = useMemo(() => {
+    if (pageSize >= 999999) return filteredAllRows;
     const start = (page - 1) * pageSize;
     return filteredAllRows.slice(start, start + pageSize);
   }, [filteredAllRows, page, pageSize]);
@@ -846,6 +860,7 @@ const OutstandingReport = () => {
     const headers = cols.map((c) => c.header);
     const rows = filteredAllRows.map((r) =>
       cols.map((c) => {
+        if (c.key === "Totcts") return formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat);
         if (c.sum || c.key === "Rate") return fmtFixed(numVal(r, c.key, ...(c.altKeys || [])));
         return dashText(getRowVal(r, c.key, ...(c.altKeys || [])));
       })
@@ -853,7 +868,7 @@ const OutstandingReport = () => {
     rows.push(
       cols.map((c, idx) => {
         if (idx === 0) return t("Total");
-        if (c.key === "Totcts") return fmtFixed(allTotals.Totcts, 3);
+        if (c.key === "Totcts") return formatCarat(allTotals.Totcts, caratFormat);
         if (c.key === "Amount") return fmtFixed(allTotals.Amount);
         if (c.key === "PaidAmount") return fmtFixed(allTotals.PaidAmount);
         if (c.key === "RemainAmount") return fmtFixed(allTotals.RemainAmount);
@@ -885,6 +900,7 @@ const OutstandingReport = () => {
         rows.push([
           "",
           ...cols.map((c) => {
+            if (c.key === "Totcts") return formatCarat(numVal(r, c.key, ...(c.altKeys || [])), caratFormat);
             if (c.sum || c.key === "Rate") return fmtFixed(numVal(r, c.key, ...(c.altKeys || [])));
             return dashText(getRowVal(r, c.key, ...(c.altKeys || [])));
           })
@@ -892,7 +908,10 @@ const OutstandingReport = () => {
       });
       rows.push([
         t("Total"),
-        ...cols.map((c) => (c.sum ? fmtFixed(subtotal[c.key] || 0) : ""))
+        ...cols.map((c) => {
+          if (c.key === "Totcts") return formatCarat(subtotal.Totcts || 0, caratFormat);
+          return c.sum ? fmtFixed(subtotal[c.key] || 0) : "";
+        })
       ]);
       Object.keys(grand).forEach((k) => {
         grand[k] += subtotal[k] || 0;
@@ -900,7 +919,10 @@ const OutstandingReport = () => {
     });
     rows.push([
       t("Grand Total"),
-      ...cols.map((c) => (c.sum ? fmtFixed(grand[c.key] || 0) : ""))
+      ...cols.map((c) => {
+        if (c.key === "Totcts") return formatCarat(grand.Totcts || 0, caratFormat);
+        return c.sum ? fmtFixed(grand[c.key] || 0) : "";
+      })
     ]);
     const fileName =
       mode === "required" ? "Required-Partywise-Outstanding-Report" : "Partywise-Outstanding-Report";
@@ -995,7 +1017,9 @@ const OutstandingReport = () => {
           if (
             cell.classList.contains("required-exclude") ||
             text === "BillNo" ||
+            text === "Bill No" ||
             text === t("BillNo") ||
+            text === t("Bill No") ||
             text === "SalesPerson" ||
             text === "Sales Person" ||
             text === t("SalesPerson") ||
@@ -1319,9 +1343,11 @@ const OutstandingReport = () => {
         </button>
       );
     }
+    if (col.key === "Totcts") {
+      return formatCarat(numVal(row, col.key, ...(col.altKeys || [])), caratFormat);
+    }
     if (col.sum || col.key === "Rate" || col.key === "Amount" || col.key === "PaidAmount" || col.key === "RemainAmount") {
-      const decimals = col.key === "Totcts" ? 3 : 2;
-      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), decimals);
+      return fmtFixed(numVal(row, col.key, ...(col.altKeys || [])), 2);
     }
     return dashText(getRowVal(row, col.key, ...(col.altKeys || [])));
   };
@@ -1630,7 +1656,7 @@ const OutstandingReport = () => {
                         options={getOptions("subType")}
                         value={getOptions("subType").find((o) => o.value === filters.subType) || null}
                         onChange={(sel) => setFilters((p) => ({ ...p, subType: sel?.value || "" }))}
-                        placeholder={t("Select SubType")}
+                        placeholder={t("Select Sub Type")}
                       />
                     </FormGroup>
                   </Col>
@@ -1715,7 +1741,7 @@ const OutstandingReport = () => {
                   </Col>
                   <Col sm={2}>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1 small">{t("Comm.Agent")}</Label>
+                      <Label className="fw-medium mb-1 small">{t("Comm. Agent")}</Label>
                       <Select
                         classNamePrefix="react-select"
                         styles={customStyles}
@@ -1809,7 +1835,7 @@ const OutstandingReport = () => {
                         className="form-control form-control-sm"
                         style={{ height: "35px" }}
                         value={filters.invNo}
-                        placeholder={t("InvNo")}
+                        placeholder={t("Inv No")}
                         onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))}
                       />
                     </FormGroup>
@@ -1940,7 +1966,7 @@ const OutstandingReport = () => {
                           setPage(1);
                         }}
                       >
-                        {[10, 25, 50, 100, 500].map((n) => (
+                        {[500, 1000, 1500].map((n) => (
                           <option key={n} value={n}>
                             {n}
                           </option>
@@ -1967,7 +1993,7 @@ const OutstandingReport = () => {
                   </Col>
                 </Row>
 
-                <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                   <table className="table table-bordered table-hover table-sm align-middle mb-0 or-report-table">
                     <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                       <tr>
@@ -2031,8 +2057,10 @@ const OutstandingReport = () => {
                           let content = "";
                           if (idx === 0) {
                             content = t("Total");
+                          } else if (col.key === "Totcts") {
+                            content = formatCarat(allTotals.Totcts || 0, caratFormat);
                           } else if (col.sum) {
-                            content = fmtFixed(allTotals[col.key] || 0, col.key === "Totcts" ? 3 : 2);
+                            content = fmtFixed(allTotals[col.key] || 0, 2);
                           }
                           return (
                             <td
@@ -2048,7 +2076,7 @@ const OutstandingReport = () => {
                   </table>
                 </div>
 
-                <div className="mt-3" style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
+                <div ref={paginationRef} className="mt-2" style={{ backgroundColor: "var(--vz-card-bg, #fff)", paddingTop: "8px", paddingBottom: "4px", borderTop: "1px solid var(--vz-border-color, #e9ebec)" }}>
                   <Row className="align-items-center mt-0 g-3 text-center text-sm-start">
                     <div className="col-sm">
                       <div className="text-muted">
@@ -2169,9 +2197,9 @@ const OutstandingReport = () => {
                     </Col>
                   </Row>
 
-                  <div className="table-responsive or-print-table-wrap">
+                  <ViewportScrollBox className="table-responsive or-print-table-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
-                      <thead className="table-light">
+                      <thead className="table-light sticky-top" style={{ zIndex: 2 }}>
                         <tr>
                           {STATEMENT_COLUMNS.map(renderHeader)}
                         </tr>
@@ -2208,7 +2236,7 @@ const OutstandingReport = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>
@@ -2261,7 +2289,7 @@ const OutstandingReport = () => {
                     </div>
                   </div>
 
-                  <div className="table-responsive or-print-table-wrap" style={{ maxHeight: "650px", overflow: "auto" }}>
+                  <ViewportScrollBox className="table-responsive or-print-table-wrap">
                     <table className="table table-bordered table-sm align-middle mb-0 or-report-table">
                       <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                         <tr>
@@ -2335,9 +2363,11 @@ const OutstandingReport = () => {
                                     key={`sub-${col.key}`}
                                     className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
                                   >
-                                    {col.sum
-                                      ? fmtFixed(subtotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
-                                      : ""}
+                                    {col.key === "Totcts"
+                                      ? formatCarat(subtotal.Totcts || 0, caratFormat)
+                                      : col.sum
+                                        ? fmtFixed(subtotal[col.key] || 0, 2)
+                                        : ""}
                                   </td>
                                 ))}
                               </tr>
@@ -2364,16 +2394,18 @@ const OutstandingReport = () => {
                                 key={`grand-${col.key}`}
                                 className={`text-end fw-bold${col.requiredExclude ? " required-exclude" : ""}`}
                               >
-                                {col.sum
-                                  ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, col.key === "Totcts" ? 3 : 2)
-                                  : ""}
+                                {col.key === "Totcts"
+                                  ? formatCarat(invoicePartyGrandTotal.Totcts || 0, caratFormat)
+                                  : col.sum
+                                    ? fmtFixed(invoicePartyGrandTotal[col.key] || 0, 2)
+                                    : ""}
                               </td>
                             ))}
                           </tr>
                         </tfoot>
                       ) : null}
                     </table>
-                  </div>
+                  </ViewportScrollBox>
 
                   {companyInfo.companyFooter ? (
                     <div className="small text-muted mt-3">{companyInfo.companyFooter}</div>

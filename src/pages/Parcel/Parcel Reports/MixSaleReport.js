@@ -17,7 +17,10 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, getCachedCaratFormat } from "../../../helpers/caratFormatDefaults";
 import {
     getMixSaleReport,
     getMixSaleReportDropdowns,
@@ -31,6 +34,7 @@ import {
     resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -120,11 +124,14 @@ const getRowDateRaw = (row) => getRowVal(row, "ConDATE", "conDATE", "condate", "
 const getRowDueDateRaw = (row) => getRowDateRaw(row);
 
 const GROUPED_SUM_COLUMNS = ["Carats", "ReturnCarats", "Amount"];
+const CARAT_GROUP_KEYS = new Set(["Carats", "ReturnCarats"]);
 const GROUPED_DECIMALS = {
-    Carats: 3,
-    ReturnCarats: 2,
     Amount: 2
 };
+const formatGroupedMetric = (value, key, caratFmt = getCachedCaratFormat()) =>
+    CARAT_GROUP_KEYS.has(key)
+        ? formatCarat(value, caratFmt)
+        : fmtFixed(value, GROUPED_DECIMALS[key] ?? 2);
 
 const getGroupedNumeric = (row, key) => {
     const aliases = {
@@ -344,7 +351,11 @@ const mapDropdownItems = (list) => {
 
 const MixSaleReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({ includePrintDates: true });
+    const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+    const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+    const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
     const [loadingDropdowns, setLoadingDropdowns] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -389,8 +400,8 @@ const MixSaleReport = () => {
 
     const groupByOptions = useMemo(
         () => [
-            { value: "InvNo", label: t("Group by InvNo") },
-            { value: "PartyName", label: t("Group by PartyName") }
+            { value: "InvNo", label: t("Group by Inv No") },
+            { value: "PartyName", label: t("Group by Party Name") }
         ],
         [t]
     );
@@ -732,8 +743,8 @@ const MixSaleReport = () => {
                         <td class="col-text">${escapeHtml(getRowVal(row, "BillNo", "billNo", "billno") || "")}</td>
                         <td class="col-text">${escapeHtml(getGroupedInvNo(row))}</td>
                         <td class="col-text">${escapeHtml(getGroupedLotNo(row))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "ReturnCarats"), GROUPED_DECIMALS.ReturnCarats))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "Carats"), "Carats", caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatGroupedMetric(getGroupedNumeric(row, "ReturnCarats"), "ReturnCarats", caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getRowVal(row, "Rate", "rate"), 2))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Amount"), GROUPED_DECIMALS.Amount))}</td>
                     </tr>
@@ -745,8 +756,8 @@ const MixSaleReport = () => {
                 <tr class="subtotal">
                     <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Total"))}</strong></td>
                     <td></td>
-                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-                    <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat))}</strong></td>
+                    <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(section.subtotal.ReturnCarats, "ReturnCarats", caratFormat))}</strong></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(section.subtotal), 2))}</strong></td>
                     <td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
                 </tr>
@@ -757,8 +768,8 @@ const MixSaleReport = () => {
             <tr class="grand-total">
                 <td colspan="2" class="col-label" style="padding-left:24px;"><strong>${escapeHtml(t("Grand Total"))}</strong></td>
                 <td></td>
-                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Carats, GROUPED_DECIMALS.Carats))}</strong></td>
-                <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.Carats, "Carats", caratFormat))}</strong></td>
+                <td class="col-num"><strong>${escapeHtml(formatGroupedMetric(grandTotal.ReturnCarats, "ReturnCarats", caratFormat))}</strong></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(calcGroupedAvgRate(grandTotal), 2))}</strong></td>
                 <td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal.Amount, GROUPED_DECIMALS.Amount))}</strong></td>
             </tr>
@@ -804,8 +815,8 @@ const MixSaleReport = () => {
     };
 
     const renderGroupedValue = (row, key) => {
-        if (GROUPED_DECIMALS[key] !== undefined) {
-            return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
+        if (CARAT_GROUP_KEYS.has(key) || GROUPED_DECIMALS[key] !== undefined) {
+            return formatGroupedMetric(getGroupedNumeric(row, key), key, caratFormat);
         }
         return dashText(getRowVal(row, "Rate", "rate"));
     };
@@ -980,8 +991,8 @@ const MixSaleReport = () => {
                 },
                 cell: ({ getValue }) => safeText(getValue())
             },
-            { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => safeText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+            { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => safeText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => safeText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => safeText(getRowVal(row.original, "Party", "party")) },
             {
                 header: t("Item"),
@@ -1001,10 +1012,10 @@ const MixSaleReport = () => {
                 header: t("Issue Carats"),
                 accessorKey: "IssueCarats",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "IssueCarats", "issueCarats"), 2)
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "IssueCarats", "issueCarats"), caratFormat)
             },
             {
-                header: t("Rejep"),
+                header: t("Reje P"),
                 accessorKey: "Discount",
                 className: "text-end",
                 cell: ({ row }) => safeFixed(getRowVal(row.original, "Discount", "discount"), 2)
@@ -1013,16 +1024,16 @@ const MixSaleReport = () => {
                 header: t("Rejection"),
                 accessorKey: "ReturnCarats",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "ReturnCarats", "returnCarats"), 2)
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "ReturnCarats", "returnCarats"), caratFormat)
             },
             {
                 header: t("Selection Carats"),
                 accessorKey: "Carats",
                 className: "text-end",
-                cell: ({ row }) => safeFixed(getRowVal(row.original, "Carats", "carats"), 3),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
                 footer: ({ table }) => {
                     const { parentCarat } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(parentCarat, caratFormat)}</span>;
                 }
             },
             {
@@ -1049,11 +1060,11 @@ const MixSaleReport = () => {
                 }
             },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => safeText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("Less1"), accessorKey: "Less1", cell: ({ row }) => safeText(getRowVal(row.original, "Less1", "less1")) },
-            { header: t("Less2"), accessorKey: "Less2", cell: ({ row }) => safeText(getRowVal(row.original, "Less2", "less2")) },
-            { header: t("Less3"), accessorKey: "Less3", cell: ({ row }) => safeText(getRowVal(row.original, "Less3", "less3")) },
+            { header: t("Less 1"), accessorKey: "Less1", cell: ({ row }) => safeText(getRowVal(row.original, "Less1", "less1")) },
+            { header: t("Less 2"), accessorKey: "Less2", cell: ({ row }) => safeText(getRowVal(row.original, "Less2", "less2")) },
+            { header: t("Less 3"), accessorKey: "Less3", cell: ({ row }) => safeText(getRowVal(row.original, "Less3", "less3")) },
             {
-                header: t("INR Amount"),
+                header: masterAmtHeader,
                 accessorKey: "MasterCurrencyAmount",
                 className: "text-end",
                 cell: ({ row }) => safeFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -1063,7 +1074,7 @@ const MixSaleReport = () => {
                 }
             },
             {
-                header: t("USD Amount"),
+                header: stockAmtHeader,
                 accessorKey: "StockCurrencyAmount",
                 className: "text-end",
                 cell: ({ row }) => safeFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -1072,10 +1083,10 @@ const MixSaleReport = () => {
                     return <span className="fw-bold text-end d-block">{fmtFixed(parentUSD, 2)}</span>;
                 }
             },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType")) },
-            { header: t("SalesPerson"), accessorKey: "SalesPerson", cell: ({ row }) => safeText(getRowVal(row.original, "SalesPerson", "salesPerson")) }
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => safeText(getRowVal(row.original, "StockType", "stockType")) },
+            { header: t("Sales Person"), accessorKey: "SalesPerson", cell: ({ row }) => safeText(getRowVal(row.original, "SalesPerson", "salesPerson")) }
         ],
-        [expandedInvnos, t]
+        [expandedInvnos, t, masterAmtHeader, stockAmtHeader, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -1086,8 +1097,8 @@ const MixSaleReport = () => {
 
         const headers = [
             "Date",
-            "InvNo",
-            "BillNo",
+            "Inv No",
+            "Bill No",
             "Party",
             "Item",
             "Shape",
@@ -1096,19 +1107,19 @@ const MixSaleReport = () => {
             "Size",
             "Sieve",
             "Issue Carats",
-            "Rejep",
+            "Reje P",
             "Rejection",
             "Selection Carats",
             "Rate",
             "Amount",
             "Broker",
-            "Less1",
-            "Less2",
-            "Less3",
-            "INR Amount",
-            "USD Amount",
-            "StockType",
-            "SalesPerson"
+            "Less 1",
+            "Less 2",
+            "Less 3",
+            masterAmtHeader,
+            stockAmtHeader,
+            "Stock Type",
+            "Sales Person"
         ];
 
         const rows = reportRows.map((row) => [
@@ -1122,10 +1133,10 @@ const MixSaleReport = () => {
             safeText(getRowVal(row, "ClarityId", "clarityId")),
             safeText(getRowVal(row, "SizeId", "sizeId")),
             safeText(getRowVal(row, "SieveId", "sieveId")),
-            safeFixed(getRowVal(row, "IssueCarats", "issueCarats"), 2),
+            formatCarat(getRowVal(row, "IssueCarats", "issueCarats"), caratFormat),
             safeFixed(getRowVal(row, "Discount", "discount"), 2),
-            safeFixed(getRowVal(row, "ReturnCarats", "returnCarats"), 2),
-            safeFixed(getRowVal(row, "Carats", "carats"), 3),
+            formatCarat(getRowVal(row, "ReturnCarats", "returnCarats"), caratFormat),
+            formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
             safeFixed(getRowVal(row, "Rate", "rate"), 2),
             safeFixed(getRowVal(row, "Amount", "amount"), 2),
             safeText(getRowVal(row, "Broker", "broker")),
@@ -1158,7 +1169,7 @@ const MixSaleReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalCarat, 3),
+            formatCarat(totalCarat, caratFormat),
             fmtFixed(totalRate, 2),
             fmtFixed(totalAmount, 2),
             "",
@@ -1191,7 +1202,7 @@ const MixSaleReport = () => {
                             {hasSearched ? t("Mix Sale Report Results") : t("Mix Sale Report Filters")}
                         </h5>
 
-                        <div className="d-flex gap-2">
+                        <div className="d-flex flex-wrap gap-2">
                             {!hasSearched ? (
                                 <>
                                     <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading}>
@@ -1244,9 +1255,9 @@ const MixSaleReport = () => {
                         <Card className="shadow-lg border-0 rounded-3 mb-4">
                             <CardBody className="bg-light-subtle">
                                 <Row className="g-3">
-                                    <Col md={10}>
+                                    <Col xs={12} lg={10}>
                                         <Row className="g-2 mb-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Date")}</Label>
                                                     <input
@@ -1258,7 +1269,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("To Date")}</Label>
                                                     <input
@@ -1270,7 +1281,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Currency")}</Label>
                                                     <Select
@@ -1284,7 +1295,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Invoice No")}</Label>
                                                     <Input
@@ -1297,7 +1308,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Party")}</Label>
                                                     <Select
@@ -1325,7 +1336,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Broker")}</Label>
                                                     <Select
@@ -1356,7 +1367,7 @@ const MixSaleReport = () => {
                                         </Row>
 
                                         <Row className="g-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Shape")}</Label>
                                                     <Select
@@ -1371,7 +1382,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Color")}</Label>
                                                     <Select
@@ -1386,7 +1397,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Clarity")}</Label>
                                                     <Select
@@ -1401,7 +1412,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Size")}</Label>
                                                     <Select
@@ -1416,7 +1427,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Sieve")}</Label>
                                                     <Select
@@ -1431,7 +1442,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Salesperson")}</Label>
                                                     <Select
@@ -1450,7 +1461,7 @@ const MixSaleReport = () => {
 
                                         {/* MVC GeneralSaleReport: Print Date / Print To Date / Group By */}
                                         <Row className="g-2 mt-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <div className="d-flex align-items-center gap-1 mb-1">
                                                         <input
@@ -1472,7 +1483,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Print To Date")}</Label>
                                                     <Input
@@ -1484,7 +1495,7 @@ const MixSaleReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Group By")}</Label>
                                                     <Select
@@ -1500,12 +1511,12 @@ const MixSaleReport = () => {
                                         </Row>
                                     </Col>
 
-                                    <Col md={2}>
+                                    <Col xs={12} lg={2}>
                                         <FormGroup className="mb-0">
                                             <Label className="fw-medium mb-1 small">{t("Enter Lot No")}</Label>
                                             <Input
                                                 type="textarea"
-                                                rows={7}
+                                                rows={5}
                                                 placeholder={t("Search by lot no")}
                                                 value={filters.lotNo}
                                                 onChange={(e) => setFilters((prev) => ({ ...prev, lotNo: e.target.value }))}
@@ -1518,9 +1529,9 @@ const MixSaleReport = () => {
                     )}
 
                     {hasSearched && viewType === "table" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
-                                <div className="d-flex justify-content-end gap-4 mb-3 small fw-semibold">
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
+                                <div className="d-flex justify-content-end gap-4 mb-2 small fw-semibold">
                                     <span>
                                         {t("Showing")}: {groupedVisibleRows.length} {t("rows")}
                                     </span>
@@ -1535,7 +1546,7 @@ const MixSaleReport = () => {
                                         isGlobalFilter={true}
                                         customPageSize={500}
                                         customPageSizes={[500, 1000, 1500]}
-                                        divClass="table-responsive table-card mb-3"
+                                        divClass="table-responsive table-card mb-0"
                                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                                         theadClass="table-light"
                                         SearchPlaceholder={t("SEARCH:")}
@@ -1548,8 +1559,8 @@ const MixSaleReport = () => {
                     )}
 
                     {hasSearched && viewType === "grouped" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
                                 <style>{`
                                     #dynamic-sale-report-table th {
                                         white-space: nowrap;
@@ -1577,15 +1588,15 @@ const MixSaleReport = () => {
                                         color: var(--vz-body-color, #e9ecef) !important;
                                     }
                                 `}</style>
-                                <div className="mb-3">
-                                    <div className="row align-items-start">
-                                        <div className="col-sm-10 d-flex">
+                                <div className="mb-2 pb-2 border-bottom">
+                                    <div className="row align-items-start g-2">
+                                        <div className="col-12 col-sm-9 d-flex align-items-start">
                                             {companyLogoUrl ? (
-                                                <div className="pe-3 pt-2">
-                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                                                <div className="pe-3">
+                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "64px", width: "76px", objectFit: "contain" }} />
                                                 </div>
                                             ) : null}
-                                            <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
+                                            <div style={{ fontSize: "13px", lineHeight: 1.4 }}>
                                                 <div className="fw-bold">{companyInfo?.companyName}</div>
                                                 <div>{companyInfo?.companyAddress}</div>
                                                 {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
@@ -1602,7 +1613,7 @@ const MixSaleReport = () => {
                                                 ) : null}
                                             </div>
                                         </div>
-                                        <div className="col-sm-2 text-end pt-2">
+                                        <div className="col-12 col-sm-3 text-sm-end">
                                             <div className="fs-5 fw-bold">{t("Mix Sale Report")}</div>
                                             <div className="small text-muted">
                                                 <div>
@@ -1619,7 +1630,10 @@ const MixSaleReport = () => {
                                 {groupedReportData.sections.length === 0 ? (
                                     <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                                 ) : (
-                                    <div className="table-responsive mix-sale-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                                    <ViewportScrollBox
+                                        className="table-responsive mix-sale-grouped-table-wrap"
+                                        deps={[groupedReportData.sections.length, companyInfo?.companyFooter, companyLogoUrl]}
+                                    >
                                         <table className="table table-bordered align-middle mb-0" id="dynamic-sale-report-table" style={{ tableLayout: "fixed", minWidth: "860px" }}>
                                             <colgroup>
                                                 <col style={{ width: "48px" }} />
@@ -1702,10 +1716,10 @@ const MixSaleReport = () => {
                                                             </td>
                                                             <td />
                                                             <td className="text-end">
-                                                                <strong>{fmtFixed(section.subtotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                                                                <strong>{formatGroupedMetric(section.subtotal.Carats, "Carats", caratFormat)}</strong>
                                                             </td>
                                                             <td className="text-end">
-                                                                <strong>{fmtFixed(section.subtotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                                                                <strong>{formatGroupedMetric(section.subtotal.ReturnCarats, "ReturnCarats", caratFormat)}</strong>
                                                             </td>
                                                             <td className="text-end">
                                                                 <strong>{fmtFixed(calcGroupedAvgRate(section.subtotal), 2)}</strong>
@@ -1723,10 +1737,10 @@ const MixSaleReport = () => {
                                                     </td>
                                                     <td />
                                                     <td className="text-end">
-                                                        <strong>{fmtFixed(groupedReportData.grandTotal.Carats, GROUPED_DECIMALS.Carats)}</strong>
+                                                        <strong>{formatGroupedMetric(groupedReportData.grandTotal.Carats, "Carats", caratFormat)}</strong>
                                                     </td>
                                                     <td className="text-end">
-                                                        <strong>{fmtFixed(groupedReportData.grandTotal.ReturnCarats, GROUPED_DECIMALS.ReturnCarats)}</strong>
+                                                        <strong>{formatGroupedMetric(groupedReportData.grandTotal.ReturnCarats, "ReturnCarats", caratFormat)}</strong>
                                                     </td>
                                                     <td className="text-end">
                                                         <strong>{fmtFixed(calcGroupedAvgRate(groupedReportData.grandTotal), 2)}</strong>
@@ -1737,11 +1751,11 @@ const MixSaleReport = () => {
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </ViewportScrollBox>
                                 )}
 
                                 {companyInfo?.companyFooter ? (
-                                    <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
+                                    <div className="mt-2 mb-0 small text-muted">{companyInfo.companyFooter}</div>
                                 ) : null}
                             </CardBody>
                         </Card>

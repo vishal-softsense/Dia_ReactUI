@@ -21,6 +21,9 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel, loadExcelJS } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import { getAddMountingStockData, getAllLotNoList, getJewelleryQuotationDropdowns, getJewelleryQuotationReport, getJewelleryQuotationStockIds, getJewelleryStockIds, getJewelleryStockSearchDropdowns, getJewelleryStockSearchReport, getJewPurity, getSettingData } from "../../../helpers/fakebackend_helper";
 import {
   checkGoogleDriveFileExists,
@@ -531,6 +534,7 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
   const pct = parseFloat(increasePercentage);
   const factor = !isNaN(pct) ? 1 + pct / 100 : 1;
 
+  const { caratFormat } = useCaratFormat();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryPaths, setGalleryPaths] = useState([]);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -663,7 +667,7 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
       rows.push(
         <tr key={`header-${jewCode}`} className="group-header">
           <td colSpan={TOTAL_COLS} data-stockid={firstLot}>
-            JewCode: {jewCode}
+            Jew Code: {jewCode}
           </td>
         </tr>
       );
@@ -726,7 +730,7 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
               <td className="col-dia-shape">{dia?.diamondShape ?? dia?.DiamondShape ?? ""}</td>
               <td className="col-dia-color">{dia?.diamondColor ?? dia?.DiamondColor ?? ""}</td>
               <td className="col-dia-pcs text-end">{fmtNum(dia?.diamondPcs ?? dia?.DiamondPcs, 0)}</td>
-              <td className="col-dia-carat text-end">{fmtNum(dia?.diamondCarat ?? dia?.DiamondCarat, 3)}</td>
+              <td className="col-dia-carat text-end">{formatCarat(dia?.diamondCarat ?? dia?.DiamondCarat, caratFormat)}</td>
               <td className="col-dia-price text-end">{fmtNum(dia?.diamondPrice ?? dia?.DiamondPrice)}</td>
               <td className="col-dia-amount text-end">{fmtNum(dia?.diamondAmount ?? dia?.DiamondAmount)}</td>
               {i === 0 && (
@@ -748,7 +752,7 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
             <td className="col-netweight text-end fw-bold">{fmtNum(jewellery?.netWeight ?? jewellery?.NetWeight, 3)}</td>
             <td className="col-dia-lotno" /><td className="col-dia-shape" /><td className="col-dia-color" />
             <td className="col-dia-pcs text-end fw-bold">{fmtNum(totalDiamondPcs, 0)}</td>
-            <td className="col-dia-carat text-end fw-bold">{fmtNum(totalDiamondCarat, 3)}</td>
+            <td className="col-dia-carat text-end fw-bold">{formatCarat(totalDiamondCarat, caratFormat)}</td>
             <td className="col-dia-price" />
             <td className="col-dia-amount text-end fw-bold">{fmtNum(totalDiamondAmt)}</td>
             <td className="col-finalamount" />
@@ -769,7 +773,7 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
         <td className="col-netweight text-end fw-bold">{fmtNum(totals.grandNetWeight, 3)}</td>
         <td className="col-dia-lotno" /><td className="col-dia-shape" /><td className="col-dia-color" />
         <td className="col-dia-pcs text-end fw-bold">{fmtNum(totals.grandDiaPcs, 0)}</td>
-        <td className="col-dia-carat text-end fw-bold">{fmtNum(totals.grandDiaCarat, 3)}</td>
+        <td className="col-dia-carat text-end fw-bold">{formatCarat(totals.grandDiaCarat, caratFormat)}</td>
         <td className="col-dia-price" />
         <td className="col-dia-amount text-end fw-bold">{fmtNum(totals.grandDiaAmt)}</td>
         <td className="col-finalamount text-end fw-bold">{fmtNum(totals.grandFinalAmt)}</td>
@@ -788,21 +792,21 @@ const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockCl
             <th rowSpan={2} className="col-video">Video</th>
             <th rowSpan={2} className="col-category">Category</th>
             <th rowSpan={2} className="col-status">Status</th>
-            <th rowSpan={2} className="col-stockid">StockId</th>
-            <th rowSpan={2} className="col-itemname">ItemName</th>
+            <th rowSpan={2} className="col-stockid">Stock Id</th>
+            <th rowSpan={2} className="col-itemname">Item Name</th>
             <th rowSpan={2} className="col-pcs">Pcs</th>
             <th rowSpan={2} className="col-rate">Rate</th>
             <th colSpan={5} className="col-metal-group">Metal Details</th>
             <th colSpan={7} className="col-diamond-group">Diamond Details</th>
-            <th rowSpan={2} className="col-finalamount">Final JewAmount</th>
+            <th rowSpan={2} className="col-finalamount">Final Jew Amount</th>
           </tr>
           <tr>
-            <th className="col-metaltype">MetalType</th>
-            <th className="col-metalcolor">MetalColor</th>
-            <th className="col-metalpurity">MetalPurity</th>
+            <th className="col-metaltype">Metal Type</th>
+            <th className="col-metalcolor">Metal Color</th>
+            <th className="col-metalpurity">Metal Purity</th>
             <th className="col-grossweight">Gross Weight</th>
             <th className="col-netweight">Net Weight</th>
-            <th className="col-dia-lotno">LotNo</th>
+            <th className="col-dia-lotno">Lot No</th>
             <th className="col-dia-shape">Shape</th>
             <th className="col-dia-color">Color</th>
             <th className="col-dia-pcs">Pcs</th>
@@ -903,14 +907,22 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const JewelleryQuotationReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { toDate, getDates } = useSettingReportDates();
   const reportRef = useRef(null);
+  const reportScrollRef = useRef(null);
+  const reportFooterRef = useRef(null);
   const printLock = useRef(false);
 
   const [showReport, setShowReport] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [reportData, setReportData] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(reportScrollRef, {
+    footerRef: reportFooterRef,
+    enabled: showReport,
+    deps: [showReport, reportData.length],
+  });
   const [stockCount, setStockCount] = useState(0);
   const [companyInfo, setCompanyInfo] = useState({});
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -1570,14 +1582,14 @@ ${hideCss} { display: none; }
         Number(j?.grossWeight ?? j?.GrossWeight ?? 0),
         Number(j?.netWeight ?? j?.NetWeight ?? 0),
         j?.jewPurity ?? j?.JewPurity ?? j?.purity ?? j?.Purity ?? "",
-        Number(rowDiaCrt.toFixed(3)),
+        truncateCaratNumber(rowDiaCrt, caratFormat),
         rowDiaPcs,
         j?.lotNo ?? j?.LotNo ?? ""
       ]);
 
       r.getCell(1).numFmt = "0.000";
       r.getCell(2).numFmt = "0.000";
-      r.getCell(4).numFmt = "0.000";
+      r.getCell(4).numFmt = caratFormat;
 
       r.eachCell((cell) => {
         cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -1624,18 +1636,18 @@ ${hideCss} { display: none; }
     rowIdx += 2;
 
     const header1 = [
-      "Image", "Category", "Status", "StockId", "ItemName", "Pcs",
+      "Image", "Category", "Status", "Stock Id", "Item Name", "Pcs",
       "Metal Details", "", "", "", "",
       "Diamond Details", "", "", "", "", "", "",
-      "FinalJewAmount"
+      "Final Jew Amount"
     ];
     ws.getRow(rowIdx).values = header1;
     ws.getRow(rowIdx).height = 25;
 
     const header2 = [
       "", "", "", "", "", "",
-      "MetalType", "MetalColor", "MetalPurity", "Gross Weight", "Net Weight",
-      "LotNo", "Shape", "Color", "Pcs", "Carat", "Price/Carat", "Dia Amt",
+      "Metal Type", "Metal Color", "Metal Purity", "Gross Weight", "Net Weight",
+      "Lot No", "Shape", "Color", "Pcs", "Carat", "Price/Carat", "Dia Amt",
       ""
     ];
     ws.getRow(rowIdx + 1).values = header2;
@@ -1736,7 +1748,7 @@ ${hideCss} { display: none; }
           rowData[13] = dia?.diamondShape ?? dia?.DiamondShape ?? "";
           rowData[14] = dia?.diamondColor ?? dia?.DiamondColor ?? "";
           rowData[15] = dia ? Number(dia?.diamondPcs ?? dia?.DiamondPcs ?? 0) : "";
-          rowData[16] = dia ? Number(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0) : "";
+          rowData[16] = dia ? truncateCaratNumber(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0, caratFormat) : "";
           rowData[17] = dia ? Number(dia?.diamondPrice ?? dia?.DiamondPrice ?? 0) : "";
           rowData[18] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
@@ -1765,7 +1777,7 @@ ${hideCss} { display: none; }
             excelRow.getCell(19).numFmt = "#,##0.00";
           }
           if (dia) {
-            excelRow.getCell(16).numFmt = "#,##0.000";
+            excelRow.getCell(16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
             excelRow.getCell(17).numFmt = "#,##0.00";
             excelRow.getCell(18).numFmt = "#,##0.00";
           }
@@ -1803,8 +1815,8 @@ ${hideCss} { display: none; }
       ws.getCell(rowIdx, 11).numFmt = "#,##0.000";
 
       ws.getCell(rowIdx, 15).value = totalDiaPcs;
-      ws.getCell(rowIdx, 16).value = totalDiaCrt;
-      ws.getCell(rowIdx, 16).numFmt = "#,##0.000";
+      ws.getCell(rowIdx, 16).value = truncateCaratNumber(totalDiaCrt, caratFormat);
+      ws.getCell(rowIdx, 16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
       ws.getCell(rowIdx, 18).value = totalDiaAmt;
       ws.getCell(rowIdx, 18).numFmt = "#,##0.00";
       ws.getCell(rowIdx, 19).value = totalFinalAmt;
@@ -1844,8 +1856,8 @@ ${hideCss} { display: none; }
 
     ws.getCell(rowIdx, 15).value = grandDiaPcs;
     ws.getCell(rowIdx, 15).font = { bold: true };
-    ws.getCell(rowIdx, 16).value = grandDiaCrt;
-    ws.getCell(rowIdx, 16).numFmt = "#,##0.000";
+    ws.getCell(rowIdx, 16).value = truncateCaratNumber(grandDiaCrt, caratFormat);
+    ws.getCell(rowIdx, 16).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
     ws.getCell(rowIdx, 16).font = { bold: true };
     ws.getCell(rowIdx, 18).value = grandDiaAmt;
     ws.getCell(rowIdx, 18).numFmt = "#,##0.00";
@@ -1911,18 +1923,18 @@ ${hideCss} { display: none; }
     rowIdx += 2;
 
     const header1 = [
-      "Image", "Video", "Category", "Status", "StockId", "ItemName", "Pcs", "Rate",
+      "Image", "Video", "Category", "Status", "Stock Id", "Item Name", "Pcs", "Rate",
       "Metal Details", "", "", "", "",
       "Diamond Details", "", "", "", "", "", "",
-      "FinalJewAmount"
+      "Final Jew Amount"
     ];
     ws.getRow(rowIdx).values = header1;
     ws.getRow(rowIdx).height = 37;
 
     const header2 = [
       "", "", "", "", "", "", "", "",
-      "MetalType", "MetalColor", "MetalPurity", "Gross Weight", "Net Weight",
-      "LotNo", "Shape", "Color", "Pcs", "Carat", "Price/Carat", "Dia. Amt",
+      "Metal Type", "Metal Color", "Metal Purity", "Gross Weight", "Net Weight",
+      "Lot No", "Shape", "Color", "Pcs", "Carat", "Price/Carat", "Dia. Amt",
       ""
     ];
     ws.getRow(rowIdx + 1).values = header2;
@@ -2029,7 +2041,7 @@ ${hideCss} { display: none; }
           rowData[15] = dia?.diamondShape ?? dia?.DiamondShape ?? "";
           rowData[16] = dia?.diamondColor ?? dia?.DiamondColor ?? "";
           rowData[17] = dia ? Number(dia?.diamondPcs ?? dia?.DiamondPcs ?? 0) : "";
-          rowData[18] = dia ? Number(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0) : "";
+          rowData[18] = dia ? truncateCaratNumber(dia?.diamondCarat ?? dia?.DiamondCarat ?? 0, caratFormat) : "";
           rowData[19] = dia ? Number(dia?.diamondPrice ?? dia?.DiamondPrice ?? 0) : "";
           rowData[20] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
@@ -2066,7 +2078,7 @@ ${hideCss} { display: none; }
             }
           }
           if (dia) {
-            excelRow.getCell(18).numFmt = "#,##0.000";
+            excelRow.getCell(18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
             excelRow.getCell(19).numFmt = "#,##0.00";
             excelRow.getCell(20).numFmt = "#,##0.00";
           }
@@ -2103,8 +2115,8 @@ ${hideCss} { display: none; }
       ws.getCell(rowIdx, 13).value = totalNetWt;
       ws.getCell(rowIdx, 13).numFmt = "#,##0.000";
       ws.getCell(rowIdx, 17).value = totalDiaPcs;
-      ws.getCell(rowIdx, 18).value = totalDiaCrt;
-      ws.getCell(rowIdx, 18).numFmt = "#,##0.000";
+      ws.getCell(rowIdx, 18).value = truncateCaratNumber(totalDiaCrt, caratFormat);
+      ws.getCell(rowIdx, 18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
       ws.getCell(rowIdx, 20).value = totalDiaAmt;
       ws.getCell(rowIdx, 20).numFmt = "#,##0.00";
       ws.getCell(rowIdx, 21).value = totalFinalAmt;
@@ -2145,8 +2157,8 @@ ${hideCss} { display: none; }
     ws.getCell(rowIdx, 13).font = { bold: true };
     ws.getCell(rowIdx, 17).value = grandDiaPcs;
     ws.getCell(rowIdx, 17).font = { bold: true };
-    ws.getCell(rowIdx, 18).value = grandDiaCrt;
-    ws.getCell(rowIdx, 18).numFmt = "#,##0.000";
+    ws.getCell(rowIdx, 18).value = truncateCaratNumber(grandDiaCrt, caratFormat);
+    ws.getCell(rowIdx, 18).numFmt = caratFormat === "0.00" ? "#,##0.00" : "#,##0.000";
     ws.getCell(rowIdx, 18).font = { bold: true };
     ws.getCell(rowIdx, 20).value = grandDiaAmt;
     ws.getCell(rowIdx, 20).numFmt = "#,##0.00";
@@ -2299,7 +2311,7 @@ ${hideCss} { display: none; }
                   </Button>
                   {reportData.length > 0 && (
                     <Button color="soft-info" className="btn-sm rounded-2 px-3 py-1" onClick={() => setShowReport(true)}>
-                      {t("Prv.Record")}
+                      {t("Prv. Record")}
                     </Button>
                   )}
                 </>
@@ -2319,9 +2331,9 @@ ${hideCss} { display: none; }
                     value={printType}
                     onChange={(e) => setPrintType(e.target.value)}
                   >
-                    <option value="JewelleryStockList Print">JewelleryStockList Print</option>
+                    <option value="JewelleryStockList Print">Jewellery Stock List Print</option>
                     <option value="BarcodePrint">Barcode Print</option>
-                    <option value="JewelleryRequiredColumnPrint">JewelleryRequiredColumn Print</option>
+                    <option value="JewelleryRequiredColumnPrint">Jewellery Required Column Print</option>
                   </Input>
                   <Button color="success" className="btn-sm rounded-2 px-3 py-1" onClick={handleExcelExport}>
                     <i className="ri-file-excel-2-line align-middle me-1" />
@@ -2369,11 +2381,11 @@ ${hideCss} { display: none; }
                           {fieldLabel("Status")}
                           <Input type="select" bsSize="sm" name="status" value={filters.status} onChange={handleFilterChange} style={{ height: 35 }}>
                             <option value="All">All</option>
-                            <option value="OnHand">OnHand</option>
-                            <option value="OnMemo">OnMemo</option>
-                            <option value="OnHand&Int.Memo">OnHand&Int.Memo</option>
-                            <option value="OnHand + Memo In">OnHand + Memo In</option>
-                            <option value="OnHand + Party Hold">OnHand + Party Hold</option>
+                            <option value="OnHand">On Hand</option>
+                            <option value="OnMemo">On Memo</option>
+                            <option value="OnHand&Int.Memo">On Hand & Int. Memo</option>
+                            <option value="OnHand + Memo In">On Hand + Memo In</option>
+                            <option value="OnHand + Party Hold">On Hand + Party Hold</option>
                             <option value="Memo In">Memo In</option>
                             <option value="Party Hold">Party Hold</option>
                             <option value="All - Party Hold">All - Party Hold</option>
@@ -2391,9 +2403,9 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("SubCategory")}
+                          {fieldLabel("Sub Category")}
                           <Input type="select" bsSize="sm" value={filters.jewSubCategory} onChange={(e) => handleNativeSelect("jewSubCategory", e.target.value)} style={{ height: 35 }}>
-                            <option value="">Select SubCategory</option>
+                            <option value="">Select Sub Category</option>
                             {dropdownOptions.subCategory.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </Input>
                         </FormGroup>
@@ -2422,9 +2434,9 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("MetalType")}
+                          {fieldLabel("Metal Type")}
                           <Input type="select" bsSize="sm" value={filters.jewMetalType} onChange={(e) => handleMetalChange(e.target.value)} style={{ height: 35 }}>
-                            <option value="">Select MetalType</option>
+                            <option value="">Select Metal Type</option>
                             {dropdownOptions.metal.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </Input>
                         </FormGroup>
@@ -2449,7 +2461,7 @@ ${hideCss} { display: none; }
                       </Col>
                       <Col lg={2} md={4} sm={6}>
                         <FormGroup className="mb-0">
-                          {fieldLabel("LotNo")}
+                          {fieldLabel("Lot No")}
                           <Select
                             isMulti
                             name="showLotNo"
@@ -2524,13 +2536,13 @@ ${hideCss} { display: none; }
                   <Col lg={2} md={3}>
                     <FormGroup className="mb-2">
                       <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-                        <Label className="fw-medium mb-0">{t("JewelleryStockID")}</Label>
+                        <Label className="fw-medium mb-0">{t("Jewellery Stock ID")}</Label>
                         <Input type="select" bsSize="sm" name="filters" value={filters.filters} onChange={handleFilterChange} style={{ maxWidth: 108, height: 30 }}>
-                          <option value="LotNo">LotNo</option>
-                          <option value="LotNo Not">LotNo Not</option>
-                          <option value="LotNo Like">LotNo Like</option>
-                          <option value="CertNo">CertNo</option>
-                          <option value="CertNo Not">CertNo Not</option>
+                          <option value="LotNo">Lot No</option>
+                          <option value="LotNo Not">Lot No Not</option>
+                          <option value="LotNo Like">Lot No Like</option>
+                          <option value="CertNo">Cert No</option>
+                          <option value="CertNo Not">Cert No Not</option>
                         </Input>
                       </div>
                       <Input
@@ -2545,7 +2557,7 @@ ${hideCss} { display: none; }
                       />
                     </FormGroup>
                     <FormGroup className="mb-0">
-                      <Label className="fw-medium mb-1">{t("Show StockID")}</Label>
+                      <Label className="fw-medium mb-1">{t("Show Stock ID")}</Label>
                       <Select
                         isMulti
                         name="showStockId"
@@ -2562,7 +2574,7 @@ ${hideCss} { display: none; }
                             debouncedLoadStockIdOptions("");
                           }
                         }}
-                        placeholder={t("Select StockID")}
+                        placeholder={t("Select Stock ID")}
                         isLoading={loadingStockIds}
                         classNamePrefix="react-select"
                         closeMenuOnSelect={false}
@@ -2591,7 +2603,7 @@ ${hideCss} { display: none; }
               <CardBody className="p-0">
                 <div ref={reportRef} id="jew-report-print-root" className="jew-report-shell">
                   <ReportCompanyHeader companyInfo={companyInfo} />
-                  <div className="jew-report-scroll">
+                  <div ref={reportScrollRef} className="jew-report-scroll viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                     <JewelleryQuotationReportTable
                       data={reportData}
                       increasePercentage={increasePercentage}
@@ -2599,7 +2611,7 @@ ${hideCss} { display: none; }
                       onStockClick={(id) => id && window.open(`/master/edit-Mounting-stock?id=${id}&mode=view`, "_blank")}
                     />
                   </div>
-                  <div className="jew-report-footer-bar">
+                  <div ref={reportFooterRef} className="jew-report-footer-bar">
                     <div id="stock-report-table_info" className="jew-entry-info">
                       Showing {stockCount > 0 ? 1 : 0} to {stockCount} of {stockCount} entries
                     </div>
@@ -2618,8 +2630,6 @@ ${hideCss} { display: none; }
         .jew-report-shell {
           display: flex;
           flex-direction: column;
-          max-height: calc(100vh - 210px);
-          min-height: 420px;
           border: 1px solid var(--vz-border-color, #dee2e6);
           border-radius: 0.5rem;
           background: var(--vz-secondary-bg, #fff);

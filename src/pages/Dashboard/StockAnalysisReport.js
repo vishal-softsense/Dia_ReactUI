@@ -19,6 +19,8 @@ import {
 import StockAnalysisPivotByFilterView from "./StockAnalysisPivotByFilterView";
 import StockAnalysisPivotFixedView from "./StockAnalysisPivotFixedView";
 import "chart.js/auto";
+import { formatCarat, truncateCaratNumber } from "../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../Components/Hooks/useCaratFormat";
 
 const Select = (props) => (
   <ReactSelect
@@ -131,6 +133,7 @@ const pick = (row, ...keys) => {
 
 const StockAnalysisReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
   const today = new Date().toISOString().substring(0, 10);
 
   const [filterTab, setFilterTab] = useState("basic");
@@ -619,14 +622,14 @@ const StockAnalysisReport = () => {
       getGroupingValue(row, activeReportType),
       pick(row, "Pcs", "pcs") ?? 0,
       pick(row, "PcsPer", "pcsPer") ?? 0,
-      pick(row, "Carats", "carats") ?? 0,
+      truncateCaratNumber(pick(row, "Carats", "carats") ?? 0, caratFormat),
       pick(row, "CaratsPer", "caratsPer") ?? 0,
       pick(row, "Amount", "amount") ?? 0,
       pick(row, "AmountPer", "amountPer") ?? 0
     ]);
     rows.push([
       "Total",
-      totals.pcs, "", fmtFloat(totals.carats), "", fmtFloat(totals.amount), ""
+      totals.pcs, "", formatCarat(totals.carats, caratFormat), "", fmtFloat(totals.amount), ""
     ]);
     const csvContent = [headers, ...rows]
       .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
@@ -1422,7 +1425,7 @@ const StockAnalysisReport = () => {
                                     <td className="text-start"><b>{getGroupingValue(row, activeReportType)}</b></td>
                                     <td>{fmtInt(pick(row, "Pcs", "pcs"))}</td>
                                     <td>{fmtFloat(pick(row, "PcsPer", "pcsPer"))}%</td>
-                                    <td>{fmtFloat(pick(row, "Carats", "carats"))}</td>
+                                    <td>{formatCarat(pick(row, "Carats", "carats"), caratFormat)}</td>
                                     <td>{fmtFloat(pick(row, "CaratsPer", "caratsPer"))}%</td>
                                     <td>{fmtCurrency(pick(row, "Amount", "amount"))}</td>
                                     <td>{fmtFloat(pick(row, "AmountPer", "amountPer"))}%</td>
@@ -1434,7 +1437,7 @@ const StockAnalysisReport = () => {
                                   <td className="text-start">{t("Total")}</td>
                                   <td>{fmtInt(totals.pcs)}</td>
                                   <td>-</td>
-                                  <td>{fmtFloat(totals.carats)}</td>
+                                  <td>{formatCarat(totals.carats, caratFormat)}</td>
                                   <td>-</td>
                                   <td>{fmtCurrency(totals.amount)}</td>
                                   <td>-</td>

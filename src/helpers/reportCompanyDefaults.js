@@ -1,4 +1,4 @@
-import { filterSettingData, getPrintFormatData, getSettingData } from "./fakebackend_helper";
+import { filterSettingData, getCurrencyMasters, getPrintFormatData, getSettingData } from "./fakebackend_helper";
 import { api } from "../config";
 import { PRINT_SETTING_NAMES } from "../printFormats/shared/printUtils";
 
@@ -78,6 +78,40 @@ function pickSettingValue(rows, name) {
   return row?.Value ?? row?.value ?? null;
 }
 
+function extractCurrencySymbols(currencies) {
+  const list = Array.isArray(currencies) ? currencies : [];
+  const pickByRate = (keyCamel, keyPascal) => {
+    const match = list.find((item) => Number(item?.[keyCamel] ?? item?.[keyPascal]) === 1);
+    const sym = match?.symbol ?? match?.Symbol ?? "";
+    return typeof sym === "string" ? sym.trim() : String(sym || "").trim();
+  };
+  return {
+    masterSymbol: pickByRate("masterCurrencyRate", "MasterCurrencyRate"),
+    stockSymbol: pickByRate("stockCurrencyRate", "StockCurrencyRate")
+  };
+}
+
+function getAuthCurrencySymbols() {
+  try {
+    const raw = sessionStorage.getItem("authUser") || localStorage.getItem("authUser") || "{}";
+    const auth = JSON.parse(raw);
+    const root = auth?.data || auth || {};
+    return {
+      masterSymbol: String(auth?.MSymbol || auth?.mSymbol || root?.MSymbol || root?.mSymbol || "").trim(),
+      stockSymbol: String(auth?.SSymbol || auth?.sSymbol || root?.SSymbol || root?.sSymbol || "").trim()
+    };
+  } catch {
+    return { masterSymbol: "", stockSymbol: "" };
+  }
+}
+
+export function clearCachedReportCompany({ dispatchEvent = true } = {}) {
+  Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  if (dispatchEvent && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(REPORT_COMPANY_SETTINGS_EVENT));
+  }
+}
+
 export function getCachedReportCompany() {
   return {
     companyName: localStorage.getItem(STORAGE_KEYS.companyName) || DEFAULT_COMPANY.companyName,
@@ -138,13 +172,19 @@ export function setCachedReportCompany(company, { dispatchEvent = true } = {}) {
 export async function getReportCompanySettings({ forceRefresh = true, persist = true } = {}) {
   const fallback = getCachedReportCompany();
 
-  if (!forceRefresh && fallback.companyName) {
+  if (!forceRefresh && fallback.companyName && fallback.stockSymbol && fallback.masterSymbol) {
     return fallback;
   }
 
   try {
-    const response = await getSettingData();
+    const [response, currencyRes] = await Promise.all([
+      getSettingData().catch(() => null),
+      getCurrencyMasters().catch(() => null)
+    ]);
     let rows = response?.data || response?.Data || [];
+    const currencyRows = currencyRes?.data || currencyRes?.Data || [];
+    const currencySymbols = extractCurrencySymbols(currencyRows);
+    const authSymbols = getAuthCurrencySymbols();
 
     try {
       const printRes = await getPrintFormatData();
@@ -183,8 +223,16 @@ export async function getReportCompanySettings({ forceRefresh = true, persist = 
       companyEmail: companyEmail || fallback.companyEmail,
       companyFooter: pickSettingValue(rows, "ReportFooterDesc") || fallback.companyFooter,
       companyLogo: pickSettingValue(rows, "CompanyLoginLogo") || fallback.companyLogo,
-      stockSymbol: pickSettingValue(rows, "SSymbol") || fallback.stockSymbol,
-      masterSymbol: pickSettingValue(rows, "MSymbol") || fallback.masterSymbol,
+      stockSymbol:
+        currencySymbols.stockSymbol ||
+        pickSettingValue(rows, "SSymbol") ||
+        authSymbols.stockSymbol ||
+        fallback.stockSymbol,
+      masterSymbol:
+        currencySymbols.masterSymbol ||
+        pickSettingValue(rows, "MSymbol") ||
+        authSymbols.masterSymbol ||
+        fallback.masterSymbol,
       companyGSTNo: pickSettingValue(rows, "CompanyGSTNo") || fallback.companyGSTNo,
       companyHSNCode: pickSettingValue(rows, "CompanyHSNCode") || fallback.companyHSNCode,
       memoConditions: pickSettingValue(rows, "MemoConditions") || fallback.memoConditions,
@@ -206,6 +254,16 @@ export async function getReportCompanySettings({ forceRefresh = true, persist = 
     console.error("Failed to load report company settings:", error);
     return fallback;
   }
+}
+
+export async function getCompanyCurrencySymbols({ forceRefresh = true } = {}) {
+  const company = await getReportCompanySettings({ forceRefresh });
+  const cached = getCachedReportCompany();
+  const authSymbols = getAuthCurrencySymbols();
+  return {
+    masterSymbol: String(company?.masterSymbol || cached.masterSymbol || authSymbols.masterSymbol || "").trim(),
+    stockSymbol: String(company?.stockSymbol || cached.stockSymbol || authSymbols.stockSymbol || "").trim()
+  };
 }
 
 export async function refreshReportCompanySettings() {

@@ -38,6 +38,8 @@ import {
   getSolitaireSaleShipVia,
   refreshSolitaireSaleBack
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
+import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -45,6 +47,13 @@ import {
 } from "../../../../helpers/reportCompanyDefaults";
 import { calcCommissionPerFromAmount, formatCommissionDisplay } from "../../../../helpers/commissionAmount";
 import { parseExcelFile } from "../../../../helpers/excel_helper";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -133,7 +142,7 @@ const emptyItem = () => ({
   sRtnStatus: ""
 });
 
-const roundCts = (v) => Math.round(toNum(v) * 1000) / 1000;
+const roundCts = (v, fmtStr) => truncateCaratNumber(v, fmtStr || getCachedCaratFormat("solitaire"));
 
 /** Prefer closing-stock on-hand / purchase carats over item-master Weight. */
 const getLotAvailableWeight = (lot) =>
@@ -236,7 +245,7 @@ const getRowStatusStyle = (row) => {
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "Back", align: "end", decimals: 2, footer: "avgBack" },
@@ -247,15 +256,15 @@ const ITEM_COLUMNS = [
   { key: "amount", label: "Amount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "exportNo", label: "Export No" },
   { key: "memoTransCode", label: "MemoTrnCode" },
-  { key: "returnCarats", label: "Return Cts", align: "end", decimals: 3 },
+  { key: "returnCarats", label: "Return Cts", align: "end", isCarat: true },
   // MVC sale-form-new.js: column header "Status", data field SRtnStatus
   { key: "sRtnStatus", label: "Status" }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -271,8 +280,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -281,17 +294,70 @@ const renderItemCell = (row, col) => {
   return v ?? "";
 };
 
-const WarningModal = ({ open, title, message, confirmText, onClose }) => (
-  <Modal isOpen={open} toggle={onClose} centered contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
-    <ModalBody className="py-4 px-5 text-center">
-      <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>{title || "Warning!"}</h3>
-      <p className="text-muted mb-4 fs-14">{message}</p>
-      <button type="button" className="btn px-4 py-2 fw-semibold text-white" style={{ backgroundColor: "#13d17c", borderColor: "#13d17c" }} onClick={onClose}>
-        {confirmText || "OK"}
-      </button>
-    </ModalBody>
-  </Modal>
-);
+const WarningModal = ({ open, title, message, confirmText, onClose }) => {
+  return (
+    <Modal isOpen={open} toggle={onClose} centered={true} contentClassName="border-0 shadow-lg" style={{ maxWidth: "400px" }}>
+      <ModalBody className="py-4 px-5 text-center">
+        <div className="mt-2">
+          <div className="d-flex justify-content-center align-items-center mb-4">
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                border: "4px solid #f27474",
+              }}
+            >
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 10L30 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M30 10L10 30"
+                  stroke="#f27474"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <h3 className="mb-2 fw-semibold" style={{ color: "#495057", fontSize: "24px" }}>
+            {title || "Warning!"}
+          </h3>
+          <p className="text-muted mb-4 fs-14" style={{ lineHeight: "1.6" }}>
+            {message}
+          </p>
+          <div className="d-flex justify-content-center">
+            <button
+              type="button"
+              className="btn px-4 py-2 fw-semibold text-white"
+              style={{
+                backgroundColor: "#13d17c",
+                borderColor: "#13d17c",
+                fontSize: "15px",
+                borderRadius: "5px",
+                minWidth: "90px",
+              }}
+              onClick={onClose}
+            >
+              {confirmText || "OK"}
+            </button>
+          </div>
+        </div>
+      </ModalBody>
+    </Modal>
+  );
+};
 
 const SolitaireSaleForm = ({ mode = "add" }) => {
   const { t } = useTranslation();
@@ -305,6 +371,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -342,6 +409,15 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [bulkLotNos, setBulkLotNos] = useState("");
   const [refreshBack, setRefreshBack] = useState("");
@@ -612,8 +688,8 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      baseRate: toNum(getVal(h, "BaseRate", "MasterCurrencyRate"), 1) || 1,
+      sBaseRate: toNum(getVal(h, "SBaseRate", "StockCurrencyRate"), 1) || 1,
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundAmount: toNum(getVal(h, "RoundAmount")),
@@ -674,11 +750,13 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
   const recalcEntryAmount = (next) => ({ ...next, amount: fmt(calcItemAmount(next.weight, next.rate, next.less1, next.less2, next.less3)) });
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -696,7 +774,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
   const fillFromLot = async (lotNo) => {
     if (!lotNo) return;
     try {
-      const res = await getSolitaireSaleLotDetail({ lotNo, curCode: toNum(header.curCode), sBaseRate: toNum(header.sBaseRate, 1) });
+      const res = await getSolitaireSaleLotDetail({ lotNo, curCode: toNum(header.curCode), sBaseRate: toNum(header.sBaseRate, 1) || 1 });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Lot detail not found."));
         return;
@@ -735,7 +813,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     const res = await getSolitaireSaleLotDetail({
       lotNo,
       curCode: toNum(header.curCode),
-      sBaseRate: toNum(header.sBaseRate, 1)
+      sBaseRate: toNum(header.sBaseRate, 1) || 1
     });
     if (!(res?.success || res?.Success)) return 0;
     const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
@@ -792,17 +870,14 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       );
     }
 
-    if (isSaleWeightInvalid(weight, availableWeight)) {
-      return showWarning(saleExceedsStockMessage(weight, availableWeight, lotNo));
-    }
     let purchaseBack = back;
     if (rate !== 0 && mrp !== 0) purchaseBack = (rate * 100) / mrp - 100;
     const row = {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
-      availableWeight: availableWeight > 0 ? Math.round(availableWeight * 1000) / 1000 : availableWeight,
+      weight: truncateCaratNumber(weight, caratFormat),
+      availableWeight: availableWeight > 0 ? truncateCaratNumber(availableWeight, caratFormat) : availableWeight,
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -872,7 +947,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Failed to load items."));
@@ -977,7 +1052,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Failed to import Excel."));
@@ -1019,13 +1094,13 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const handleRefreshBack = async () => {
     if (!items.length) return toast.warning(t("Please add at least one item."));
@@ -1330,21 +1405,6 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
     if (readOnly) return;
     if (!party?.value) return toast.warning(t("Please select Party."));
     if (!items.length) return toast.warning(t("Please add at least one item."));
-    for (const r of items) {
-      if (toNum(r.memoTransCode) !== 0) continue;
-      let available = toNum(r.availableWeight);
-      if (!isEdit) {
-        try {
-          const onHand = await fetchLotOnHand(r.lotNo);
-          if (onHand > 0 || !(available > 0)) available = onHand;
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      if (isSaleWeightInvalid(r.weight, available)) {
-        return showWarning(saleExceedsStockMessage(r.weight, available, r.lotNo));
-      }
-    }
     setSaving(true);
     try {
       const payload = buildPayload();
@@ -1422,9 +1482,9 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                         <FormGroup className="mb-2">
                           <Label className="form-label mb-1">
                             {t("Party")}
-                            {!readOnly && <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">{t("Add Account/Group")}</Link>}
+                            {!readOnly && <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">{t("NEW")}</Link>}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}><FormGroup className="mb-2"><Label className="form-label mb-1">{t("Due Days")}</Label><Input type="number" className="form-control-sm" style={fieldH} value={header.dueDays} onChange={(e) => setHeaderField("dueDays", e.target.value)} /></FormGroup></Col>
@@ -1516,9 +1576,9 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                   {!readOnly && (
                     <div className="txn-item-entry-grid">
                       <div className="txn-item-field txn-item-field--wide">
-                        <Label className="form-label mb-1">
+                        <Label className="form-label mb-1" style={{ overflow: "visible", lineHeight: "18px" }}>
                           {t("Lot Number")}
-                          <Link to="/masters/add-solitaire-item-master" className="ms-2 small text-primary" target="_blank">{t("Add Item")}</Link>
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none", display: "inline-block", lineHeight: "14px", verticalAlign: "middle" }} target="_blank">{t("ADD ITEM")}</Link>
                         </Label>
                         <CreatableSelect styles={customStyles} options={lotOpts} value={lotSel} onChange={(o) => { setLotSel(o); onEntryChange("lotNo", o?.value || ""); if (o?.value) fillFromLot(o.value); }} onInputChange={(v, meta) => { if (meta.action === "input-change") setLotInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setLotInput(""); setLotOpts([]); } }} isLoading={lotLoading} placeholder={t("Lot...")} isClearable />
                       </div>
@@ -1536,7 +1596,7 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       </div>
                       <div className="txn-item-field">
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleWeightBlur} />
+                        <Input type="text" inputMode="decimal" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleWeightBlur} />
                       </div>
                       <div className="txn-item-field">
                         <Label className="form-label mb-1">{t("Pcs")}</Label>
@@ -1598,14 +1658,30 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                                   </div>
                                 ) : <span className="text-muted">-</span>}
                               </td>
-                              {ITEM_COLUMNS.map((col) => <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>{renderItemCell(r, col)}</td>)}
+                              {ITEM_COLUMNS.map((col) => (
+                                <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
+                                  {col.key === "lotNo" ? (
+                                    <span
+                                      role="button"
+                                      className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpenStockHistory(r.lotNo)}
+                                      title={t("View Stock History")}
+                                    >
+                                      {r.lotNo}
+                                    </span>
+                                  ) : (
+                                    renderItemCell(r, col, caratFormat)
+                                  )}
+                                </td>
+                              ))}
                             </tr>
                           ))}
                         </tbody>
                         <tfoot className="table-light fw-semibold">
                           <tr>
                             <td colSpan={3}>{t("Total")}</td>
-                            {ITEM_COLUMNS.slice(2).map((col) => <td key={col.key} className={col.align === "end" ? "text-end" : ""}>{col.footer ? getItemFooterValue(col.footer, totals, items) : ""}</td>)}
+                            {ITEM_COLUMNS.slice(2).map((col) => <td key={col.key} className={col.align === "end" ? "text-end" : ""}>{col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}</td>)}
                           </tr>
                         </tfoot>
                       </Table>
@@ -1732,7 +1808,17 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
                       <td><Input type="checkbox" checked={!!r.selected} onChange={(e) => { const checked = e.target.checked; setMemoRows((prev) => prev.map((x) => (x.key === r.key ? { ...x, selected: checked } : x))); }} /></td>
                       <td>{r.date}</td>
                       <td>{r.memoNo}</td>
-                      <td>{r.lotNo}</td>
+                      <td>
+                        <span
+                          role="button"
+                          className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleOpenStockHistory(r.lotNo)}
+                          title={t("View Stock History")}
+                        >
+                          {r.lotNo}
+                        </span>
+                      </td>
                       <td className="text-end">{fmt(r.cts, 3)}</td>
                       <td>
                         <Input type="number" className="form-control-sm" style={{ height: 28, width: "65px", padding: "1px 5px", fontSize: "11px" }} value={r.sale} onChange={(e) => {
@@ -1777,6 +1863,12 @@ const SolitaireSaleForm = ({ mode = "add" }) => {
           </ModalFooter>
         </Modal>
 
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={false}
+        />
         <WarningModal open={warningModal.open} title={t("Warning!")} message={warningModal.message} confirmText={t("OK")} onClose={closeWarning} />
         <ToastContainer autoClose={2000} />
         <style>{`

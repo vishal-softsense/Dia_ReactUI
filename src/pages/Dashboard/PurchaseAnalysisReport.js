@@ -41,7 +41,10 @@ import {
   getAccGrpMasters
 } from "../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../Components/Hooks/useCompanyCurrencySymbols";
 import "chart.js/auto";
+import { formatCarat, truncateCaratNumber } from "../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../Components/Hooks/useCaratFormat";
 
 const CHART_COLORS = [
   "#FF6384",
@@ -120,6 +123,10 @@ const arrowLinesPlugin = {
 
 const PurchaseAnalysisReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const mSym = masterSymbol || t("Master");
+  const sSym = stockSymbol || t("Stock");
 
   const { fromDate: settingFrom, toDate: settingTo, getDates } = useSettingReportDates();
 
@@ -604,44 +611,44 @@ const PurchaseAnalysisReport = () => {
       "Pur Pcs%",
       "Pur Carats",
       "Pur Carats%",
-      "Pur Cost $",
+      `Pur Cost ${sSym}`,
       "Sold Pcs",
       "Sold Pcs%",
       "Sold Carats",
       "Sold Carats%",
-      "Sale Amt $",
+      `Sale Amt ${sSym}`,
       "Sale%",
-      "Cost Amt $",
+      `Cost Amt ${sSym}`,
       "Sale%",
-      "Sold PL $",
-      "Sold PL $ %",
-      "PL % On PurAmt $",
-      "Sale Amt INR",
+      `Sold PL ${sSym}`,
+      `Sold PL ${sSym} %`,
+      `PL % On PurAmt ${sSym}`,
+      `Sale Amt ${mSym}`,
       "Sale%",
-      "Sold PL INR",
-      "INR PL%",
-      "Pur Cost INR",
-      "PL % On PurAmt INR",
+      `Sold PL ${mSym}`,
+      `${mSym} PL%`,
+      `Pur Cost ${mSym}`,
+      `PL % On PurAmt ${mSym}`,
       "Stock Pcs",
       "Stock Pcs%",
       "Stock Carats",
       "Stock Carats%",
-      "Stock Amt $",
-      "Stock Amt $ %",
-      "Total PL Amt $",
-      "Total PL $ %"
+      `Stock Amt ${sSym}`,
+      `Stock Amt ${sSym} %`,
+      `Total PL Amt ${sSym}`,
+      `Total PL ${sSym} %`
     ];
 
     const rows = filteredData.map((row) => [
       getGroupingValue(row, activeReportType),
       pick(row, "PurPcs", "purPcs") ?? 0,
       pick(row, "PurPcsper", "purPcsper") ?? 0,
-      pick(row, "PurCarats", "purCarats") ?? 0,
+      truncateCaratNumber(pick(row, "PurCarats", "purCarats") ?? 0, caratFormat),
       pick(row, "PurCaratsper", "purCaratsper") ?? 0,
       pick(row, "PurCostdollar", "purCostdollar") ?? 0,
       pick(row, "SoldPcs", "soldPcs") ?? 0,
       pick(row, "SoldPcsper", "soldPcsper") ?? 0,
-      pick(row, "SoldCarats", "soldCarats") ?? 0,
+      truncateCaratNumber(pick(row, "SoldCarats", "soldCarats") ?? 0, caratFormat),
       pick(row, "SoldCaratsper", "soldCaratsper") ?? 0,
       pick(row, "SaleAmtdollar", "saleAmtdollar") ?? 0,
       pick(row, "Saleamtdollerper", "saleamtdollerper") ?? 0,
@@ -658,7 +665,7 @@ const PurchaseAnalysisReport = () => {
       pick(row, "PLperOnPurAmtINR", "pLperOnPurAmtINR") ?? 0,
       pick(row, "StockPcs", "stockPcs") ?? 0,
       pick(row, "StockPcsper", "stockPcsper") ?? 0,
-      pick(row, "StockCarats", "stockCarats") ?? 0,
+      truncateCaratNumber(pick(row, "StockCarats", "stockCarats") ?? 0, caratFormat),
       pick(row, "StockCaratsper", "stockCaratsper") ?? 0,
       pick(row, "StockAmtdollar", "stockAmtdollar") ?? 0,
       pick(row, "StockAmtdollarper", "stockAmtdollarper") ?? 0,
@@ -670,12 +677,12 @@ const PurchaseAnalysisReport = () => {
       "Total",
       totals.purPcs,
       "",
-      totals.purCarats.toFixed(2),
+      formatCarat(totals.purCarats, caratFormat),
       "",
       totals.purCostdollar.toFixed(2),
       totals.soldPcs,
       "",
-      totals.soldCarats.toFixed(2),
+      formatCarat(totals.soldCarats, caratFormat),
       "",
       totals.saleAmtdollar.toFixed(2),
       "",
@@ -692,7 +699,7 @@ const PurchaseAnalysisReport = () => {
       "",
       totals.stockPcs,
       "",
-      totals.stockCarats.toFixed(2),
+      formatCarat(totals.stockCarats, caratFormat),
       "",
       totals.stockAmtdollar.toFixed(2),
       "",
@@ -761,7 +768,7 @@ const PurchaseAnalysisReport = () => {
         legend: { display: false },
         title: {
           display: true,
-          text: isDollar ? "SoldPL$" : "SoldPLINR",
+          text: isDollar ? `SoldPL${sSym}` : `SoldPL${mSym}`,
           font: { size: 18, weight: "bold" },
           padding: { bottom: 20 },
           color: isDark ? "#e9ebec" : "#212529"
@@ -1363,32 +1370,32 @@ const PurchaseAnalysisReport = () => {
                                   <th className="header-bg-pur">{t("Pur Pcs%")}</th>
                                   <th className="header-bg-pur">{t("Pur Carats")}</th>
                                   <th className="header-bg-pur">{t("Pur Carats%")}</th>
-                                  <th className="header-bg-pur">{t("Pur Cost $")}</th>
+                                  <th className="header-bg-pur">{`Pur Cost ${sSym}`}</th>
                                   <th className="header-bg-sold">{t("Sold Pcs")}</th>
                                   <th className="header-bg-sold">{t("Sold Pcs%")}</th>
                                   <th className="header-bg-sold">{t("Sold Carats")}</th>
                                   <th className="header-bg-sold">{t("Sold Carats%")}</th>
-                                  <th className="header-bg-sale-pl">{t("Sale Amt $")}</th>
+                                  <th className="header-bg-sale-pl">{`Sale Amt ${sSym}`}</th>
                                   <th className="header-bg-sale-pl">{t("Sale%")}</th>
-                                  <th>{t("Cost Amt $")}</th>
+                                  <th>{`Cost Amt ${sSym}`}</th>
                                   <th className="header-bg-sale-pl">{t("Sale%")}</th>
-                                  <th>{t("Sold PL $")}</th>
-                                  <th>{t("Sold PL $ %")}</th>
-                                  <th className="header-bg-pur">{t("PL % On PurAmt $")}</th>
-                                  <th className="header-bg-sale-pl">{t("Sale Amt INR")}</th>
+                                  <th>{`Sold PL ${sSym}`}</th>
+                                  <th>{`Sold PL ${sSym} %`}</th>
+                                  <th className="header-bg-pur">{`PL % On PurAmt ${sSym}`}</th>
+                                  <th className="header-bg-sale-pl">{`Sale Amt ${mSym}`}</th>
                                   <th className="header-bg-sale-pl">{t("Sale%")}</th>
-                                  <th>{t("Sold PL INR")}</th>
-                                  <th>{t("INR PL%")}</th>
-                                  <th className="header-bg-pur">{t("Pur Cost INR")}</th>
-                                  <th className="header-bg-pur">{t("PL % On PurAmt INR")}</th>
+                                  <th>{`Sold PL ${mSym}`}</th>
+                                  <th>{`${mSym} PL%`}</th>
+                                  <th className="header-bg-pur">{`Pur Cost ${mSym}`}</th>
+                                  <th className="header-bg-pur">{`PL % On PurAmt ${mSym}`}</th>
                                   <th>{t("Stock Pcs")}</th>
                                   <th>{t("Stock Pcs%")}</th>
                                   <th>{t("Stock Carats")}</th>
                                   <th>{t("Stock Carats%")}</th>
-                                  <th>{t("Stock Amt $")}</th>
-                                  <th>{t("Stock Amt $ %")}</th>
-                                  <th>{t("Total PL Amt $")}</th>
-                                  <th>{t("Total PL $ %")}</th>
+                                  <th>{`Stock Amt ${sSym}`}</th>
+                                  <th>{`Stock Amt ${sSym} %`}</th>
+                                  <th>{`Total PL Amt ${sSym}`}</th>
+                                  <th>{`Total PL ${sSym} %`}</th>
                                 </tr>
                                 <tr>
                                   <th className="p-1">
@@ -1460,12 +1467,12 @@ const PurchaseAnalysisReport = () => {
                                     </td>
                                     <td className="cell-bg-pur">{fmtInt(pick(row, "PurPcs", "purPcs"))}</td>
                                     <td className="cell-bg-pur">{fmtFloat(pick(row, "PurPcsper", "purPcsper"))}%</td>
-                                    <td className="cell-bg-pur">{fmtFloat(pick(row, "PurCarats", "purCarats"))}</td>
+                                    <td className="cell-bg-pur">{formatCarat(pick(row, "PurCarats", "purCarats"), caratFormat)}</td>
                                     <td className="cell-bg-pur">{fmtFloat(pick(row, "PurCaratsper", "purCaratsper"))}%</td>
                                     <td className="cell-bg-pur">{fmtCurrency(pick(row, "PurCostdollar", "purCostdollar"))}</td>
                                     <td className="cell-bg-sold">{fmtInt(pick(row, "SoldPcs", "soldPcs"))}</td>
                                     <td className="cell-bg-sold">{fmtFloat(pick(row, "SoldPcsper", "soldPcsper"))}%</td>
-                                    <td className="cell-bg-sold">{fmtFloat(pick(row, "SoldCarats", "soldCarats"))}</td>
+                                    <td className="cell-bg-sold">{formatCarat(pick(row, "SoldCarats", "soldCarats"), caratFormat)}</td>
                                     <td className="cell-bg-sold">{fmtFloat(pick(row, "SoldCaratsper", "soldCaratsper"))}%</td>
                                     <td className="cell-bg-sale-pl">{fmtCurrency(pick(row, "SaleAmtdollar", "saleAmtdollar"))}</td>
                                     <td className="cell-bg-sale-pl">{fmtFloat(pick(row, "Saleamtdollerper", "saleamtdollerper"))}%</td>
@@ -1482,7 +1489,7 @@ const PurchaseAnalysisReport = () => {
                                     <td className="cell-bg-pur">{fmtFloat(pick(row, "PLperOnPurAmtINR", "pLperOnPurAmtINR"))}%</td>
                                     <td>{fmtInt(pick(row, "StockPcs", "stockPcs"))}</td>
                                     <td>{fmtFloat(pick(row, "StockPcsper", "stockPcsper"))}%</td>
-                                    <td>{fmtFloat(pick(row, "StockCarats", "stockCarats"))}</td>
+                                    <td>{formatCarat(pick(row, "StockCarats", "stockCarats"), caratFormat)}</td>
                                     <td>{fmtFloat(pick(row, "StockCaratsper", "stockCaratsper"))}%</td>
                                     <td>{fmtCurrency(pick(row, "StockAmtdollar", "stockAmtdollar"))}</td>
                                     <td>{fmtFloat(pick(row, "StockAmtdollarper", "stockAmtdollarper"))}%</td>
@@ -1496,12 +1503,12 @@ const PurchaseAnalysisReport = () => {
                                   <td className="text-start">{t("Total")}</td>
                                   <td>{fmtInt(totals.purPcs)}</td>
                                   <td>-</td>
-                                  <td>{fmtFloat(totals.purCarats)}</td>
+                                  <td>{formatCarat(totals.purCarats, caratFormat)}</td>
                                   <td>-</td>
                                   <td>{fmtCurrency(totals.purCostdollar)}</td>
                                   <td>{fmtInt(totals.soldPcs)}</td>
                                   <td>-</td>
-                                  <td>{fmtFloat(totals.soldCarats)}</td>
+                                  <td>{formatCarat(totals.soldCarats, caratFormat)}</td>
                                   <td>-</td>
                                   <td>{fmtCurrency(totals.saleAmtdollar)}</td>
                                   <td>-</td>
@@ -1518,7 +1525,7 @@ const PurchaseAnalysisReport = () => {
                                   <td>-</td>
                                   <td>{fmtInt(totals.stockPcs)}</td>
                                   <td>-</td>
-                                  <td>{fmtFloat(totals.stockCarats)}</td>
+                                  <td>{formatCarat(totals.stockCarats, caratFormat)}</td>
                                   <td>-</td>
                                   <td>{fmtCurrency(totals.stockAmtdollar)}</td>
                                   <td>-</td>

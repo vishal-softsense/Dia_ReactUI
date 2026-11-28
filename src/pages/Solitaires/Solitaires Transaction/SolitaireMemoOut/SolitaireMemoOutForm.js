@@ -34,11 +34,20 @@ import {
   getSolitaireMemoOutShipVia,
   refreshSolitaireMemoOutBack
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
+import StockHistoryPopupModal from "../../Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
   REPORT_COMPANY_SETTINGS_EVENT
 } from "../../../../helpers/reportCompanyDefaults";
+import {
+  formatCarat,
+  sanitizeCaratInput,
+  truncateCaratNumber,
+  getCachedCaratFormat
+} from "../../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../../Components/Hooks/useCaratFormat";
 
 const todayIso = () => new Date().toISOString().substr(0, 10);
 
@@ -105,10 +114,34 @@ const calcItemAmount = (weight, rate, less1, less2, less3) => {
   return Math.round(amount * 100) / 100;
 };
 
+const roundCts = (v, fmtStr) => truncateCaratNumber(v, fmtStr || getCachedCaratFormat("solitaire"));
+
+/** Prefer closing-stock on-hand; do not treat item-master Carats as available stock. */
+const getLotAvailableWeight = (lot) => {
+  const onHand = roundCts(
+    getNumVal(lot, "OnHandCarats3Dec", "onHandCarats3Dec", "BalanceCarats3Dec", "balanceCarats3Dec")
+  );
+  if (onHand > 0) return onHand;
+  const balance = roundCts(getNumVal(lot, "Weight", "Carats"));
+  return balance > 0 ? balance : 0;
+};
+
+const memoExceedsStockMessage = (memoWeight, available, lotNo) => {
+  const lot = lotNo ? ` for lot ${lotNo}` : "";
+  return `Memo weight (${roundCts(memoWeight)}) cannot exceed available stock weight (${roundCts(available)})${lot}.`;
+};
+
+const isMemoWeightInvalid = (memoWeight, available) => {
+  const memo = roundCts(memoWeight);
+  const avail = roundCts(available);
+  return memo > 0 && memo > avail;
+};
+
 const emptyItem = () => ({
   lotNo: "",
   itemName: "",
   weight: "",
+  availableWeight: "",
   pcs: "",
   mrp: "",
   back: "",
@@ -152,6 +185,7 @@ const mapItemFromApi = (r, idx) => ({
   lotNo: getStrVal(r, "LotNo"),
   itemName: getStrVal(r, "ItemName"),
   weight: getNumVal(r, "Weight", "Carats"),
+  availableWeight: getLotAvailableWeight(r) || getNumVal(r, "Weight", "Carats"),
   pcs: getNumVal(r, "Pcs") || 0,
   mrp: getNumVal(r, "MRP"),
   back: getNumVal(r, "Back", "PMRPDown"),
@@ -195,7 +229,7 @@ const getRowStatusStyle = (status) => {
 const ITEM_COLUMNS = [
   { key: "lotNo", label: "LotNo" },
   { key: "itemName", label: "ItemName" },
-  { key: "weight", label: "Weight", align: "end", decimals: 3, footer: "weight" },
+  { key: "weight", label: "Weight", align: "end", isCarat: true, footer: "weight" },
   { key: "pcs", label: "Pcs", align: "end", footer: "pcs" },
   { key: "mrp", label: "MRP", align: "end", decimals: 2, footer: "avgMrp" },
   { key: "back", label: "Back", align: "end", decimals: 2, footer: "avgBack" },
@@ -205,14 +239,14 @@ const ITEM_COLUMNS = [
   { key: "less3", label: "Less3", align: "end", decimals: 2 },
   { key: "amount", label: "Amount", align: "end", decimals: 2, footer: "totAmount" },
   { key: "status", label: "Status" },
-  { key: "spCarats", label: "SpCarats", align: "end", decimals: 3 },
-  { key: "returnCarats", label: "ReturnCarats", align: "end", decimals: 3 }
+  { key: "spCarats", label: "SpCarats", align: "end", isCarat: true },
+  { key: "returnCarats", label: "ReturnCarats", align: "end", isCarat: true }
 ];
 
-const getItemFooterValue = (footerKey, totals, itemRows) => {
+const getItemFooterValue = (footerKey, totals, itemRows, caratFormat) => {
   switch (footerKey) {
     case "weight":
-      return fmt(totals.totCts, 3);
+      return formatCarat(totals.totCts, caratFormat);
     case "pcs":
       return itemRows.reduce((s, r) => s + toNum(r.pcs), 0);
     case "avgMrp":
@@ -228,8 +262,12 @@ const getItemFooterValue = (footerKey, totals, itemRows) => {
   }
 };
 
-const renderItemCell = (row, col) => {
+const renderItemCell = (row, col, caratFormat) => {
   const v = row[col.key];
+  if (col.isCarat) {
+    if (v === "" || v == null) return v === 0 || v === "0" ? formatCarat(0, caratFormat) : "";
+    return formatCarat(v, caratFormat);
+  }
   if (col.decimals != null) {
     if (v === "" || v == null) return v === 0 || v === "0" ? fmt(0, col.decimals) : "";
     return fmt(v, col.decimals);
@@ -311,6 +349,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
   const editId = searchParams.get("Id") || searchParams.get("id") || "";
   const isView = String(searchParams.get("Mode") || searchParams.get("mode") || "").toLowerCase() === "view";
   const readOnly = isView;
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -343,6 +382,15 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
   const [sOp, setSOp] = useState("*");
   const [editIndex, setEditIndex] = useState(-1);
   const [items, setItems] = useState([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState("");
+
+  const handleOpenStockHistory = (lotNo) => {
+    const lot = String(lotNo || "").trim();
+    if (!lot) return;
+    setSelectedHistoryLot(lot);
+    setHistoryModalOpen(true);
+  };
   const [entry, setEntry] = useState(emptyItem());
   const [bulkLotNos, setBulkLotNos] = useState("");
   const [refreshBack, setRefreshBack] = useState("");
@@ -640,8 +688,8 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       dueDays: toNum(getVal(h, "DueDays")),
       dueDate: toLocalDateStr(getVal(h, "DueDate")) || todayIso(),
       curCode: String(getVal(h, "CurCode") || ""),
-      baseRate: toNum(getVal(h, "BaseRate"), 1),
-      sBaseRate: toNum(getVal(h, "SBaseRate"), 1),
+      baseRate: toNum(getVal(h, "BaseRate", "MasterCurrencyRate"), 1) || 1,
+      sBaseRate: toNum(getVal(h, "SBaseRate", "StockCurrencyRate"), 1) || 1,
       description: getVal(h, "Description", "InvDisc"),
       plusMinusAmount: toNum(getVal(h, "PlusMinusAmount")),
       roundDate: toLocalDateStr(getVal(h, "RoundDate")) || todayIso(),
@@ -689,12 +737,14 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const recalcEntryAmount = (next) => ({ ...next, amount: fmt(calcItemAmount(next.weight, next.rate, next.less1, next.less2, next.less3)) });
 
   const onEntryChange = (key, value) => {
+    const cleanVal = key === "weight" ? sanitizeCaratInput(value, caratFormat) : value;
     setEntry((prev) => {
-      let next = { ...prev, [key]: value };
+      let next = { ...prev, [key]: cleanVal };
       if (key === "mrp" || key === "back") {
         const mrp = toNum(key === "mrp" ? value : next.mrp);
         const back = toNum(key === "back" ? value : next.back);
@@ -709,13 +759,63 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
     });
   };
 
+  const fetchLotOnHand = async (lotNo) => {
+    if (!lotNo) return 0;
+    try {
+      const res = await getSolitaireMemoOutLotDetail({
+        lotNo,
+        curCode: toNum(header.curCode),
+        sBaseRate: toNum(header.sBaseRate, 1)
+      });
+      if (!(res?.success || res?.Success)) return 0;
+      const rows = res.Data || res.data || [];
+      const lot = Array.isArray(rows) ? rows[0] : rows;
+      return getLotAvailableWeight(lot);
+    } catch {
+      return 0;
+    }
+  };
+
+  const resolveAvailableWeight = async (lotNo, fallback, rowWeight = 0) => {
+    let onHand = toNum(fallback);
+    try {
+      const live = await fetchLotOnHand(lotNo);
+      if (live > 0) onHand = live;
+    } catch (err) {
+      console.error(err);
+    }
+    // Saved invoice edit: on-hand already excludes this line — add it back.
+    if (isEdit && editIndex >= 0) {
+      return roundCts(onHand + toNum(rowWeight));
+    }
+    return roundCts(onHand);
+  };
+
+  const handleWeightBlur = async () => {
+    if (readOnly) return;
+    const lotNo = (lotSel?.value || entry.lotNo || "").toString().trim();
+    const weight = toNum(entry.weight);
+    if (!lotNo || weight <= 0) return;
+    const availableWeight = await resolveAvailableWeight(
+      lotNo,
+      entry.availableWeight,
+      editIndex >= 0 ? items[editIndex]?.weight : 0
+    );
+    setEntry((prev) => ({ ...prev, availableWeight }));
+    if (availableWeight <= 0) {
+      showWarning(t("Not enough stock in hand to make sale or memo."));
+    } else if (isMemoWeightInvalid(weight, availableWeight)) {
+      showWarning(memoExceedsStockMessage(weight, availableWeight, lotNo));
+    }
+  };
+
   const fillFromLot = async (lotNo) => {
     if (!lotNo) return;
     try {
       const res = await getSolitaireMemoOutLotDetail({
         lotNo,
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       });
       if (!(res?.success || res?.Success)) {
         toast.warning(res?.Data || res?.data || t("Lot detail not found."));
@@ -724,6 +824,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       const lot = (Array.isArray(res.Data || res.data) ? (res.Data || res.data)[0] : res.Data || res.data) || null;
       if (!lot) return;
 
+      const availableWeight = getLotAvailableWeight(lot) || getNumVal(lot, "Weight", "Carats");
       const weight = getNumVal(lot, "Weight", "Carats");
       const mrp = getNumVal(lot, "MRP");
       const back = getNumVal(lot, "Back");
@@ -741,6 +842,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
           lotNo: getStrVal(lot, "LotNo") || lotNo,
           itemName: getStrVal(lot, "ItemName"),
           weight,
+          availableWeight,
           pcs,
           mrp,
           back,
@@ -774,7 +876,8 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       ...entry,
       lotNo,
       itemName: entry.itemName || lotSel?.label || "",
-      weight: Math.round(weight * 1000) / 1000,
+      weight: truncateCaratNumber(weight, caratFormat),
+      availableWeight: toNum(entry.availableWeight),
       pcs: toNum(entry.pcs, 0),
       mrp,
       back: Math.round(purchaseBack * 100) / 100,
@@ -805,12 +908,21 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
     setEntry(emptyItem());
   };
 
-  const handleEditRow = (idx) => {
+  const handleEditRow = async (idx) => {
     const r = items[idx];
     if (!r) return;
     setEditIndex(idx);
     setLotSel({ value: r.lotNo, label: r.lotNo });
-    setEntry({ ...emptyItem(), ...r });
+    let availableWeight = toNum(r.availableWeight);
+    if (r.lotNo) {
+      try {
+        const onHand = await fetchLotOnHand(r.lotNo);
+        availableWeight = isEdit ? roundCts(onHand + toNum(r.weight)) : onHand;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setEntry({ ...emptyItem(), ...r, availableWeight: availableWeight || r.availableWeight || "" });
   };
 
   const handleDeleteRow = (idx) => {
@@ -834,7 +946,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
         less2: toNum(entry.less2),
         less3: toNum(entry.less3),
         curCode: toNum(header.curCode),
-        sBaseRate: toNum(header.sBaseRate, 1)
+        sBaseRate: toNum(header.sBaseRate, 1) || 1
       };
       const res = await getSolitaireMemoOutItemFromList(payload);
       if (!(res?.success || res?.Success)) {
@@ -843,7 +955,11 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       }
       const data = res.Data || res.data || {};
       const rows = data.ExcelData || data.excelData || [];
-      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      setItems(rows.map((r, idx) => {
+        const mapped = mapItemFromApi(r, idx);
+        const availableWeight = getLotAvailableWeight(r) || mapped.weight;
+        return { ...mapped, availableWeight };
+      }));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Items loaded."));
     } catch (err) {
@@ -872,7 +988,11 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       }
       const data = res.Data || res.data || {};
       const rows = data.ExcelData || data.excelData || [];
-      setItems(rows.map((r, idx) => mapItemFromApi(r, idx)));
+      setItems(rows.map((r, idx) => {
+        const mapped = mapItemFromApi(r, idx);
+        const availableWeight = getLotAvailableWeight(r) || mapped.weight;
+        return { ...mapped, availableWeight };
+      }));
       if (data.Alert || data.alert) toast.warning(data.Alert || data.alert);
       else toast.success(t("Avg Back/Rate Updated"));
     } catch (err) {
@@ -894,13 +1014,13 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
       totWithoutLess += w * toNum(r.rate);
     });
     return {
-      totCts: Math.round(totCts * 1000) / 1000,
+      totCts: truncateCaratNumber(totCts, caratFormat),
       totAmount: Math.round(totAmount * 100) / 100,
       avgMrp: totCts === 0 ? 0 : totMrp / totCts,
       avgRate: totCts === 0 ? 0 : totWithoutLess / totCts,
       avgBack: totMrp === 0 ? 0 : (totWithoutLess / totMrp) * 100 - 100
     };
-  }, [items]);
+  }, [items, caratFormat]);
 
   const summary = useMemo(() => {
     const netAmount = totals.totAmount;
@@ -1085,12 +1205,12 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                           <Label className="form-label mb-1">
                             {t("Party")}
                             {!readOnly && (
-                              <Link to="/account/add-accountgroup" className="ms-2 small text-primary" target="_blank">
-                                {t("Add Account/Group")}
+                              <Link to="/account/add-accountgroup" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                                {t("NEW")}
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1203,7 +1323,12 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                   {!readOnly && (
                     <Row className="g-2 align-items-end">
                       <Col xs={12} sm={6} md={2}>
-                        <Label className="form-label mb-1">{t("Lot Number")}</Label>
+                        <Label className="form-label mb-1">
+                          {t("Lot Number")}
+                          <Link to="/masters/add-solitaire-item-master" className="ms-1 border border-primary text-primary px-1 rounded" style={{ fontSize: "10px", textDecoration: "none" }} target="_blank">
+                            {t("ADD ITEM")}
+                          </Link>
+                        </Label>
                         <CreatableSelect
                           styles={customStyles}
                           options={lotOpts}
@@ -1225,7 +1350,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Weight")}</Label>
-                        <Input type="number" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} />
+                        <Input type="text" inputMode="decimal" className="form-control-sm" style={fieldH} value={entry.weight} onChange={(e) => onEntryChange("weight", e.target.value)} onBlur={handleWeightBlur} />
                       </Col>
                       <Col xs={6} sm={4} md={1}>
                         <Label className="form-label mb-1">{t("Pcs")}</Label>
@@ -1299,7 +1424,19 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                               </td>
                               {ITEM_COLUMNS.map((col) => (
                                 <td key={col.key} className={col.align === "end" ? "text-end" : ""} style={{ whiteSpace: "nowrap" }}>
-                                  {renderItemCell(r, col)}
+                                  {col.key === "lotNo" ? (
+                                    <span
+                                      role="button"
+                                      className="text-primary text-decoration-underline fw-medium cursor-pointer"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpenStockHistory(r.lotNo)}
+                                      title={t("View Stock History")}
+                                    >
+                                      {r.lotNo}
+                                    </span>
+                                  ) : (
+                                    renderItemCell(r, col, caratFormat)
+                                  )}
                                 </td>
                               ))}
                             </tr>
@@ -1310,7 +1447,7 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
                             <td colSpan={3}>{t("Total")}</td>
                             {ITEM_COLUMNS.slice(2).map((col) => (
                               <td key={col.key} className={col.align === "end" ? "text-end" : ""}>
-                                {col.footer ? getItemFooterValue(col.footer, totals, items) : ""}
+                                {col.footer ? getItemFooterValue(col.footer, totals, items, caratFormat) : ""}
                               </td>
                             ))}
                           </tr>
@@ -1396,6 +1533,12 @@ const SolitaireMemoOutForm = ({ mode = "add" }) => {
             </Col>
           </Row>
         </Container>
+        <StockHistoryPopupModal
+          isOpen={historyModalOpen}
+          toggle={() => setHistoryModalOpen(false)}
+          stockId={selectedHistoryLot}
+          isParcel={false}
+        />
         <WarningModal
           open={warningModal.open}
           title={t("Warning!")}

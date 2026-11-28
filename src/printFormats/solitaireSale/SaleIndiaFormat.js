@@ -1,6 +1,7 @@
 import React from "react";
 import {
   fmt,
+  fmtSolitaireCarat,
   fmtDateMMM,
   getVal,
   paginateWithLastCap
@@ -260,7 +261,7 @@ const SaleIndiaFormat = ({ data, items, company, logoUrl }) => {
                     <td style={cell}>{getVal(item, "PolishId", "polishId")}</td>
                     <td style={cell}>{getVal(item, "SymId", "symId")}</td>
                     <td style={cell}>{getVal(item, "FLId", "flId", "FlId")}</td>
-                    <td style={cell}>{fmt(getVal(item, "Carats", "carats"), 2)}</td>
+                    <td style={cell}>{fmtSolitaireCarat(getVal(item, "Carats", "carats"))}</td>
                     <td style={cell}>{fmt(getVal(item, "Rate", "rate"), 2)}</td>
                     <td style={cell}>{fmt(getVal(item, "Back", "back"), 2)}</td>
                     <td style={cell}>
@@ -284,7 +285,7 @@ const SaleIndiaFormat = ({ data, items, company, logoUrl }) => {
                         }}
                       >
                         <span style={{ float: "left" }}>Total Carats :</span>
-                        <span style={{ float: "right" }}>{fmt(totalWt, 2)}</span>
+                        <span style={{ float: "right" }}>{fmtSolitaireCarat(totalWt)}</span>
                         <div style={{ clear: "both" }} />
                       </td>
                       <td colSpan={2} style={{ ...cell, height: "auto", padding: "4px 0" }}>

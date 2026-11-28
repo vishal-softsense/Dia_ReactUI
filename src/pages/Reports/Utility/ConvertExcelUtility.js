@@ -143,7 +143,7 @@ const ConvertExcelUtility = () => {
                     <h5 className="card-title mb-0 text-primary fw-semibold">{t(title)}</h5>
                 </CardHeader>
                 <CardBody className="p-0">
-                    <div className="table-responsive" style={{ maxHeight: "500px", overflowY: "auto" }}>
+                    <div className="table-responsive viewport-table-scroll" style={{ maxHeight: "clamp(220px, 45vh, 460px)" }}>
                         <Table id={tableId} bordered hover size="sm" className="align-middle text-center mb-0" style={{ fontSize: "11px", minWidth: "1800px" }}>
                             <thead className="table-light sticky-top">
                                 <tr>

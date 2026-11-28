@@ -19,9 +19,9 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
     getLedgerReportList1,
-    getSettingData,
     getTrialBalanceSheetReport,
     getTrialBalanceSheetReportPermission
 } from "../../../helpers/fakebackend_helper";
@@ -289,6 +289,7 @@ const buildTrialBalancePrintHtml = ({
 const TrialBalanceSheetReport = () => {
     const { t } = useTranslation();
     const tableRef = useRef(null);
+    const tableScrollRef = useRef(null);
     const { toDate: settingToDate, getDates } = useSettingReportDates();
 
     const [loading, setLoading] = useState(false);
@@ -296,10 +297,14 @@ const TrialBalanceSheetReport = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [showReport, setShowReport] = useState(false);
     const [reportData, setReportData] = useState([]);
+    const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+        enabled: showReport,
+        deps: [showReport, reportData.length],
+    });
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
-    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "USD");
-    const [masterSymbol, setMasterSymbol] = useState("INR");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
 
     const [toDate, setToDate] = useState(settingToDate);
     const [hideZeroBalance, setHideZeroBalance] = useState(true);
@@ -318,10 +323,10 @@ const TrialBalanceSheetReport = () => {
     const columns = useMemo(
         () => [
             { header: "Account Name", key: "MainAccountName" },
-            { header: `DEBIT ${stockSymbol}`, key: "Debit" },
-            { header: `CREDIT ${stockSymbol}`, key: "Credit" },
-            { header: `DEBIT ${masterSymbol}`, key: "MDebit" },
-            { header: `CREDIT ${masterSymbol}`, key: "MCredit" },
+            { header: `DEBIT ${stockSymbol || "Stock"}`, key: "Debit" },
+            { header: `CREDIT ${stockSymbol || "Stock"}`, key: "Credit" },
+            { header: `DEBIT ${masterSymbol || "Master"}`, key: "MDebit" },
+            { header: `CREDIT ${masterSymbol || "Master"}`, key: "MCredit" },
             { header: "Type", key: "Type" }
         ],
         [masterSymbol, stockSymbol]
@@ -332,11 +337,11 @@ const TrialBalanceSheetReport = () => {
             { header: "JV Date", key: "JVDate" },
             { header: "Type", key: "VType" },
             { header: "Description", key: "Account" },
-            { header: `D ${stockSymbol} Amt.`, key: "StockDebit" },
-            { header: `C ${stockSymbol} Amt.`, key: "StockCredit" },
+            { header: `D ${stockSymbol || "Stock"} Amt.`, key: "StockDebit" },
+            { header: `C ${stockSymbol || "Stock"} Amt.`, key: "StockCredit" },
             { header: "CL Balance", key: "StockFinalAmount" },
-            { header: `D ${masterSymbol} Amt.`, key: "MasterDebit" },
-            { header: `C ${masterSymbol} Amt.`, key: "MasterCredit" },
+            { header: `D ${masterSymbol || "Master"} Amt.`, key: "MasterDebit" },
+            { header: `C ${masterSymbol || "Master"} Amt.`, key: "MasterCredit" },
             { header: "C Balance", key: "MasterFinalAmount" }
         ],
         [masterSymbol, stockSymbol]
@@ -359,26 +364,9 @@ const TrialBalanceSheetReport = () => {
     const loadSymbols = useCallback(async () => {
         const company = await getReportCompanySettings({ forceRefresh: true });
         if (company) setCompanyInfo(company);
-
-        let sSym = company?.stockSymbol || "";
-        let mSym = "";
-        try {
-            const settings = await getSettingData();
-            const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-            const pick = (name) => {
-                const target = String(name).toLowerCase();
-                const row = rows.find(
-                    (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                );
-                return row?.Value ?? row?.value ?? "";
-            };
-            sSym = pick("SSymbol") || sSym;
-            mSym = pick("MSymbol") || mSym;
-        } catch {
-            /* ignore */
-        }
-        setStockSymbol(sSym || "USD");
-        setMasterSymbol(mSym || "INR");
+        const cached = getCachedReportCompany();
+        setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+        setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
     }, []);
 
     useEffect(() => {
@@ -962,8 +950,12 @@ const TrialBalanceSheetReport = () => {
                                         </Col>
                                     </Row>
 
-                                    <div id="dynamic-trial-balncessheet" className="card mt-3 mb-3">
-                                        <div className="table-responsive">
+                                    <div id="dynamic-trial-balncessheet" className="card mt-3 mb-0">
+                                        <div
+                                            ref={tableScrollRef}
+                                            className="table-responsive viewport-table-scroll"
+                                            style={{ maxHeight: tableMaxHeight }}
+                                        >
                                             <table
                                                 ref={tableRef}
                                                 className="table table-bordered nowrap mb-0 trial-balance-report-table"

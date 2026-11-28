@@ -1,5 +1,5 @@
 import React from "react";
-import { fmtDateMMM, fmtNum, getVal, paginateVariable } from "../shared/printUtils";
+import { fmtCaratNum, fmtDateMMM, fmtNum, getVal, paginateVariable } from "../shared/printUtils";
 
 // MVC Views/MixSaleReturnPartial/MixSaleRtnPrint_USA.cshtml — same-to-same
 const SINGLE_PAGE = 18;
@@ -248,7 +248,7 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
                     </td>
                     <td style={itemTd}>{getVal(item, "Pcs", "pcs", "Qty", "qty")}</td>
                     <td style={{ ...itemTd, textAlign: "right" }}>
-                      {fmtNum(getVal(item, "Carats", "carats", "Weight", "weight"), 2)}
+                      {fmtCaratNum(getVal(item, "Carats", "carats", "Weight", "weight"))}
                     </td>
                     <td style={{ ...itemTd, textAlign: "right" }}>
                       {fmtNum(getVal(item, "Rate", "rate", "PricePerCarat", "pricePerCarat"), 2)}
@@ -307,7 +307,7 @@ const MixSaleRtnPrintUsaFormat = ({ data, items, totals, company, logoUrl }) => 
                         Total Carats:
                       </td>
                       <td style={{ ...itemTd, textAlign: "right", borderLeft: "none", fontSize: 13 }}>
-                        {fmtNum(totals.wt, 2)}
+                        {fmtCaratNum(totals.wt)}
                       </td>
                       <td style={{ ...itemTd, textAlign: "center", fontSize: 13 }}>US $ :</td>
                       <td style={{ ...itemTd, textAlign: "right", fontSize: 13 }}>{fmtNum(totals.amount, 2)}</td>

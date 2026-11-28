@@ -18,6 +18,8 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 import {
   getAccGrpMasters,
   getJewMetalMastersPurity,
@@ -25,6 +27,7 @@ import {
   getJewellerySaleReturnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -80,7 +83,13 @@ const CERTIFICATE_OPTIONS = [
 
 const JewSaleReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -471,13 +480,13 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "ConDATE", "conDATE", "conDate", "Date", "date"))
       },
       {
-        header: t("InvNo"),
+        header: t("Inv No"),
         accessorKey: "invno",
         accessorFn: (row) => dashText(getRowVal(row, "invno", "Invno", "InvNo", "invNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invno", "Invno", "InvNo", "invNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo"))
@@ -489,7 +498,7 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Due", "due"))
       },
       {
-        header: t("InvType"),
+        header: t("Invoice Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
@@ -513,7 +522,7 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("DesignName"),
+        header: t("Design Name"),
         accessorKey: "DesignName",
         accessorFn: (row) => dashText(getRowVal(row, "DesignName", "designName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "DesignName", "designName"))
@@ -525,13 +534,13 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType"))
       },
       {
-        header: t("SubCategory"),
+        header: t("Sub Category"),
         accessorKey: "SubCategory",
         accessorFn: (row) => dashText(getRowVal(row, "SubCategory", "subCategory")),
         cell: ({ row }) => dashText(getRowVal(row.original, "SubCategory", "subCategory"))
       },
       {
-        header: t("JewelleryCertificate"),
+        header: t("Jewellery Certificate"),
         accessorKey: "JewelleryCertificate",
         accessorFn: (row) => dashText(getRowVal(row, "JewelleryCertificate", "jewelleryCertificate")),
         cell: ({ row }) => dashText(getRowVal(row.original, "JewelleryCertificate", "jewelleryCertificate"))
@@ -555,13 +564,13 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Purity", "purity"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "StockItem",
         accessorFn: (row) => dashText(getRowVal(row, "StockItem", "stockItem", "Item", "item")),
         cell: ({ row }) => dashText(getRowVal(row.original, "StockItem", "stockItem", "Item", "item"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -569,28 +578,28 @@ const JewSaleReturnReport = () => {
       {
         header: t("Pcs"),
         accessorKey: "carats",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), 2),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "carats", "Carats", "Pcs", "pcs"), 2),
+        accessorFn: (row) => formatCarat(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "carats", "Carats", "Pcs", "pcs"), caratFormat),
         sortingFn: numericSortFn,
         footer: ({ table }) => {
           const { parentPcs } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentPcs, 2)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentPcs, caratFormat)}</span>;
         }
       },
       {
-        header: t("Less1"),
+        header: t("Less 1"),
         accessorKey: "Less1",
         accessorFn: (row) => dashText(getRowVal(row, "Less1", "less1")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less1", "less1"))
       },
       {
-        header: t("Less2"),
+        header: t("Less 2"),
         accessorKey: "Less2",
         accessorFn: (row) => dashText(getRowVal(row, "Less2", "less2")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less2", "less2"))
       },
       {
-        header: t("Less3"),
+        header: t("Less 3"),
         accessorKey: "Less3",
         accessorFn: (row) => dashText(getRowVal(row, "Less3", "less3")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Less3", "less3"))
@@ -624,7 +633,7 @@ const JewSaleReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol"))
       },
       {
-        header: t("INR Rate"),
+        header: masterRateHeader,
         accessorKey: "MasterCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "MasterCurrencyRate", "masterCurrencyRate");
@@ -637,7 +646,7 @@ const JewSaleReturnReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -648,7 +657,7 @@ const JewSaleReturnReport = () => {
         }
       },
       {
-        header: t("USD Rate"),
+        header: stockRateHeader,
         accessorKey: "StockCurrencyRate",
         accessorFn: (row) => {
           const val = getRowVal(row, "StockCurrencyRate", "stockCurrencyRate");
@@ -661,7 +670,7 @@ const JewSaleReturnReport = () => {
         sortingFn: numericSortFn
       },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         accessorFn: (row) => fmtFixed(getRowVal(row, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -672,7 +681,7 @@ const JewSaleReturnReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -682,9 +691,9 @@ const JewSaleReturnReport = () => {
     }
 
     const headers = [
-      "Date", "InvNo", "BillNo", "Due", "InvType", "Party", "Category", "Broker", "DesignName", "Sub Type",
-      "SubCategory", "JewelleryCertificate", "Metal Type", "Color", "Purity", "LotNo", "ItemName",
-      "Pcs", "Less1", "Less2", "Less3", "Rate", "Amount", "Symbol", "INR Rate", "INR Amount", "USD Rate", "USD Amount"
+      "Date", "Inv No", "Bill No", "Due", "Invoice Type", "Party", "Category", "Broker", "Design Name", "Sub Type",
+      "Sub Category", "Jewellery Certificate", "Metal Type", "Color", "Purity", "Lot No", "Item Name",
+      "Pcs", "Less 1", "Less 2", "Less 3", "Rate", "Amount", "Symbol", masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -705,7 +714,7 @@ const JewSaleReturnReport = () => {
       dashText(getRowVal(row, "Purity", "purity")),
       dashText(getRowVal(row, "StockItem", "stockItem", "Item", "item")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), 2),
+      formatCarat(getRowVal(row, "carats", "Carats", "Pcs", "pcs"), caratFormat),
       dashText(getRowVal(row, "Less1", "less1")),
       dashText(getRowVal(row, "Less2", "less2")),
       dashText(getRowVal(row, "Less3", "less3")),
@@ -730,7 +739,7 @@ const JewSaleReturnReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jewellery Sale Return Report")} pageTitle={t("JewSale Reports")} />
+          <BreadCrumb title={t("Jewellery Sale Return Report")} pageTitle={t("Jew Sale Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
@@ -824,13 +833,13 @@ const JewSaleReturnReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Sub Type")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subType")} value={getOptions("subType").find((o) => o.value === filters.subType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))} placeholder={t("Select SubType")} isLoading={loadingDropdowns} />
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subType")} value={getOptions("subType").find((o) => o.value === filters.subType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subType: sel?.value || "" }))} placeholder={t("Select Sub Type")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("SubCategory")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.subCategory) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subCategory: sel?.value || "" }))} placeholder={t("Select SubCategory")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Sub Category")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("subCategory")} value={getOptions("subCategory").find((o) => o.value === filters.subCategory) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, subCategory: sel?.value || "" }))} placeholder={t("Select Sub Category")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>
@@ -841,8 +850,8 @@ const JewSaleReturnReport = () => {
                       </Col>
                       <Col sm={2}>
                         <FormGroup className="mb-0">
-                          <Label className="fw-medium mb-1 small">{t("MetalType")}</Label>
-                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.metalType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, metalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select MetalType")} isLoading={loadingDropdowns} />
+                          <Label className="fw-medium mb-1 small">{t("Metal Type")}</Label>
+                          <Select classNamePrefix="react-select" styles={customStyles} isClearable options={getOptions("metal")} value={getOptions("metal").find((o) => o.value === filters.metalType) || null} onChange={(sel) => setFilters((prev) => ({ ...prev, metalType: sel?.value || "", jewPurity: "" }))} placeholder={t("Select Metal Type")} isLoading={loadingDropdowns} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>

@@ -7,6 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import TableContainer from "../../../Components/Common/TableContainer";
+import ViewportScrollBox from "../../../Components/Common/ViewportScrollBox";
 import { exportToExcel } from "../../../helpers/excel_helper";
 import {
     getAccGrpMasters,
@@ -20,6 +21,8 @@ import {
     resolveCompanyLogoUrl
 } from "../../../helpers/reportCompanyDefaults";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import { useCaratFormat } from "../../../Components/Hooks/useCaratFormat";
 
 const dashText = (value) => {
     if (value === null || value === undefined || value === "") return "-";
@@ -331,6 +334,7 @@ const dateColumnProps = (id, getRawDate) => ({
 
 const MixMemoOutReport = () => {
     const { t } = useTranslation();
+    const { caratFormat } = useCaratFormat();
     const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates({
         includeReturnDates: true,
         includePrintDates: true
@@ -392,8 +396,8 @@ const MixMemoOutReport = () => {
 
     const groupByOptions = useMemo(
         () => [
-            { value: "MemoNo", label: t("Group by MemoNo") },
-            { value: "PartyName", label: t("Group by PartyName") }
+            { value: "MemoNo", label: t("Group by Memo No") },
+            { value: "PartyName", label: t("Group by Party Name") }
         ],
         [t]
     );
@@ -770,10 +774,10 @@ const MixMemoOutReport = () => {
                         <td class="col-text">${escapeHtml(getRowVal(row, "MemoNo", "memoNo"))}</td>
                         <td class="col-text">${escapeHtml(getRowVal(row, "Lotno", "lotno"))}</td>
                         <td class="col-product">${escapeHtml(getRowVal(row, "ItemName", "itemName"))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Carats"), GROUPED_DECIMALS.Carats))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Carats"), caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Estimate"), GROUPED_DECIMALS.Estimate))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Return"), GROUPED_DECIMALS.Return))}</td>
-                        <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Balance"), GROUPED_DECIMALS.Balance))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Return"), caratFormat))}</td>
+                        <td class="col-num">${escapeHtml(formatCarat(getGroupedNumeric(row, "Balance"), caratFormat))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "Price"), GROUPED_DECIMALS.Price))}</td>
                         <td class="col-num">${escapeHtml(fmtFixed(getGroupedNumeric(row, "BalanceAmt"), GROUPED_DECIMALS.BalanceAmt))}</td>
                     </tr>
@@ -788,7 +792,11 @@ const MixMemoOutReport = () => {
                     <td></td>
                     ${GROUPED_SUM_COLUMNS.map(
                 (colKey) =>
-                    `<td class="col-num"><strong>${escapeHtml(fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                    `<td class="col-num"><strong>${escapeHtml(
+                        ["Carats", "Return", "Balance"].includes(colKey)
+                            ? formatCarat(section.subtotal[colKey], caratFormat)
+                            : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])
+                    )}</strong></td>`
             ).join("")}
                 </tr>
             `;
@@ -801,7 +809,11 @@ const MixMemoOutReport = () => {
                 <td></td>
                 ${GROUPED_SUM_COLUMNS.map(
             (colKey) =>
-                `<td class="col-num"><strong>${escapeHtml(fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey]))}</strong></td>`
+                `<td class="col-num"><strong>${escapeHtml(
+                    ["Carats", "Return", "Balance"].includes(colKey)
+                        ? formatCarat(grandTotal[colKey], caratFormat)
+                        : fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey])
+                )}</strong></td>`
         ).join("")}
             </tr>
         `;
@@ -850,6 +862,9 @@ const MixMemoOutReport = () => {
     };
 
     const renderGroupedValue = (row, key) => {
+        if (["Carats", "Return", "Balance"].includes(key)) {
+            return formatCarat(getGroupedNumeric(row, key), caratFormat);
+        }
         if (GROUPED_DECIMALS[key] !== undefined) {
             return fmtFixed(getGroupedNumeric(row, key), GROUPED_DECIMALS[key]);
         }
@@ -1017,26 +1032,26 @@ const MixMemoOutReport = () => {
                 footer: () => <span className="fw-bold">{t("Total")}:</span>
             },
             {
-                header: t("DATE"),
+                header: t("Date"),
                 ...dateColumnProps("TrnDate", getRowTrnDateRaw),
                 cell: ({ getValue }) => dashText(getValue())
             },
             {
-                header: t("DueDate"),
+                header: t("Due Date"),
                 ...dateColumnProps("ConDATE", getRowDueDateRaw),
                 cell: ({ getValue }) => dashText(getValue())
             },
             {
-                header: t("OverDue"),
+                header: t("Over Due"),
                 accessorKey: "DueDays",
                 cell: ({ row }) => dashText(getRowVal(row.original, "DueDays", "dueDays"))
             },
-            { header: t("MemoNo"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
-            { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
+            { header: t("Memo Number"), accessorKey: "MemoNo", cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo")) },
+            { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo")) },
             { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-            { header: t("LotNo"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno", "Lotno")) },
+            { header: t("Lot No"), accessorKey: "Lotno", cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "lotno", "Lotno")) },
             {
-                header: t("ItemName"),
+                header: t("Item Name"),
                 accessorKey: "ItemName",
                 cell: ({ row }) => {
                     const val = getRowVal(row.original, "ItemName", "itemName");
@@ -1048,10 +1063,10 @@ const MixMemoOutReport = () => {
                 header: t("Carats"),
                 accessorKey: "Carats",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
                 footer: ({ table }) => {
                     const { totalCarats } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalCarats, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalCarats, caratFormat)}</span>;
                 }
             },
             {
@@ -1088,24 +1103,24 @@ const MixMemoOutReport = () => {
                 header: t("Return"),
                 accessorKey: "Return",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
                 footer: ({ table }) => {
                     const { totalReturn } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
                 }
             },
             {
                 header: t("Balance"),
                 accessorKey: "Balance",
                 className: "text-end",
-                cell: ({ row }) => fmtFixed(getRowVal(row.original, "Balance", "balance"), 2),
+                cell: ({ row }) => formatCarat(getRowVal(row.original, "Balance", "balance"), caratFormat),
                 footer: ({ table }) => {
                     const { totalBalance } = getTableTotals(table);
-                    return <span className="fw-bold text-end d-block">{fmtFixed(totalBalance, 2)}</span>;
+                    return <span className="fw-bold text-end d-block">{formatCarat(totalBalance, caratFormat)}</span>;
                 }
             },
             {
-                header: t("BalanceAmt"),
+                header: t("Balance Amt"),
                 accessorKey: "BalanceAmt",
                 className: "text-end",
                 cell: ({ row }) => fmtFixed(getRowVal(row.original, "BalanceAmt", "balanceAmt"), 2),
@@ -1116,15 +1131,15 @@ const MixMemoOutReport = () => {
             },
             { header: t("Seller"), accessorKey: "Seller", cell: ({ row }) => dashText(getRowVal(row.original, "Seller", "seller")) },
             { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
-            { header: t("MemoType"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
-            { header: t("SubType"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
+            { header: t("Memo Type"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype")) },
+            { header: t("Sub Type"), accessorKey: "SubType", cell: ({ row }) => dashText(getRowVal(row.original, "SubType", "subType")) },
             { header: t("Category"), accessorKey: "Category", cell: ({ row }) => dashText(getRowVal(row.original, "Category", "category")) },
-            { header: t("IssUser"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
-            { header: t("StockType"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) },
-            { header: t("SalesPerson"), accessorKey: "SalesPerson", cell: ({ row }) => dashText(getRowVal(row.original, "SalesPerson", "salesPerson")) },
+            { header: t("Iss User"), accessorKey: "IssUser", cell: ({ row }) => dashText(getRowVal(row.original, "IssUser", "issUser")) },
+            { header: t("Stock Type"), accessorKey: "StockType", cell: ({ row }) => dashText(getRowVal(row.original, "StockType", "stockType")) },
+            { header: t("Sales Person"), accessorKey: "SalesPerson", cell: ({ row }) => dashText(getRowVal(row.original, "SalesPerson", "salesPerson")) },
             { header: t("Tracking No"), accessorKey: "Tracking", cell: ({ row }) => dashText(getRowVal(row.original, "Tracking", "tracking")) }
         ],
-        [expandedMemoNos, t, getTableTotals]
+        [expandedMemoNos, t, getTableTotals, caratFormat]
     );
 
     const handleExcel = async () => {
@@ -1134,29 +1149,29 @@ const MixMemoOutReport = () => {
         }
 
         const headers = [
-            "DATE",
-            "DueDate",
-            "OverDue",
-            "MemoNo",
-            "BillNo",
+            "Date",
+            "Due Date",
+            "Over Due",
+            "Memo Number",
+            "Bill No",
             "Party",
-            "LotNo",
-            "ItemName",
+            "Lot No",
+            "Item Name",
             "Carats",
             "Price",
             "Amount",
             "Sold",
             "Return",
             "Balance",
-            "BalanceAmt",
+            "Balance Amt",
             "Seller",
             "Broker",
-            "MemoType",
-            "SubType",
+            "Memo Type",
+            "Sub Type",
             "Category",
-            "IssUser",
-            "StockType",
-            "SalesPerson",
+            "Iss User",
+            "Stock Type",
+            "Sales Person",
             "Tracking No"
         ];
 
@@ -1169,12 +1184,12 @@ const MixMemoOutReport = () => {
             dashText(getRowVal(r, "Party", "party")),
             dashText(getRowVal(r, "Lotno", "lotno")),
             dashText(getRowVal(r, "ItemName", "itemName")),
-            fmtFixed(getRowVal(r, "Carats", "carats"), 3),
+            formatCarat(getRowVal(r, "Carats", "carats"), caratFormat),
             fmtFixed(getRowVal(r, "Price", "price"), 2),
             fmtFixed(getRowVal(r, "Amount", "amount"), 2),
             fmtFixed(getRowVal(r, "Estimate", "estimate"), 2),
-            fmtFixed(getRowVal(r, "Return", "return"), 3),
-            fmtFixed(getRowVal(r, "Balance", "balance"), 2),
+            formatCarat(getRowVal(r, "Return", "return"), caratFormat),
+            formatCarat(getRowVal(r, "Balance", "balance"), caratFormat),
             fmtFixed(getRowVal(r, "BalanceAmt", "balanceAmt"), 2),
             dashText(getRowVal(r, "Seller", "seller")),
             dashText(getRowVal(r, "Broker", "broker")),
@@ -1203,12 +1218,12 @@ const MixMemoOutReport = () => {
             "",
             "",
             "",
-            fmtFixed(totalCarats, 3),
+            formatCarat(totalCarats, caratFormat),
             fmtFixed(totalPrice, 2),
             fmtFixed(totalAmount, 2),
             fmtFixed(totalEstimate, 2),
-            fmtFixed(totalReturn, 3),
-            fmtFixed(totalBalance, 2),
+            formatCarat(totalReturn, caratFormat),
+            formatCarat(totalBalance, caratFormat),
             fmtFixed(totalBalanceAmt, 2),
             "",
             "",
@@ -1241,7 +1256,7 @@ const MixMemoOutReport = () => {
                             {hasSearched ? t("Mix Memo Report Results") : t("Mix Memo Report Filters")}
                         </h5>
 
-                        <div className="d-flex gap-2">
+                        <div className="d-flex flex-wrap gap-2">
                             {!hasSearched ? (
                                 <>
                                     <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleReport} disabled={loading}>
@@ -1299,9 +1314,9 @@ const MixMemoOutReport = () => {
                         <Card className="shadow-lg border-0 rounded-3 mb-4">
                             <CardBody className="bg-light-subtle">
                                 <Row className="g-3">
-                                    <Col md={10}>
+                                    <Col xs={12} lg={10}>
                                         <Row className="g-2 mb-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Date")}</Label>
                                                     <input
@@ -1313,7 +1328,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("To Date")}</Label>
                                                     <input
@@ -1325,7 +1340,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Currency")}</Label>
                                                     <Select
@@ -1339,7 +1354,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
                                                     <Input
@@ -1352,7 +1367,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Type")}</Label>
                                                     <Select
@@ -1365,7 +1380,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Group By")}</Label>
                                                     <Select
@@ -1381,7 +1396,7 @@ const MixMemoOutReport = () => {
                                         </Row>
 
                                         <Row className="g-2">
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <div className="d-flex align-items-center gap-1 mb-1">
                                                         <input
@@ -1404,7 +1419,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("To Date")}</Label>
                                                     <input
@@ -1417,7 +1432,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Party")}</Label>
                                                     <Select
@@ -1439,7 +1454,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Broker")}</Label>
                                                     <Select
@@ -1461,7 +1476,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <Label className="fw-medium mb-1 small">{t("Tracking No")}</Label>
                                                     <Input
@@ -1474,7 +1489,7 @@ const MixMemoOutReport = () => {
                                                     />
                                                 </FormGroup>
                                             </Col>
-                                            <Col sm={2}>
+                                            <Col xs={12} sm={6} md={4} lg={2}>
                                                 <FormGroup className="mb-0">
                                                     <div className="d-flex align-items-center gap-1" style={{ height: "35px" }}>
                                                         <input
@@ -1492,12 +1507,12 @@ const MixMemoOutReport = () => {
                                         </Row>
                                     </Col>
 
-                                    <Col md={2}>
+                                    <Col xs={12} lg={2}>
                                         <FormGroup className="mb-0">
                                             <Label className="fw-medium mb-1 small">{t("Enter Lot No")}</Label>
                                             <Input
                                                 type="textarea"
-                                                rows={7}
+                                                rows={5}
                                                 value={filters.lotNo}
                                                 placeholder={t("Search by lot no")}
                                                 onChange={(e) => setFilters((p) => ({ ...p, lotNo: e.target.value }))}
@@ -1510,7 +1525,7 @@ const MixMemoOutReport = () => {
 
                                 <Row className="g-2">
                                     {attributeFields.map(({ label, key }) => (
-                                        <Col sm={2} key={key}>
+                                        <Col xs={12} sm={6} md={4} lg={2} key={key}>
                                             <FormGroup className="mb-0">
                                                 <Label className="fw-medium mb-1 small">{t(label)}</Label>
                                                 <Select
@@ -1570,9 +1585,9 @@ const MixMemoOutReport = () => {
                     )}
 
                     {hasSearched && viewType === "table" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
-                                <div className="d-flex justify-content-end gap-4 mb-3 small fw-semibold">
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
+                                <div className="d-flex justify-content-end gap-4 mb-2 small fw-semibold">
                                     <span>
                                         {t("Showing")}: {groupedVisibleRows.length} {t("rows")}
                                     </span>
@@ -1587,7 +1602,7 @@ const MixMemoOutReport = () => {
                                         isGlobalFilter={true}
                                         customPageSize={500}
                                         customPageSizes={[500, 1000, 1500]}
-                                        divClass="table-responsive table-card mb-3"
+                                        divClass="table-responsive table-card mb-0"
                                         tableClass="align-middle table-nowrap mb-0 table-hover table-striped"
                                         theadClass="table-light"
                                         SearchPlaceholder={t("SEARCH:")}
@@ -1600,8 +1615,8 @@ const MixMemoOutReport = () => {
                     )}
 
                     {hasSearched && viewType === "grouped" && (
-                        <Card className="shadow-lg border-0 rounded-3 mb-4">
-                            <CardBody>
+                        <Card className="shadow-lg border-0 rounded-3 mb-0">
+                            <CardBody className="p-2 px-sm-3 py-sm-2">
                                 <style>{`
                                     #dynamic-memoOut-report-table th {
                                         white-space: nowrap;
@@ -1629,15 +1644,15 @@ const MixMemoOutReport = () => {
                                         color: var(--vz-body-color, #e9ecef) !important;
                                     }
                                 `}</style>
-                                <div className="mb-3">
-                                    <div className="row align-items-start">
-                                        <div className="col-sm-10 d-flex">
+                                <div className="mb-2 pb-2 border-bottom">
+                                    <div className="row align-items-start g-2">
+                                        <div className="col-12 col-sm-9 d-flex align-items-start">
                                             {companyLogoUrl ? (
-                                                <div className="pe-3 pt-2">
-                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "90px", width: "96px" }} />
+                                                <div className="pe-3">
+                                                    <img src={companyLogoUrl} alt="Company Logo" style={{ maxHeight: "64px", width: "76px", objectFit: "contain" }} />
                                                 </div>
                                             ) : null}
-                                            <div style={{ fontSize: "14px", lineHeight: 1.8, paddingTop: "12px" }}>
+                                            <div style={{ fontSize: "13px", lineHeight: 1.4 }}>
                                                 <div className="fw-bold">{companyInfo?.companyName}</div>
                                                 <div>{companyInfo?.companyAddress}</div>
                                                 {companyInfo?.companyAddress1 ? <div>{companyInfo.companyAddress1}</div> : null}
@@ -1654,7 +1669,7 @@ const MixMemoOutReport = () => {
                                                 ) : null}
                                             </div>
                                         </div>
-                                        <div className="col-sm-2 text-end pt-2">
+                                        <div className="col-12 col-sm-3 text-sm-end">
                                             <div className="fs-5 fw-bold">{t("Mix Memo Out Report")}</div>
                                             <div className="small text-muted">
                                                 <div>
@@ -1671,7 +1686,10 @@ const MixMemoOutReport = () => {
                                 {groupedReportData.sections.length === 0 ? (
                                     <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                                 ) : (
-                                    <div className="table-responsive mix-memo-grouped-table-wrap" style={{ maxHeight: "750px", overflow: "auto" }}>
+                                    <ViewportScrollBox
+                                        className="table-responsive mix-memo-grouped-table-wrap"
+                                        deps={[groupedReportData.sections.length, companyInfo?.companyFooter, companyLogoUrl]}
+                                    >
                                         <table className="table table-bordered align-middle mb-0" id="dynamic-memoOut-report-table" style={{ tableLayout: "fixed", minWidth: "1160px" }}>
                                             <colgroup>
                                                 <col style={{ width: "48px" }} />
@@ -1767,7 +1785,11 @@ const MixMemoOutReport = () => {
                                                             <td />
                                                             {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
-                                                                    <strong>{fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                                    <strong>
+                                                                        {["Carats", "Return", "Balance"].includes(colKey)
+                                                                            ? formatCarat(section.subtotal[colKey], caratFormat)
+                                                                            : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                                    </strong>
                                                                 </td>
                                                             ))}
                                                         </tr>
@@ -1782,17 +1804,21 @@ const MixMemoOutReport = () => {
                                                     <td />
                                                     {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                         <td key={`grand-${colKey}`} className="text-end">
-                                                            <strong>{fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}</strong>
+                                                            <strong>
+                                                                {["Carats", "Return", "Balance"].includes(colKey)
+                                                                    ? formatCarat(groupedReportData.grandTotal[colKey], caratFormat)
+                                                                    : fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                            </strong>
                                                         </td>
                                                     ))}
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </ViewportScrollBox>
                                 )}
 
                                 {companyInfo?.companyFooter ? (
-                                    <div className="mt-3 mb-1 small">{companyInfo.companyFooter}</div>
+                                    <div className="mt-2 mb-0 small text-muted">{companyInfo.companyFooter}</div>
                                 ) : null}
                             </CardBody>
                         </Card>

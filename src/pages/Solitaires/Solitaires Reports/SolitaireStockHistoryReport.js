@@ -24,6 +24,9 @@ import {
   getSolitaireAdminLots
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 
 const debounce = (func, delay) => {
   let timer;
@@ -47,6 +50,8 @@ const trnTypeOptions = [
   { value: "PARTYHOLD", label: "Party Hold" },
   { value: "PARTYHOLDRTN", label: "Party Hold Return" }
 ];
+
+const DEFAULT_SOLITAIRE_TYPES = ["PUR", "SALE", "PURRTN", "SALERTN", "STKTRN", "PARTYHOLD", "PARTYHOLDRTN"];
 
 const formatDateYMDToDMY = (dateStr) => {
   if (!dateStr) return "";
@@ -152,6 +157,7 @@ const CustomValueContainer = ({ children, ...props }) => {
 
 const SolitaireStockHistoryReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -159,9 +165,14 @@ const SolitaireStockHistoryReport = () => {
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [masterDropdowns, setMasterDropdowns] = useState({});
 
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
 
-  const [selectedTypes, setSelectedTypes] = useState(["ALL"]);
+  const [selectedTypes, setSelectedTypes] = useState(DEFAULT_SOLITAIRE_TYPES);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
 
@@ -381,7 +392,7 @@ const SolitaireStockHistoryReport = () => {
     setHasSearched(false);
     setReportRows([]);
     setPriceMode("SalpurAvg");
-    setSelectedTypes(["ALL"]);
+    setSelectedTypes(DEFAULT_SOLITAIRE_TYPES);
     setFilters(mergeDates({
       shape: [],
       color: [],
@@ -477,7 +488,7 @@ const SolitaireStockHistoryReport = () => {
     const grouped = new Map();
 
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -486,21 +497,20 @@ const SolitaireStockHistoryReport = () => {
     });
 
     const columns = [
-      "TrnDate",
-      "TrnType",
+      "Trn Date",
+      "Trn Type",
       "Particulars",
-      "StockIn",
-      "StockInPrice",
-      "StockInAmount",
-      "StockOut",
-      "StockOutPrice",
-      "StockOutAmount",
-      "BalanceStock",
-      "BalancePrice",
-      "BalanceAmount"
+      "Stock In",
+      "Stock In Price",
+      "Stock In Amount",
+      "Stock Out",
+      "Stock Out Price",
+      "Stock Out Amount",
+      "Balance Stock",
+      "Balance Price",
+      "Balance Amount"
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -522,7 +532,7 @@ const SolitaireStockHistoryReport = () => {
 
       const subtotal = { InCts: 0, InRate: 0, InAmount: 0, OutCts: 0, OutRate: 0, OutAmount: 0 };
 
-      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([`Stock ID: ${stockId}`, "", "", "", "", "", "", "", "", "", "", ""]);
 
       items.forEach((item) => {
         const trnDate = item.trntype === "OpStk" ? opStkDate : item.trnDate;
@@ -530,13 +540,13 @@ const SolitaireStockHistoryReport = () => {
           trnDate || "",
           item.trntype || "",
           item.perticulors || "",
-          fmtFixed(item.inCts, caratDecimals),
+          formatCarat(item.inCts, caratFormat),
           fmtFixed(item.inRate, priceDecimals),
           fmtFixed(item.inAmount, amtDecimals),
-          fmtFixed(item.outCts, caratDecimals),
+          formatCarat(item.outCts, caratFormat),
           fmtFixed(item.outRate, priceDecimals),
           fmtFixed(item.outAmount, amtDecimals),
-          fmtFixed(item.balCts, caratDecimals),
+          formatCarat(item.balCts, caratFormat),
           fmtFixed(item.balRate, priceDecimals),
           fmtFixed(item.balAmount, amtDecimals)
         ]);
@@ -567,10 +577,10 @@ const SolitaireStockHistoryReport = () => {
         "Total:",
         "",
         "",
-        (subtotal.InCts).toFixed(caratDecimals),
+        formatCarat(subtotal.InCts, caratFormat),
         (subtotal.InRate).toFixed(priceDecimals),
         (subtotal.InAmount).toFixed(amtDecimals),
-        (subtotal.OutCts).toFixed(caratDecimals),
+        formatCarat(subtotal.OutCts, caratFormat),
         (subtotal.OutRate).toFixed(priceDecimals),
         (subtotal.OutAmount).toFixed(amtDecimals),
         "",
@@ -583,10 +593,10 @@ const SolitaireStockHistoryReport = () => {
       "Grand Total:",
       "",
       "",
-      grandTotals.InCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.InCts, caratFormat),
       grandTotals.InRate.toFixed(priceDecimals),
       grandTotals.InAmount.toFixed(amtDecimals),
-      grandTotals.OutCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.OutCts, caratFormat),
       grandTotals.OutRate.toFixed(priceDecimals),
       grandTotals.OutAmount.toFixed(amtDecimals),
       "",
@@ -601,7 +611,7 @@ const SolitaireStockHistoryReport = () => {
     const groupOrder = [];
     const grouped = new Map();
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -615,24 +625,23 @@ const SolitaireStockHistoryReport = () => {
     if (!reportRows || reportRows.length === 0) return null;
 
     const columns = [
-      { header: "TrnDate", key: "trnDate", numeric: false },
-      { header: "TrnType", key: "trntype", numeric: false },
+      { header: "Trn Date", key: "trnDate", numeric: false },
+      { header: "Trn Type", key: "trntype", numeric: false },
       { header: "Particulars", key: "perticulors", numeric: false },
 
-      { header: "StockIn", key: "inCts", numeric: true },
-      { header: "StockInPrice", key: "inRate", numeric: true },
-      { header: "StockInAmount", key: "inAmount", numeric: true },
+      { header: "Stock In", key: "inCts", numeric: true },
+      { header: "Stock In Price", key: "inRate", numeric: true },
+      { header: "Stock In Amount", key: "inAmount", numeric: true },
 
-      { header: "StockOut", key: "outCts", numeric: true },
-      { header: "StockOutPrice", key: "outRate", numeric: true },
-      { header: "StockOutAmount", key: "outAmount", numeric: true },
+      { header: "Stock Out", key: "outCts", numeric: true },
+      { header: "Stock Out Price", key: "outRate", numeric: true },
+      { header: "Stock Out Amount", key: "outAmount", numeric: true },
 
-      { header: "BalanceStock", key: "balCts", numeric: true },
-      { header: "BalancePrice", key: "balRate", numeric: true },
-      { header: "BalanceAmount", key: "balAmount", numeric: true }
+      { header: "Balance Stock", key: "balCts", numeric: true },
+      { header: "Balance Price", key: "balRate", numeric: true },
+      { header: "Balance Amount", key: "balAmount", numeric: true }
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -642,13 +651,13 @@ const SolitaireStockHistoryReport = () => {
 
     return (
       <div
+        ref={tableScrollRef}
         id="container-div"
+        className="viewport-table-scroll"
         style={{
-          maxHeight: 750,
-          overflowY: "auto",
-          overflowX: "auto",
+          maxHeight: tableMaxHeight,
           padding: 0,
-          border: "1px solid #dcdcdc",
+          border: "1px solid var(--vz-border-color, #dcdcdc)",
           borderRadius: 8,
           fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"
@@ -693,7 +702,7 @@ const SolitaireStockHistoryReport = () => {
                 <React.Fragment key={stockId}>
                   <tr className="group-header">
                     <td colSpan={columns.length} style={{ fontWeight: 700, fontSize: 15, padding: 10, borderTop: "2px solid #b3b3b3", borderBottom: "2px solid #b3b3b3", color: "var(--vz-body-color, #000)", textAlign: "left" }}>
-                      <strong>StockID:</strong> {stockId}
+                      <strong>Stock ID:</strong> {stockId}
                     </td>
                   </tr>
 
@@ -708,7 +717,7 @@ const SolitaireStockHistoryReport = () => {
                           }
 
                           if (col.key === "inCts" || col.key === "outCts" || col.key === "balCts") {
-                            val = fmtFixed(val, caratDecimals);
+                            val = formatCarat(val, caratFormat);
                           } else if (col.key === "inRate" || col.key === "outRate" || col.key === "balRate") {
                             val = fmtFixed(val, priceDecimals);
                           } else if (col.key === "inAmount" || col.key === "outAmount" || col.key === "balAmount") {
@@ -775,10 +784,10 @@ const SolitaireStockHistoryReport = () => {
                     <td colSpan={3} style={{ textAlign: "left", fontWeight: "bold", padding: "10px 12px" }}>
                       Total:
                     </td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InCts.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(subtotal.InCts, caratFormat)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InRate.toFixed(priceDecimals)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.InAmount.toFixed(amtDecimals)}</td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutCts.toFixed(caratDecimals)}</td>
+                    <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(subtotal.OutCts, caratFormat)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutRate.toFixed(priceDecimals)}</td>
                     <td style={{ textAlign: "right", fontWeight: "bold" }}>{subtotal.OutAmount.toFixed(amtDecimals)}</td>
                     <td />
@@ -793,10 +802,10 @@ const SolitaireStockHistoryReport = () => {
               <td colSpan={3} style={{ textAlign: "left", fontWeight: "bold", padding: "10px 12px" }}>
                 Grand Total:
               </td>
-              <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InCts.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(grandTotals.InCts, caratFormat)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InRate.toFixed(priceDecimals)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.InAmount.toFixed(amtDecimals)}</td>
-              <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutCts.toFixed(caratDecimals)}</td>
+              <td style={{ textAlign: "right", fontWeight: "bold" }}>{formatCarat(grandTotals.OutCts, caratFormat)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutRate.toFixed(priceDecimals)}</td>
               <td style={{ textAlign: "right", fontWeight: "bold" }}>{grandTotals.OutAmount.toFixed(amtDecimals)}</td>
               <td />

@@ -28,6 +28,9 @@ import {
   getSolitairePurchaseReturnReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCompanyCurrencySymbols from "../../../Components/Hooks/useCompanyCurrencySymbols";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -66,6 +69,12 @@ const getTableTotals = (table) => {
 
 const SolitairePurchaseReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
+  const { masterSymbol, stockSymbol } = useCompanyCurrencySymbols();
+  const masterRateHeader = masterSymbol ? `${masterSymbol} Rate` : t("Master Rate");
+  const masterAmtHeader = masterSymbol ? `${masterSymbol} Amount` : t("Master Amount");
+  const stockRateHeader = stockSymbol ? `${stockSymbol} Rate` : t("Stock Rate");
+  const stockAmtHeader = stockSymbol ? `${stockSymbol} Amount` : t("Stock Amount");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -466,14 +475,15 @@ const SolitairePurchaseReturnReport = () => {
         cell: ({ row }) => {
           const r = row.original;
           if (r?.isParent) return "";
-          const code = getRowVal(r, "Code", "code");
+          const code = getRowVal(r, "Code", "code", "InvCode", "invCode", "Id", "id");
           return (
             <div className="report-action">
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  const url = `../purchase/edit-purchase?Id=${code}&Mode=view`;
+                  if (!code) return;
+                  const url = `../purchasereturn/edit-purchasereturn?Id=${code}&Mode=view`;
                   const win = window.open(url, "_blank");
                   if (win) win.focus();
                 }}
@@ -495,14 +505,14 @@ const SolitairePurchaseReturnReport = () => {
         accessorKey: "Due",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "Due", "due"), 0)
       },
-      { header: t("InvNo"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
-      { header: t("BillNo"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
+      { header: t("Inv No"), accessorKey: "Invno", cell: ({ row }) => dashText(getRowVal(row.original, "Invno", "invno", "InvNo", "invNo")) },
+      { header: t("Bill No"), accessorKey: "BillNo", cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo", "billno")) },
       { header: t("Party"), accessorKey: "Party", cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party")) },
-      { header: t("Comm.Agent"), accessorKey: "Commission", cell: ({ row }) => dashText(getRowVal(row.original, "Commission", "commission", "commAgent", "CommAgent")) },
+      { header: t("Comm. Agent"), accessorKey: "Commission", cell: ({ row }) => dashText(getRowVal(row.original, "Commission", "commission", "commAgent", "CommAgent")) },
       { header: t("Broker"), accessorKey: "Broker", cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker")) },
       { header: t("Item"), accessorKey: "Item", cell: ({ row }) => dashText(getRowVal(row.original, "Item", "item")) },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName")),
         footer: () => <span className="fw-bold text-center d-block">AVG</span>
@@ -532,10 +542,10 @@ const SolitairePurchaseReturnReport = () => {
         header: t("Carats"),
         accessorKey: "Carats",
         className: "text-end",
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Carats", "carats"), 3),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
         footer: ({ table }) => {
           const { parentCarat } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(parentCarat, caratFormat)}</span>;
         }
       },
       {
@@ -548,9 +558,9 @@ const SolitairePurchaseReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentCarat > 0 ? parentAmt / parentCarat : 0, 2)}</span>;
         }
       },
-      { header: t("Less1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
-      { header: t("Less2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
-      { header: t("Less3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
+      { header: t("Less 1"), accessorKey: "Less1", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less1", "less1"), 2) },
+      { header: t("Less 2"), accessorKey: "Less2", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less2", "less2"), 2) },
+      { header: t("Less 3"), accessorKey: "Less3", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "Less3", "less3"), 2) },
       {
         header: t("Amount"),
         accessorKey: "Amount",
@@ -562,7 +572,7 @@ const SolitairePurchaseReturnReport = () => {
         }
       },
       { header: t("Symbol"), accessorKey: "Symbol", cell: ({ row }) => dashText(getRowVal(row.original, "Symbol", "symbol")) },
-      { header: t("$Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DRate", "dRate", "drate"), 2) },
+      { header: t("$ Rate"), accessorKey: "DRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "DRate", "dRate", "drate"), 2) },
       { header: t("Cert"), accessorKey: "Cert", cell: ({ row }) => dashText(getRowVal(row.original, "Cert", "cert")) },
       { header: t("Cert No"), accessorKey: "CertificateNo", cell: ({ row }) => dashText(getRowVal(row.original, "CertificateNo", "certificateNo")) },
       { header: t("Shape"), accessorKey: "ShapeId", cell: ({ row }) => dashText(getRowVal(row.original, "ShapeId", "shapeId")) },
@@ -574,10 +584,10 @@ const SolitairePurchaseReturnReport = () => {
       { header: t("FL"), accessorKey: "FLId", cell: ({ row }) => dashText(getRowVal(row.original, "FLId", "flId")) },
       { header: t("User"), accessorKey: "User", cell: ({ row }) => dashText(getRowVal(row.original, "User", "user")) },
       { header: t("Purchaser"), accessorKey: "Purchaser", cell: ({ row }) => dashText(getRowVal(row.original, "Purchaser", "purchaser")) },
-      { header: t("ExpParty"), accessorKey: "Expparty", cell: ({ row }) => dashText(getRowVal(row.original, "Expparty", "expparty", "ExpParty", "expParty")) },
-      { header: t("ExpNo"), accessorKey: "ExportNo", cell: ({ row }) => dashText(getRowVal(row.original, "ExportNo", "exportNo")) },
-      { header: t("SinglePcs"), accessorKey: "SinglePcs", cell: ({ row }) => dashText(getRowVal(row.original, "SinglePcs", "singlePcs")) },
-      { header: t("InvType"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype", "InvType", "invType")) },
+      { header: t("Exp Party"), accessorKey: "Expparty", cell: ({ row }) => dashText(getRowVal(row.original, "Expparty", "expparty", "ExpParty", "expParty")) },
+      { header: t("Exp No"), accessorKey: "ExportNo", cell: ({ row }) => dashText(getRowVal(row.original, "ExportNo", "exportNo")) },
+      { header: t("Single Pcs"), accessorKey: "SinglePcs", cell: ({ row }) => dashText(getRowVal(row.original, "SinglePcs", "singlePcs")) },
+      { header: t("Inv Type"), accessorKey: "Invtype", cell: ({ row }) => dashText(getRowVal(row.original, "Invtype", "invtype", "InvType", "invType")) },
       {
         header: t("MRP Amt"),
         accessorKey: "MRPAmt",
@@ -588,9 +598,9 @@ const SolitairePurchaseReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentMRPAmt, 2)}</span>;
         }
       },
-      { header: t("INR Rate"), accessorKey: "MasterCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
+      { header: masterRateHeader, accessorKey: "MasterCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyRate", "masterCurrencyRate"), 2) },
       {
-        header: t("INR Amount"),
+        header: masterAmtHeader,
         accessorKey: "MasterCurrencyAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "MasterCurrencyAmount", "masterCurrencyAmount"), 2),
@@ -599,9 +609,9 @@ const SolitairePurchaseReturnReport = () => {
           return <span className="fw-bold text-end d-block">{fmtFixed(parentINR, 2)}</span>;
         }
       },
-      { header: t("USD Rate"), accessorKey: "StockCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
+      { header: stockRateHeader, accessorKey: "StockCurrencyRate", className: "text-end", cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyRate", "stockCurrencyRate"), 2) },
       {
-        header: t("USD Amount"),
+        header: stockAmtHeader,
         accessorKey: "StockCurrencyAmount",
         className: "text-end",
         cell: ({ row }) => fmtFixed(getRowVal(row.original, "StockCurrencyAmount", "stockCurrencyAmount"), 2),
@@ -611,7 +621,7 @@ const SolitairePurchaseReturnReport = () => {
         }
       }
     ],
-    [expandedInvnos, t]
+    [expandedInvnos, t, masterRateHeader, masterAmtHeader, stockRateHeader, stockAmtHeader, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -623,24 +633,24 @@ const SolitairePurchaseReturnReport = () => {
     const headers = [
       "Date",
       "Due",
-      "InvNo",
-      "BillNo",
+      "Inv No",
+      "Bill No",
       "Party",
-      "Comm.Agent",
+      "Comm. Agent",
       "Broker",
       "Item",
-      "ItemName",
+      "Item Name",
       "MRP",
       "Disc",
       "Col/Cla",
       "Carats",
       "Rate",
-      "Less1",
-      "Less2",
-      "Less3",
+      "Less 1",
+      "Less 2",
+      "Less 3",
       "Amount",
       "Symbol",
-      "$Rate",
+      "$ Rate",
       "Cert",
       "Cert No",
       "Shape",
@@ -652,15 +662,15 @@ const SolitairePurchaseReturnReport = () => {
       "FL",
       "User",
       "Purchaser",
-      "ExpParty",
-      "ExpNo",
-      "SinglePcs",
-      "InvType",
+      "Exp Party",
+      "Exp No",
+      "Single Pcs",
+      "Inv Type",
       "MRP Amt",
-      "INR Rate",
-      "INR Amount",
-      "USD Rate",
-      "USD Amount"
+      masterRateHeader,
+      masterAmtHeader,
+      stockRateHeader,
+      stockAmtHeader
     ];
 
     const rows = reportRows.map((row) => [
@@ -676,7 +686,7 @@ const SolitairePurchaseReturnReport = () => {
       fmtFixed(getRowVal(row, "MRP", "mrp"), 2),
       fmtFixed(getRowVal(row, "Discount", "discount"), 2),
       dashText(getRowVal(row, "ColCla", "colCla", "colcla")),
-      fmtFixed(getRowVal(row, "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
       fmtFixed(getRowVal(row, "Rate", "rate"), 2),
       fmtFixed(getRowVal(row, "Less1", "less1"), 2),
       fmtFixed(getRowVal(row, "Less2", "less2"), 2),
@@ -768,7 +778,7 @@ const SolitairePurchaseReturnReport = () => {
                           handleExcel();
                         }}
                       >
-                        PurchaseReturnReport Print
+                        Purchase Return Report Print
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>

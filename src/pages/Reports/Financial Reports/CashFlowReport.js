@@ -6,8 +6,7 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import {
     getCashFlowReport,
-    getCashFlowReportPermission,
-    getSettingData
+    getCashFlowReportPermission
 } from "../../../helpers/fakebackend_helper";
 import {
     getCachedReportCompany,
@@ -23,8 +22,8 @@ const CashFlowReport = () => {
     const [reportData, setReportData] = useState([]);
     const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
     const [reportDate, setReportDate] = useState("");
-    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "USD");
-    const [masterSymbol, setMasterSymbol] = useState("INR");
+    const [stockSymbol, setStockSymbol] = useState(() => getCachedReportCompany().stockSymbol || "");
+    const [masterSymbol, setMasterSymbol] = useState(() => getCachedReportCompany().masterSymbol || "");
 
     const loadReport = useCallback(async () => {
         setLoading(true);
@@ -38,26 +37,9 @@ const CashFlowReport = () => {
 
             const company = await getReportCompanySettings({ forceRefresh: true });
             if (company) setCompanyInfo(company);
-
-            let sSym = company?.stockSymbol || "";
-            let mSym = "";
-            try {
-                const settings = await getSettingData();
-                const rows = Array.isArray(settings) ? settings : settings?.data || settings?.Data || [];
-                const pick = (name) => {
-                    const target = String(name).toLowerCase();
-                    const row = rows.find(
-                        (x) => String(x?.Name ?? x?.name ?? "").trim().toLowerCase() === target
-                    );
-                    return row?.Value ?? row?.value ?? "";
-                };
-                sSym = pick("SSymbol") || sSym;
-                mSym = pick("MSymbol") || mSym;
-            } catch {
-                /* ignore */
-            }
-            setStockSymbol(sSym || "USD");
-            setMasterSymbol(mSym || "INR");
+            const cached = getCachedReportCompany();
+            setStockSymbol(company?.stockSymbol || cached.stockSymbol || "");
+            setMasterSymbol(company?.masterSymbol || cached.masterSymbol || "");
 
             const response = await getCashFlowReport();
             if (response?.success === false) {

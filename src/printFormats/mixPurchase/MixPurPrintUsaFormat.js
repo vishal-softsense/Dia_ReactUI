@@ -1,5 +1,5 @@
 import React from "react";
-import { fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
+import { fmtCaratNum, fmtDateSlash, fmtNum, getPrintAmountHeader, getVal, paginateStella } from "../shared/printUtils";
 
 // MVC Views/MixPurchase/MixPurchasePrint_USA.cshtml — source of truth for Mix Purchase (variant=note)
 // MVC layout: 24 on full pages, 20 on single/last page with totals, signature and footer.
@@ -92,7 +92,25 @@ const itemCell = {
  * MVC MixPurchasePrint_USA column proportions:
  * Sr No (5%), Stock # (18%), DESCRIPTION (28%), QTY (5%), WT. (8%), Price/Carat (14%), Amount (22%)
  */
-const ITEM_COL_WIDTHS = ["5%", "18%", "28%", "5%", "8%", "14%", "22%"];
+const ITEM_COL_WIDTHS_DEFAULT = ["5%", "18%", "28%", "5%", "8%", "14%", "22%"];
+const ITEM_COL_WIDTHS_NOTE = ["4%", "25%", "27%", "5%", "8%", "12%", "19%"];
+
+const getNoteStockCellStyle = (stockNo) => {
+  const len = String(stockNo ?? "").trim().length;
+  let fontSize = FS_ITEM; // 12px for short/normal lots
+  if (len > 30) fontSize = 8.5;
+  else if (len > 24) fontSize = 9.5;
+  else if (len > 18) fontSize = 10.5;
+  return {
+    fontSize,
+    padding: "1px 4px",
+    lineHeight: 1.15,
+    whiteSpace: len > 32 ? "normal" : "nowrap",
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    overflow: "visible"
+  };
+};
 
 /** Keep MM/dd/yyyy from API; otherwise format like MVC ToString("MM/dd/yyyy"). */
 const fmtDateSlashOrRaw = (val) => {
@@ -118,6 +136,7 @@ const MixPurPrintUsaFormat = ({
 }) => {
   const isNote = variant === "note";
   const isConsignment = variant === "consignment";
+  const colWidths = isNote ? ITEM_COL_WIDTHS_NOTE : ITEM_COL_WIDTHS_DEFAULT;
   const itemsPerPage = isNote
     ? ITEMS_PER_PAGE_NOTE
     : isConsignment
@@ -271,19 +290,19 @@ const MixPurPrintUsaFormat = ({
           fontFamily: FONT_BODY
         }}
       >
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[0] }} />
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[1] }} />
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[2] }} />
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[3], textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[4], textAlign: "right", verticalAlign: "top" }}>
-          {fmtNum(totals.wt, 2)}
+        <td style={{ ...totalCell, width: colWidths[0] }} />
+        <td style={{ ...totalCell, width: colWidths[1] }} />
+        <td style={{ ...totalCell, width: colWidths[2] }} />
+        <td style={{ ...totalCell, width: colWidths[3], textAlign: "right", verticalAlign: "top" }}>{totals.qty}</td>
+        <td style={{ ...totalCell, width: colWidths[4], textAlign: "right", verticalAlign: "top" }}>
+          {fmtCaratNum(totals.wt)}
         </td>
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[5], paddingLeft: 8, verticalAlign: "top" }}>
+        <td style={{ ...totalCell, width: colWidths[5], paddingLeft: 8, verticalAlign: "top" }}>
           <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>Sub Total</div>
           <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>Charges</div>
           <div style={{ fontWeight: "bold", fontSize: FS_TOTALS, fontFamily: FONT_BODY, marginTop: 4, lineHeight: 1.25 }}>TOTAL</div>
         </td>
-        <td style={{ ...totalCell, width: ITEM_COL_WIDTHS[6], textAlign: "right", verticalAlign: "top", paddingRight: 6 }}>
+        <td style={{ ...totalCell, width: colWidths[6], textAlign: "right", verticalAlign: "top", paddingRight: 6 }}>
           <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>{fmtNum(totals.amount, 2)}</div>
           <div style={{ fontFamily: FONT_BODY, fontSize: FS_TOTALS, lineHeight: 1.25 }}>&nbsp;</div>
           <div style={{ fontWeight: "bold", fontSize: FS_TOTALS, fontFamily: FONT_BODY, marginTop: 4, lineHeight: 1.25 }}>{fmtNum(totals.amount, 2)}</div>
@@ -497,7 +516,7 @@ const MixPurPrintUsaFormat = ({
               }}
             >
               <colgroup>
-                {ITEM_COL_WIDTHS.map((w, i) => (
+                {colWidths.map((w, i) => (
                   <col key={i} style={{ width: w }} />
                 ))}
               </colgroup>
@@ -509,7 +528,7 @@ const MixPurPrintUsaFormat = ({
                         key={`${h}-${col}`}
                         style={{
                           ...th,
-                          width: ITEM_COL_WIDTHS[col],
+                          width: colWidths[col],
                           ...(col === COL_COUNT - 1 ? { borderRight: "1px solid #000" } : {})
                         }}
                       >
@@ -520,66 +539,71 @@ const MixPurPrintUsaFormat = ({
                 </tr>
               </thead>
               <tbody>
-                {pageItems.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="mix-pur-item-row"
-                    style={{ fontSize: FS_ITEM, fontFamily: FONT_BODY }}
-                  >
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[0], textAlign: "center" }}>
-                      {srNo++}
-                    </td>
-                    <td
-                      style={{
-                        ...itemCell,
-                        width: ITEM_COL_WIDTHS[1],
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden"
-                      }}
+                {pageItems.map((item, idx) => {
+                  const stockNo = getVal(
+                    item,
+                    "StockNo",
+                    "stockNo",
+                    "Lotno",
+                    "lotno",
+                    "LotNo",
+                    "lotNo",
+                    "Stock_ID",
+                    "Stock_Id",
+                    "stock_ID",
+                    "stockId",
+                    "JewItem",
+                    "jewItem"
+                  );
+
+                  return (
+                    <tr
+                      key={idx}
+                      className="mix-pur-item-row"
+                      style={{ fontSize: FS_ITEM, fontFamily: FONT_BODY }}
                     >
-                      {getVal(
-                        item,
-                        "StockNo",
-                        "stockNo",
-                        "Lotno",
-                        "lotno",
-                        "LotNo",
-                        "lotNo",
-                        "Stock_ID",
-                        "Stock_Id",
-                        "stock_ID",
-                        "stockId",
-                        "JewItem",
-                        "jewItem"
-                      )}
-                    </td>
-                    <td
-                      style={{
-                        ...itemCell,
-                        width: ITEM_COL_WIDTHS[2],
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis"
-                      }}
-                    >
-                      {getVal(item, "Description", "description", "ItemName", "itemName")}
-                    </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[3], textAlign: "right" }}>
-                      {getVal(item, "Qty", "qty", "Pcs", "pcs")}
-                    </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[4], textAlign: "right" }}>
-                      {fmtNum(getVal(item, "Weight", "weight", "Carats", "carats"), 2)}
-                    </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[5], textAlign: "right" }}>
-                      {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
-                    </td>
-                    <td style={{ ...itemCell, width: ITEM_COL_WIDTHS[6], textAlign: "right", borderRight: "1px solid #000" }}>
-                      {fmtNum(getVal(item, "Amount", "amount"), 2)}
-                    </td>
-                  </tr>
-                ))}
+                      <td style={{ ...itemCell, width: colWidths[0], textAlign: "center" }}>
+                        {srNo++}
+                      </td>
+                      <td
+                        style={{
+                          ...itemCell,
+                          width: colWidths[1],
+                          textAlign: "left",
+                          ...(isNote
+                            ? { height: "auto", minHeight: ROW_H, ...getNoteStockCellStyle(stockNo) }
+                            : { whiteSpace: "nowrap", overflow: "hidden" })
+                        }}
+                      >
+                        {stockNo}
+                      </td>
+                      <td
+                        style={{
+                          ...itemCell,
+                          width: colWidths[2],
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
+                      >
+                        {getVal(item, "Description", "description", "ItemName", "itemName")}
+                      </td>
+                      <td style={{ ...itemCell, width: colWidths[3], textAlign: "right" }}>
+                        {getVal(item, "Qty", "qty", "Pcs", "pcs")}
+                      </td>
+                      <td style={{ ...itemCell, width: colWidths[4], textAlign: "right" }}>
+                        {fmtCaratNum(getVal(item, "Weight", "weight", "Carats", "carats"))}
+                      </td>
+                      <td style={{ ...itemCell, width: colWidths[5], textAlign: "right" }}>
+                        {fmtNum(getVal(item, "PricePerCarat", "pricePerCarat", "Rate", "rate"), 2)}
+                      </td>
+                      <td style={{ ...itemCell, width: colWidths[6], textAlign: "right", borderRight: "1px solid #000" }}>
+                        {fmtNum(getVal(item, "Amount", "amount"), 2)}
+                      </td>
+                    </tr>
+                  );
+                })}
 
                 {Array.from({ length: Math.max(0, pageCapacity - pageItems.length) }).map((_, i) => (
                   <tr key={`empty-${i}`} className="mix-pur-empty-row" style={{ fontFamily: FONT_BODY }}>
@@ -588,7 +612,7 @@ const MixPurPrintUsaFormat = ({
                         key={col}
                         style={{
                           ...itemCell,
-                          width: ITEM_COL_WIDTHS[col],
+                          width: colWidths[col],
                           borderLeft: "1px solid #000",
                           borderRight: "1px solid #000",
                           borderTop: "none",
@@ -610,7 +634,7 @@ const MixPurPrintUsaFormat = ({
                           borderBottom: "1px solid #000",
                           borderLeft: "1px solid #000",
                           borderRight: "1px solid #000",
-                          width: ITEM_COL_WIDTHS[col],
+                          width: colWidths[col],
                           padding: 0,
                           height: 0,
                           lineHeight: 0

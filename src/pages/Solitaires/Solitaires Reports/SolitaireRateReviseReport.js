@@ -13,6 +13,8 @@ import {
   getSolitaireRateReviseReport
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -62,6 +64,7 @@ const getRateReviseTableTotals = (table) => {
 
 const SolitaireRateReviseReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat("solitaire");
 
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
@@ -240,7 +243,7 @@ const SolitaireRateReviseReport = () => {
   const columns = useMemo(
     () => [
       {
-        header: t("DATE"),
+        header: t("Date"),
         accessorKey: "Date",
         cell: ({ row }) => {
           const value = getRowVal(row.original, "Date", "date");
@@ -249,7 +252,7 @@ const SolitaireRateReviseReport = () => {
         footer: () => <span className="fw-bold">{t("Total")}</span>
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "LotNo",
         cell: ({ row }) => {
           if (isTotalRow(row.original)) {
@@ -263,41 +266,41 @@ const SolitaireRateReviseReport = () => {
       {
         header: t("Carats"),
         accessorKey: "Carats",
-        cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "Carats", "carats"), 3),
-        footer: ({ table }) => <span className="fw-bold text-end d-block">{fmtFixedOrZero(getRateReviseTableTotals(table).totalCarats, 3)}</span>
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Carats", "carats"), caratFormat),
+        footer: ({ table }) => <span className="fw-bold text-end d-block">{formatCarat(getRateReviseTableTotals(table).totalCarats, caratFormat)}</span>
       },
       {
-        header: t("OldRate"),
+        header: t("Old Rate"),
         accessorKey: "OldRate",
         cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "OldRate", "oldRate"), 2)
       },
       {
-        header: t("NewRate"),
+        header: t("New Rate"),
         accessorKey: "NewRate",
         cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "NewRate", "newRate"), 2)
       },
       {
-        header: t("Old%"),
+        header: t("Old %"),
         accessorKey: "OldPer",
         cell: ({ row }) => {
           return `${fmtFixedOrZero(getRowVal(row.original, "OldPer", "oldPer"), 2)}%`;
         }
       },
       {
-        header: t("New%"),
+        header: t("New %"),
         accessorKey: "NewPer",
         cell: ({ row }) => {
           return `${fmtFixedOrZero(getRowVal(row.original, "NewPer", "newPer"), 2)}%`;
         }
       },
       {
-        header: t("PLAmount"),
+        header: t("PL Amount"),
         accessorKey: "PLAmount",
         cell: ({ row }) => fmtFixedOrZero(getRowVal(row.original, "PLAmount", "plAmount"), 3),
         footer: ({ table }) => <span className="fw-bold text-end d-block">{fmtFixedOrZero(getRateReviseTableTotals(table).totalPL, 2)}</span>
       },
       {
-        header: t("UserName"),
+        header: t("User Name"),
         accessorKey: "UserName",
         cell: ({ row }) => {
           const value = getRowVal(row.original, "UserName", "userName");
@@ -329,7 +332,7 @@ const SolitaireRateReviseReport = () => {
         }
       }
     ],
-    [t]
+    [t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -340,14 +343,14 @@ const SolitaireRateReviseReport = () => {
 
     const headers = [
       "Date",
-      "LotNo",
+      "Lot No",
       "Carats",
-      "OldRate",
-      "NewRate",
-      "Old%",
-      "New%",
-      "PLAmount",
-      "UserName",
+      "Old Rate",
+      "New Rate",
+      "Old %",
+      "New %",
+      "PL Amount",
+      "User Name",
       "Shape",
       "Color",
       "Clarity"
@@ -363,7 +366,7 @@ const SolitaireRateReviseReport = () => {
         : getRowVal(row, "LotNo", "lotNo")
           ? String(getRowVal(row, "LotNo", "lotNo"))
           : "",
-      fmtFixedOrZero(getRowVal(row, "Carats", "carats"), 3),
+      formatCarat(getRowVal(row, "Carats", "carats"), caratFormat),
       fmtFixedOrZero(getRowVal(row, "OldRate", "oldRate"), 2),
       fmtFixedOrZero(getRowVal(row, "NewRate", "newRate"), 2),
       `${fmtFixedOrZero(getRowVal(row, "OldPer", "oldPer"), 2)}%`,

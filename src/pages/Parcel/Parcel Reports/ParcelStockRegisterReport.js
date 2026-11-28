@@ -17,6 +17,9 @@ import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getParcelStockHistoryReport,
   getParcelStockRegisterDropdowns,
@@ -63,7 +66,7 @@ const transactionTypeOptions = [
   { value: "STKTRN", label: "Stock Transfer" }
 ];
 
-const DEFAULT_TRANSACTION_TYPES = ["MEMOIN", "PUR", "MEMOOUT", "SALE", "STKTRN"];
+const DEFAULT_TRANSACTION_TYPES = ["PUR", "SALE", "STKTRN"];
 
 const formatDateYMDToDMY = (dateStr) => {
   if (!dateStr || typeof dateStr !== "string") return dateStr || "";
@@ -266,15 +269,21 @@ const mapDropdownItems = (items) => {
 
 const ParcelStockRegisterReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
 
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
   const [masterDropdowns, setMasterDropdowns] = useState({});
+  const tableScrollRef = useRef(null);
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
   // TYPE (.chkType) — MVC default: none selected ("Select Types")
   const [selectedTypes, setSelectedTypes] = useState([]);
-  // Transaction (.chkTypeall) — MVC cshtml checked: MEMOIN, PUR, MEMOOUT, SALE, STKTRN
+  // Transaction (.chkTypeall) — default checked: PUR, SALE, STKTRN (MEMOIN & MEMOOUT unchecked)
   const [selectedTypesTrn, setSelectedTypesTrn] = useState(DEFAULT_TRANSACTION_TYPES);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [trnDropdownOpen, setTrnDropdownOpen] = useState(false);
@@ -320,7 +329,7 @@ const ParcelStockRegisterReport = () => {
     const groupOrder = [];
     const grouped = new Map();
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -663,7 +672,7 @@ const ParcelStockRegisterReport = () => {
     const grouped = new Map();
 
     reportRows.forEach((item) => {
-      const key = item.lotNo || "Unknown StockID";
+      const key = item.lotNo || "Unknown Stock ID";
       if (!grouped.has(key)) {
         grouped.set(key, []);
         groupOrder.push(key);
@@ -672,23 +681,22 @@ const ParcelStockRegisterReport = () => {
     });
 
     const columns = [
-      "TrnDate",
-      "TrnType",
-      "InvNo",
+      "Trn Date",
+      "Trn Type",
+      "Inv No",
       "Particulars",
-      "StockIn",
-      "StockInPrice",
-      "StockInAmount",
-      "StockOut",
-      "StockOutPrice",
-      "StockOutAmount",
+      "Stock In",
+      "Stock In Price",
+      "Stock In Amount",
+      "Stock Out",
+      "Stock Out Price",
+      "Stock Out Amount",
       "COGS",
-      "BalanceStock",
-      "BalancePrice",
-      "BalanceAmount"
+      "Balance Stock",
+      "Balance Price",
+      "Balance Amount"
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
 
@@ -708,7 +716,7 @@ const ParcelStockRegisterReport = () => {
       const items = grouped.get(stockId) || [];
       const subtotal = { InCts: 0, InRate: 0, InAmount: 0, OutCts: 0, OutRate: 0, OutAmount: 0 };
 
-      rows.push([`StockID:${stockId}`, "", "", "", "", "", "", "", "", "", "", "", ""]);
+      rows.push([`Stock ID: ${stockId}`, "", "", "", "", "", "", "", "", "", "", "", ""]);
 
       items.forEach((item) => {
         const trnDate = item.trntype === "OpStk" ? opStkDate : item.trnDate;
@@ -717,14 +725,14 @@ const ParcelStockRegisterReport = () => {
           item.trntype || "",
           item.invno ?? "",
           item.perticulors || "",
-          fmtFixed(item.inCts, caratDecimals),
+          formatCarat(item.inCts, caratFormat),
           fmtFixed(item.inRate, priceDecimals),
           fmtFixed(item.inAmount, amtDecimals),
-          fmtFixed(item.outCts, caratDecimals),
+          formatCarat(item.outCts, caratFormat),
           fmtFixed(item.outRate, priceDecimals),
           fmtFixed(item.outAmount, amtDecimals),
           item.cogs || 0,
-          fmtFixed(item.balCts, caratDecimals),
+          formatCarat(item.balCts, caratFormat),
           fmtFixed(item.balRate, priceDecimals),
           fmtFixed(item.balAmount, amtDecimals)
         ]);
@@ -756,10 +764,10 @@ const ParcelStockRegisterReport = () => {
         "",
         "",
         "",
-        subtotal.InCts.toFixed(caratDecimals),
+        formatCarat(subtotal.InCts, caratFormat),
         subtotal.InRate.toFixed(priceDecimals),
         subtotal.InAmount.toFixed(amtDecimals),
-        subtotal.OutCts.toFixed(caratDecimals),
+        formatCarat(subtotal.OutCts, caratFormat),
         subtotal.OutRate.toFixed(priceDecimals),
         subtotal.OutAmount.toFixed(amtDecimals),
         "",
@@ -774,10 +782,10 @@ const ParcelStockRegisterReport = () => {
       "",
       "",
       "",
-      grandTotals.InCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.InCts, caratFormat),
       grandTotals.InRate.toFixed(priceDecimals),
       grandTotals.InAmount.toFixed(amtDecimals),
-      grandTotals.OutCts.toFixed(caratDecimals),
+      formatCarat(grandTotals.OutCts, caratFormat),
       grandTotals.OutRate.toFixed(priceDecimals),
       grandTotals.OutAmount.toFixed(amtDecimals),
       "",
@@ -803,23 +811,22 @@ const ParcelStockRegisterReport = () => {
 
     // MVC renderStockRegisterReportByStockID columns (+ COGS when radio is COGS)
     const columns = [
-      { header: "TrnDate", key: "trnDate", numeric: false },
-      { header: "TrnType", key: "trntype", numeric: false },
-      { header: "InvNo", key: "invno", numeric: false },
+      { header: "Trn Date", key: "trnDate", numeric: false },
+      { header: "Trn Type", key: "trntype", numeric: false },
+      { header: "Inv No", key: "invno", numeric: false },
       { header: "Particulars", key: "perticulors", numeric: false },
-      { header: "StockIn", key: "inCts", numeric: true, sum: true },
-      { header: "StockInPrice", key: "inRate", numeric: true, sum: true },
-      { header: "StockInAmount", key: "inAmount", numeric: true, sum: true },
-      { header: "StockOut", key: "outCts", numeric: true, sum: true },
-      { header: "StockOutPrice", key: "outRate", numeric: true, sum: true },
-      { header: "StockOutAmount", key: "outAmount", numeric: true, sum: true },
+      { header: "Stock In", key: "inCts", numeric: true, sum: true },
+      { header: "Stock In Price", key: "inRate", numeric: true, sum: true },
+      { header: "Stock In Amount", key: "inAmount", numeric: true, sum: true },
+      { header: "Stock Out", key: "outCts", numeric: true, sum: true },
+      { header: "Stock Out Price", key: "outRate", numeric: true, sum: true },
+      { header: "Stock Out Amount", key: "outAmount", numeric: true, sum: true },
       ...(showCOGS ? [{ header: "COGS", key: "cogs", numeric: true, sum: true }] : []),
-      { header: "BalanceStock", key: "balCts", numeric: true },
-      { header: "BalancePrice", key: "balRate", numeric: true },
-      { header: "BalanceAmount", key: "balAmount", numeric: true }
+      { header: "Balance Stock", key: "balCts", numeric: true },
+      { header: "Balance Price", key: "balRate", numeric: true },
+      { header: "Balance Amount", key: "balAmount", numeric: true }
     ];
 
-    const caratDecimals = 2;
     const amtDecimals = 2;
     const priceDecimals = 2;
     const sumKeys = columns.filter((c) => c.sum).map((c) => c.key);
@@ -830,8 +837,10 @@ const ParcelStockRegisterReport = () => {
     });
     const opStkDate = formatDateYMDToDMY(filters.fromDate);
 
+    const isCaratCol = (key) => key === "inCts" || key === "outCts" || key === "balCts";
+
     const fmtCol = (key, val) => {
-      if (key === "inCts" || key === "outCts" || key === "balCts") return fmtFixed(val, caratDecimals);
+      if (isCaratCol(key)) return formatCarat(val, caratFormat);
       if (key === "inAmount" || key === "outAmount" || key === "balAmount") return fmtFixed(val, amtDecimals);
       if (key === "inRate" || key === "outRate" || key === "balRate" || key === "cogs") {
         return fmtFixed(val, priceDecimals);
@@ -839,8 +848,10 @@ const ParcelStockRegisterReport = () => {
       return val ?? "";
     };
 
+    const fmtSummaryCol = (key, val) =>
+      isCaratCol(key) ? formatCarat(val, caratFormat) : Number(val || 0).toFixed(decFor(key));
+
     const decFor = (key) => {
-      if (key === "inCts" || key === "outCts" || key === "balCts") return caratDecimals;
       if (key === "inAmount" || key === "outAmount" || key === "balAmount") return amtDecimals;
       return priceDecimals;
     };
@@ -848,13 +859,13 @@ const ParcelStockRegisterReport = () => {
     return (
       <div className="table-responsive">
         <div
+          ref={tableScrollRef}
           id="container-div"
+          className="viewport-table-scroll"
           style={{
-            maxHeight: 750,
-            overflowY: "auto",
-            overflowX: "auto",
+            maxHeight: tableMaxHeight,
             padding: 0,
-            border: "1px solid #dcdcdc",
+            border: "1px solid var(--vz-border-color, #dcdcdc)",
             borderRadius: 8,
             fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"
@@ -913,7 +924,7 @@ const ParcelStockRegisterReport = () => {
                           textAlign: "left"
                         }}
                       >
-                        <strong>StockID:</strong> {stockId}
+                        <strong>Stock ID:</strong> {stockId}
                       </td>
                     </tr>
 
@@ -975,7 +986,7 @@ const ParcelStockRegisterReport = () => {
                       {columns.slice(3).map((col) =>
                         sumKeys.includes(col.key) ? (
                           <td key={col.key} style={{ textAlign: "right", fontWeight: "bold" }}>
-                            {subtotal[col.key].toFixed(decFor(col.key))}
+                            {fmtSummaryCol(col.key, subtotal[col.key])}
                           </td>
                         ) : (
                           <td key={col.key} />
@@ -993,7 +1004,7 @@ const ParcelStockRegisterReport = () => {
                 {columns.slice(3).map((col) =>
                   sumKeys.includes(col.key) ? (
                     <td key={col.key} style={{ textAlign: "right", fontWeight: "bold" }}>
-                      {grandTotals[col.key].toFixed(decFor(col.key))}
+                      {fmtSummaryCol(col.key, grandTotals[col.key])}
                     </td>
                   ) : (
                     <td key={col.key} />

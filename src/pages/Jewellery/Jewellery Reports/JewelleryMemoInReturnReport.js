@@ -24,6 +24,8 @@ import {
   getJewelleryMemoInReturnReportDropdowns
 } from "../../../helpers/fakebackend_helper";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
+import useCaratFormat from "../../../Components/Hooks/useCaratFormat";
+import { formatCarat } from "../../../helpers/caratFormatDefaults";
 
 const dashText = (value) => (value === null || value === undefined || value === "" ? "-" : String(value));
 
@@ -65,6 +67,7 @@ const TYPE_OPTIONS = [
 
 const JewelleryMemoInReturnReport = () => {
   const { t } = useTranslation();
+  const { caratFormat } = useCaratFormat();
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -361,19 +364,19 @@ const JewelleryMemoInReturnReport = () => {
         footer: () => <span className="fw-bold text-center d-block">Total:</span>
       },
       {
-        header: t("DATE"),
+        header: t("Date"),
         accessorKey: "TrnDate",
         accessorFn: (row) => dashText(getRowVal(row, "TrnDate", "trnDate", "ConDATE", "conDATE")),
         cell: ({ row }) => dashText(getRowVal(row.original, "TrnDate", "trnDate", "ConDATE", "conDATE"))
       },
       {
-        header: t("MemoNo"),
+        header: t("Memo Number"),
         accessorKey: "MemoNo",
         accessorFn: (row) => dashText(getRowVal(row, "MemoNo", "memoNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "MemoNo", "memoNo"))
       },
       {
-        header: t("BillNo"),
+        header: t("Bill No"),
         accessorKey: "BillNo",
         accessorFn: (row) => dashText(getRowVal(row, "BillNo", "billNo")),
         cell: ({ row }) => dashText(getRowVal(row.original, "BillNo", "billNo"))
@@ -385,13 +388,13 @@ const JewelleryMemoInReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Party", "party"))
       },
       {
-        header: t("LotNo"),
+        header: t("Lot No"),
         accessorKey: "Lotno",
         accessorFn: (row) => dashText(getRowVal(row, "Lotno", "LotNo", "lotno", "Stock_ID")),
         cell: ({ row }) => dashText(getRowVal(row.original, "Lotno", "LotNo", "lotno", "Stock_ID"))
       },
       {
-        header: t("ItemName"),
+        header: t("Item Name"),
         accessorKey: "ItemName",
         accessorFn: (row) => dashText(getRowVal(row, "ItemName", "itemName")),
         cell: ({ row }) => dashText(getRowVal(row.original, "ItemName", "itemName"))
@@ -399,11 +402,11 @@ const JewelleryMemoInReturnReport = () => {
       {
         header: t("Return"),
         accessorKey: "Return",
-        accessorFn: (row) => fmtFixed(getRowVal(row, "Return", "return"), 3),
-        cell: ({ row }) => fmtFixed(getRowVal(row.original, "Return", "return"), 3),
+        accessorFn: (row) => formatCarat(getRowVal(row, "Return", "return"), caratFormat),
+        cell: ({ row }) => formatCarat(getRowVal(row.original, "Return", "return"), caratFormat),
         footer: ({ table }) => {
           const { totalReturn } = getTableTotals(table);
-          return <span className="fw-bold text-end d-block">{fmtFixed(totalReturn, 3)}</span>;
+          return <span className="fw-bold text-end d-block">{formatCarat(totalReturn, caratFormat)}</span>;
         }
       },
       {
@@ -433,13 +436,13 @@ const JewelleryMemoInReturnReport = () => {
         cell: ({ row }) => dashText(getRowVal(row.original, "Broker", "broker"))
       },
       {
-        header: t("invtype"),
+        header: t("Inv Type"),
         accessorKey: "invtype",
         accessorFn: (row) => dashText(getRowVal(row, "invtype", "Invtype", "InvType")),
         cell: ({ row }) => dashText(getRowVal(row.original, "invtype", "Invtype", "InvType"))
       }
     ],
-    [expandedMemoNos, t]
+    [expandedMemoNos, t, caratFormat]
   );
 
   const handleExcel = async () => {
@@ -449,8 +452,8 @@ const JewelleryMemoInReturnReport = () => {
     }
 
     const headers = [
-      "DATE", "MemoNo", "BillNo", "Party", "LotNo", "ItemName",
-      "Return", "Price", "Amount", "Broker", "invtype"
+      "Date", "Memo Number", "Bill No", "Party", "Lot No", "Item Name",
+      "Return", "Price", "Amount", "Broker", "Inv Type"
     ];
 
     const rows = reportRows.map((row) => [
@@ -460,7 +463,7 @@ const JewelleryMemoInReturnReport = () => {
       dashText(getRowVal(row, "Party", "party")),
       dashText(getRowVal(row, "Lotno", "LotNo", "Stock_ID")),
       dashText(getRowVal(row, "ItemName", "itemName")),
-      fmtFixed(getRowVal(row, "Return", "return"), 3),
+      formatCarat(getRowVal(row, "Return", "return"), caratFormat),
       fmtFixed(getRowVal(row, "Price", "price"), 2),
       fmtFixed(getRowVal(row, "Amount", "amount"), 2),
       dashText(getRowVal(row, "Broker", "broker")),
@@ -471,7 +474,7 @@ const JewelleryMemoInReturnReport = () => {
     if (!res?.success) toast.error(t("Excel export failed."));
   };
 
-  document.title = `${t("Jewellery MemoIn Return Report")} | ${t("Reports")}`;
+  document.title = `${t("Jewellery Memo In Return Report")} | ${t("Reports")}`;
 
   return (
     <React.Fragment>
@@ -479,12 +482,12 @@ const JewelleryMemoInReturnReport = () => {
 
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Jew MemoIn Return Report")} pageTitle={t("Jew Reports")} />
+          <BreadCrumb title={t("Jew Memo In Return Report")} pageTitle={t("Jew Reports")} />
 
           <div className="card stock-search-header-bar d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 p-3 rounded-3 shadow-sm border gap-2">
             <h5 className="mb-0 fw-bold text-primary d-flex align-items-center gap-2">
               <i className={hasSearched ? "ri-database-2-line fs-20 text-primary" : "ri-search-eye-line fs-20 text-primary"}></i>
-              {hasSearched ? t("Jew MemoIn Return Report Results") : t("Jew MemoIn Return Report Filters")}
+              {hasSearched ? t("Jew Memo In Return Report Results") : t("Jew Memo In Return Report Filters")}
             </h5>
 
             <div className="d-flex gap-2">
@@ -546,7 +549,7 @@ const JewelleryMemoInReturnReport = () => {
                       <Col sm={2}>
                         <FormGroup className="mb-0">
                           <Label className="fw-medium mb-1 small">{t("Memo No")}</Label>
-                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("MemoNo")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
+                          <Input type="text" className="form-control form-control-sm" style={{ height: "35px" }} value={filters.invNo} placeholder={t("Memo No")} onChange={(e) => setFilters((p) => ({ ...p, invNo: e.target.value }))} />
                         </FormGroup>
                       </Col>
                       <Col sm={2}>

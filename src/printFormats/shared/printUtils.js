@@ -1,4 +1,5 @@
 import { api } from "../../config";
+import { formatCarat, getCachedCaratFormat, getCaratDecimals, isCaratScopeKeyword } from "../../helpers/caratFormatDefaults";
 
 export const FALLBACK_MEMO_CONDITIONS =
   "The diamonds invoiced herein are purchased from legitimate sources, not involved in funding conflict & in compliance with the United Nations resolutions. The seller hereby agrees the assurances are based on personal knowledge and /or written assurances given by the supplier of these diamonds";
@@ -23,6 +24,33 @@ export const fmt = (v, d = 2) => {
   const n = Number(v);
   return Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
 };
+
+const resolvePrintCaratFormat = (formatOrScope) => {
+  if (!formatOrScope || isCaratScopeKeyword(formatOrScope)) {
+    return getCachedCaratFormat(formatOrScope || "parcel");
+  }
+  return formatOrScope;
+};
+
+/** Truncated carat formatter without rounding or float drift, driven by Setting Master */
+export const fmtCarat = (v, formatOrScope = "parcel") => formatCarat(v, resolvePrintCaratFormat(formatOrScope));
+
+/** Truncated carat formatter with en-US locale thousands separator */
+export const fmtCaratNum = (v, formatOrScope = "parcel") => {
+  const s = fmtCarat(v, formatOrScope);
+  const [intPart, fracPart] = s.split(".");
+  const neg = intPart.startsWith("-");
+  const digits = neg ? intPart.slice(1) : intPart;
+  const withCommas = Number(digits).toLocaleString("en-US");
+  return `${neg ? "-" : ""}${withCommas}.${fracPart}`;
+};
+
+export const getDynamicCaratDecimals = (formatOrScope = "parcel") =>
+  getCaratDecimals(resolvePrintCaratFormat(formatOrScope));
+
+export const fmtSolitaireCarat = (v) => fmtCarat(v, "solitaire");
+export const fmtSolitaireCaratNum = (v) => fmtCaratNum(v, "solitaire");
+export const getDynamicSolitaireCaratDecimals = () => getDynamicCaratDecimals("solitaire");
 
 /** MVC MixSalePrint_USA N2 with thousands separator (e.g. 153,000.00). */
 export const fmtNum = (v, d = 2) => {

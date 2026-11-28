@@ -17,6 +17,7 @@ import { toast, ToastContainer } from "react-toastify";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import { useSettingReportDates } from "../../../Components/Hooks/useSettingReportDates";
 import { exportToExcel } from "../../../helpers/excel_helper";
+import useViewportTableHeight from "../../../helpers/useViewportTableHeight";
 import {
   getAccGrpMasters,
   getSolitaireAgingDropdowns,
@@ -72,6 +73,7 @@ const emptyTotals = () =>
 const SolitaireAgingReport = () => {
   const { t } = useTranslation();
   const printRef = useRef(null);
+  const tableScrollRef = useRef(null);
   const { fromDate, toDate, getDates, mergeDates } = useSettingReportDates();
 
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -79,6 +81,10 @@ const SolitaireAgingReport = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [dropdownData, setDropdownData] = useState({});
   const [reportRows, setReportRows] = useState([]);
+  const tableMaxHeight = useViewportTableHeight(tableScrollRef, {
+    enabled: hasSearched,
+    deps: [hasSearched, reportRows.length],
+  });
   const [appliedGroupBy, setAppliedGroupBy] = useState("InvoiceWise");
   const [appliedDateRange, setAppliedDateRange] = useState({ from: "", to: "" });
   const [companyInfo, setCompanyInfo] = useState(() => getCachedReportCompany());
@@ -812,7 +818,7 @@ const SolitaireAgingReport = () => {
                   {reportRows.length === 0 ? (
                     <div className="text-center py-4 text-muted">{t("No data available.")}</div>
                   ) : (
-                    <div className="table-responsive table-card" style={{ maxHeight: "620px", overflow: "auto" }}>
+                    <div ref={tableScrollRef} className="table-responsive table-card viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                       <table id="aging-report-table" className="table table-bordered table-hover table-sm align-middle mb-0">
                         <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 2 }}>
                           <tr>
