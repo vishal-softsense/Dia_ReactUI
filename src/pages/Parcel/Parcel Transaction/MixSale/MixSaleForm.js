@@ -25,6 +25,7 @@ import CreatableSelect from "react-select/creatable";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
+import DocumentEmailModal from "../../../../Components/Common/DocumentEmailModal";
 import {
   addMixSale,
   editMixSale,
@@ -624,6 +625,12 @@ const MixSaleForm = ({ mode = "add" }) => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [emailModal, setEmailModal] = useState({
+    open: false,
+    docId: "",
+    navigateAfter: false,
+    savedMsg: ""
+  });
   const [typeOpts, setTypeOpts] = useState([]);
   const [subTypeOpts, setSubTypeOpts] = useState([]);
   const [categoryOpts, setCategoryOpts] = useState([]);
@@ -2191,10 +2198,21 @@ const MixSaleForm = ({ mode = "add" }) => {
       const payload = buildPayload();
       const res = isEdit ? await editMixSale(payload) : await addMixSale(payload);
       if (res?.success || res?.Success) {
-        toast.success(res?.Data || res?.data || t("Saved successfully."));
-        navigate("/mixform/mixformlist", {
-          state: { successMessage: res?.Data || res?.data || t("Saved successfully.") }
-        });
+        const savedMsg = res?.Data || res?.data || t("Saved successfully.");
+        toast.success(savedMsg);
+        const createdId = res?.code || res?.Code || res?.invNo || res?.InvNo || "";
+        if (!isEdit && createdId) {
+          setEmailModal({
+            open: true,
+            docId: String(createdId),
+            navigateAfter: true,
+            savedMsg
+          });
+        } else {
+          navigate("/mixform/mixformlist", {
+            state: { successMessage: savedMsg }
+          });
+        }
       } else {
         toast.warning(res?.Data || res?.data || t("Save failed."));
       }
@@ -2203,6 +2221,31 @@ const MixSaleForm = ({ mode = "add" }) => {
       toast.error(t("Save failed."));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenEmail = () => {
+    const docId = header.code || editId || header.invNo;
+    if (!docId) {
+      toast.warning(t("Invoice number is required."));
+      return;
+    }
+    setEmailModal({
+      open: true,
+      docId: String(docId),
+      navigateAfter: false,
+      savedMsg: ""
+    });
+  };
+
+  const handleCloseEmail = () => {
+    const shouldNav = emailModal.navigateAfter;
+    const savedMsg = emailModal.savedMsg;
+    setEmailModal({ open: false, docId: "", navigateAfter: false, savedMsg: "" });
+    if (shouldNav) {
+      navigate("/mixform/mixformlist", {
+        state: { successMessage: savedMsg || t("Saved successfully.") }
+      });
     }
   };
 
@@ -2239,6 +2282,12 @@ const MixSaleForm = ({ mode = "add" }) => {
                     <span>{title}</span>
                   </h5>
                   <div className="d-flex gap-2 flex-wrap align-items-center w-100 w-sm-auto justify-content-start justify-content-sm-end">
+                    {isEdit && (
+                      <Button color="info" size="sm" className="flex-fill flex-sm-grow-0 text-nowrap" onClick={handleOpenEmail}>
+                        <i className="ri-mail-send-line me-1 align-middle" />
+                        {t("Email")}
+                      </Button>
+                    )}
                     {!readOnly && (
                       <Button color="primary" size="sm" className="flex-fill flex-sm-grow-0 text-nowrap" disabled={saving} onClick={handleSubmit}>
                         {saving ? t("Saving...") : t("Submit")}
@@ -3405,6 +3454,12 @@ const MixSaleForm = ({ mode = "add" }) => {
           message={warningModal.message}
           confirmText={t("OK")}
           onClose={closeWarning}
+        />
+        <DocumentEmailModal
+          isOpen={emailModal.open}
+          onClose={handleCloseEmail}
+          docType="MixSale"
+          documentId={emailModal.docId}
         />
         <ToastContainer autoClose={2000} />
       </div>
