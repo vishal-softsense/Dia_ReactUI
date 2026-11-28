@@ -1,5 +1,5 @@
 import React from "react";
-import { fmtCarat, fmtDate, fmtNum, getVal, paginateFixed } from "../shared/printUtils";
+import { fmt, fmtCarat, fmtDate, fmtNum, getVal, paginateFixed } from "../shared/printUtils";
 import deltaQr from "../../assets/images/print/deltaqr.png";
 import deltaInstaQr from "../../assets/images/print/delta.png";
 

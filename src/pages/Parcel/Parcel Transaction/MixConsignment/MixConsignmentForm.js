@@ -37,6 +37,7 @@ import {
   checkLotNoExists,
   getMixConsignmentMixLotNoLM
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
@@ -514,7 +515,7 @@ const mapLotDetailToEntry = (lot, lotNo, opts = {}) => {
   } = opts;
 
   const carats = getNumVal(lot, "Carats", "Weight");
-  const caratStr = formatCarat(carats, getCachedCaratFormat());
+  const caratStr = formatCaratValue(carats, getCachedCaratFormat());
   // MVC: $('#Pcs').val(jsonData[0].Pcs) — parcel lots typically return 0.
   // Do not coerce with || 1 (that forced Pcs to 1 whenever API Pcs was 0).
   const pcs = getNumVal(lot, "Pcs");
@@ -1347,6 +1348,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
   }, [isEdit, editId]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   useEffect(() => {
     const days = toNum(header.dueDays, 0);
@@ -2252,7 +2254,7 @@ const MixConsignmentForm = ({ mode = "add" }) => {
                             styles={customStyles}
                             options={partyOpts}
                             value={party}
-                            onChange={setParty}
+                            onChange={handlePartyChange}
                             onInputChange={(v, meta) => {
                               if (meta.action === "input-change") setPartyInput(v);
                             }}
