@@ -34,8 +34,11 @@ import {
   formatCarat,
   formatPrice,
   MAKING_TYPE_OPTIONS,
+  makingChargesForLoaded,
   mapDiamondListToRows,
+  normalizeMakingType,
   resolveOtherChargesExtra,
+  skipsOtherAndAsking,
   summarizeTableRows,
 } from "./jewStockFormUtils";
 import { sanitizeCaratInput, truncateCaratNumber } from "../../../helpers/caratFormatDefaults";
@@ -199,7 +202,7 @@ export default function AddMountingMaster() {
   const navigate = useNavigate();
 
   // ── page title ──
-  useEffect(() => { document.title = "Add Mounting Stock | DiaJewSoft"; }, []);
+  useEffect(() => { document.title = "Add Jewellery Stock | DiaJewSoft"; }, []);
 
   // ════════════════════════════════════════════════════════════════════════════
   // SECTION A  –  Mounting Stock LIST  (from MountingStockList)
@@ -225,12 +228,12 @@ export default function AddMountingMaster() {
         toast.error(
           response?.Message || response?.message ||
           response?.data?.Message || response?.data?.message ||
-          "Failed to fetch mounting stock."
+          "Failed to fetch jewellery stock."
         );
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch mounting stock.");
+      toast.error("Failed to fetch jewellery stock.");
     } finally {
       setListLoading(false);
     }
@@ -556,7 +559,7 @@ export default function AddMountingMaster() {
         const { success, data, message } = unwrapApiResponse(response);
         if (cancelled) return;
         if (!success || !data) {
-          toast.error(message || "Failed to load mounting stock dropdowns.");
+          toast.error(message || "Failed to load jewellery stock dropdowns.");
           return;
         }
         // Same as MVC AddMountingStock ViewBag — ItemMasterDropDown + Jew masters
@@ -593,7 +596,7 @@ export default function AddMountingMaster() {
       } catch (err) {
         if (!cancelled) {
           console.error(err);
-          toast.error("Failed to load mounting stock dropdowns.");
+          toast.error("Failed to load jewellery stock dropdowns.");
         }
       }
     };
@@ -660,6 +663,7 @@ export default function AddMountingMaster() {
   // ── Derived visibility ──
   const showMountingSection = jewCategory === "Finished Jewellery" || jewCategory === "Semi Jewellery";
   const showDetailsSection = jewCategory !== "Mounting" && jewCategory !== "Metal";
+  const lockOtherAndAsking = skipsOtherAndAsking(jewCategory);
 
 
   const [calcBasis, setCalcBasis] = useState("NetWeight"); // "GrossWeight" | "NetWeight"
@@ -719,6 +723,7 @@ export default function AddMountingMaster() {
   }, [handlingCarat, handlingCharges]);
 
   useEffect(() => {
+    const skipOtherAndAsking = skipsOtherAndAsking(jewCategory);
     const chargeArgs = {
       metalAmount,
       originalMakingCharges,
@@ -732,7 +737,12 @@ export default function AddMountingMaster() {
       askingPer,
       isManualAskingRate,
       currentAskingRate: askingRate,
+      skipOtherAndAsking,
     };
+    if (skipOtherAndAsking) {
+      otherChargesExtraRef.current = 0;
+      pendingLoadedOtherRef.current = null;
+    }
     let extra = otherChargesExtraRef.current || 0;
     if (pendingLoadedOtherRef.current) {
       const autoTotals = computeChargeTotals({ ...chargeArgs, otherChargesExtra: 0 });
@@ -750,11 +760,11 @@ export default function AddMountingMaster() {
     setOtherCharges(totals.otherCharges);
     setTotalMakingCharges(totals.totalMakingCharges);
     setFinalAmount(totals.finalAmount);
-    if (!isManualAskingRate) {
+    if (skipOtherAndAsking || !isManualAskingRate) {
       setAskingRate(totals.askingRate);
     }
   }, [
-    metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
+    jewCategory, metalAmount, originalMakingCharges, handlingAmount, certificateCharges,
     hallmarkCharges, settingCharges, diamondAmount, stoneAmount, otherPer,
     askingPer, isManualAskingRate, chargeSettingsReady,
   ]);
@@ -774,6 +784,7 @@ export default function AddMountingMaster() {
   }, [carats, rate]);
 
   const handleOtherChargesChange = (value) => {
+    if (skipsOtherAndAsking(jewCategory)) return;
     const autoTotals = computeChargeTotals({
       metalAmount,
       originalMakingCharges,
@@ -828,10 +839,10 @@ export default function AddMountingMaster() {
             }).filter((o) => o.value !== "")
           );
         } else {
-          toast.error(message || "Error loading mounting stock options.");
+          toast.error(message || "Error loading jewellery stock options.");
         }
       })
-      .catch(() => toast.error("Error loading mounting stock options."));
+      .catch(() => toast.error("Error loading jewellery stock options."));
   }, [jewCategory]);
 
   // MVC: $('#UseMounting').on('change') → get-all-Mounting-details and fill form + diamond grid
@@ -895,11 +906,15 @@ export default function AddMountingMaster() {
           ? Number(data.totalMetalAmount ?? data.TotalMetalAmount).toFixed(2)
           : ""
       );
-      setMakingType(data.makingType || data.MakingType || "");
+      const loadedMaking = makingChargesForLoaded(
+        data.makingType || data.MakingType || "",
+        data.makingRate ?? data.MakingRate ?? "",
+        data.grossWeight ?? data.GrossWeight ?? ""
+      );
+      setMakingType(loadedMaking.type);
       setMakingRate(data.makingRate ?? data.MakingRate ?? "");
-      const loadedMaking = data.makingCharges ?? data.MakingCharges ?? "";
-      setMakingCharges(loadedMaking);
-      setOriginalMakingCharges(String(loadedMaking || "0"));
+      setMakingCharges(loadedMaking.charges);
+      setOriginalMakingCharges(loadedMaking.charges);
       setSettingCharges(
         data.settingCharges != null || data.SettingCharges != null
           ? Number(data.settingCharges ?? data.SettingCharges).toFixed(2)
@@ -1212,12 +1227,12 @@ export default function AddMountingMaster() {
           TotalHandlingCharges: parseFloat(handlingAmount) || 0,
           JewelleryCertificate: jewCert,
           TotalCertificateCharges: parseFloat(certificateCharges) || 0,
-          OtherCharges: parseFloat(otherCharges) || 0,
+          OtherCharges: lockOtherAndAsking ? 0 : (parseFloat(otherCharges) || 0),
           HallmarkCharges: parseFloat(hallmarkCharges) || 0,
           TotalMakingCharges: parseFloat(totalMakingCharges) || 0,
           TotalStoneAmount: parseFloat(stoneAmount) || 0,
           FinalAmount: parseFloat(finalAmount) || 0,
-          AskingRate: parseFloat(askingRate) || 0,
+          AskingRate: lockOtherAndAsking ? 0 : (parseFloat(askingRate) || 0),
           TotalDiamondQty: parseInt(diamondQty) || 0,
           TotalStoneQty: parseInt(stoneQty) || 0,
           Description: description,
@@ -1233,10 +1248,10 @@ export default function AddMountingMaster() {
 
       const response = await saveMountingStock(payload);
       if (response.success || response.Success) {
-        toast.success(response.message || response.Message || "Mounting stock saved successfully!");
-        navigate("/master/jewelleryM-stock-list", { state: { successMessage: "Mounting stock saved successfully!" } });
+        toast.success(response.message || response.Message || "Jewellery stock saved successfully!");
+        navigate("/master/jewelleryM-stock-list", { state: { successMessage: "Jewellery stock saved successfully!" } });
       } else {
-        toast.error(response.message || response.Message || "Failed to save mounting stock.");
+        toast.error(response.message || response.Message || "Failed to save jewellery stock.");
       }
     } catch (err) {
       console.error("Submit error:", err);
@@ -1256,7 +1271,7 @@ export default function AddMountingMaster() {
         detail ||
         data?.message || data?.Message ||
         data?.title || // ProblemDetails responses use "title"
-        "Failed to submit mounting stock."
+        "Failed to submit jewellery stock."
       );
     } finally {
       setSubmitLoading(false);
@@ -1276,7 +1291,7 @@ export default function AddMountingMaster() {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          <BreadCrumb title={t("Add Mounting Stock")} pageTitle={t("Stock & Account")} />
+          <BreadCrumb title={t("Add Jewellery Stock")} pageTitle={t("Stock & Account")} />
 
           {/* ══════════════════════════════════════════════════════════════════
               TOP HEADER  –  mirrors MountingStockList CardHeader
@@ -1285,7 +1300,7 @@ export default function AddMountingMaster() {
             <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
               <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
                 <i className="ri-add-circle-line fs-20 text-primary"></i>
-                {t("Add Mounting Stock")}
+                {t("Add Jewellery Stock")}
               </h5>
               <div className="d-flex gap-2">
                 <Button
@@ -1690,7 +1705,8 @@ export default function AddMountingMaster() {
                     <input type="number" className={`${roCls} text-end`} value={costAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Other Charges">
-                    <input type="number" className={`${inputCls} text-end`} value={otherCharges}
+                    <input type="number" className={`${lockOtherAndAsking ? roCls : inputCls} text-end`} value={lockOtherAndAsking ? "0.00" : otherCharges}
+                      readOnly={lockOtherAndAsking}
                       onChange={(e) => handleOtherChargesChange(e.target.value)} />
                   </FieldRow>
                   <FieldRow label="Final Cost Amount">
@@ -1698,8 +1714,9 @@ export default function AddMountingMaster() {
                       value={finalAmount} readOnly />
                   </FieldRow>
                   <FieldRow label="Asking Rate">
-                    <input type="text" className={`${inputCls} text-end`}
-                      placeholder="Asking Rate" value={askingRate}
+                    <input type="text" className={`${lockOtherAndAsking ? roCls : inputCls} text-end`}
+                      placeholder="Asking Rate" value={lockOtherAndAsking ? "0.00" : askingRate}
+                      readOnly={lockOtherAndAsking}
                       onChange={(e) => { setIsManualAskingRate(true); setAskingRate(e.target.value); }} />
                   </FieldRow>
                 </CardBody>

@@ -42,7 +42,7 @@ const MountingStockList = () => {
                     response.message ||
                     response.Message ||
                     response.data?.Message ||
-                    "Failed to fetch mounting stock."
+                    "Failed to fetch jewellery stock."
                 );
             }
         } catch (error) {
@@ -51,7 +51,7 @@ const MountingStockList = () => {
                     ? error
                     : error.response?.data?.message ||
                       error.response?.data?.Message ||
-                      "Failed to fetch mounting stock.";
+                      "Failed to fetch jewellery stock.";
             toast.error(errMsg);
         }
         setLoading(false);
@@ -68,13 +68,13 @@ const MountingStockList = () => {
             try {
                 const response = await deleteMountingStock(itemToDelete);
                 if (response.success || response.Success) {
-                    toast.success(response.message || response.Message || "Mounting stock deleted successfully");
+                    toast.success(response.message || response.Message || "Jewellery stock deleted successfully");
                     fetchMountingStock();
                 } else {
-                    toast.error(response.message || response.Message || "Failed to delete mounting stock");
+                    toast.error(response.message || response.Message || "Failed to delete jewellery stock");
                 }
             } catch (error) {
-                const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Failed to delete mounting stock");
+                const errMsg = typeof error === 'string' ? error : (error.response?.data?.message || error.response?.data?.Message || "Failed to delete jewellery stock");
                 toast.error(errMsg);
             }
             setDeleteModal(false);
@@ -239,27 +239,27 @@ const MountingStockList = () => {
         [navigate, t, caratFormat]
     );
 
-    document.title = `${t("Mounting Stock Master")} | ${t("Admin")}`;
+    document.title = `${t("Jewellery Stock Master")} | ${t("Admin")}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title={t("Mounting Stock Master")} pageTitle={t("Stock & Account")} />
+                    <BreadCrumb title={t("Jewellery Stock Master")} pageTitle={t("Stock & Account")} />
                     <Row>
                         <Col lg={12}>
                             <Card className="shadow-lg border-0 rounded-3 overflow-hidden">
                                 <CardHeader className="bg-transparent border-bottom d-flex align-items-center py-3">
                                     <h5 className="card-title mb-0 flex-grow-1 fw-bold text-primary d-flex align-items-center gap-2">
                                         <i className="ri-archive-line fs-20 text-primary"></i>
-                                        {t("Mounting Stock Master")}
+                                        {t("Jewellery Stock Master")}
                                     </h5>
                                     <div className="d-flex gap-2">
                                         <Link
                                             to="/master/add-stock-Mounting"
                                             className="btn btn-primary add-btn rounded-3 d-inline-flex align-items-center gap-1"
                                         >
-                                            <i className="ri-add-line align-bottom"></i> {t("Add Mounting Stock")}
+                                            <i className="ri-add-line align-bottom"></i> {t("Add Jewellery Stock")}
                                         </Link>
                                         <Button
                                             className="btn-soft-success rounded-3"

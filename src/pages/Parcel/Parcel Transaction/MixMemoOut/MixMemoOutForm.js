@@ -22,6 +22,7 @@ import CreatableSelect from "react-select/creatable";
 import { toast, ToastContainer } from "react-toastify";
 
 import BreadCrumb from "../../../../Components/Common/BreadCrumb";
+import DocumentEmailModal from "../../../../Components/Common/DocumentEmailModal";
 import {
   addMixMemoOut,
   editMixMemoOut,
@@ -34,6 +35,7 @@ import {
   getMixMemoOutPageData,
   getMixMemoOutShipVia
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import StockHistoryPopupModal from "../../../Solitaires/Solitaires Reports/StockHistoryPopupModal";
 import {
   getCachedReportCompany,
@@ -388,6 +390,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [emailModal, setEmailModal] = useState({
+    open: false,
+    docId: "",
+    navigateAfter: false,
+    savedMsg: ""
+  });
   const [subTypeOpts, setSubTypeOpts] = useState([]);
   const [categoryOpts, setCategoryOpts] = useState([]);
   const [currencyOpts, setCurrencyOpts] = useState([]);
@@ -841,6 +849,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
   }, [header.trnDate, header.dueDays]);
 
   const setHeaderField = (key, value) => setHeader((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setHeader, readOnly });
 
   const recalcEntryAmount = (next) => ({
     ...next,
@@ -1176,10 +1185,21 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       const payload = buildPayload();
       const res = isEdit ? await editMixMemoOut(payload) : await addMixMemoOut(payload);
       if (res?.success || res?.Success) {
-        toast.success(res?.Data || res?.data || t("Saved successfully."));
-        navigate("/mixmemoform/mixmemoformlist", {
-          state: { successMessage: res?.Data || res?.data || t("Saved successfully.") }
-        });
+        const savedMsg = res?.Data || res?.data || t("Saved successfully.");
+        toast.success(savedMsg);
+        const createdId = res?.code || res?.Code || res?.invNo || res?.InvNo || "";
+        if (!isEdit && createdId) {
+          setEmailModal({
+            open: true,
+            docId: String(createdId),
+            navigateAfter: true,
+            savedMsg
+          });
+        } else {
+          navigate("/mixmemoform/mixmemoformlist", {
+            state: { successMessage: savedMsg }
+          });
+        }
       } else {
         toast.warning(res?.Data || res?.data || t("Save failed."));
       }
@@ -1188,6 +1208,31 @@ const MixMemoOutForm = ({ mode = "add" }) => {
       toast.error(t("Save failed."));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenEmail = () => {
+    const docId = header.code || editId || header.invNo;
+    if (!docId) {
+      toast.warning(t("Invoice number is required."));
+      return;
+    }
+    setEmailModal({
+      open: true,
+      docId: String(docId),
+      navigateAfter: false,
+      savedMsg: ""
+    });
+  };
+
+  const handleCloseEmail = () => {
+    const shouldNav = emailModal.navigateAfter;
+    const savedMsg = emailModal.savedMsg;
+    setEmailModal({ open: false, docId: "", navigateAfter: false, savedMsg: "" });
+    if (shouldNav) {
+      navigate("/mixmemoform/mixmemoformlist", {
+        state: { successMessage: savedMsg || t("Saved successfully.") }
+      });
     }
   };
 
@@ -1248,6 +1293,10 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                         </Link>
                         <Button color="primary" size="sm" onClick={handlePrintMemo}>
                           {t("Print Mix Memo")}
+                        </Button>
+                        <Button color="info" size="sm" onClick={handleOpenEmail}>
+                          <i className="ri-mail-send-line me-1 align-middle" />
+                          {t("Email")}
                         </Button>
                         <Button color="primary" outline size="sm" onClick={handlePrintMemoCurrentStatus}>
                           {t("Print Memo Current Status")}
@@ -1311,7 +1360,7 @@ const MixMemoOutForm = ({ mode = "add" }) => {
                               </Link>
                             )}
                           </Label>
-                          <Select styles={customStyles} options={partyOpts} value={party} onChange={setParty} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
+                          <Select styles={customStyles} options={partyOpts} value={party} onChange={handlePartyChange} onInputChange={(v, meta) => { if (meta.action === "input-change") setPartyInput(v); else if (meta.action === "input-blur" || meta.action === "menu-close") { setPartyInput(""); setPartyOpts([]); } }} isLoading={partyLoading} placeholder={t("Search Party...")} isClearable isDisabled={readOnly} />
                         </FormGroup>
                       </Col>
                       <Col md={1} sm={3}>
@@ -1784,6 +1833,12 @@ const MixMemoOutForm = ({ mode = "add" }) => {
           message={warningModal.message}
           confirmText={t("OK")}
           onClose={closeWarning}
+        />
+        <DocumentEmailModal
+          isOpen={emailModal.open}
+          onClose={handleCloseEmail}
+          docType="MixMemoOut"
+          documentId={emailModal.docId}
         />
         <ToastContainer autoClose={2000} />
       </div>

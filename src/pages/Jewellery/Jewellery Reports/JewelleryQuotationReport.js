@@ -530,7 +530,10 @@ const ReportCompanyHeader = ({ companyInfo }) => (
   </div>
 );
 
-const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange }) => {
+const JewelleryQuotationReportTable = ({ data, increasePercentage = 0, onStockClick, onStockCountChange }) => {
+  const pct = parseFloat(increasePercentage);
+  const factor = !isNaN(pct) ? 1 + pct / 100 : 1;
+
   const { caratFormat } = useCaratFormat();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryPaths, setGalleryPaths] = useState([]);
@@ -635,7 +638,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
 
         t.grandGrossWeight += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         t.grandNetWeight += Number(j?.netWeight ?? j?.NetWeight ?? 0);
-        t.grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+        t.grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * factor;
 
         diamonds.forEach((d) => {
           t.grandDiaPcs += Number(d?.diamondPcs ?? d?.DiamondPcs ?? 0);
@@ -645,7 +648,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
       });
     });
     return t;
-  }, [grouped]);
+  }, [grouped, factor]);
 
   const stockCount = useMemo(() => Object.values(grouped).reduce((n, g) => n + g.length, 0), [grouped]);
 
@@ -676,6 +679,12 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
         const rowColor = STATUS_COLOR[jewellery?.curStatus ?? jewellery?.CurStatus] || "";
         const stockId = jewellery?.lotNo ?? jewellery?.LotNo ?? "";
         const jewId = jewellery?.jewCode ?? jewellery?.JewCode;
+
+        const rawRate = Number(jewellery?.chitBhav ?? jewellery?.ChitBhav ?? jewellery?.rate ?? jewellery?.Rate ?? 0);
+        const displayRate = rawRate * factor;
+
+        const rawFinalAmt = Number(jewellery?.finalJAmount ?? jewellery?.FinalJAmount ?? 0);
+        const displayFinalAmt = rawFinalAmt * factor;
 
         let totalDiamondPcs = 0;
         let totalDiamondCarat = 0;
@@ -709,7 +718,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
                   </td>
                   <td rowSpan={maxRows} className="col-itemname">{jewellery?.itemName ?? jewellery?.ItemName ?? ""}</td>
                   <td rowSpan={maxRows} className="col-pcs text-end">{jewellery?.pcs ?? jewellery?.Pcs ?? 0}</td>
-                  <td rowSpan={maxRows} className="col-rate text-end">{fmtNum(jewellery?.rate ?? jewellery?.Rate)}</td>
+                  <td rowSpan={maxRows} className="col-rate text-end">{fmtNum(displayRate)}</td>
                   <td rowSpan={maxRows} className="col-metaltype">{jewellery?.metalType ?? jewellery?.MetalType ?? ""}</td>
                   <td rowSpan={maxRows} className="col-metalcolor">{jewellery?.jewColor ?? jewellery?.JewColor ?? ""}</td>
                   <td rowSpan={maxRows} className="col-metalpurity">{jewellery?.jewPurity ?? jewellery?.JewPurity ?? ""}</td>
@@ -725,7 +734,7 @@ const JewelleryQuotationReportTable = ({ data, onStockClick, onStockCountChange 
               <td className="col-dia-price text-end">{fmtNum(dia?.diamondPrice ?? dia?.DiamondPrice)}</td>
               <td className="col-dia-amount text-end">{fmtNum(dia?.diamondAmount ?? dia?.DiamondAmount)}</td>
               {i === 0 && (
-                <td rowSpan={maxRows} className="col-finalamount text-end">{fmtNum(jewellery?.finalJAmount ?? jewellery?.FinalJAmount)}</td>
+                <td rowSpan={maxRows} className="col-finalamount text-end">{fmtNum(displayFinalAmt)}</td>
               )}
             </tr>
           );
@@ -935,6 +944,12 @@ const JewelleryQuotationReport = () => {
   const [loadingStockIds, setLoadingStockIds] = useState(false);
   const [stockSearchValue, setStockSearchValue] = useState("");
   const [printType, setPrintType] = useState("JewelleryStockList Print");
+  const [increasePercentage, setIncreasePercentage] = useState("");
+
+  const increaseFactor = useMemo(() => {
+    const pct = parseFloat(increasePercentage);
+    return !isNaN(pct) ? 1 + pct / 100 : 1;
+  }, [increasePercentage]);
 
   const [filters, setFilters] = useState({
     date: toDate,
@@ -1270,6 +1285,7 @@ const JewelleryQuotationReport = () => {
     loadStockIdOptions("");
     setReportData([]);
     setStockCount(0);
+    setIncreasePercentage("");
     setShowReport(false);
     toast.success("Filters cleared.");
   };
@@ -1286,12 +1302,12 @@ const JewelleryQuotationReport = () => {
     }
 
     const clone = source.cloneNode(true);
-    
+
     let hideCols = [];
     let groupColspan = 21;
     let diaColspan = 8;
     let stoneColspan = 0;
-    
+
     if (printType === "BarcodePrint") {
       hideCols = [
         "col-image", "col-video", "col-lab", "col-certno", "col-category", "col-subcategory", "col-status", "col-itemname",
@@ -1332,7 +1348,7 @@ const JewelleryQuotationReport = () => {
       const stockId = td.getAttribute("data-stockid");
       if (stockId) td.textContent = `Stock ID: ${stockId}`;
     });
-    
+
     const diamondGroup = clone.querySelector(".col-diamond-group");
     if (diamondGroup) {
       if (diaColspan > 0) {
@@ -1574,7 +1590,7 @@ ${hideCss} { display: none; }
       r.getCell(1).numFmt = "0.000";
       r.getCell(2).numFmt = "0.000";
       r.getCell(4).numFmt = caratFormat;
-      
+
       r.eachCell((cell) => {
         cell.alignment = { horizontal: "center", vertical: "middle" };
         cell.border = {
@@ -1690,7 +1706,7 @@ ${hideCss} { display: none; }
 
         totalGrossWt += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         totalNetWt += Number(j?.netWeight ?? j?.NetWeight ?? 0);
-        totalFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+        totalFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
 
         diaList.forEach((d) => {
           totalDiaPcs += Number(d?.diamondPcs ?? d?.DiamondPcs ?? 0);
@@ -1700,7 +1716,7 @@ ${hideCss} { display: none; }
 
         grandGrossWt += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         grandNetWt += Number(j?.netWeight ?? j?.NetWeight ?? 0);
-        grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+        grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
 
         diaList.forEach((d) => {
           grandDiaPcs += Number(d?.diamondPcs ?? d?.DiamondPcs ?? 0);
@@ -1737,7 +1753,7 @@ ${hideCss} { display: none; }
           rowData[18] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
           if (i === 0) {
-            rowData[19] = Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+            rowData[19] = Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
           } else {
             rowData[19] = "";
           }
@@ -1979,7 +1995,7 @@ ${hideCss} { display: none; }
 
         totalGrossWt += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         totalNetWt += Number(j?.netWeight ?? j?.NetWeight ?? 0);
-        totalFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+        totalFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
         totalJewPcs += Number(j?.pcs ?? j?.Pcs ?? 0);
 
         diaList.forEach((d) => {
@@ -1991,7 +2007,7 @@ ${hideCss} { display: none; }
         grandJewPcs += Number(j?.pcs ?? j?.Pcs ?? 0);
         grandGrossWt += Number(j?.grossWeight ?? j?.GrossWeight ?? 0);
         grandNetWt += Number(j?.netWeight ?? j?.NetWeight ?? 0);
-        grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+        grandFinalAmt += Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
 
         diaList.forEach((d) => {
           grandDiaPcs += Number(d?.diamondPcs ?? d?.DiamondPcs ?? 0);
@@ -2011,7 +2027,7 @@ ${hideCss} { display: none; }
             rowData[5] = j?.lotNo ?? j?.LotNo ?? "";
             rowData[6] = j?.itemName ?? j?.ItemName ?? "";
             rowData[7] = Number(j?.pcs ?? j?.Pcs ?? 0);
-            rowData[8] = Number(j?.rate ?? j?.Rate ?? 0);
+            rowData[8] = Number(j?.chitBhav ?? j?.ChitBhav ?? j?.rate ?? j?.Rate ?? 0) * increaseFactor;
             rowData[9] = j?.metalType ?? j?.MetalType ?? "";
             rowData[10] = j?.jewColor ?? j?.JewColor ?? "";
             rowData[11] = j?.jewPurity ?? j?.JewPurity ?? "";
@@ -2030,7 +2046,7 @@ ${hideCss} { display: none; }
           rowData[20] = dia ? Number(dia?.diamondAmount ?? dia?.DiamondAmount ?? 0) : "";
 
           if (i === 0) {
-            rowData[21] = Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0);
+            rowData[21] = Number(j?.finalJAmount ?? j?.FinalJAmount ?? 0) * increaseFactor;
           } else {
             rowData[21] = "";
           }
@@ -2268,6 +2284,23 @@ ${hideCss} { display: none; }
               {showReport ? t("Jewellery Quotation Report Results") : t("Jewellery Quotation Report Filters")}
             </h5>
             <div className="d-flex flex-wrap gap-2 align-items-center">
+              <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-2 border bg-light-subtle">
+                <Label className="mb-0 fw-semibold text-nowrap small" htmlFor="increasePercentage">
+                  {t("Increase Rate %")}:
+                </Label>
+                <Input
+                  id="increasePercentage"
+                  type="number"
+                  bsSize="sm"
+                  className="text-end fw-bold"
+                  style={{ width: 75, height: 29 }}
+                  placeholder="0"
+                  value={increasePercentage}
+                  onChange={(e) => setIncreasePercentage(e.target.value)}
+                  step="any"
+                />
+                <span className="small text-muted fw-bold">%</span>
+              </div>
               {!showReport ? (
                 <>
                   <Button color="primary" className="btn-sm rounded-2 px-3 py-1" onClick={handleSearch} disabled={loading || loadingDropdowns}>
@@ -2573,6 +2606,7 @@ ${hideCss} { display: none; }
                   <div ref={reportScrollRef} className="jew-report-scroll viewport-table-scroll" style={{ maxHeight: tableMaxHeight }}>
                     <JewelleryQuotationReportTable
                       data={reportData}
+                      increasePercentage={increasePercentage}
                       onStockCountChange={setStockCount}
                       onStockClick={(id) => id && window.open(`/master/edit-Mounting-stock?id=${id}&mode=view`, "_blank")}
                     />
