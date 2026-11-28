@@ -31,14 +31,17 @@ import {
 } from "../../../helpers/fakebackend_helper";
 
 const TABLE_COLUMNS = [
-    { key: "ItemCode", label: "Code", align: "text-start" },
+    { key: "ItemCode", label: "Code", align: "text-start", isTotalLabel: true },
     { key: "LotNo", label: "Lot No", align: "text-start" },
     { key: "Pcs", label: "Pcs", align: "text-end" },
-    { key: "carats", label: "Carats", align: "text-end", isCarat: true },
-    { key: "OnHand", label: "On Hand", align: "text-end", isCarat: true },
+    { key: "carats", label: "Carats", align: "text-end", isCarat: true, totalKey: "carats" },
+    { key: "OnHand", label: "On Hand", align: "text-end", isCarat: true, totalKey: "onHand" },
+    { key: "MemoOut", label: "Memo Out", align: "text-end", isCarat: true, totalKey: "memoOut" },
     { key: "Rate", label: "Asking Price", align: "text-end", decimals: 2 },
-    { key: "Amount", label: "Amount", align: "text-end", decimals: 3 }
+    { key: "Amount", label: "Amount", align: "text-end", decimals: 3, totalKey: "amount", totalDecimals: 2 }
 ];
+
+const EXPORT_COLUMNS = TABLE_COLUMNS.filter(col => col.key !== "ItemCode");
 
 const MvcSwalResult = ({ open, type, title, text, confirmText, onClose }) => {
     const isSuccess = type === "success";
@@ -106,12 +109,12 @@ const filterRows = (rows, filters) =>
         })
     );
 
-const computeTotals = (rows) => ({
-    pcs: rows.reduce((sum, row) => sum + (Number(getRowValue(row, "Pcs")) || 0), 0),
-    carats: rows.reduce((sum, row) => sum + (Number(getRowValue(row, "carats")) || 0), 0),
-    onHand: rows.reduce((sum, row) => sum + (Number(getRowValue(row, "OnHand")) || 0), 0),
-    amount: rows.reduce((sum, row) => sum + (Number(getRowValue(row, "Amount")) || 0), 0)
-});
+const computeTotals = (rows) =>
+    TABLE_COLUMNS.reduce((acc, col) => {
+        if (!col.totalKey) return acc;
+        acc[col.totalKey] = rows.reduce((sum, row) => sum + (Number(getRowValue(row, col.key)) || 0), 0);
+        return acc;
+    }, {});
 
 const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) => {
     const { t } = useTranslation();
@@ -172,13 +175,20 @@ const StockTellyTable = ({ title, rows, filters, onFilterChange, emptyText }) =>
                     </tbody>
                     <tfoot className="table-light fw-bold" style={{ position: "sticky", bottom: 0, zIndex: 2, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>
                         <tr>
-                            <td className="fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{t("Total:") || "Total:"}</td>
-                            <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
-                            <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatCarat(totals.carats, caratFormat)}</td>
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatCarat(totals.onHand, caratFormat)}</td>
-                            <td style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }} />
-                            <td className="text-end fw-bold" style={{ position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" }}>{formatNumber(totals.amount, 2)}</td>
+                            {TABLE_COLUMNS.map(col => {
+                                const stickyFooterStyle = { position: "sticky", bottom: 0, backgroundColor: "var(--vz-table-head-bg, var(--vz-tertiary-bg, #f3f6f9))", color: "var(--vz-table-color, inherit)" };
+                                if (col.isTotalLabel) {
+                                    return <td key={`total-${col.key}`} className="fw-bold" style={stickyFooterStyle}>{t("Total:") || "Total:"}</td>;
+                                }
+                                if (col.totalKey) {
+                                    const totalVal = totals[col.totalKey] ?? 0;
+                                    const formattedTotal = col.isCarat
+                                        ? formatCarat(totalVal, caratFormat)
+                                        : formatNumber(totalVal, col.totalDecimals ?? col.decimals ?? 2);
+                                    return <td key={`total-${col.key}`} className={`${col.align} fw-bold`} style={stickyFooterStyle}>{formattedTotal}</td>;
+                                }
+                                return <td key={`total-${col.key}`} style={stickyFooterStyle} />;
+                            })}
                         </tr>
                     </tfoot>
                 </Table>
@@ -454,15 +464,15 @@ const StockTelly = () => {
         }
 
         const filteredRows = filterRows(stockRows, stockFilters);
-        const headers = ["Lot No", "Pcs", "Carats", "On Hand", "Asking Price", "Amount"];
-        const rows = filteredRows.map(row => [
-            getRowValue(row, "LotNo"),
-            getRowValue(row, "Pcs"),
-            formatNumber(getRowValue(row, "carats"), 3),
-            formatNumber(getRowValue(row, "OnHand"), 3),
-            formatNumber(getRowValue(row, "Rate"), 2),
-            formatNumber(getRowValue(row, "Amount"), 3)
-        ]);
+        const headers = EXPORT_COLUMNS.map(col => col.label);
+        const rows = filteredRows.map(row =>
+            EXPORT_COLUMNS.map(col => {
+                const value = getRowValue(row, col.key);
+                if (col.isCarat) return formatNumber(value, 3);
+                if (col.decimals !== undefined) return formatNumber(value, col.decimals);
+                return value ?? "";
+            })
+        );
 
         const result = await exportToExcel(headers, rows, "Sheet 1", "StockTallyData");
         if (!result?.success) {
@@ -474,9 +484,9 @@ const StockTelly = () => {
         e.preventDefault();
         try {
             // Generate template in-browser (public/excelfolder/ImportStockTakingData.xlsx is not bundled)
-            // Columns must match MVC import: LotNo, Pcs, Carats, OnHand, Rate, Amount
+            // Columns support both legacy 6-col and current 7-col format (with MemoOut)
             const result = await exportToExcel(
-                ["LotNo", "Pcs", "Carats", "OnHand", "Rate", "Amount"],
+                ["LotNo", "Pcs", "Carats", "OnHand", "MemoOut", "Rate", "Amount"],
                 [],
                 "ImportStockTakingData",
                 "ImportStockTakingData"
