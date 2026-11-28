@@ -25,6 +25,7 @@ import {
   getLoanGivenDetail,
   getLoanGivenPageData
 } from "../../../../helpers/fakebackend_helper";
+import { usePartyDueDays } from "../../../../helpers/partyDueDaysHelper";
 import {
   getCachedReportCompany,
   getReportCompanySettings,
@@ -174,6 +175,7 @@ const LoanGivenForm = ({ mode }) => {
   });
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const handlePartyChange = usePartyDueDays({ setParty, setState: setForm, dateKey: "date" });
 
   useEffect(() => {
     const loadSymbols = async () => {
@@ -477,7 +479,7 @@ const LoanGivenForm = ({ mode }) => {
                       {t("Add Account/Group")}
                     </Link>
                   </Label>
-                  <Select {...accountSelectProps(partyOpts, party, setParty, partyInput, setPartyInput, setPartyOpts, partyLoading, t("Search Party"))} />
+                  <Select {...accountSelectProps(partyOpts, party, handlePartyChange, partyInput, setPartyInput, setPartyOpts, partyLoading, t("Search Party"))} />
                 </FormGroup>
               </Col>
               <Col md={2} sm={4}>
