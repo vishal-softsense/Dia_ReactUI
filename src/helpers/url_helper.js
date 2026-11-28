@@ -1159,3 +1159,8 @@ export const GET_LAB_DATA_IMPORT_CERT = "/api/GetLabData/import-cert";
 export const GET_LAB_DATA_GIA = "/api/GetLabData/get-gia-data";
 export const GET_LAB_DATA_IGI = "/api/GetLabData/get-igi-data";
 export const GET_LAB_DATA_PRINT = "/api/GetLabData/getlabdataprint";
+
+// Document Email (Mix Memo Out & Mix Sale)
+export const DOCUMENT_EMAIL_COMPOSE = "/api/DocumentEmail/compose";
+export const DOCUMENT_EMAIL_SEND = "/api/DocumentEmail/send";
+export const DOCUMENT_EMAIL_PREVIEW_PDF = "/api/DocumentEmail/preview-pdf";

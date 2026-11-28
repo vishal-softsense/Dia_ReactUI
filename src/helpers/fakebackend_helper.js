@@ -1,3 +1,4 @@
+import axios from "axios";
 import { APIClient } from "./api_helper";
 
 import * as url from "./url_helper";
@@ -1410,3 +1411,13 @@ export const getStockTransferLotDetails = lotNo =>
   api.get(`${url.STOCK_TRANSFER_LOT_DETAILS}?LotNo=${encodeURIComponent(lotNo || "")}`);
 export const getStockTransferLotNoList = searchby =>
   api.get(`${url.STOCK_TRANSFER_LOTNO_LIST}?searchby=${encodeURIComponent(searchby || "")}`);
+
+// Document Email (Mix Memo Out & Mix Sale)
+export const composeDocumentEmail = (docType, id) =>
+  api.get(`${url.DOCUMENT_EMAIL_COMPOSE}?docType=${encodeURIComponent(docType)}&id=${encodeURIComponent(id)}`);
+export const sendDocumentEmail = payload => api.create(url.DOCUMENT_EMAIL_SEND, payload);
+export const previewDocumentEmailPdf = (docType, id) =>
+  axios.get(
+    `${url.DOCUMENT_EMAIL_PREVIEW_PDF}?docType=${encodeURIComponent(docType)}&id=${encodeURIComponent(id)}`,
+    { responseType: "blob" }
+  );
