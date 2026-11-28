@@ -126,6 +126,18 @@ const getGroupedNumeric = (row, key) => {
     return Number(getRowVal(row, ...(aliases[key] || [key])) || 0);
 };
 
+const formatGroupedSumCell = (colKey, totals, caratFmt) => {
+    if (colKey === "Price") {
+        const carats = Number(totals?.Carats) || 0;
+        const amount = Number(totals?.BalanceAmt) || 0;
+        return fmtFixed(carats > 0 ? amount / carats : 0, GROUPED_DECIMALS.Price);
+    }
+    if (["Carats", "Return", "Balance"].includes(colKey)) {
+        return formatCarat(totals[colKey], caratFmt);
+    }
+    return fmtFixed(totals[colKey], GROUPED_DECIMALS[colKey]);
+};
+
 const buildGroupedReportSections = (rows, groupBy) => {
     const grouped = {};
 
@@ -815,9 +827,7 @@ const MixConsignmentReport = () => {
                     ${GROUPED_SUM_COLUMNS.map(
                         (colKey) =>
                             `<td class="col-num"><strong>${escapeHtml(
-                                ["Carats", "Return", "Balance"].includes(colKey)
-                                    ? formatCarat(section.subtotal[colKey], caratFormat)
-                                    : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])
+                                formatGroupedSumCell(colKey, section.subtotal, caratFormat)
                             )}</strong></td>`
                     ).join("")}
                 </tr>
@@ -832,9 +842,7 @@ const MixConsignmentReport = () => {
                 ${GROUPED_SUM_COLUMNS.map(
                     (colKey) =>
                         `<td class="col-num"><strong>${escapeHtml(
-                            ["Carats", "Return", "Balance"].includes(colKey)
-                                ? formatCarat(grandTotal[colKey], caratFormat)
-                                : fmtFixed(grandTotal[colKey], GROUPED_DECIMALS[colKey])
+                            formatGroupedSumCell(colKey, grandTotal, caratFormat)
                         )}</strong></td>`
                 ).join("")}
             </tr>
@@ -1912,9 +1920,7 @@ const MixConsignmentReport = () => {
                                                             {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                                 <td key={`${section.groupKey}-${colKey}`} className="text-end">
                                                                     <strong>
-                                                                        {["Carats", "Return", "Balance"].includes(colKey)
-                                                                            ? formatCarat(section.subtotal[colKey], caratFormat)
-                                                                            : fmtFixed(section.subtotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                                        {formatGroupedSumCell(colKey, section.subtotal, caratFormat)}
                                                                     </strong>
                                                                 </td>
                                                             ))}
@@ -1931,9 +1937,7 @@ const MixConsignmentReport = () => {
                                                     {GROUPED_SUM_COLUMNS.map((colKey) => (
                                                         <td key={`grand-${colKey}`} className="text-end">
                                                             <strong>
-                                                                {["Carats", "Return", "Balance"].includes(colKey)
-                                                                    ? formatCarat(groupedReportData.grandTotal[colKey], caratFormat)
-                                                                    : fmtFixed(groupedReportData.grandTotal[colKey], GROUPED_DECIMALS[colKey])}
+                                                                {formatGroupedSumCell(colKey, groupedReportData.grandTotal, caratFormat)}
                                                             </strong>
                                                         </td>
                                                     ))}
